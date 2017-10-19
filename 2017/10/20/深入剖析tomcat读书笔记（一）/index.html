@@ -15,7 +15,7 @@
 <meta property="og:url" content="https://zjs1224522500.github.io/Elvis.github.io/2017/10/20/深入剖析tomcat读书笔记（一）/index.html">
 <meta property="og:site_name" content="Elvis">
 <meta property="og:description" content="前言1、Servlet容器是如何工作的？ 创建一个Request对象，用可能会在Servlet中使用的信息填充该Request对象; 创建一个调用Servlet的response对象，用来向WEB客户端发送响应； 调用Servlet的service()方法,将Request对象和Response对象。   复习Servlet的生命周期 Servlet 通过调用 init () 方法进行初始化。 S">
-<meta property="og:updated_time" content="2017-10-19T13:32:01.671Z">
+<meta property="og:updated_time" content="2017-10-19T16:56:26.952Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="深入剖析Tomcat读书笔记">
 <meta name="twitter:description" content="前言1、Servlet容器是如何工作的？ 创建一个Request对象，用可能会在Servlet中使用的信息填充该Request对象; 创建一个调用Servlet的response对象，用来向WEB客户端发送响应； 调用Servlet的service()方法,将Request对象和Response对象。   复习Servlet的生命周期 Servlet 通过调用 init () 方法进行初始化。 S">
@@ -217,6 +217,7 @@ var _hmt = _hmt || [];
 <h3 id="测试过程中存在的问题："><a href="#测试过程中存在的问题：" class="headerlink" title="测试过程中存在的问题："></a>测试过程中存在的问题：</h3><blockquote>
 <p>IE浏览器测试成功，谷歌浏览器测试失败.</p>
 </blockquote>
+<a id="more"></a>
 <h1 id="第二章-一个简单的Servlet容器"><a href="#第二章-一个简单的Servlet容器" class="headerlink" title="第二章 一个简单的Servlet容器"></a>第二章 一个简单的Servlet容器</h1><h2 id="Servlet容器的搭建"><a href="#Servlet容器的搭建" class="headerlink" title="Servlet容器的搭建"></a>Servlet容器的搭建</h2><ul>
 <li><p>基于第一章WEB服务器的搭建，（第一章的WEB服务器只能访问服务器端的静态资源），在能访问静态资源<code>static resources</code>的基础之上，能够处理<code>Servlet</code>对应的相关请求并调用<code>Servlet</code>对应的类的方法。</p>
 </li>
