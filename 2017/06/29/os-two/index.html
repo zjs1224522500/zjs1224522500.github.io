@@ -6,26 +6,28 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://github.com/zjs1224522500/zjs1224522500.github.io">
-  <title>操作系统引论 | Elvis</title>
+  <title>进程的描述与控制 | Elvis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="第一章 操作系统引论1.1 操作系统的目标及作用1.1.1 操作系统的概念  An Operating System is a program that managers the computer hardware provides a basis for application programs acts as an intermediary between the computer user">
+  <meta name="description" content="第二章 进程的描述与控制 2.1 程序执行2.1.1 程序顺序执行 特征： 顺序性：处理机的操作严格按照程序所规定的顺序执行。 封闭性：程序运行时独占全机资源，程序一旦开始执行，其执行结果不受外界因素影响。 可再现性：只要程序执行时的环境和初始条件相同，都将获得相同的结果。（不论它是从头到尾不停顿地执行，还是“停停走走”地执行）    2.1.2 程序并发执行 特征： 间断性：程序并发执行是，由于">
 <meta name="keywords" content="OS">
 <meta property="og:type" content="article">
-<meta property="og:title" content="操作系统引论">
-<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/05/02/操作系统引论/index.html">
+<meta property="og:title" content="进程的描述与控制">
+<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/06/29/os-two/index.html">
 <meta property="og:site_name" content="Elvis">
-<meta property="og:description" content="第一章 操作系统引论1.1 操作系统的目标及作用1.1.1 操作系统的概念  An Operating System is a program that managers the computer hardware provides a basis for application programs acts as an intermediary between the computer user">
-<meta property="og:image" content="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1493644528643&di=347d7ceaa94ddd7a6d57fb5a3fbb4df2&imgtype=0&src=http%3A%2F%2Fs2.51cto.com%2Fwyfs02%2FM02%2F86%2FA9%2FwKioL1fGuSnxWs5uAAB97dFuqVs272.png">
-<meta property="og:image" content="http://b.hiphotos.baidu.com/image/pic/item/3b87e950352ac65cb15ce65ff1f2b21193138a45.jpg">
-<meta property="og:image" content="http://g.hiphotos.baidu.com/image/pic/item/8435e5dde71190efb0de1df3c41b9d16fdfa60f1.jpg">
-<meta property="og:image" content="http://e.hiphotos.baidu.com/image/pic/item/f603918fa0ec08fa0d13ec8b53ee3d6d55fbda8f.jpg">
-<meta property="og:image" content="http://g.hiphotos.baidu.com/image/pic/item/730e0cf3d7ca7bcb64f93803b4096b63f624a818.jpg">
-<meta property="og:image" content="http://f.hiphotos.baidu.com/image/pic/item/8435e5dde71190efc3e96cf3c41b9d16fdfa6088.jpg">
-<meta property="og:updated_time" content="2017-10-19T16:57:08.435Z">
+<meta property="og:description" content="第二章 进程的描述与控制 2.1 程序执行2.1.1 程序顺序执行 特征： 顺序性：处理机的操作严格按照程序所规定的顺序执行。 封闭性：程序运行时独占全机资源，程序一旦开始执行，其执行结果不受外界因素影响。 可再现性：只要程序执行时的环境和初始条件相同，都将获得相同的结果。（不论它是从头到尾不停顿地执行，还是“停停走走”地执行）    2.1.2 程序并发执行 特征： 间断性：程序并发执行是，由于">
+<meta property="og:image" content="http://h.hiphotos.baidu.com/image/pic/item/9d82d158ccbf6c81272de0c4b63eb13533fa4080.jpg">
+<meta property="og:image" content="http://h.hiphotos.baidu.com/image/pic/item/21a4462309f790520fbaee1306f3d7ca7bcbd572.jpg">
+<meta property="og:image" content="http://f.hiphotos.baidu.com/image/pic/item/8601a18b87d6277ff333981522381f30e924fcfe.jpg">
+<meta property="og:image" content="http://b.hiphotos.baidu.com/image/pic/item/aa18972bd40735fadfb7e49494510fb30f240853.jpg">
+<meta property="og:image" content="http://b.hiphotos.baidu.com/image/pic/item/0b7b02087bf40ad1dbef93cd5d2c11dfa9ecce91.jpg">
+<meta property="og:image" content="http://c.hiphotos.baidu.com/image/pic/item/6d81800a19d8bc3ef3d952e4888ba61ea9d345ce.jpg">
+<meta property="og:image" content="http://f.hiphotos.baidu.com/image/pic/item/d833c895d143ad4bac4a16ee88025aafa40f06b3.jpg">
+<meta property="og:image" content="http://c.hiphotos.baidu.com/image/pic/item/7c1ed21b0ef41bd5cf73b4da5bda81cb39db3dff.jpg">
+<meta property="og:updated_time" content="2017-10-19T16:56:56.398Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="操作系统引论">
-<meta name="twitter:description" content="第一章 操作系统引论1.1 操作系统的目标及作用1.1.1 操作系统的概念  An Operating System is a program that managers the computer hardware provides a basis for application programs acts as an intermediary between the computer user">
-<meta name="twitter:image" content="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1493644528643&di=347d7ceaa94ddd7a6d57fb5a3fbb4df2&imgtype=0&src=http%3A%2F%2Fs2.51cto.com%2Fwyfs02%2FM02%2F86%2FA9%2FwKioL1fGuSnxWs5uAAB97dFuqVs272.png">
+<meta name="twitter:title" content="进程的描述与控制">
+<meta name="twitter:description" content="第二章 进程的描述与控制 2.1 程序执行2.1.1 程序顺序执行 特征： 顺序性：处理机的操作严格按照程序所规定的顺序执行。 封闭性：程序运行时独占全机资源，程序一旦开始执行，其执行结果不受外界因素影响。 可再现性：只要程序执行时的环境和初始条件相同，都将获得相同的结果。（不论它是从头到尾不停顿地执行，还是“停停走走”地执行）    2.1.2 程序并发执行 特征： 间断性：程序并发执行是，由于">
+<meta name="twitter:image" content="http://h.hiphotos.baidu.com/image/pic/item/9d82d158ccbf6c81272de0c4b63eb13533fa4080.jpg">
   
     <link rel="alternative" href="/atom.xml" title="Elvis" type="application/atom+xml">
   
@@ -167,379 +169,329 @@ var _hmt = _hmt || [];
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-操作系统引论" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-os-two" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      操作系统引论
+      进程的描述与控制
     </h1>
   
 
         
-        <a href="/2017/05/02/操作系统引论/" class="archive-article-date">
-  	<time datetime="2017-05-01T20:32:20.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-05-01</time>
+        <a href="/2017/06/29/os-two/" class="archive-article-date">
+  	<time datetime="2017-06-28T17:28:18.442Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-06-28</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="第一章-操作系统引论"><a href="#第一章-操作系统引论" class="headerlink" title="第一章 操作系统引论"></a>第一章 操作系统引论</h1><h3 id="1-1-操作系统的目标及作用"><a href="#1-1-操作系统的目标及作用" class="headerlink" title="1.1 操作系统的目标及作用"></a>1.1 操作系统的目标及作用</h3><h4 id="1-1-1-操作系统的概念"><a href="#1-1-1-操作系统的概念" class="headerlink" title="1.1.1 操作系统的概念"></a>1.1.1 操作系统的概念</h4><blockquote>
-<ul>
-<li>An Operating System is a program that managers the computer hardware provides a basis for application programs acts as an intermediary between the computer user and the computer hardware  </li>
-<li>OS is a resource allocator Manages all resources Decides between conflicting requests for efficient and fair resource use  </li>
-<li>OS is a control program Controls execution of programs to prevent errors and improper use of the computer</li>
-</ul>
-</blockquote>
-<ul>
-<li>操作系统定义：操作系统是位于<code>硬件层(HAL)</code>之上，所有其它系统软件层之下的一个系统软件。其主要作用是管理好这些设备，提高它们的利用率和系统的吞吐量，并为用户和应用程序提供一个统一的接口，便于用户使用。</li>
-</ul>
-<h4 id="1-1-2-操作系统的位置"><a href="#1-1-2-操作系统的位置" class="headerlink" title="1.1.2 操作系统的位置"></a>1.1.2 操作系统的位置</h4><ul>
-<li>位于硬件层(HAL)之上，所有其它系统软件层之下的一个系统软件<br><img src="https://timgsa.baidu.com/timg?image&amp;quality=80&amp;size=b9999_10000&amp;sec=1493644528643&amp;di=347d7ceaa94ddd7a6d57fb5a3fbb4df2&amp;imgtype=0&amp;src=http%3A%2F%2Fs2.51cto.com%2Fwyfs02%2FM02%2F86%2FA9%2FwKioL1fGuSnxWs5uAAB97dFuqVs272.png" alt="image"></li>
-</ul>
-<h4 id="1-1-3-操作系统的目标"><a href="#1-1-3-操作系统的目标" class="headerlink" title="1.1.3 操作系统的目标"></a>1.1.3 操作系统的目标</h4><ul>
-<li>有效性:操作系统允许以更有效的方式使用计算机系统资源。（提高系统资源利用率、提高系统的吞吐量）</li>
-<li>方便性:操作系统使计算机更易于使用。</li>
-<li>可扩充性:在操作系统中,允许有效地开发，测试和引进新的系统功能。</li>
-<li>开放性:实现应用程序的可移植性和互操作性,要求具有统一的开放的环境。</li>
-</ul>
-<h4 id="1-1-4-操作系统的作用"><a href="#1-1-4-操作系统的作用" class="headerlink" title="1.1.4 操作系统的作用"></a>1.1.4 操作系统的作用</h4><ul>
-<li>OS 看做是用户与计算机硬件系统之间的接口。  <blockquote>
-<p>含义：OS 处于用户与计算机硬件系统之间，用户通过OS来使用计算机系统。</p>
-</blockquote>
-</li>
-</ul>
-<p><img src="http://b.hiphotos.baidu.com/image/pic/item/3b87e950352ac65cb15ce65ff1f2b21193138a45.jpg" alt="image"></p>
-<ul>
-<li>OS作为计算机系统资源的管理者  <ul>
-<li>从资源管理的观点看，则可把OS视为计算机系统资源的管理者。  </li>
+        <h1 id="第二章-进程的描述与控制"><a href="#第二章-进程的描述与控制" class="headerlink" title="第二章 进程的描述与控制"></a>第二章 进程的描述与控制</h1><hr>
+<h3 id="2-1-程序执行"><a href="#2-1-程序执行" class="headerlink" title="2.1 程序执行"></a>2.1 程序执行</h3><h4 id="2-1-1-程序顺序执行"><a href="#2-1-1-程序顺序执行" class="headerlink" title="2.1.1 程序顺序执行"></a>2.1.1 程序顺序执行</h4><ul>
+<li>特征：<ul>
+<li>顺序性：处理机的操作严格按照程序所规定的顺序执行。</li>
+<li>封闭性：程序运行时独占全机资源，程序一旦开始执行，其执行结果不受外界因素影响。</li>
+<li>可再现性：只要程序执行时的环境和初始条件相同，都将获得相同的结果。<br>（不论它是从头到尾不停顿地执行，还是“停停走走”地执行）</li>
 </ul>
 </li>
 </ul>
-<blockquote>
-<p>处理机管理<br>  存储器管理<br>  I/O设备管理<br>  文件管理</p>
+<h4 id="2-1-2-程序并发执行"><a href="#2-1-2-程序并发执行" class="headerlink" title="2.1.2 程序并发执行"></a>2.1.2 程序并发执行</h4><ul>
+<li>特征：<ul>
+<li>间断性：程序并发执行是，由于共享系统资源，这些程序形成相互制约的关系，具有“执行-暂停-执行”特征。</li>
+<li>失去封闭性：程序并发执行时，多个程序共享系统资源，因而这些资源的状态将由多个程序来改变，从而导致程序的运行失去封闭性。</li>
+<li>不可再现性：程序并发执行，由于失去了封闭性，从而也失去了可再现性。   </li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="2-2-进程的描述"><a href="#2-2-进程的描述" class="headerlink" title="2.2 进程的描述"></a>2.2 进程的描述</h3><h4 id="2-2-1-进程的定义和特征"><a href="#2-2-1-进程的定义和特征" class="headerlink" title="2.2.1 进程的定义和特征"></a>2.2.1 进程的定义和特征</h4><h5 id="2-2-1-1-典型的进程定义有："><a href="#2-2-1-1-典型的进程定义有：" class="headerlink" title="2.2.1.1 典型的进程定义有："></a>2.2.1.1 典型的进程定义有：</h5><ul>
+<li><blockquote>
+<p>进程是程序的一次执行。</p>
 </blockquote>
-<ul>
-<li>OS实现了对计算机资源的抽象<br>对于一个完全无软件的计算机系统(即裸机)，它向用户提供的是实际硬件接口(物理接口)，用户必须对物理接口的实现细节有充分的了解，并利用机器指令进行编程，因此很难使用。  <blockquote>
-<p>通过OS的I／Ｏ管理实现了对计算机资源的抽象，帮助用户对硬件资源的使用和管理。</p>
+</li>
+<li><blockquote>
+<p>进程是一个程序及其数据在处理机上顺序执行时所发生的活动。</p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>进程是程序在一个数据集合上运行的过程，它是系统进行资源分配和调度的一个独立单位</p>
+</blockquote>
+</li>
+</ul>
 <a id="more"></a>
-<h3 id="1-2-操作系统的发展历程-了解"><a href="#1-2-操作系统的发展历程-了解" class="headerlink" title="1.2 操作系统的发展历程 *(了解)"></a>1.2 操作系统的发展历程 *(了解)</h3></blockquote>
-</li>
-<li>操作系统的产生  <ul>
-<li>手工操作阶段  </li>
-<li>成批处理阶段  </li>
-<li>执行系统阶段</li>
+<h5 id="2-2-1-2-进程的结构"><a href="#2-2-1-2-进程的结构" class="headerlink" title="2.2.1.2 进程的结构"></a>2.2.1.2 进程的结构</h5><ul>
+<li>为使程序（含数据）能独立运行，应为之配置一进程控制块，即<code>PCB（程序控制块）</code></li>
+<li>由程序段、相关的数据段和PCB三部分便构成了<strong>进程实体</strong>（又称<strong>进程映像</strong>）。</li>
+<li>所谓创建进程，实质上是创建进程实体中的PCB；而撤消进程，实质上是撤消进程的PCB。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">PCB本质为一个结构体（eg:Linux中的PCB）：</div><div class="line"><span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span>&#123;</span></div><div class="line">...</div><div class="line"><span class="keyword">unsigned</span> <span class="keyword">short</span> uid; <span class="comment">// 用户标识</span></div><div class="line"><span class="keyword">int</span> pid;            <span class="comment">// 进程标识</span></div><div class="line"><span class="keyword">int</span> processor;<span class="comment">//标识用户正在使用的CPU,以支持对称多处理机方式</span></div><div class="line">...</div><div class="line"><span class="keyword">volatile</span> <span class="keyword">long</span> state; <span class="comment">// 标识进程的状态</span></div><div class="line"><span class="keyword">long</span> prority;        <span class="comment">// 表示进程的优先级</span></div><div class="line">unsighed <span class="keyword">long</span> rt_prority;<span class="comment">//表示实时进程的优先级，对于普通进程无效</span></div><div class="line"><span class="keyword">long</span> counter<span class="comment">//进程动态优先级计数器，用于进程轮转调度算法</span></div><div class="line"><span class="keyword">unsigned</span> <span class="keyword">long</span> flags;</div><div class="line"><span class="keyword">unsigned</span> <span class="keyword">long</span> policy;<span class="comment">//进程调度策略</span></div><div class="line">...</div><div class="line"><span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">next_task</span>, *<span class="title">prev_task</span>;</span></div><div class="line"><span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">next_run</span>,*<span class="title">prev_run</span>;</span></div><div class="line"><span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">p_opptr</span>,*<span class="title">p_pptr</span>,*<span class="title">p_cptr</span>,*<span class="title">pysptr</span>,*<span class="title">p_ptr</span>;</span></div><div class="line">...</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<h5 id="2-2-1-3-进程的特征-重要"><a href="#2-2-1-3-进程的特征-重要" class="headerlink" title="2.2.1.3 进程的特征 (重要)"></a>2.2.1.3 进程的特征 (重要)</h5><ul>
+<li>动态性：（状态在不断地发生改变）<ul>
+<li>进程的实质是进程实体的一次执行过程，因此，<strong>动态性</strong>是进程的最基本的特征。</li>
+<li>动态性表现：“它由创建而产生，由调度而执行，由撤消而消亡”。可见，进程实体有一定的生命期。</li>
+<li><strong>程序</strong>是一组有序指令的集合，其本身并不具有运动的含义，因而是静态的。</li>
 </ul>
 </li>
-<li>操作系统的完善  <ul>
-<li>多道批处理系统  </li>
-<li>分时系统  </li>
-<li>实时处理系统  </li>
-<li>通用操作系统</li>
+<li>并发性：<ul>
+<li>多个进程实体同存于内存中，且能在一段时间内同时运行。</li>
 </ul>
 </li>
-<li>操作系统的发展  <ul>
-<li>计算机网络的出现  </li>
-<li>微型计算机的普及  </li>
-<li>极强的计算和处理能力  </li>
-<li>微内核操作系统  </li>
-<li>多核操作系统</li>
+<li>独立性：<ul>
+<li>进程实体是一个能独立运行、独立分配资源和独立接受调度的基本单位。</li>
+</ul>
+</li>
+<li>异步性：<ul>
+<li>进程按各自独立的、不可预知的速度向前推进，或说进程实体按异步方式运行。</li>
 </ul>
 </li>
 </ul>
-<h4 id="1-2-1-无操作系统的计算机系统"><a href="#1-2-1-无操作系统的计算机系统" class="headerlink" title="1.2.1 无操作系统的计算机系统"></a>1.2.1 无操作系统的计算机系统</h4><h5 id="1-2-1-1-人工操作方式（20世纪50年代）"><a href="#1-2-1-1-人工操作方式（20世纪50年代）" class="headerlink" title="1.2.1.1 人工操作方式（20世纪50年代）"></a>1.2.1.1 人工操作方式（20世纪50年代）</h5><ul>
-<li>人工控制<h5 id="1-2-1-2-脱机输入-输出方式"><a href="#1-2-1-2-脱机输入-输出方式" class="headerlink" title="1.2.1.2 脱机输入/输出方式"></a>1.2.1.2 脱机输入/输出方式</h5></li>
-<li>在一台外围机的控制下，把纸带(卡片)上的数据(程序)输入到磁带上。当CPU需要这些程序和数据时，再从磁带上将其高速地调入内存。</li>
-</ul>
-<h4 id="1-2-2-单道批处理系统"><a href="#1-2-2-单道批处理系统" class="headerlink" title="1.2.2 单道批处理系统"></a>1.2.2 单道批处理系统</h4><blockquote>
-<p>系统对作业的处理都是成批进行的，且在内存中始终仅存一道作业运行，运行结束或出错，才自动调另一道作业运行，故称为单道批处理系统。  </p>
-</blockquote>
-<p><img src="http://g.hiphotos.baidu.com/image/pic/item/8435e5dde71190efb0de1df3c41b9d16fdfa60f1.jpg" alt="image"></p>
+<h4 id="2-2-2-进程的基本状态及转换-（重要）"><a href="#2-2-2-进程的基本状态及转换-（重要）" class="headerlink" title="2.2.2 进程的基本状态及转换 （重要）"></a>2.2.2 进程的基本状态及转换 （重要）</h4><ul>
+<li><p>进程的三种基本状态：</p>
 <ul>
-<li>单道批处理系统主要特征:自动性、顺序性、单道性。</li>
-<li>优点：减少人工操作，解决了作业的自动接续。</li>
-<li>缺点：平均周转时间长，没有交互能力。</li>
+<li><code>就绪（Ready）</code>状态：当进程已分配到除CPU以外的所有必要资源后，只要再获得CPU，便可立即执行。</li>
+<li><code>执行（Running）</code>状态：进程已获得CPU，其程序正在执行。单处理机系统中，只有一个进程处于执行状态，多处理机系统中，则有多个进程处于执行状态。</li>
+<li><code>阻塞（Block）</code>状态：正在执行的进程由于发生某事件而暂时无法继续执行时，便放弃处理机而处于暂停状态，把这种暂停状态称为阻塞状态，有时也称为等待状态。根据阻塞原因，系统中设置多个阻塞队列。</li>
 </ul>
-<h4 id="1-2-3-多道批处理系统"><a href="#1-2-3-多道批处理系统" class="headerlink" title="1.2.3 多道批处理系统"></a>1.2.3 多道批处理系统</h4><blockquote>
-<p>在内存中存放多道作业运行，运行结束或出错，自动调度内存中的另一道作业运行。多道程序。</p>
-</blockquote>
+</li>
+<li><p>三种基本状态的转换<br><img src="http://h.hiphotos.baidu.com/image/pic/item/9d82d158ccbf6c81272de0c4b63eb13533fa4080.jpg" alt="image"></p>
 <ul>
-<li>主要特征：多道性、无序性、调度性（进程调度和作业调度）。</li>
-<li>优点：<ul>
-<li>提高CPU的利用率。</li>
-<li>提高内存和I/O设备利用率。</li>
-<li>增加系统吞吐率。</li>
+<li>进程状态转换过程既有主动原因，也有被动原因</li>
 </ul>
 </li>
-<li>缺点：平均周转时间长，没有交互能力。</li>
-<li>需要解决的问题：<ul>
-<li>处理机管理：分配和控制CPU。</li>
-<li>存储器管理：为每道程序分配必要的内存空间。</li>
-<li>I/O设备管理：I/O设备的分配与操纵。</li>
-<li>文件管理：文件的存取、共享和保护。</li>
-<li>作业管理：如何组织作业运行。</li>
-</ul>
-</li>
-</ul>
-<h4 id="1-2-4-分时操作系统-重要"><a href="#1-2-4-分时操作系统-重要" class="headerlink" title="1.2.4 分时操作系统 (重要)"></a>1.2.4 分时操作系统 (重要)</h4><blockquote>
-<p>分时系统是指在一台主机上连接了多个带有显示器和键盘的终端，同时允许多个用户通过自己的终端，以交互方式使用计算机，共享主机中的资源。</p>
-</blockquote>
+<li><p>创建状态和终止状态</p>
 <ul>
-<li>分时系统能很好地将一台计算机提供给多个用户同时使用，提高计算机的利用率。还可以满足用户对人—机交互的需求。</li>
-<li>它被经常应用于查询系统中，满足许多查询用户的需要。</li>
-<li>特点：  <ul>
-<li>多路性：一个主机与多个终端相连；  </li>
-<li>交互性：以对话的方式为用户服务；  </li>
-<li>独占性：每个终端用户仿佛拥有一台虚拟机。  </li>
-<li>及时性：用户的请求能在很短的时间内获得响应。</li>
+<li><code>创建</code>状态：如果进程所需资源尚不能得到满足，如无足够的内存空间，创建工作将无法完成，进程不能被调度，此时的进程状态为创建状态。</li>
+<li><code>终止</code>状态：一个进程到达了自然结束点，或者出现了无法克服的错误，或是被操作系统所终结，或是被其他有终止权的进程所终结，它将进入终止状态。</li>
 </ul>
 </li>
 </ul>
-<h4 id="1-2-5-实时操作系统-（重要）"><a href="#1-2-5-实时操作系统-（重要）" class="headerlink" title="1.2.5 实时操作系统 （重要）"></a>1.2.5 实时操作系统 （重要）</h4><blockquote>
-<p>所谓实时系统：是计算机及时响应外部事件的请求，在规定的时间内完成对该事件的处理，并控制所有实时设备和实时任务协调一致的运行。</p>
-</blockquote>
+<h4 id="2-2-3-挂起操作和进程状态的转换"><a href="#2-2-3-挂起操作和进程状态的转换" class="headerlink" title="2.2.3 挂起操作和进程状态的转换"></a>2.2.3 挂起操作和进程状态的转换</h4><ul>
+<li><p>挂起状态 使执行的进程暂停执行，静止下来，我们把这种静止状态成为挂起状态</p>
 <ul>
-<li>实时系统的特征：  <ul>
-<li>多路性：能对多个对象进行控制。  </li>
-<li>独立性：独立运行，不混淆，不破坏。  </li>
-<li>交互性：仅限于访问系统中某些特定的专用服务程序。  </li>
-<li>可靠性：高可靠性，应具有过载防护能力。  </li>
-<li>及时性：不同的系统要求不一样，控制对象必须在截止时间内完成。</li>
-</ul>
-</li>
-</ul>
-<h4 id="1-2-6-微机操作系统"><a href="#1-2-6-微机操作系统" class="headerlink" title="1.2.6 微机操作系统"></a>1.2.6 微机操作系统</h4><blockquote>
-<p>配置在微型机上的操作系统称为微机操作系统。</p>
-</blockquote>
-<p>1．单用户单任务操作系统<br>2．单用户多任务操作系统<br>3．多用户多任务操作系统  </p>
-<h3 id="1-3-操作系统的基本特性-（重要）"><a href="#1-3-操作系统的基本特性-（重要）" class="headerlink" title="1.3 操作系统的基本特性 （重要）"></a>1.3 操作系统的基本特性 （重要）</h3><ul>
-<li>现代OS的四个基本特征：<ul>
+<li>引入挂起状态的原因：<ul>
 <li><ol>
-<li>并发性</li>
+<li>终端用户的请求用户；（发现程序运行有问题，将其暂停）</li>
 </ol>
 </li>
 <li><ol>
-<li>共享性</li>
+<li>父进程请求；(挂起子进程，协调子进程的活动)   </li>
 </ol>
 </li>
 <li><ol>
-<li>虚拟性</li>
+<li>负荷调节的需要。当实时系统中的工作负荷较重，把一些不重要的进程挂起，以保证系统能正常运行。</li>
 </ol>
 </li>
 <li><ol>
-<li>异步性</li>
+<li>操作系统的需要。操作系统有时希望挂起某些进程，以便检查运行中的资源使用情况或进行记账。</li>
 </ol>
 </li>
 </ul>
 </li>
+<li><p>进程挂起状态的转换<br><img src="http://h.hiphotos.baidu.com/image/pic/item/21a4462309f790520fbaee1306f3d7ca7bcbd572.jpg" alt="image"></p>
+</li>
+<li><p>有挂起状态的进程转换<br><img src="http://f.hiphotos.baidu.com/image/pic/item/8601a18b87d6277ff333981522381f30e924fcfe.jpg" alt="image"><br><img src="http://b.hiphotos.baidu.com/image/pic/item/aa18972bd40735fadfb7e49494510fb30f240853.jpg" alt="image"></p>
+</li>
+<li><p>挂起状态的思考</p>
+<ul>
+<li>就绪/挂起（静止就绪）可以从活动就绪因为挂起操作转变为静止就绪状态，也可以从执行状态因为某些原因挂起转变为静止就绪状态</li>
+<li>就绪/挂起状态无法直接进入执行状态</li>
+<li>挂起状态无法直接进入执行状态</li>
+<li>挂起进程无法自我激活，但是进程可以自我挂起（只要已知进程ID等有效信息）</li>
 </ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="2-2-4-进程管理中的数据结构"><a href="#2-2-4-进程管理中的数据结构" class="headerlink" title="2.2.4 进程管理中的数据结构"></a>2.2.4 进程管理中的数据结构</h4><h5 id="2-2-4-1-进程控制块的作用"><a href="#2-2-4-1-进程控制块的作用" class="headerlink" title="2.2.4.1 进程控制块的作用"></a>2.2.4.1 进程控制块的作用</h5><ul>
+<li>独立运行基本单位的标志。</li>
+<li>能实现间断性运行方式。（保护CPU现场）</li>
+<li>提供进程管理所需要的信息。（OS通过PCB对进程- 实施控制和管理。）</li>
+<li>提供进程调度所需要的信息。（提供进程状态、优先级等信息）</li>
+<li>实现与其它进程的同步与通信。（消息队列指针，信号量等）</li>
+</ul>
+<h5 id="2-2-4-2-进程控制块的内容"><a href="#2-2-4-2-进程控制块的内容" class="headerlink" title="2.2.4.2 进程控制块的内容"></a>2.2.4.2 进程控制块的内容</h5><ul>
+<li>进程标识符信息</li>
+<li>处理器状态信息</li>
+<li>进程调度信息</li>
+<li>进程控制信息</li>
+</ul>
+<ol>
+<li><p>进程标识符信息:进程标识符用于惟一地标识一个进程。一个进程通常有两种标识符：</p>
+<ol>
+<li>内部标识符。为每一个进程赋予一个惟一的数字标识符，通常是进程的序号(Pid)。设置内部标识符主要是为了方便操作系统使用。</li>
+<li>外部标识符。它由创建者提供(进程的名字)，通常是由字母、数字组成，往往是由用户（进程）在访问该进程时使用。</li>
+</ol>
+</li>
+<li><p>处理器状态信息:主要是由处理机的各种寄存器中的内容组成的。</p>
+<ol>
+<li>通用寄存器，又称为用户可视寄存器。</li>
+<li>指令计数器（PC），其中存放了要访问的下一条指令的地址。</li>
+<li>程序状态字PSW，其中含有状态信息，如条件码、执行方式、中断屏蔽标志等</li>
+<li>用户栈指针(SP)，用于存放系统调用参数及调用地址。栈指针指向该栈的栈顶。</li>
+</ol>
+</li>
+</ol>
+<ul>
+<li>这些都是中断和进程切换时需要保护的内容！</li>
+</ul>
+<ol>
+<li><p>进程调度信息:在PCB中还存放一些与进程调度和进程切换有关的信息。</p>
+<ol>
+<li>进程状态。指明进程的当前状态。</li>
+<li>进程优先级。</li>
+<li>进程调度所需的其它信息。如：进程已等待CPU的时间总和、进程已执行的时间总和等；</li>
+<li>事件。是指进程由执行状态转变为阻塞状态所等待发生的事件，即阻塞原因。</li>
+</ol>
+</li>
+<li><p>进程控制信息</p>
+<ol>
+<li>程序和数据的地址，是指进程的程序和数据所在的内存或外存地址。</li>
+<li>进程同步和通信机制，指实现进程同步和通信时必需的机制，如消息队列指针、信号量等，他们可能全部或部分的放在PCB中。</li>
+<li>资源清单。进程所需的全部资源及已经分配到该进程的资源的清单；</li>
+<li>链接指针。本进程所在队列的下一个进程的PCB的首地址。 </li>
+</ol>
+</li>
+</ol>
+<h5 id="2-2-4-3-进程控制块的组织方式"><a href="#2-2-4-3-进程控制块的组织方式" class="headerlink" title="2.2.4.3 进程控制块的组织方式"></a>2.2.4.3 进程控制块的组织方式</h5><ul>
+<li>链接方式：把具有同一状态的PCB，用其中的链接字链接成一个队列。<br><img src="http://b.hiphotos.baidu.com/image/pic/item/0b7b02087bf40ad1dbef93cd5d2c11dfa9ecce91.jpg" alt="image"></li>
+<li>索引方式：相同状态进程的PCB组织在一张表格中，系统根据所有进程的状态建立几张索引表，系统分别记载各PCB表格的起始地址。<br><img src="http://c.hiphotos.baidu.com/image/pic/item/6d81800a19d8bc3ef3d952e4888ba61ea9d345ce.jpg" alt="image"> </li>
+<li>多级队列：按照进程状态不同分别组织PCB队列，同一状态进程PCB按照优先级高低（或者到达的先后顺序）用链接指针连接起来。<br><img src="http://f.hiphotos.baidu.com/image/pic/item/d833c895d143ad4bac4a16ee88025aafa40f06b3.jpg" alt="image"></li>
+</ul>
+<h3 id="2-3-进程控制"><a href="#2-3-进程控制" class="headerlink" title="2.3 进程控制"></a>2.3 进程控制</h3><ul>
+<li>进程控制：<ul>
+<li>创建一个新进程，终止进程</li>
+<li>进程运行中的状态转换。</li>
+</ul>
+</li>
+<li>进程控制一般是由OS内核中的一组原语来实现的。</li>
+</ul>
+<h4 id="2-3-1-原语"><a href="#2-3-1-原语" class="headerlink" title="2.3.1 原语"></a>2.3.1 原语</h4><ul>
+<li>什么是原语？<blockquote>
+<p>原语是由若干条指令组成的，用于完成一定功能的一个过程。是“原子操作”，即一个操作中的所有动作要么全做，要么全不做，换言之，是一个不可分割的基本单位，在执行过程中不允许被中断。</p>
+</blockquote>
+</li>
+</ul>
+<h4 id="2-3-2-进程的创建"><a href="#2-3-2-进程的创建" class="headerlink" title="2.3.2 进程的创建"></a>2.3.2 进程的创建</h4><h5 id="2-3-2-1-进程图（Process-Graph）"><a href="#2-3-2-1-进程图（Process-Graph）" class="headerlink" title="2.3.2.1 进程图（Process  Graph）"></a>2.3.2.1 进程图（Process  Graph）</h5><ul>
+<li>进程图是用于描述一个进程的家族关系的有向树。</li>
+<li>子进程可以继承父进程所拥有的资源。</li>
+<li>当子进程被撤消时，应将其从父进程那里获得的资源归还给父进程。 </li>
+<li>在撤消父进程时，也必须同时撤消其所有的子进程。<br><img src="http://c.hiphotos.baidu.com/image/pic/item/7c1ed21b0ef41bd5cf73b4da5bda81cb39db3dff.jpg" alt="image"></li>
+</ul>
+<h5 id="2-3-2-2-引起创建进程的事件"><a href="#2-3-2-2-引起创建进程的事件" class="headerlink" title="2.3.2.2 引起创建进程的事件"></a>2.3.2.2 引起创建进程的事件</h5><ul>
+<li><p>导致一个进程去创建另一个进程的典型事件，可有以下四类：</p>
+<ul>
+<li>（1）用户登录。分时系统中，用户通过终端登录成功后，系统将为用户建立一个进程。</li>
+<li>（2）作业调度。将作业调入内存后，创建进程。</li>
+<li>（3）提供服务。例如：I/O请求，打印进程等。</li>
+<li>（4）应用请求。基于应用进程的需求，由它自己创建一个新进程，以便使新进程以并发运行方式完成特定任务。</li>
+</ul>
+</li>
+<li><p>调用进程创建原语步骤：</p>
+<ul>
+<li>（1）申请空白PCB。   </li>
+<li>（2）为新进程分配资源。</li>
+<li>（3）初始化进程控制块。<ul>
+<li>① 初始化标识信息。</li>
+<li>② 初始化处理机状态信息。使程序计数器指向程序的入口地址，使栈指针指向栈顶；</li>
+<li>③ 初始化处理机控制信息：进程的状态、优先级。</li>
+</ul>
+</li>
+<li>（4）将新进程插入就绪队列，启动调度。</li>
+</ul>
+</li>
+</ul>
+<h4 id="2-3-3-进程的终止"><a href="#2-3-3-进程的终止" class="headerlink" title="2.3.3 进程的终止"></a>2.3.3 进程的终止</h4><ul>
+<li>（1）正常结束。</li>
+<li><p>（2）异常结束：</p>
+<ul>
+<li>① 越界错误。</li>
+<li>② 保护错。</li>
+<li>③ 非法指令。</li>
+<li>④ 特权指令错。</li>
+<li>⑤ 运行超时。</li>
+<li>⑥ 等待超时。</li>
+<li>⑦ 算术运算错、被0除：</li>
+<li>⑧ I/O故障。</li>
+</ul>
+</li>
+<li><p>（3）外界干预  </p>
 <blockquote>
-<p><strong>并发</strong>是最重要的特征，其它特征都以并发为前提。</p>
-</blockquote>
-<h4 id="1-3-1-并发性"><a href="#1-3-1-并发性" class="headerlink" title="1.3.1 并发性"></a>1.3.1 并发性</h4><ul>
-<li>并行性：是指两个或多个事件在同一时刻发生。</li>
-<li>并发性：是指两个或多个事件在同一时间间隔内发生。<blockquote>
-<p>在多道程序环境下，并发性是指在一段时间内，宏观上有多个程序在同时运行，但在单处理机系统中，每一时刻却仅能有一道程序执行，故微观上这些程序只能是分时地交替执行。 </p>
-</blockquote>
-</li>
-</ul>
-<h4 id="1-3-2-共享"><a href="#1-3-2-共享" class="headerlink" title="1.3.2 共享"></a>1.3.2 共享</h4><blockquote>
-<p>共享：是指系统中的资源可供内存中多个并发执行的进程共同使用。</p>
-</blockquote>
-<h5 id="1-3-2-1-互斥共享"><a href="#1-3-2-1-互斥共享" class="headerlink" title="1.3.2.1 互斥共享"></a>1.3.2.1 互斥共享</h5><ul>
-<li>把在一段时间内只允许一个进程访问的资源，称为临界资源。</li>
-<li>系统中的临界资源可以提供给多个进程使用，但一段时间内仅允许一个进程使用，称为互斥共享方式。</li>
-</ul>
-<h5 id="1-3-2-2-同时访问方式"><a href="#1-3-2-2-同时访问方式" class="headerlink" title="1.3.2.2 同时访问方式"></a>1.3.2.2 同时访问方式</h5><ul>
-<li>一段时间内，多个进程可以同时使用这个资源。</li>
-<li>从微观上看，多个进程交替互斥地使用系统中的某个资源。例如磁盘。</li>
-</ul>
-<h4 id="1-3-3-虚拟性"><a href="#1-3-3-虚拟性" class="headerlink" title="1.3.3 虚拟性"></a>1.3.3 虚拟性</h4><blockquote>
-<p>虚拟：是指通过某种技术把一个物理实体变为（映射为）若干个逻辑上的对应物，用于实现虚拟的技术称为虚拟技术。</p>
+<p>外界干预并非指在本进程运行中出现了异常事件，而是指进程因外界的请求而终止运行。</p>
 </blockquote>
 <ul>
-<li>虚拟处理机技术：分时实现</li>
-<li>虚拟设备技术：<code>SPOOLING</code>技术（第五章）</li>
-<li>虚拟磁盘技术:</li>
-<li>虚拟存储器技术：虚拟存储器（第四章）</li>
+<li>① 操作员或操作系统干预。由于某种原因，例如，发生了死锁，由操作员或操作系统终止该进程；</li>
+<li>② 父进程请求终止该进程；</li>
+<li>③ 当父进程终止时，OS也将他的所有子孙进程终止。</li>
 </ul>
-<h4 id="1-3-4-异步性-（易错）"><a href="#1-3-4-异步性-（易错）" class="headerlink" title="1.3.4 异步性 （易错）"></a>1.3.4 异步性 （易错）</h4><ul>
-<li>执行结果不确定，程序不可再现。</li>
-<li>异步性，多道程序环境下程序（进程）以异步的方式执行，每道程序在何时执行、各自执行的顺序、完成时间都是不确定的，也是不可预知的。</li>
-<li><a href="http://blog.csdn.net/ideality_hunter/article/details/53453285" target="_blank" rel="external">CSDN同步异步解析</a></li>
+</li>
 </ul>
-<h3 id="1-4-操作系统的主要功能"><a href="#1-4-操作系统的主要功能" class="headerlink" title="1.4 操作系统的主要功能"></a>1.4 操作系统的主要功能</h3><ol>
-<li>处理机管理（CPU）</li>
-<li>存储器管理</li>
-<li>设备管理</li>
-<li>文件管理</li>
-<li>操作系统与用户之间的接口 </li>
-</ol>
-<h4 id="1-4-1-处理机管理功能"><a href="#1-4-1-处理机管理功能" class="headerlink" title="1.4.1 处理机管理功能"></a>1.4.1 处理机管理功能</h4><blockquote>
-<p>主要功能 ：创建和撤销进程（或者线程），对诸进程的运行进行协调，实现进程之间的信息交换，以及按照一定的算法把处理机分配给进程。</p>
+<ul>
+<li>（4） 进程的终止过程<ul>
+<li>根据被终止进程的PID找到它的PCB，从中读出该进程的状态。</li>
+<li>若被终止进程正处于执行状态，应立即终止该进程的执行，重新进行调度。</li>
+<li>若该进程还有子孙进程，立即将其所有子孙进程终止。</li>
+<li>将被终止进程所拥有的全部资源，归还给其父进程，或者归还给系统。</li>
+<li>将被终止进程的PCB从所在队列中移出。 </li>
+</ul>
+</li>
+</ul>
+<h4 id="2-3-4-进程的阻塞与唤醒"><a href="#2-3-4-进程的阻塞与唤醒" class="headerlink" title="2.3.4 进程的阻塞与唤醒"></a>2.3.4 进程的阻塞与唤醒</h4><ul>
+<li><p>引起进程阻塞和唤醒的事件</p>
+<ul>
+<li>1）向系统请求共享资源失败。</li>
+<li>2）等待某种操作的完成：如I/O操作时进程进入阻塞状态，I/O完成后，被中断处理程序唤醒。</li>
+<li>3）新数据尚未到达。处理数据的进程A阻塞，输入数据的进程B完成后去唤醒A。 </li>
+<li>4）无新工作可做, 如此时使用<code>sleep（）</code>进入休眠</li>
+</ul>
+</li>
+<li><p>进程阻塞过程</p>
+<ul>
+<li>① 正在执行的进程，当发现上述某事件时，由于无法继续执行，于是进程便通过调用阻塞原语block把自己阻塞；</li>
+<li>② 把进程控制块中的现行状态由“执行”改为阻塞，并将PCB插入阻塞队列；</li>
+<li>③ 转调度程序进行重新调度，将处理机分配给另一就绪进程，并进行切换。</li>
+</ul>
+</li>
+<li><p>进程唤醒过程</p>
+<ul>
+<li>① 当被阻塞进程所期待的事件出现时，则由有关进程（比如，用完并释放了该I/O设备的进程）调用唤醒原语<code>wakeup()</code>，将等待该事件的进程唤醒。</li>
+<li>② 唤醒原语执行的过程是：首先把被阻塞的进程从等待该事件的阻塞队列中移出，将其PCB中的现行状态由阻塞改为就绪，然后再将该PCB插入到就绪队列中。</li>
+</ul>
+</li>
+</ul>
+<h4 id="2-3-5-进程的挂起和激活"><a href="#2-3-5-进程的挂起和激活" class="headerlink" title="2.3.5 进程的挂起和激活"></a>2.3.5 进程的挂起和激活</h4><ul>
+<li>进程的挂起：当出现了引起进程挂起的事件时（比如，用户进程请求将自己挂起，或父进程请求将自己的某个子进程挂起），系统将利用挂起原语<code>suspend()</code>将指定进程挂起或处于阻塞状态的进程挂起。</li>
+<li><p>进程挂起的过程：</p>
+<ul>
+<li>挂起原语的执行过程是：<ul>
+<li>1、首先检查被挂起进程的状态，若处于活动就绪状态，便将其改为静止就绪；对于活动阻塞状态的进程，则将之改为静止阻塞；</li>
+<li>2、然后将被挂起进程的PCB复制到指定的内存区域。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>进程的激活过程</p>
+<ul>
+<li>① 当发生激活进程的事件时，例如，父进程或用户进程请求激活指定进程，系统将利用激活原语<code>active()</code>将指定进程激活。</li>
+<li>② 系统利用激活原语<code>active()</code>将指定进程激活：<br>  激活原语检查该进程的现行状态，若是静止就绪，便将之改为活动就绪；<br>  若为静止阻塞，便将之改为活动阻塞。</li>
+</ul>
+</li>
+<li><p>进程控制原语可能引起的调度</p>
+<blockquote>
+<p>时机：假如采用的是抢占调度策略，则每当有新进程进入就绪队列时，都应检查是否要进行重新调度。<br>  创建、终止（自己）、挂起（自己）、激活、阻塞、唤醒都可能会产生新的调度。</p>
 </blockquote>
-<h5 id="1-4-1-1-进程控制"><a href="#1-4-1-1-进程控制" class="headerlink" title="1.4.1.1 进程控制"></a>1.4.1.1 进程控制</h5><p>进程控制的主要功能：是为作业创建进程、撤消已结束的进程，以及控制进程在运行过程中的状态转换。</p>
-<h5 id="1-4-1-2-进程同步和互斥"><a href="#1-4-1-2-进程同步和互斥" class="headerlink" title="1.4.1.2 进程同步和互斥"></a>1.4.1.2 进程同步和互斥</h5><blockquote>
-<p>进程同步的主要任务是为多个进程的运行进行协调。</p>
-</blockquote>
-<h6 id="1-4-1-2-1-进程互斥方式"><a href="#1-4-1-2-1-进程互斥方式" class="headerlink" title="1.4.1.2.1 进程互斥方式"></a>1.4.1.2.1 进程互斥方式</h6><ul>
-<li>这是指诸进程（线程）在对临界资源进行访问时，应采用互斥方式</li>
+</li>
 </ul>
-<h6 id="1-4-1-2-2-进程同步方式"><a href="#1-4-1-2-2-进程同步方式" class="headerlink" title="1.4.1.2.2 进程同步方式"></a>1.4.1.2.2 进程同步方式</h6><ul>
-<li>指进程相互合作去完成共同的任务时，诸进程之间的协调。</li>
-</ul>
-<h5 id="1-4-1-3进程通信"><a href="#1-4-1-3进程通信" class="headerlink" title="1.4.1.3进程通信"></a>1.4.1.3进程通信</h5><blockquote>
-<p>进程通信——是进程之间的信息交换。</p>
+<h3 id="2-4-进程的同步"><a href="#2-4-进程的同步" class="headerlink" title="2.4 进程的同步"></a>2.4 进程的同步</h3><h4 id="2-4-1-进程的同步的基本概念"><a href="#2-4-1-进程的同步的基本概念" class="headerlink" title="2.4.1 进程的同步的基本概念"></a>2.4.1 进程的同步的基本概念</h4><blockquote>
+<p>进程同步机制的主要任务，是对多个相关进程在执行次序上进行协调，使并发执行的诸进程之间能按照一定的规则（或时序）共享系统资源，并能很好的相互合作，从而使程序的执行具有可再现性。</p>
 </blockquote>
 <ul>
-<li>通信方式：消息队列、管道、套接字等。</li>
+<li>间接相互制约关系  并发执行的进程在使用共享资源时的关系，资源的互斥。</li>
+<li>直接相互制约关系 多个进程为完成同一项任务而相互合作的关系。</li>
 </ul>
-<h5 id="1-4-1-4-调度"><a href="#1-4-1-4-调度" class="headerlink" title="1.4.1.4 调度"></a>1.4.1.4 调度</h5><ul>
-<li>作业调度<code>(高级调度)</code>：从后备队列中按照一定的算法选择出若干个作业，为他们分配资源，调入内存，建立进程，插入就绪队列中。</li>
-<li>进程调度<code>(低级调度)</code>：是从进程的就绪队列中按照一定的算法选择一个新进程，把处理机分配给它，使进程投入执行。</li>
-</ul>
-<h4 id="1-4-2-存储器管理功能"><a href="#1-4-2-存储器管理功能" class="headerlink" title="1.4.2 存储器管理功能"></a>1.4.2 存储器管理功能</h4><blockquote>
-<p>主要任务：为多道程序的运行提供良好的环境，方便用户使用存储器，提高存储器的利用率以及能从逻辑上扩充内存。</p>
-</blockquote>
-<ul>
-<li>内存分配</li>
-<li>内存保护</li>
-<li>地址映射</li>
-<li>内存扩充</li>
-</ul>
-<h5 id="1-4-2-1-内存分配"><a href="#1-4-2-1-内存分配" class="headerlink" title="1.4.2.1 内存分配"></a>1.4.2.1 内存分配</h5><h6 id="1-4-2-1-1-静态分配方式"><a href="#1-4-2-1-1-静态分配方式" class="headerlink" title="1.4.2.1.1 静态分配方式"></a>1.4.2.1.1 静态分配方式</h6><ul>
-<li>每个作业运行之前分配好内存空间，在作业的整个运行期间不再改变。<h6 id="1-4-2-1-2-动态分配方式"><a href="#1-4-2-1-2-动态分配方式" class="headerlink" title="1.4.2.1.2 动态分配方式"></a>1.4.2.1.2 动态分配方式</h6></li>
-<li>每个作业在运行前或运行中，均可申请新的附加内存空间，以适应程序和数据的动态增涨。  </li>
-</ul>
-<h5 id="1-4-2-2-内存保护"><a href="#1-4-2-2-内存保护" class="headerlink" title="1.4.2.2 内存保护"></a>1.4.2.2 内存保护</h5><ul>
-<li>确保每道用户程序都只在自己的内存空间内运行，彼此互不干扰。</li>
-<li>绝不允许用户程序访问操作系统的程序和数据，也不允许用户程序转移到非共享的其它用户程序中去执行。</li>
-</ul>
-<h5 id="1-4-2-3-地址映射"><a href="#1-4-2-3-地址映射" class="headerlink" title="1.4.2.3 地址映射"></a>1.4.2.3 地址映射</h5><ul>
-<li>地址空间：目标程序或装入程序限定的空间，称为“地址空间”。单元的编号称为逻辑地址，又称为相对地址。</li>
-<li>内存空间： 由内存中的一系列单元所限定的地址范围称为“内存空间”，其中的地址称为“物理地址”</li>
-<li>地址映射：运行时，将地址空间中的逻辑地址转换为内存空间中与之对应的物理地址，称为地址映射 。</li>
-</ul>
-<h5 id="1-4-2-4-内存扩充"><a href="#1-4-2-4-内存扩充" class="headerlink" title="1.4.2.4 内存扩充"></a>1.4.2.4 内存扩充</h5><blockquote>
-<p>借助于虚拟存储技术:从逻辑上去扩充内存容量，使用户所感觉到的内存容量比实际内存容量大得多。 </p>
-</blockquote>
-<ul>
-<li>请求调入功能；</li>
-<li>置换功能；</li>
-</ul>
-<h5 id="1-4-3-设备管理功能"><a href="#1-4-3-设备管理功能" class="headerlink" title="1.4.3 设备管理功能"></a>1.4.3 设备管理功能</h5><p>设备管理的主要任务：</p>
-<ul>
-<li>完成用户进程提出的I/O请求；</li>
-<li>为用户进程分配其所需的I/O设备；</li>
-<li>提高CPU和I/O设备的利用率；</li>
-<li>提高I/O速度；</li>
-<li>方便用户使用I/O设备。</li>
-</ul>
-<p>设备管理具有的功能：</p>
-<ul>
-<li>缓冲管理：有效地缓和CPU和I/O设备速度不匹配的矛盾 ，提高CPU的利用率。</li>
-<li>设备分配：根据I/O请求，分配其所需的设备。</li>
-<li>设备处理：设备处理程序又称为设备驱动程序。</li>
-</ul>
-<h5 id="1-4-4-文件管理功能"><a href="#1-4-4-文件管理功能" class="headerlink" title="1.4.4 文件管理功能"></a>1.4.4 文件管理功能</h5><blockquote>
-<p>对用户文件和系统文件进行管理，以方便用户使用，并保证文件的安全性。</p>
-</blockquote>
-<p>主要功能：</p>
-<ul>
-<li>文件存储空间的管理:对诸多文件及文件的存储空间，实施统一的管理。</li>
-<li>目录管理</li>
-<li>文件的读／写管理和保护</li>
-</ul>
-<h5 id="1-4-5-方便用户使用的用户接口"><a href="#1-4-5-方便用户使用的用户接口" class="headerlink" title="1.4.5 方便用户使用的用户接口"></a>1.4.5 方便用户使用的用户接口</h5><ul>
-<li>计算机用户需要的用户命令  <blockquote>
-<p>由OS实现的所有用户命令所构成的集合常被人们称为OS的<code>Interface(用户接口)</code>；有时也称为命令接口。</p>
-</blockquote>
-</li>
-<li>应用软件需要的System Call(系统调用)  <blockquote>
-<p>由OS实现的所有系统调用所构成的集合被人们称为程序接口或应用编程接口(<code>Application Programming Interface,API</code>)。</p>
-</blockquote>
-</li>
-</ul>
-<h6 id="用户接口"><a href="#用户接口" class="headerlink" title="用户接口"></a>用户接口</h6><ul>
-<li><p>命令接口——用户可通过该接口向作业发出命令以控制作业的运行。</p>
-</li>
-<li><p>程序接口 ——由一组系统调用组成，每一个系统调用都是一个能完成特定功能的子程序，每当应用程序要求OS提供某种服务（功能）时，便调用具有相应功能的系统调用。 </p>
-</li>
-<li><p>图形接口（GUI）<br>图形用户接口采用了图形化的操作界面，用非常容易识别的各种图标（icon）来将系统的各项功能、各种应用程序和文件，直观、逼真地表示出来。用户可用鼠标或通过菜单和对话框，来完成对应用程序和文件的操作。</p>
-</li>
-</ul>
-<h3 id="1-5-操作系统的体系结构"><a href="#1-5-操作系统的体系结构" class="headerlink" title="1.5 操作系统的体系结构"></a>1.5 操作系统的体系结构</h3><ul>
-<li>操作系统是一个大型系统软件，其结构已经历了四代的变革：<ul>
-<li>第一代的OS是无结构的；</li>
-<li>第二代OS采用了模块式结构；</li>
-<li>第三代是层次式结构</li>
-<li>现代OS结构是微内核结构；</li>
-</ul>
-</li>
-</ul>
-<h4 id="1-5-1-无结构操作系统"><a href="#1-5-1-无结构操作系统" class="headerlink" title="1.5.1 无结构操作系统"></a>1.5.1 无结构操作系统</h4><ul>
-<li>在早期开发操作系统时，设计者只是把他的注意力放在功能的实现和获得高的效率上，缺乏首尾一致的设计思想。</li>
-<li>OS是为数众多的一组过程的集合，各过程之间可以相互调用，在操作系统内部不存在任何结构，因此，有人把它称为整体系统结构。</li>
-<li>缺陷：<ul>
-<li>设计出的操作系统既庞大又杂乱，缺乏清晰的程序结构。</li>
-<li>编制出的程序错误很多，给调试工作带来很多困难；增加了维护人员的负担。</li>
-</ul>
-</li>
-</ul>
-<h4 id="1-5-2-模块化OS结构"><a href="#1-5-2-模块化OS结构" class="headerlink" title="1.5.2 模块化OS结构"></a>1.5.2 模块化OS结构</h4><ul>
-<li>使用分块结构的系统包含若干module（模块）；其中，每一块实现一组基本概念以及与其相关的基本属性。</li>
-<li>块与块之间的相互关系：<blockquote>
-<p>所有各块的实现均可以任意引用其它各块所提供的概念及属性。</p>
-</blockquote>
-</li>
-</ul>
-<p><img src="http://e.hiphotos.baidu.com/image/pic/item/f603918fa0ec08fa0d13ec8b53ee3d6d55fbda8f.jpg" alt="image"></p>
-<ul>
-<li>优点：<ul>
-<li>提高了OS设计的正确性、可理解性和可维护性。</li>
-<li>增强了0S的可适应性。</li>
-<li>加速了OS的开发过程。</li>
-</ul>
-</li>
-<li>缺点：<ul>
-<li>对模块的划分及对接口的规定要精确描述很困难</li>
-<li>从功能观点来划分模块时，未能将共享资源和独占资源加以区别；</li>
-</ul>
-</li>
-</ul>
-<h4 id="1-5-3-分层式OS结构"><a href="#1-5-3-分层式OS结构" class="headerlink" title="1.5.3 分层式OS结构"></a>1.5.3 分层式OS结构</h4><blockquote>
-<p>使用分层系统结构包含若干layer（层）；其中，每一层实现一组基本概念以及与其相关的基本属性。</p>
-</blockquote>
-<ul>
-<li>层与层之间的相互关系：<ul>
-<li>所有各层的实现不依赖其以上各层所提供的概念及其属性，只依赖其直接下层所提供的概念及属性；</li>
-<li>每一层均对其上各层隐藏其下各层的存在。<br><img src="http://g.hiphotos.baidu.com/image/pic/item/730e0cf3d7ca7bcb64f93803b4096b63f624a818.jpg" alt="image"></li>
-</ul>
-</li>
-</ul>
-<h4 id="1-5-4-微内核OS结构"><a href="#1-5-4-微内核OS结构" class="headerlink" title="1.5.4 微内核OS结构"></a>1.5.4 微内核OS结构</h4><ul>
-<li>客户/服务器模式(Client-Server Model)<br><img src="http://f.hiphotos.baidu.com/image/pic/item/8435e5dde71190efc3e96cf3c41b9d16fdfa6088.jpg" alt="image"></li>
-<li><p>所谓微内核技术，是指精心设计的、能实现现代OS核心功能的小型内核，它与一般的OS(程序)不同， 它更小更精炼，它不仅运行在核心态，而且开机后常驻内存， 它不会因内存紧张而被换出内存。</p>
-</li>
-<li><p>微内核所提供的功能:<br>操作系统的另一部分是内核，用来处理客户和服务器之间的通信， 即由内核来接收客户的请求，再将该请求送至相应的服务器；同时它也接收服务器的应答， 并将此应答回送给请求客户。 </p>
-</li>
-<li><p>优点：</p>
-<ul>
-<li>提高了系统的可扩展性</li>
-<li>增强了系统的可靠性</li>
-<li>可移植性好   </li>
-<li>提供了对分布式系统的支持</li>
-</ul>
-</li>
-<li>缺点<ul>
-<li>运行效率有所降低：消息传递开销+模式切换开销</li>
-</ul>
-</li>
-</ul>
-
+<h4 id="2-4-2"><a href="#2-4-2" class="headerlink" title="2.4.2"></a>2.4.2</h4>
       
 
       
@@ -639,7 +591,7 @@ var _hmt = _hmt || [];
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="http://s.jiathis.com/qrcode.php?url=https://github.com/zjs1224522500/zjs1224522500.github.io/2017/05/02/操作系统引论/" alt="微信分享二维码">
+      <img src="http://s.jiathis.com/qrcode.php?url=https://github.com/zjs1224522500/zjs1224522500.github.io/2017/06/29/os-two/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -653,18 +605,18 @@ var _hmt = _hmt || [];
   
 <nav id="article-nav">
   
-    <a href="/2017/05/07/Java.String/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2017/10/20/tomcat-one/" id="article-nav-newer" class="article-nav-link-wrap">
       <i class="icon-circle-left"></i>
       <div class="article-nav-title">
         
-          Java.String
+          深入剖析Tomcat读书笔记（一）
         
       </div>
     </a>
   
   
-    <a href="/2017/04/30/Hello,my first blog by hexo/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Hello,my first blog by hexo</div>
+    <a href="/2017/05/07/Java.String/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Java.String</div>
       <i class="icon-circle-right"></i>
     </a>
   
@@ -703,7 +655,7 @@ var _hmt = _hmt || [];
 <script src="//imsun.github.io/gitment/dist/gitment.browser.js"></script>
 <script>
 var gitment = new Gitment({
-  id: "https://github.com/zjs1224522500/zjs1224522500.github.io/2017/05/02/操作系统引论/",
+  id: "https://github.com/zjs1224522500/zjs1224522500.github.io/2017/06/29/os-two/",
   owner: 'zjs1224522500',
   repo: 'https://github.com/zjs1224522500/zjs1224522500.github.io.git',
   oauth: {
