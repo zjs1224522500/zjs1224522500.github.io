@@ -6,17 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://zjs1224522500.github.io/Elvis.github.io">
-  <title>Archives: 2017/4 | Elvis</title>
+  <title>深入剖析Tomcat读书笔记 | Elvis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="电子科技大学软件工程在读，JavaWeb学习ing">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Elvis">
-<meta property="og:url" content="https://zjs1224522500.github.io/Elvis.github.io/archives/2017/04/index.html">
+  <meta name="description" content="前言1、Servlet容器是如何工作的？ 创建一个Request对象，用可能会在Servlet中使用的信息填充该Request对象; 创建一个调用Servlet的response对象，用来向WEB客户端发送响应； 调用Servlet的service()方法,将Request对象和Response对象。   复习Servlet的生命周期 Servlet 通过调用 init () 方法进行初始化。 S">
+<meta name="keywords" content="服务器">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入剖析Tomcat读书笔记">
+<meta property="og:url" content="https://zjs1224522500.github.io/Elvis.github.io/2017/10/20/深入剖析tomcat读书笔记（一）/index.html">
 <meta property="og:site_name" content="Elvis">
-<meta property="og:description" content="电子科技大学软件工程在读，JavaWeb学习ing">
+<meta property="og:description" content="前言1、Servlet容器是如何工作的？ 创建一个Request对象，用可能会在Servlet中使用的信息填充该Request对象; 创建一个调用Servlet的response对象，用来向WEB客户端发送响应； 调用Servlet的service()方法,将Request对象和Response对象。   复习Servlet的生命周期 Servlet 通过调用 init () 方法进行初始化。 S">
+<meta property="og:updated_time" content="2017-10-19T13:32:01.671Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Elvis">
-<meta name="twitter:description" content="电子科技大学软件工程在读，JavaWeb学习ing">
+<meta name="twitter:title" content="深入剖析Tomcat读书笔记">
+<meta name="twitter:description" content="前言1、Servlet容器是如何工作的？ 创建一个Request对象，用可能会在Servlet中使用的信息填充该Request对象; 创建一个调用Servlet的response对象，用来向WEB客户端发送响应； 调用Servlet的service()方法,将Request对象和Response对象。   复习Servlet的生命周期 Servlet 通过调用 init () 方法进行初始化。 S">
   
     <link rel="alternative" href="/atom.xml" title="Elvis" type="application/atom+xml">
   
@@ -142,98 +144,241 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-深入剖析tomcat读书笔记（一）" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2017" class="archive-year">2017</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/04/30/java基本常识/" class="archive-article-date">
-  	<time datetime="2017-04-30T00:55:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-04-30</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/04/30/java基本常识/">Java基本常识</a>
+    <h1 class="article-title" itemprop="name">
+      深入剖析Tomcat读书笔记
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2017/10/20/深入剖析tomcat读书笔记（一）/" class="archive-article-date">
+  	<time datetime="2017-10-19T21:28:52.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-10-19</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><h2 id="1、Servlet容器是如何工作的？"><a href="#1、Servlet容器是如何工作的？" class="headerlink" title="1、Servlet容器是如何工作的？"></a>1、Servlet容器是如何工作的？</h2><ul>
+<li>创建一个<code>Request</code>对象，用可能会在<code>Servlet</code>中使用的信息填充该<code>Request</code>对象;</li>
+<li>创建一个调用<code>Servlet</code>的<code>response</code>对象，用来向WEB客户端发送响应；</li>
+<li>调用<code>Servlet</code>的<code>service()</code>方法,将<code>Request</code>对象和<code>Response</code>对象。</li>
+</ul>
+<blockquote>
+<h3 id="复习Servlet的生命周期"><a href="#复习Servlet的生命周期" class="headerlink" title="复习Servlet的生命周期"></a>复习Servlet的生命周期</h3><ul>
+<li>Servlet 通过调用 <code>init ()</code> 方法进行初始化。</li>
+<li>Servlet 调用 <code>service()</code> 方法来处理客户端的请求。</li>
+<li>Servlet 通过调用 <code>destroy()</code> 方法终止（结束）。</li>
+<li>最后，Servlet 是由 JVM 的垃圾回收器进行垃圾回收的。</li>
+</ul>
+</blockquote>
+<h2 id="2、Catalina"><a href="#2、Catalina" class="headerlink" title="2、Catalina"></a>2、Catalina</h2><ul>
+<li><code>Catalina</code>是一个成熟的软件，设计和开发的十分优雅，功能结构也是模块化的，主要分为以下两个模块：<ul>
+<li><code>连接器</code> :负责将请求和容器相关联，为每个接收到的HTTP请求创建一个<code>request</code>对象和一个<code>response</code>，然后将处理过程交给容器。</li>
+<li><code>容器</code>：从连接器中接受到<code>request</code>和<code>response</code>对象，并调用相应的<code>Servlet</code>的<code>service()</code>方法。</li>
+</ul>
+</li>
+</ul>
+<h1 id="第一章-简单的Web服务器"><a href="#第一章-简单的Web服务器" class="headerlink" title="第一章 简单的Web服务器"></a>第一章 简单的Web服务器</h1><ul>
+<li>通过复习<code>Java套接字编程</code>，搭建一个简单的<code>Web服务器</code>，同时复习了计算机网络的相关知识以及<code>JavaIO</code>中的<code>输入输出流</code>相关操作。</li>
+</ul>
+<h2 id="WEB服务器的工作原理"><a href="#WEB服务器的工作原理" class="headerlink" title="WEB服务器的工作原理"></a>WEB服务器的工作原理</h2><ul>
+<li>服务器利用相应的<code>服务器套接字(ServerSocket)</code>（又称<code>连接套接字,欢迎套接字(WelcomeSocket)</code>）对相应的IP地址和端口进行监听，等待客户端发送相关连接请求;</li>
+<li><code>客户端的套接字(ClientSocket)</code>提出连接请求，要连接的目标是<code>ServerSocket</code>。为此，<code>CllientSocket</code>必须首先描述它要连接的服务器的套接字，指出服务器端套接字的地址<code>Host</code>和端口号<code>port</code>，然后就向<code>服务器端套接字</code>提出连接请求;</li>
+<li>当<code>服务器端套接字(ServerSocket)</code>监听到或者说接收到<code>客户端套接字(ClientSocket)</code>的连接请求时，就响应<code>客户端套接字</code>的请求，建立一个新的线程，把<code>服务器端套接字</code>的描述发 给客户端，一旦客户端确认了此描述，双方就正式建立连接。而<code>服务器端套接字</code>继续处于监听状态，继续接收其他<code>客户端套接字</code>的连接请求;<code>服务器端套接字(ServerSocket)</code>在收到请求时会调用<code>accept()</code>方法为客户端创建一个新的套接字<code>连接套接字（connection socket）</code>，实质上和客户端建立连接之后进行通信的是<code>连接套接字</code></li>
+</ul>
+<h2 id="在编写过程中遇到的问题：-待解决"><a href="#在编写过程中遇到的问题：-待解决" class="headerlink" title="在编写过程中遇到的问题：(待解决)"></a>在编写过程中遇到的问题：(待解决)</h2><h3 id="编写代码时抛出异常："><a href="#编写代码时抛出异常：" class="headerlink" title="编写代码时抛出异常："></a>编写代码时抛出异常：</h3><blockquote>
+<p>java.net.SocketException: Software caused connection abort: socket write error.</p>
+</blockquote>
+<ul>
+<li>通过debug初步分析的结果是在浏览器生成发送给客户端响应时的输出流的<code>write()</code>函数出现了问题,查阅资料显示为<strong>在write()时输出流被提前关闭</strong></li>
+</ul>
+<h3 id="测试过程中存在的问题："><a href="#测试过程中存在的问题：" class="headerlink" title="测试过程中存在的问题："></a>测试过程中存在的问题：</h3><blockquote>
+<p>IE浏览器测试成功，谷歌浏览器测试失败.</p>
+</blockquote>
+<h1 id="第二章-一个简单的Servlet容器"><a href="#第二章-一个简单的Servlet容器" class="headerlink" title="第二章 一个简单的Servlet容器"></a>第二章 一个简单的Servlet容器</h1><h2 id="Servlet容器的搭建"><a href="#Servlet容器的搭建" class="headerlink" title="Servlet容器的搭建"></a>Servlet容器的搭建</h2><ul>
+<li><p>基于第一章WEB服务器的搭建，（第一章的WEB服务器只能访问服务器端的静态资源），在能访问静态资源<code>static resources</code>的基础之上，能够处理<code>Servlet</code>对应的相关请求并调用<code>Servlet</code>对应的类的方法。</p>
+</li>
+<li><p><strong>采用类加载器加载URI中对应的Servlet类名对应的类 + newInstance() 实例化的方法来实例化Servlet类</strong></p>
+</li>
+</ul>
+<h3 id="new关键字-和-newInstance实例化的区别"><a href="#new关键字-和-newInstance实例化的区别" class="headerlink" title="new关键字 和 newInstance实例化的区别"></a>new关键字 和 newInstance实例化的区别</h3><blockquote>
+<p><strong>new关键字 和 newInstance实例化的区别</strong></p>
+<ul>
+<li>创建对象的方式不一样，前者是创建一个新对象,后者是使用类加载机制.</li>
+<li>new创建一个类的时候，这个类可以没有被加载。但是使用newInstance()方法的时候，就必须保证：<ul>
+<li>1、这个类已经加载；</li>
+<li>2、这个类已经连接了。</li>
+</ul>
+</li>
+<li>newInstance: 弱类型。低效率。只能调用无参构造。<br>new: 强类型。相对高效。能调用任何public构造。</li>
+</ul>
+<hr>
+<p><a href="http://blog.csdn.net/gudu1289/article/details/46638495" target="_blank" rel="external"><strong>参考博客：newInstance() 和 new 有什么区别?</strong></a></p>
+</blockquote>
+<h3 id="ServletServerTwo相比ServletSeverOne"><a href="#ServletServerTwo相比ServletSeverOne" class="headerlink" title="ServletServerTwo相比ServletSeverOne"></a>ServletServerTwo相比ServletSeverOne</h3><ul>
+<li><strong>使用了外观模式Facade（结构型）</strong><h4 id="外观模式"><a href="#外观模式" class="headerlink" title="外观模式"></a>外观模式</h4><blockquote>
+<ul>
+<li>概述：我们通过外观的包装，使应用程序只能看到外观对象，而不会看到具体的细节对象，这样无疑会降低应用程序的复杂度，并且提高了程序的可维护性。</li>
+<li>为子系统中的一组接口提供一个一致的界面， Facade模式定义了一个高层接口，这个接口使得这一子系统更加容易使用。引入外观角色之后，用户只需要直接与外观角色交互，用户与子系统之间的复杂关系由外观角色来实现，从而降低了系统的耦合度</li>
+</ul>
+</blockquote>
+</li>
+</ul>
+<hr>
+<blockquote>
+<p><a href="http://blog.csdn.net/hguisu/article/details/7533759" target="_blank" rel="external">参考博客：设计模式（九）外观模式Facade（结构型）</a></p>
+</blockquote>
+<p><a href="https://github.com/zjs1224522500/demo" target="_blank" rel="external"><strong>简单web服务器对应的源码demo的Github地址</strong></a></p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://a.hiphotos.baidu.com/image/pic/item/314e251f95cad1c86f392e46753e6709c83d51d5.jpg">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://f.hiphotos.baidu.com/image/pic/item/caef76094b36acafab0e449d76d98d1000e99ce1.jpg">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">JavaSE</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">服务器</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="http://s.jiathis.com/qrcode.php?url=https://zjs1224522500.github.io/Elvis.github.io/2017/10/20/深入剖析tomcat读书笔记（一）/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/04/30/Hello,my first blog by hexo/" class="archive-article-date">
-  	<time datetime="2017-04-30T00:55:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-04-30</time>
-</a>
-        </div>
-    	 
+<nav id="article-nav">
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/04/30/Hello,my first blog by hexo/">Hello,my first blog by hexo</a>
-    </h1>
+  
+    <a href="/2017/06/29/进程的描述与控制/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">进程的描述与控制</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+
+
+
+  
+  
+  
+  <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+<script>
+  var cloudTieConfig = {
+    url: "https://zjs1224522500.github.io/Elvis.github.io/2017/10/20/深入剖析tomcat读书笔记（一）/", 
+    sourceId: "深入剖析tomcat读书笔记（一）",
+    productKey: "true",
+    target: "cloud-tie-wrapper"
+  };
+</script>
+<script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">JavaSE</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
   
 
-    
+  
 
 
           </div>
@@ -256,8 +401,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
