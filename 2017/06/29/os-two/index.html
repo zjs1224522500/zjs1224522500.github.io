@@ -15,19 +15,19 @@
 <meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/06/29/os-two/index.html">
 <meta property="og:site_name" content="Elvis">
 <meta property="og:description" content="第二章 进程的描述与控制 2.1 程序执行2.1.1 程序顺序执行 特征： 顺序性：处理机的操作严格按照程序所规定的顺序执行。 封闭性：程序运行时独占全机资源，程序一旦开始执行，其执行结果不受外界因素影响。 可再现性：只要程序执行时的环境和初始条件相同，都将获得相同的结果。（不论它是从头到尾不停顿地执行，还是“停停走走”地执行）    2.1.2 程序并发执行 特征： 间断性：程序并发执行是，由于">
-<meta property="og:image" content="http://h.hiphotos.baidu.com/image/pic/item/9d82d158ccbf6c81272de0c4b63eb13533fa4080.jpg">
-<meta property="og:image" content="http://h.hiphotos.baidu.com/image/pic/item/21a4462309f790520fbaee1306f3d7ca7bcbd572.jpg">
-<meta property="og:image" content="http://f.hiphotos.baidu.com/image/pic/item/8601a18b87d6277ff333981522381f30e924fcfe.jpg">
-<meta property="og:image" content="http://b.hiphotos.baidu.com/image/pic/item/aa18972bd40735fadfb7e49494510fb30f240853.jpg">
-<meta property="og:image" content="http://b.hiphotos.baidu.com/image/pic/item/0b7b02087bf40ad1dbef93cd5d2c11dfa9ecce91.jpg">
-<meta property="og:image" content="http://c.hiphotos.baidu.com/image/pic/item/6d81800a19d8bc3ef3d952e4888ba61ea9d345ce.jpg">
-<meta property="og:image" content="http://f.hiphotos.baidu.com/image/pic/item/d833c895d143ad4bac4a16ee88025aafa40f06b3.jpg">
-<meta property="og:image" content="http://c.hiphotos.baidu.com/image/pic/item/7c1ed21b0ef41bd5cf73b4da5bda81cb39db3dff.jpg">
-<meta property="og:updated_time" content="2017-10-19T16:56:56.398Z">
+<meta property="og:image" content="http://oxp7d1tae.bkt.clouddn.com/7.jpg">
+<meta property="og:image" content="http://oxp7d1tae.bkt.clouddn.com/8.jpg">
+<meta property="og:image" content="http://oxp7d1tae.bkt.clouddn.com/9.jpg">
+<meta property="og:image" content="http://oxp7d1tae.bkt.clouddn.com/10.jpg">
+<meta property="og:image" content="http://oxp7d1tae.bkt.clouddn.com/11.jpg">
+<meta property="og:image" content="http://oxp7d1tae.bkt.clouddn.com/12.jpg">
+<meta property="og:image" content="http://oxp7d1tae.bkt.clouddn.com/13.jpg">
+<meta property="og:image" content="http://oxp7d1tae.bkt.clouddn.com/14.jpg">
+<meta property="og:updated_time" content="2017-10-20T08:22:44.020Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="进程的描述与控制">
 <meta name="twitter:description" content="第二章 进程的描述与控制 2.1 程序执行2.1.1 程序顺序执行 特征： 顺序性：处理机的操作严格按照程序所规定的顺序执行。 封闭性：程序运行时独占全机资源，程序一旦开始执行，其执行结果不受外界因素影响。 可再现性：只要程序执行时的环境和初始条件相同，都将获得相同的结果。（不论它是从头到尾不停顿地执行，还是“停停走走”地执行）    2.1.2 程序并发执行 特征： 间断性：程序并发执行是，由于">
-<meta name="twitter:image" content="http://h.hiphotos.baidu.com/image/pic/item/9d82d158ccbf6c81272de0c4b63eb13533fa4080.jpg">
+<meta name="twitter:image" content="http://oxp7d1tae.bkt.clouddn.com/7.jpg">
   
     <link rel="alternative" href="/atom.xml" title="Elvis" type="application/atom+xml">
   
@@ -207,6 +207,7 @@ var _hmt = _hmt || [];
 </li>
 </ul>
 <hr>
+<a id="more"></a>
 <h3 id="2-2-进程的描述"><a href="#2-2-进程的描述" class="headerlink" title="2.2 进程的描述"></a>2.2 进程的描述</h3><h4 id="2-2-1-进程的定义和特征"><a href="#2-2-1-进程的定义和特征" class="headerlink" title="2.2.1 进程的定义和特征"></a>2.2.1 进程的定义和特征</h4><h5 id="2-2-1-1-典型的进程定义有："><a href="#2-2-1-1-典型的进程定义有：" class="headerlink" title="2.2.1.1 典型的进程定义有："></a>2.2.1.1 典型的进程定义有：</h5><ul>
 <li><blockquote>
 <p>进程是程序的一次执行。</p>
@@ -221,7 +222,6 @@ var _hmt = _hmt || [];
 </blockquote>
 </li>
 </ul>
-<a id="more"></a>
 <h5 id="2-2-1-2-进程的结构"><a href="#2-2-1-2-进程的结构" class="headerlink" title="2.2.1.2 进程的结构"></a>2.2.1.2 进程的结构</h5><ul>
 <li>为使程序（含数据）能独立运行，应为之配置一进程控制块，即<code>PCB（程序控制块）</code></li>
 <li>由程序段、相关的数据段和PCB三部分便构成了<strong>进程实体</strong>（又称<strong>进程映像</strong>）。</li>
@@ -256,7 +256,7 @@ var _hmt = _hmt || [];
 <li><code>阻塞（Block）</code>状态：正在执行的进程由于发生某事件而暂时无法继续执行时，便放弃处理机而处于暂停状态，把这种暂停状态称为阻塞状态，有时也称为等待状态。根据阻塞原因，系统中设置多个阻塞队列。</li>
 </ul>
 </li>
-<li><p>三种基本状态的转换<br><img src="http://h.hiphotos.baidu.com/image/pic/item/9d82d158ccbf6c81272de0c4b63eb13533fa4080.jpg" alt="image"></p>
+<li><p>三种基本状态的转换<br><img src="http://oxp7d1tae.bkt.clouddn.com/7.jpg" alt="image"></p>
 <ul>
 <li>进程状态转换过程既有主动原因，也有被动原因</li>
 </ul>
@@ -290,9 +290,9 @@ var _hmt = _hmt || [];
 </li>
 </ul>
 </li>
-<li><p>进程挂起状态的转换<br><img src="http://h.hiphotos.baidu.com/image/pic/item/21a4462309f790520fbaee1306f3d7ca7bcbd572.jpg" alt="image"></p>
+<li><p>进程挂起状态的转换<br><img src="http://oxp7d1tae.bkt.clouddn.com/8.jpg" alt="image"></p>
 </li>
-<li><p>有挂起状态的进程转换<br><img src="http://f.hiphotos.baidu.com/image/pic/item/8601a18b87d6277ff333981522381f30e924fcfe.jpg" alt="image"><br><img src="http://b.hiphotos.baidu.com/image/pic/item/aa18972bd40735fadfb7e49494510fb30f240853.jpg" alt="image"></p>
+<li><p>有挂起状态的进程转换<br><img src="http://oxp7d1tae.bkt.clouddn.com/9.jpg" alt="image"><br><img src="http://oxp7d1tae.bkt.clouddn.com/10.jpg" alt="image"></p>
 </li>
 <li><p>挂起状态的思考</p>
 <ul>
@@ -356,9 +356,9 @@ var _hmt = _hmt || [];
 </li>
 </ol>
 <h5 id="2-2-4-3-进程控制块的组织方式"><a href="#2-2-4-3-进程控制块的组织方式" class="headerlink" title="2.2.4.3 进程控制块的组织方式"></a>2.2.4.3 进程控制块的组织方式</h5><ul>
-<li>链接方式：把具有同一状态的PCB，用其中的链接字链接成一个队列。<br><img src="http://b.hiphotos.baidu.com/image/pic/item/0b7b02087bf40ad1dbef93cd5d2c11dfa9ecce91.jpg" alt="image"></li>
-<li>索引方式：相同状态进程的PCB组织在一张表格中，系统根据所有进程的状态建立几张索引表，系统分别记载各PCB表格的起始地址。<br><img src="http://c.hiphotos.baidu.com/image/pic/item/6d81800a19d8bc3ef3d952e4888ba61ea9d345ce.jpg" alt="image"> </li>
-<li>多级队列：按照进程状态不同分别组织PCB队列，同一状态进程PCB按照优先级高低（或者到达的先后顺序）用链接指针连接起来。<br><img src="http://f.hiphotos.baidu.com/image/pic/item/d833c895d143ad4bac4a16ee88025aafa40f06b3.jpg" alt="image"></li>
+<li>链接方式：把具有同一状态的PCB，用其中的链接字链接成一个队列。<br><img src="http://oxp7d1tae.bkt.clouddn.com/11.jpg" alt="image"></li>
+<li>索引方式：相同状态进程的PCB组织在一张表格中，系统根据所有进程的状态建立几张索引表，系统分别记载各PCB表格的起始地址。<br><img src="http://oxp7d1tae.bkt.clouddn.com/12.jpg" alt="image"> </li>
+<li>多级队列：按照进程状态不同分别组织PCB队列，同一状态进程PCB按照优先级高低（或者到达的先后顺序）用链接指针连接起来。<br><img src="http://oxp7d1tae.bkt.clouddn.com/13.jpg" alt="image"></li>
 </ul>
 <h3 id="2-3-进程控制"><a href="#2-3-进程控制" class="headerlink" title="2.3 进程控制"></a>2.3 进程控制</h3><ul>
 <li>进程控制：<ul>
@@ -378,7 +378,7 @@ var _hmt = _hmt || [];
 <li>进程图是用于描述一个进程的家族关系的有向树。</li>
 <li>子进程可以继承父进程所拥有的资源。</li>
 <li>当子进程被撤消时，应将其从父进程那里获得的资源归还给父进程。 </li>
-<li>在撤消父进程时，也必须同时撤消其所有的子进程。<br><img src="http://c.hiphotos.baidu.com/image/pic/item/7c1ed21b0ef41bd5cf73b4da5bda81cb39db3dff.jpg" alt="image"></li>
+<li>在撤消父进程时，也必须同时撤消其所有的子进程。<br><img src="http://oxp7d1tae.bkt.clouddn.com/14.jpg" alt="image"></li>
 </ul>
 <h5 id="2-3-2-2-引起创建进程的事件"><a href="#2-3-2-2-引起创建进程的事件" class="headerlink" title="2.3.2.2 引起创建进程的事件"></a>2.3.2.2 引起创建进程的事件</h5><ul>
 <li><p>导致一个进程去创建另一个进程的典型事件，可有以下四类：</p>
@@ -754,11 +754,11 @@ getOwnMetadataKeys:function(t){return o(i(t),arguments.length<2?void 0:u(argumen
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">随笔</a>
+                <a href="javascript:void(0)" class="js-tag color3">OS</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">OS</a>
+                <a href="javascript:void(0)" class="js-tag color3">随笔</a>
               </li>
              
               <li class="article-tag-list-item">
