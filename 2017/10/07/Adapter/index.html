@@ -6,17 +6,21 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://github.com/zjs1224522500/zjs1224522500.github.io">
-  <title>Tag: OS | Elvis</title>
+  <title>适配器模式 | Elvis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="电子科技大学软件工程在读，JavaWeb学习ing">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Elvis">
-<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/tags/OS/index.html">
+  <meta name="description" content="适配器模式 将一个类的接口转换成客户希望的另一个接口。适配器模式使得原本由于接口不兼容而不能一起工作的那些类可以一起工作。 OO设计原则：  面向接口编程 封装变化 多用组合少用继承 对修改关闭，对扩展开放">
+<meta name="keywords" content="设计模式">
+<meta property="og:type" content="article">
+<meta property="og:title" content="适配器模式">
+<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/07/Adapter/index.html">
 <meta property="og:site_name" content="Elvis">
-<meta property="og:description" content="电子科技大学软件工程在读，JavaWeb学习ing">
+<meta property="og:description" content="适配器模式 将一个类的接口转换成客户希望的另一个接口。适配器模式使得原本由于接口不兼容而不能一起工作的那些类可以一起工作。 OO设计原则：  面向接口编程 封装变化 多用组合少用继承 对修改关闭，对扩展开放">
+<meta property="og:image" content="http://oxp7d1tae.bkt.clouddn.com/%E9%80%82%E9%85%8D%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F.png?e=1507795609&token=ZXDhxYzNG4wTZtYl8hbtBHRR-jjSKurOSb6w2aOU:JF_g64CfcHaOEF0Qcsh0PCBTQfw">
+<meta property="og:updated_time" content="2017-10-29T10:20:55.925Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Elvis">
-<meta name="twitter:description" content="电子科技大学软件工程在读，JavaWeb学习ing">
+<meta name="twitter:title" content="适配器模式">
+<meta name="twitter:description" content="适配器模式 将一个类的接口转换成客户希望的另一个接口。适配器模式使得原本由于接口不兼容而不能一起工作的那些类可以一起工作。 OO设计原则：  面向接口编程 封装变化 多用组合少用继承 对修改关闭，对扩展开放">
+<meta name="twitter:image" content="http://oxp7d1tae.bkt.clouddn.com/%E9%80%82%E9%85%8D%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F.png?e=1507795609&token=ZXDhxYzNG4wTZtYl8hbtBHRR-jjSKurOSb6w2aOU:JF_g64CfcHaOEF0Qcsh0PCBTQfw">
   
     <link rel="alternative" href="/atom.xml" title="Elvis" type="application/atom+xml">
   
@@ -170,98 +174,214 @@ var _hmt = _hmt || [];
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-Adapter" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2017" class="archive-year">2017</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/06/29/os-two/" class="archive-article-date">
-  	<time datetime="2017-06-28T17:28:18.442Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-06-28</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/06/29/os-two/">进程的描述与控制</a>
+    <h1 class="article-title" itemprop="name">
+      适配器模式
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2017/10/07/Adapter/" class="archive-article-date">
+  	<time datetime="2017-10-06T20:32:20.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-10-06</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="适配器模式"><a href="#适配器模式" class="headerlink" title="适配器模式"></a>适配器模式</h2><blockquote>
+<p>将一个类的接口转换成客户希望的另一个接口。适配器模式使得原本由于接口不兼容而不能一起工作的那些类可以一起工作。</p>
+<p>OO设计原则：</p>
+<ul>
+<li>面向接口编程</li>
+<li>封装变化</li>
+<li>多用组合少用继承</li>
+<li>对修改关闭，对扩展开放</li>
+</ul>
+</blockquote>
+<a id="more"></a>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AdapterDemo</span> </span>&#123;</div><div class="line">	</div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line">		PowerA powerA = <span class="keyword">new</span> PowerAImplA();</div><div class="line">		startA(powerA);</div><div class="line">		</div><div class="line">		</div><div class="line">		PowerB powerB = <span class="keyword">new</span> PowerBImpl();</div><div class="line">		<span class="comment">//startA(powerB); 报错</span></div><div class="line">		<span class="comment">//由于 startA 的参数为 PowerA 类型,此时需要适配</span></div><div class="line">		</div><div class="line">		PowerAAdapter pAAdapter = <span class="keyword">new</span> PowerAAdapter(powerB);</div><div class="line">		startA(pAAdapter);</div><div class="line">		</div><div class="line">	&#125;</div><div class="line">	</div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">startA</span><span class="params">(PowerA powerA)</span></span>&#123;</div><div class="line">		<span class="comment">// ......</span></div><div class="line">		powerA.insert();</div><div class="line">		<span class="comment">// ......</span></div><div class="line">	&#125;</div><div class="line">	</div><div class="line"></div><div class="line">    <span class="comment">//与startA的内容大部分重复，故仅适用 startA() ，从而需要一个相应的适配器，使得 PowerB 能使用 startA()</span></div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">startB</span><span class="params">(PowerB powerB)</span></span>&#123;</div><div class="line">		<span class="comment">// ......</span></div><div class="line">		powerB.connect();</div><div class="line">		<span class="comment">// ......</span></div><div class="line">	&#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"></div><div class="line"><span class="comment">//适配器Adapter核心代码</span></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">PowerAAdapter</span> <span class="keyword">implements</span> <span class="title">PowerA</span></span>&#123;</div><div class="line">	</div><div class="line">	<span class="keyword">private</span> PowerB powerB;<span class="comment">// 要进行适配的接口</span></div><div class="line">	</div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="title">PowerAAdapter</span><span class="params">(PowerB powerB)</span> </span>&#123;</div><div class="line">		<span class="keyword">this</span>.powerB = powerB;</div><div class="line">	&#125;</div><div class="line"></div><div class="line">	<span class="meta">@Override</span></div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">insert</span><span class="params">()</span> </span>&#123;</div><div class="line">		powerB.connect();</div><div class="line">	&#125;</div><div class="line">	</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">/**</span></div><div class="line"> * 电源A接口</div><div class="line"> */</div><div class="line"><span class="class"><span class="keyword">interface</span> <span class="title">PowerA</span></span>&#123;</div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">insert</span><span class="params">()</span></span>;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">PowerAImplA</span> <span class="keyword">implements</span> <span class="title">PowerA</span></span>&#123;</div><div class="line"></div><div class="line">	<span class="meta">@Override</span></div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">insert</span><span class="params">()</span> </span>&#123;</div><div class="line">		<span class="comment">// TODO Auto-generated method stub</span></div><div class="line">		System.out.println(<span class="string">"电源A接口插入，开始工作。"</span>);</div><div class="line">	&#125;</div><div class="line">	</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">/**</span></div><div class="line"> * 电源B接口</div><div class="line"> */</div><div class="line"><span class="class"><span class="keyword">interface</span> <span class="title">PowerB</span></span>&#123;</div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">connect</span><span class="params">()</span></span>;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">PowerBImpl</span> <span class="keyword">implements</span> <span class="title">PowerB</span></span>&#123;</div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">connect</span><span class="params">()</span></span>&#123;</div><div class="line">		System.out.println(<span class="string">"电源B接口已连接。"</span>);</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><img src="http://oxp7d1tae.bkt.clouddn.com/%E9%80%82%E9%85%8D%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F.png?e=1507795609&amp;token=ZXDhxYzNG4wTZtYl8hbtBHRR-jjSKurOSb6w2aOU:JF_g64CfcHaOEF0Qcsh0PCBTQfw" alt="image"></p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://oxp7d1tae.bkt.clouddn.com/alipay.png">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://oxp7d1tae.bkt.clouddn.com/wechat.png">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">OS</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">设计模式</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="http://s.jiathis.com/qrcode.php?url=https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/07/Adapter/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/05/02/os-one/" class="archive-article-date">
-  	<time datetime="2017-05-01T20:32:20.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-05-01</time>
-</a>
+<nav id="article-nav">
+  
+    <a href="/2017/10/20/tomcat-one/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          深入剖析Tomcat读书笔记（一）
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/06/29/os-two/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">进程的描述与控制</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
+        
+        
+    </div>
+</aside>
+
+
+
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/05/02/os-one/">操作系统引论</a>
-    </h1>
+  
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">OS</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
   
 
-    
+  
+
+  
+  <div id="gitment-ctn"></div> 
+<link rel="stylesheet" href="//imsun.github.io/gitment/style/default.css">
+<script src="//imsun.github.io/gitment/dist/gitment.browser.js"></script>
+<script>
+var gitment = new Gitment({
+  id: "https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/07/Adapter/",
+  owner: 'zjs1224522500',
+  repo: 'zjs1224522500.github.io',
+  oauth: {
+    client_id: 'cccb9b919b08c6e61099',
+    client_secret: 'ab2ce55de1b91e9ed7c6f3e819a32ea0b1ca617b',
+  },
+})
+gitment.render('gitment-ctn')
+</script>
+  
 
 
           </div>
@@ -284,9 +404,9 @@ var _hmt = _hmt || [];
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,

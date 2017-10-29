@@ -6,17 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://github.com/zjs1224522500/zjs1224522500.github.io">
-  <title>Tag: OS | Elvis</title>
+  <title>Docker常用命令 | Elvis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="电子科技大学软件工程在读，JavaWeb学习ing">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Elvis">
-<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/tags/OS/index.html">
+  <meta name="description" content="1、安装与启动、更新 安装Docker : apt-get install -y docker.io 启动Docker : systemctl start docker 运行系统引导时启用 docker: systemctl enable docker 核对Docker版本：docker version 更新Docker：docker-machine upgrade default">
+<meta name="keywords" content="服务器">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Docker常用命令">
+<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/25/Docker-cmd/index.html">
 <meta property="og:site_name" content="Elvis">
-<meta property="og:description" content="电子科技大学软件工程在读，JavaWeb学习ing">
+<meta property="og:description" content="1、安装与启动、更新 安装Docker : apt-get install -y docker.io 启动Docker : systemctl start docker 运行系统引导时启用 docker: systemctl enable docker 核对Docker版本：docker version 更新Docker：docker-machine upgrade default">
+<meta property="og:updated_time" content="2017-10-29T10:24:51.029Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Elvis">
-<meta name="twitter:description" content="电子科技大学软件工程在读，JavaWeb学习ing">
+<meta name="twitter:title" content="Docker常用命令">
+<meta name="twitter:description" content="1、安装与启动、更新 安装Docker : apt-get install -y docker.io 启动Docker : systemctl start docker 运行系统引导时启用 docker: systemctl enable docker 核对Docker版本：docker version 更新Docker：docker-machine upgrade default">
   
     <link rel="alternative" href="/atom.xml" title="Elvis" type="application/atom+xml">
   
@@ -170,98 +172,277 @@ var _hmt = _hmt || [];
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-Docker-cmd" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2017" class="archive-year">2017</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/06/29/os-two/" class="archive-article-date">
-  	<time datetime="2017-06-28T17:28:18.442Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-06-28</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/06/29/os-two/">进程的描述与控制</a>
+    <h1 class="article-title" itemprop="name">
+      Docker常用命令
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2017/10/25/Docker-cmd/" class="archive-article-date">
+  	<time datetime="2017-10-24T20:32:20.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-10-24</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="1、安装与启动、更新"><a href="#1、安装与启动、更新" class="headerlink" title="1、安装与启动、更新"></a>1、安装与启动、更新</h2><ul>
+<li>安装<code>Docker</code> : <code>apt-get install -y docker.io</code></li>
+<li>启动<code>Docker</code> : <code>systemctl start docker</code></li>
+<li>运行系统引导时启用 <code>docker</code>: <code>systemctl enable docker</code></li>
+<li>核对<code>Docker</code>版本：<code>docker version</code></li>
+<li>更新<code>Docker</code>：<code>docker-machine upgrade default</code></li>
+</ul>
+<a id="more"></a>
+<h2 id="2、镜像、容器相关"><a href="#2、镜像、容器相关" class="headerlink" title="2、镜像、容器相关"></a>2、镜像、容器相关</h2><h3 id="镜像-images"><a href="#镜像-images" class="headerlink" title="镜像 images"></a>镜像 images</h3><ul>
+<li><p>查看安装的镜像<strong>image</strong>：<code>docker images</code></p>
+</li>
+<li><p>搜索可用的<strong>Docker</strong>镜像：<code>docker search 镜像名字</code></p>
+</li>
+<li><p>运行镜像：<code>docker run 镜像名称 要执行的命令</code></p>
+<ul>
+<li>指定参数 <code>-d</code> 让容器在后台运行</li>
+<li><code>-P</code> 将容器内部使用的网络端口映射到我们的主机上  </li>
+<li><code>-p</code> 绑定指定端口 <code>-p 5000:5000</code>，<code>-p 127.0.0.1:5001:5002</code></li>
+<li><code>-t</code>:在新容器内指定一个伪终端或终端。</li>
+<li><code>-i</code>:允许你对容器内的标准输入 (STDIN) 进行交互。</li>
+<li><code>--name</code>：为容器命名</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><code>&gt; docker run -p 8080:80 --name nginx_web -it hub.c.163.com/library/nginx</code> </p>
+</blockquote>
+<ul>
+<li><p>从<strong>dockerhub</strong>上<strong>pull</strong>镜像：<code>docker pull 镜像名称</code></p>
+</li>
+<li><p>构建镜像：<code>docker build 镜像名</code></p>
+<blockquote>
+<p><code>docker build -t runoob/centos:6.7 .</code>  </p>
+<ul>
+<li><code>-t</code> ：指定要创建的目标镜像名  </li>
+<li><code>.</code> ：Dockerfile 文件所在目录，可以指定Dockerfile 的绝对路径</li>
+</ul>
+</blockquote>
+</li>
+<li><p>设置镜像标签：<code>docker tag 镜像ID 镜像名：标签</code></p>
+</li>
+<li><p>删除镜像：<code>docker rmi 镜像名称</code></p>
+</li>
+</ul>
+<h3 id="容器-containers"><a href="#容器-containers" class="headerlink" title="容器 containers"></a>容器 containers</h3><ul>
+<li><p>查看运行的容器<strong>container</strong>：<code>docker ps</code></p>
+<ul>
+<li><code>-l</code>:查询最后一次创建的容器</li>
+<li><code>-a</code>:查看所有容器</li>
+</ul>
+</li>
+<li><p>查看容器的详细信息（JSON格式）：<code>docker inspect 容器编号</code></p>
+</li>
+<li><p>提交容器修改：<code>docker commit id 容器</code></p>
+<blockquote>
+<p><code>docker commit -m=&quot;has update&quot; -a=&quot;runoob&quot; e218edb10161 runoob/ubuntu:v2</code><br><strong>-m</strong> 提交的描述信息<br><strong>-a</strong> 指定镜像作者</p>
+</blockquote>
+</li>
+<li><p>停止容器：<code>docker stop 容器名 或 容器ID</code></p>
+</li>
+<li><p>查看指定容器的某个确定端口映射到宿主机的端口号：<code>docker port 容器ID或容器名</code></p>
+</li>
+<li><p>查看指定容器的标准输出：<code>docker logs 容器ID或容器名</code></p>
+</li>
+<li><p>查看容器内部运行的进程：<code>docker top 容器ID或容器名</code></p>
+</li>
+<li><p>删除指定的容器：<code>docker rm 容器名或容器编号</code></p>
+</li>
+<li><p>进入后台容器并提供<code>bash</code>: <code>docker exec -it 容器名 或 容器编号 bash</code></p>
+<ul>
+<li><code>-it</code> 同<code>run</code>命令中的<code>-it</code>一致</li>
+</ul>
+</li>
+<li><p>退出容器: <code>Ctrl + D</code> 或 <code>exit</code></p>
+</li>
+</ul>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://oxp7d1tae.bkt.clouddn.com/alipay.png">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://oxp7d1tae.bkt.clouddn.com/wechat.png">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">OS</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">服务器</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="http://s.jiathis.com/qrcode.php?url=https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/25/Docker-cmd/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/05/02/os-one/" class="archive-article-date">
-  	<time datetime="2017-05-01T20:32:20.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-05-01</time>
-</a>
+<nav id="article-nav">
+  
+    <a href="/2017/10/25/Docker-start/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          Docker入门笔记
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/10/20/tomcat-one/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">深入剖析Tomcat读书笔记（一）</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
+        
+        
+    </div>
+</aside>
+
+
+
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/05/02/os-one/">操作系统引论</a>
-    </h1>
+  
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">OS</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
   
 
-    
+  
+
+  
+  <div id="gitment-ctn"></div> 
+<link rel="stylesheet" href="//imsun.github.io/gitment/style/default.css">
+<script src="//imsun.github.io/gitment/dist/gitment.browser.js"></script>
+<script>
+var gitment = new Gitment({
+  id: "https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/25/Docker-cmd/",
+  owner: 'zjs1224522500',
+  repo: 'zjs1224522500.github.io',
+  oauth: {
+    client_id: 'cccb9b919b08c6e61099',
+    client_secret: 'ab2ce55de1b91e9ed7c6f3e819a32ea0b1ca617b',
+  },
+})
+gitment.render('gitment-ctn')
+</script>
+  
 
 
           </div>
@@ -284,9 +465,9 @@ var _hmt = _hmt || [];
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
