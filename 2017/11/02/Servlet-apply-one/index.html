@@ -6,21 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://github.com/zjs1224522500/zjs1224522500.github.io">
-  <title>验证码Java实现 | Elvis</title>
+  <title>Servlet常用用法（一） | Elvis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="验证码Java实现">
+  <meta name="description" content="1、Servlet编写过滤器(Filter) Servlet 过滤器 可以动态地拦截请求【请求预处理】和响应【响应后处理】，以变换或使用包含在请求或响应中的信息。可以将一个或多个 Servlet 过滤器附加到一个 Servlet 或一组 Servlet。Servlet 过滤器也可以附加到 JavaServer Pages (JSP) 文件和 HTML 页面。调用 Servlet 前调用所有附加的">
 <meta name="keywords" content="JavaWeb">
 <meta property="og:type" content="article">
-<meta property="og:title" content="验证码Java实现">
-<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/30/VerifyCode-Java/index.html">
+<meta property="og:title" content="Servlet常用用法（一）">
+<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/11/02/Servlet-apply-one/index.html">
 <meta property="og:site_name" content="Elvis">
-<meta property="og:description" content="验证码Java实现">
-<meta property="og:image" content="http://oxp7d1tae.bkt.clouddn.com/%E9%AA%8C%E8%AF%81%E7%A0%81.png">
-<meta property="og:updated_time" content="2017-10-29T10:19:10.609Z">
+<meta property="og:description" content="1、Servlet编写过滤器(Filter) Servlet 过滤器 可以动态地拦截请求【请求预处理】和响应【响应后处理】，以变换或使用包含在请求或响应中的信息。可以将一个或多个 Servlet 过滤器附加到一个 Servlet 或一组 Servlet。Servlet 过滤器也可以附加到 JavaServer Pages (JSP) 文件和 HTML 页面。调用 Servlet 前调用所有附加的">
+<meta property="og:updated_time" content="2017-11-01T12:10:31.546Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="验证码Java实现">
-<meta name="twitter:description" content="验证码Java实现">
-<meta name="twitter:image" content="http://oxp7d1tae.bkt.clouddn.com/%E9%AA%8C%E8%AF%81%E7%A0%81.png">
+<meta name="twitter:title" content="Servlet常用用法（一）">
+<meta name="twitter:description" content="1、Servlet编写过滤器(Filter) Servlet 过滤器 可以动态地拦截请求【请求预处理】和响应【响应后处理】，以变换或使用包含在请求或响应中的信息。可以将一个或多个 Servlet 过滤器附加到一个 Servlet 或一组 Servlet。Servlet 过滤器也可以附加到 JavaServer Pages (JSP) 文件和 HTML 页面。调用 Servlet 前调用所有附加的">
   
     <link rel="alternative" href="/atom.xml" title="Elvis" type="application/atom+xml">
   
@@ -174,34 +172,134 @@ var _hmt = _hmt || [];
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-VerifyCode-Java" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-Servlet-apply-one" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      验证码Java实现
+      Servlet常用用法（一）
     </h1>
   
 
         
-        <a href="/2017/10/30/VerifyCode-Java/" class="archive-article-date">
-  	<time datetime="2017-10-29T21:28:52.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-10-29</time>
+        <a href="/2017/11/02/Servlet-apply-one/" class="archive-article-date">
+  	<time datetime="2017-11-01T21:28:52.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-11-01</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="验证码Java实现"><a href="#验证码Java实现" class="headerlink" title="验证码Java实现"></a>验证码Java实现</h1><p><img src="http://oxp7d1tae.bkt.clouddn.com/%E9%AA%8C%E8%AF%81%E7%A0%81.png" alt="image"><br><a id="more"></a></p>
-<h2 id="1、Servlet实现验证码"><a href="#1、Servlet实现验证码" class="headerlink" title="1、Servlet实现验证码"></a>1、<code>Servlet</code>实现验证码</h2><h3 id="实现步骤"><a href="#实现步骤" class="headerlink" title="实现步骤:"></a>实现步骤:</h3><ul>
-<li>1、服务端随机生成验证码：利用<code>java.awt</code>中的相关类，譬如<code>Graphics</code> <strong>（核心）</strong>,<code>BufferedImage</code></li>
-<li>2、利用<code>Servlet</code>进行<code>Client</code>和<code>Server</code>的交互，进行验证码的获取，以及表单的客户端验证码输入和服务端存储的记录进行验证。</li>
+        <h1 id="1、Servlet编写过滤器-Filter"><a href="#1、Servlet编写过滤器-Filter" class="headerlink" title="1、Servlet编写过滤器(Filter)"></a>1、<code>Servlet</code>编写过滤器(<code>Filter</code>)</h1><blockquote>
+<p><strong><code>Servlet</code> 过滤器</strong> 可以动态地拦截请求【<strong>请求预处理</strong>】和响应【<strong>响应后处理</strong>】，以变换或使用包含在请求或响应中的信息。可以将一个或多个 <code>Servlet</code> 过滤器附加到一个 <code>Servlet</code> 或一组 <code>Servlet</code>。<code>Servlet</code> 过滤器也可以附加到 <code>JavaServer Pages (JSP)</code> 文件和 <code>HTML</code> 页面。调用 <code>Servlet</code> 前调用所有附加的 <code>Servlet</code> 过滤器。从而实现一些特殊的功能。</p>
+</blockquote>
+<h4 id="请求预处理："><a href="#请求预处理：" class="headerlink" title="请求预处理："></a>请求预处理：</h4><ul>
+<li>在<code>HttpServletRequest</code>到达 <code>Servlet</code> 之前，拦截客户的<code>HttpServletRequest</code> 。根据需要检查<code>HttpServletRequest</code>，也可以修改<code>HttpServletRequest</code> 头和数据。</li>
 </ul>
-<h3 id="核心代码：（验证码的生成）"><a href="#核心代码：（验证码的生成）" class="headerlink" title="核心代码：（验证码的生成）"></a>核心代码：（验证码的生成）</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ImageServlet</span> <span class="keyword">extends</span> <span class="title">HttpServlet</span> </span>&#123;</div><div class="line"></div><div class="line">	<span class="meta">@Override</span></div><div class="line">	<span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span></span></div><div class="line">			<span class="keyword">throws</span> ServletException, IOException &#123;</div><div class="line">		<span class="comment">//初始化图片类型</span></div><div class="line">		BufferedImage bufferedImage = <span class="keyword">new</span> BufferedImage(<span class="number">68</span>, <span class="number">22</span>, BufferedImage.TYPE_INT_RGB);</div><div class="line">		<span class="comment">//进行制图</span></div><div class="line">		Graphics graphics = bufferedImage.getGraphics();</div><div class="line">		<span class="comment">//RGB设置颜色并填充对应图像坐标像素点</span></div><div class="line">		Color color = <span class="keyword">new</span> Color(<span class="number">200</span>, <span class="number">150</span>, <span class="number">255</span>);</div><div class="line">		graphics.setColor(color);</div><div class="line">		graphics.fillRect(<span class="number">0</span>, <span class="number">0</span>, <span class="number">68</span>, <span class="number">22</span>);</div><div class="line">		<span class="keyword">char</span>[] chars = <span class="string">"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"</span>.toCharArray();</div><div class="line">		Random random = <span class="keyword">new</span> Random();</div><div class="line">		<span class="keyword">int</span> length = chars.length, index;</div><div class="line"></div><div class="line">		<span class="comment">//循环随机生成验证码</span></div><div class="line">		StringBuffer stringBuffer = <span class="keyword">new</span> StringBuffer();</div><div class="line">		<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">4</span>; i++) &#123;</div><div class="line">			index = random.nextInt(length);</div><div class="line">			<span class="comment">//设置验证码的不同颜色并记录验证码</span></div><div class="line">			graphics.setColor(</div><div class="line">					<span class="keyword">new</span> Color(random.nextInt(<span class="number">88</span>), random.nextInt(<span class="number">188</span>), random.nextInt(<span class="number">255</span>)));</div><div class="line">			graphics.drawString(chars[index] + <span class="string">""</span>, (i * <span class="number">15</span>) + <span class="number">3</span>, <span class="number">18</span>);</div><div class="line">			stringBuffer.append(chars[index]);</div><div class="line">		&#125;</div><div class="line">		<span class="comment">//将验证码的记录值存储在session中</span></div><div class="line">		req.getSession().setAttribute(<span class="string">"picCode"</span>, stringBuffer.toString());</div><div class="line">		<span class="comment">//将生成的图片写入Response的输出流中</span></div><div class="line">		ImageIO.write(bufferedImage, <span class="string">"JPG"</span>, resp.getOutputStream());</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<h2 id="2、插件实现验证码："><a href="#2、插件实现验证码：" class="headerlink" title="2、插件实现验证码："></a>2、插件实现验证码：</h2><h2 id="常见验证码组件-Jcaptcha和Kaptcha"><a href="#常见验证码组件-Jcaptcha和Kaptcha" class="headerlink" title="- 常见验证码组件 Jcaptcha和Kaptcha"></a>- 常见验证码组件 <code>Jcaptcha</code>和<code>Kaptcha</code></h2><p>敬请期待 :)</p>
-<h2 id="3、Java图片验证码"><a href="#3、Java图片验证码" class="headerlink" title="3、Java图片验证码"></a>3、Java图片验证码</h2><p>敬请期待 :)</p>
+<h4 id="响应后处理："><a href="#响应后处理：" class="headerlink" title="响应后处理："></a>响应后处理：</h4><ul>
+<li>在<code>HttpServletResponse</code>到达客户端之前，拦截<code>HttpServletResponse</code> 。根据需要检查<code>HttpServletResponse</code>，也可以修改<code>HttpServletResponse</code>头和数据。</li>
+</ul>
+<h3 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h3><ul>
+<li>身份验证过滤器（Authentication Filters）。【<strong>权限访问控制</strong>】</li>
+<li>数据压缩过滤器（Data compression Filters）。【<strong>压缩响应信息</strong>】</li>
+<li>加密过滤器（Encryption Filters）。</li>
+<li>触发资源访问事件过滤器。</li>
+<li>图像转换过滤器（Image Conversion Filters）。</li>
+<li>日志记录和审核过滤器（Logging and Auditing Filters）。</li>
+<li>MIME-TYPE 链过滤器（MIME-TYPE Chain Filters）。</li>
+<li>标记化过滤器（Tokenizing Filters）。</li>
+<li>XSL/T 过滤器（XSL/T Filters），转换 XML 内容。</li>
+</ul>
+<h2 id="Filter的生命周期"><a href="#Filter的生命周期" class="headerlink" title="Filter的生命周期"></a>Filter的生命周期</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">/*初始化，Filter的创建和销毁由WEB服务器负责。 web 应用程序启动时，web 服务器将创建Filter 的实例对象,  </div><div class="line">并调用其init方法，读取web.xml配置，完成对象的初始化功能，  </div><div class="line">从而为后续的用户请求作好拦截的准备工作（filter对象只会创建一次，init方法也只会执行一次）。  </div><div class="line">开发人员通过init方法的参数，可获得代表当前filter配置信息的FilterConfig对象。</div><div class="line">*/</div><div class="line">public void init(FilterConfig filterConfig) throws ServletException;</div><div class="line"></div><div class="line">/*</div><div class="line">拦截请求,完成实际的过滤操作。当客户请求访问与过滤器关联的URL的时候，</div><div class="line">Servlet过滤器将先执行doFilter方法。FilterChain参数用于访问后续过滤器。</div><div class="line">*/</div><div class="line">public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException;</div><div class="line"></div><div class="line">/*</div><div class="line">销毁,Filter对象创建后会驻留在内存，当web应用移除或服务器停止时才销毁。  </div><div class="line">在Web容器卸载 Filter 对象之前被调用。该方法在Filter的生命周期中仅执行一次。  </div><div class="line">在这个方法中，可以释放过滤器使用的资源。</div><div class="line">*/</div><div class="line">public void destroy();</div></pre></td></tr></table></figure>
+<ul>
+<li>字符编码过滤器、静态资源过滤器、禁止缓存过滤器、非法字符过滤器 编码实现：<blockquote>
+<p><a href="https://github.com/zjs1224522500/JavaWebUtils/tree/master/CommonFilters"><code>JavaWeb</code>中常用的<code>Filter</code>对应我的Github仓库地址</a></p>
+</blockquote>
+</li>
+</ul>
+<h1 id="2、Servlet-跟踪Session"><a href="#2、Servlet-跟踪Session" class="headerlink" title="2、Servlet 跟踪Session"></a>2、<code>Servlet</code> 跟踪<code>Session</code></h1><h3 id="维持客户端和服务器之间的session会话的方式："><a href="#维持客户端和服务器之间的session会话的方式：" class="headerlink" title="维持客户端和服务器之间的session会话的方式："></a>维持客户端和服务器之间的<code>session</code>会话的方式：</h3><ul>
+<li><strong><code>Cookies</code></strong></li>
+<li><strong>隐藏的表单字段</strong> <code>&lt;input type=&quot;hidden&quot; name=&quot;sessionid&quot; value=&quot;12345&quot;&gt;</code></li>
+<li><strong><code>URL</code>重写</strong>：在每个<code>URL</code>末尾追加一些额外的数据来标识<code>session</code> 会话，服务器会把该<code>session</code>会话标识符与已存储的有关<code>session</code> 会话的数据相关联。<code>http://w3cschool.cc/file.htm;sessionid=12345</code></li>
+<li><strong><code>HttpSession</code>对象</strong>：<code>Servlet</code>还提供了<code>HttpSession</code>接口，该接口提供了一种跨多个页面请求或访问网站时识别用户以及存储有关用户信息的方式。<code>Servlet</code>容器使用这个接口来创建一个<code>HTTP</code>客户端和 <code>HTTP</code>服务器之间的<code>session</code>会话。会话持续一个指定的时间段，跨多个连接或页面请求。<blockquote>
+<p><code>HttpSession session = request.getSession();</code></p>
+</blockquote>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>public Object getAttribute(String name)</td>
+<td>该方法返回在该 session 会话中具有指定名称的对象，如果没有指定名称的对象，则返回 null。</td>
+</tr>
+<tr>
+<td>public Enumeration getAttributeNames()</td>
+<td>该方法返回 String 对象的枚举，String 对象包含所有绑定到该 session 会话的对象的名称。</td>
+</tr>
+<tr>
+<td>public long getCreationTime()</td>
+<td>该方法返回该 session 会话被创建的时间，自格林尼治标准时间 1970 年 1 月 1 日午夜算起，以毫秒为单位。</td>
+</tr>
+<tr>
+<td>public String getId()</td>
+<td>该方法返回一个包含分配给该 session 会话的唯一标识符的字符串。</td>
+</tr>
+<tr>
+<td>public long getLastAccessedTime()</td>
+<td>该方法返回客户端最后一次发送与该 session 会话相关的请求的时间自格林尼治标准时间 1970 年 1 月 1 日午夜算起，以毫秒为单位。</td>
+</tr>
+<tr>
+<td>public int getMaxInactiveInterval()</td>
+<td>该方法返回 Servlet 容器在客户端访问时保持 session 会话打开的最大时间间隔，以秒为单位。</td>
+</tr>
+<tr>
+<td>public void invalidate()</td>
+<td>该方法指示该 session 会话无效，并解除绑定到它上面的任何对象。</td>
+</tr>
+<tr>
+<td>public boolean isNew()</td>
+<td>如果客户端还不知道该 session 会话，或者如果客户选择不参入该 session 会话，则该方法返回 true。</td>
+</tr>
+<tr>
+<td>public void removeAttribute(String name)</td>
+<td>该方法将从该 session 会话移除指定名称的对象。</td>
+</tr>
+<tr>
+<td>public void setAttribute(String name, Object value)</td>
+<td>该方法使用指定的名称绑定一个对象到该 session 会话。</td>
+</tr>
+<tr>
+<td>public void setMaxInactiveInterval(int interval)</td>
+<td>该方法在 Servlet 容器指示该 session 会话无效之前，指定客户端请求之间的时间，以秒为单位。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="删除Session会话数据"><a href="#删除Session会话数据" class="headerlink" title="删除Session会话数据"></a>删除<code>Session</code>会话数据</h3><h5 id="当您完成了一个用户的-session-会话数据，您有以下几种选择："><a href="#当您完成了一个用户的-session-会话数据，您有以下几种选择：" class="headerlink" title="当您完成了一个用户的 session 会话数据，您有以下几种选择："></a>当您完成了一个用户的 session 会话数据，您有以下几种选择：</h5><ul>
+<li><strong>移除一个特定的属性</strong>：您可以调用 <code>public void removeAttribute(String name)</code> 方法来删除与特定的键相关联的值。<br>删除整个 <code>session</code> 会话：您可以调用 <code>public void invalidate()</code> 方法来丢弃整个 <code>session</code> 会话。</li>
+<li><strong>设置 <code>session</code> 会话过期时间</strong>：您可以调用 <code>public void setMaxInactiveInterval(int interval)</code> 方法来单独设置 <code>session</code> 会话超时。</li>
+<li><strong>注销用户</strong>：如果使用的是支持 <code>servlet 2.4</code> 的服务器，您可以调用 <code>logout</code> 来注销 <code>Web</code> 服务器的客户端，并把属于所有用户的所有 <code>session</code> 会话设置为无效。</li>
+<li><strong><code>web.xml</code> 配置</strong>：如果您使用的是 Tomcat，除了上述方法，您还可以在 web.xml 文件中配置 session 会话超时，如下所示：<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">&lt;session-config&gt;</div><div class="line">  &lt;session-timeout&gt;15&lt;/session-timeout&gt;</div><div class="line">&lt;/session-config&gt;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>上面实例中的超时时间是以分钟为单位，将覆盖 <code>Tomcat</code> 中默认的 30 分钟超时时间。  </p>
+<p>在一个 <code>Servlet</code> 中的 <code>getMaxInactiveInterval()</code> 方法会返回 <code>session</code> 会话的超时时间，以秒为单位。</p>
+<h2 id="gt-session相关代码示例Github地址"><a href="#gt-session相关代码示例Github地址" class="headerlink" title="&gt; session相关代码示例Github地址"></a>&gt; <a href="https://github.com/zjs1224522500/JavaWebUtils/blob/master/CommonFilters/src/main/java/com/elvis/session/SessionTrack.java">session相关代码示例Github地址</a></h2><blockquote>
+<p><code>sessionId</code>:<code>sessionid</code>是一个会话的<code>key</code>，浏览器第一次访问服务器会在服务器端生成一个<code>session</code>，有一个<code>sessionid</code>和它对应。<code>tomcat</code>生成的<code>sessionid</code>叫做<code>jsessionid</code>。</p>
+</blockquote>
+<ul>
+<li><code>session</code>在访问<code>tomcat</code>服务器<code>HttpServletRequest</code>的<code>getSession(true)</code>的时候创建，<code>tomcat</code>的<code>ManagerBase</code>类提供创建<code>sessionid</code>的方法：<strong>随机数+时间+jvmid</strong>；<blockquote>
+<p><a href="http://www.cnblogs.com/woshimrf/p/5317776.html" target="_blank" rel="external">参考博文：sessionid如何产生？由谁产生？保存在哪里？</a></p>
+</blockquote>
+</li>
+</ul>
 
       
 
@@ -302,7 +400,7 @@ var _hmt = _hmt || [];
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="http://s.jiathis.com/qrcode.php?url=https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/30/VerifyCode-Java/" alt="微信分享二维码">
+      <img src="http://s.jiathis.com/qrcode.php?url=https://github.com/zjs1224522500/zjs1224522500.github.io/2017/11/02/Servlet-apply-one/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -316,18 +414,9 @@ var _hmt = _hmt || [];
   
 <nav id="article-nav">
   
-    <a href="/2017/11/02/Servlet-apply-one/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          Servlet常用用法（一）
-        
-      </div>
-    </a>
   
-  
-    <a href="/2017/10/29/Servlet-basic/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Servlet基础知识</div>
+    <a href="/2017/10/30/VerifyCode-Java/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">验证码Java实现</div>
       <i class="icon-circle-right"></i>
     </a>
   
@@ -366,7 +455,7 @@ var _hmt = _hmt || [];
 <script src="//imsun.github.io/gitment/dist/gitment.browser.js"></script>
 <script>
 var gitment = new Gitment({
-  id: "https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/30/VerifyCode-Java/",
+  id: "https://github.com/zjs1224522500/zjs1224522500.github.io/2017/11/02/Servlet-apply-one/",
   owner: 'zjs1224522500',
   repo: 'zjs1224522500.github.io',
   oauth: {

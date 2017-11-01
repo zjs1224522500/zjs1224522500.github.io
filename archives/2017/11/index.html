@@ -6,21 +6,17 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://github.com/zjs1224522500/zjs1224522500.github.io">
-  <title>验证码Java实现 | Elvis</title>
+  <title>Archives: 2017/11 | Elvis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="验证码Java实现">
-<meta name="keywords" content="JavaWeb">
-<meta property="og:type" content="article">
-<meta property="og:title" content="验证码Java实现">
-<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/30/VerifyCode-Java/index.html">
+  <meta name="description" content="电子科技大学软件工程在读，JavaWeb学习ing">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Elvis">
+<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/archives/2017/11/index.html">
 <meta property="og:site_name" content="Elvis">
-<meta property="og:description" content="验证码Java实现">
-<meta property="og:image" content="http://oxp7d1tae.bkt.clouddn.com/%E9%AA%8C%E8%AF%81%E7%A0%81.png">
-<meta property="og:updated_time" content="2017-10-29T10:19:10.609Z">
+<meta property="og:description" content="电子科技大学软件工程在读，JavaWeb学习ing">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="验证码Java实现">
-<meta name="twitter:description" content="验证码Java实现">
-<meta name="twitter:image" content="http://oxp7d1tae.bkt.clouddn.com/%E9%AA%8C%E8%AF%81%E7%A0%81.png">
+<meta name="twitter:title" content="Elvis">
+<meta name="twitter:description" content="电子科技大学软件工程在读，JavaWeb学习ing">
   
     <link rel="alternative" href="/atom.xml" title="Elvis" type="application/atom+xml">
   
@@ -174,73 +170,36 @@ var _hmt = _hmt || [];
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-VerifyCode-Java" class="article article-type-post " itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
+            
   
-    <h1 class="article-title" itemprop="name">
-      验证码Java实现
+  
+    
+    
+      
+      
+      <section class="archives-wrap">
+        <div class="archive-year-wrap">
+          <a href="/archives/2017" class="archive-year">2017</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      	<div class="article-meta">
+	      	<a href="/2017/11/02/Servlet-apply-one/" class="archive-article-date">
+  	<time datetime="2017-11-01T21:28:52.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-11-01</time>
+</a>
+        </div>
+    	 
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2017/11/02/Servlet-apply-one/">Servlet常用用法（一）</a>
     </h1>
   
 
-        
-        <a href="/2017/10/30/VerifyCode-Java/" class="archive-article-date">
-  	<time datetime="2017-10-29T21:28:52.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-10-29</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="验证码Java实现"><a href="#验证码Java实现" class="headerlink" title="验证码Java实现"></a>验证码Java实现</h1><p><img src="http://oxp7d1tae.bkt.clouddn.com/%E9%AA%8C%E8%AF%81%E7%A0%81.png" alt="image"><br><a id="more"></a></p>
-<h2 id="1、Servlet实现验证码"><a href="#1、Servlet实现验证码" class="headerlink" title="1、Servlet实现验证码"></a>1、<code>Servlet</code>实现验证码</h2><h3 id="实现步骤"><a href="#实现步骤" class="headerlink" title="实现步骤:"></a>实现步骤:</h3><ul>
-<li>1、服务端随机生成验证码：利用<code>java.awt</code>中的相关类，譬如<code>Graphics</code> <strong>（核心）</strong>,<code>BufferedImage</code></li>
-<li>2、利用<code>Servlet</code>进行<code>Client</code>和<code>Server</code>的交互，进行验证码的获取，以及表单的客户端验证码输入和服务端存储的记录进行验证。</li>
-</ul>
-<h3 id="核心代码：（验证码的生成）"><a href="#核心代码：（验证码的生成）" class="headerlink" title="核心代码：（验证码的生成）"></a>核心代码：（验证码的生成）</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ImageServlet</span> <span class="keyword">extends</span> <span class="title">HttpServlet</span> </span>&#123;</div><div class="line"></div><div class="line">	<span class="meta">@Override</span></div><div class="line">	<span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span></span></div><div class="line">			<span class="keyword">throws</span> ServletException, IOException &#123;</div><div class="line">		<span class="comment">//初始化图片类型</span></div><div class="line">		BufferedImage bufferedImage = <span class="keyword">new</span> BufferedImage(<span class="number">68</span>, <span class="number">22</span>, BufferedImage.TYPE_INT_RGB);</div><div class="line">		<span class="comment">//进行制图</span></div><div class="line">		Graphics graphics = bufferedImage.getGraphics();</div><div class="line">		<span class="comment">//RGB设置颜色并填充对应图像坐标像素点</span></div><div class="line">		Color color = <span class="keyword">new</span> Color(<span class="number">200</span>, <span class="number">150</span>, <span class="number">255</span>);</div><div class="line">		graphics.setColor(color);</div><div class="line">		graphics.fillRect(<span class="number">0</span>, <span class="number">0</span>, <span class="number">68</span>, <span class="number">22</span>);</div><div class="line">		<span class="keyword">char</span>[] chars = <span class="string">"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"</span>.toCharArray();</div><div class="line">		Random random = <span class="keyword">new</span> Random();</div><div class="line">		<span class="keyword">int</span> length = chars.length, index;</div><div class="line"></div><div class="line">		<span class="comment">//循环随机生成验证码</span></div><div class="line">		StringBuffer stringBuffer = <span class="keyword">new</span> StringBuffer();</div><div class="line">		<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">4</span>; i++) &#123;</div><div class="line">			index = random.nextInt(length);</div><div class="line">			<span class="comment">//设置验证码的不同颜色并记录验证码</span></div><div class="line">			graphics.setColor(</div><div class="line">					<span class="keyword">new</span> Color(random.nextInt(<span class="number">88</span>), random.nextInt(<span class="number">188</span>), random.nextInt(<span class="number">255</span>)));</div><div class="line">			graphics.drawString(chars[index] + <span class="string">""</span>, (i * <span class="number">15</span>) + <span class="number">3</span>, <span class="number">18</span>);</div><div class="line">			stringBuffer.append(chars[index]);</div><div class="line">		&#125;</div><div class="line">		<span class="comment">//将验证码的记录值存储在session中</span></div><div class="line">		req.getSession().setAttribute(<span class="string">"picCode"</span>, stringBuffer.toString());</div><div class="line">		<span class="comment">//将生成的图片写入Response的输出流中</span></div><div class="line">		ImageIO.write(bufferedImage, <span class="string">"JPG"</span>, resp.getOutputStream());</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<h2 id="2、插件实现验证码："><a href="#2、插件实现验证码：" class="headerlink" title="2、插件实现验证码："></a>2、插件实现验证码：</h2><h2 id="常见验证码组件-Jcaptcha和Kaptcha"><a href="#常见验证码组件-Jcaptcha和Kaptcha" class="headerlink" title="- 常见验证码组件 Jcaptcha和Kaptcha"></a>- 常见验证码组件 <code>Jcaptcha</code>和<code>Kaptcha</code></h2><p>敬请期待 :)</p>
-<h2 id="3、Java图片验证码"><a href="#3、Java图片验证码" class="headerlink" title="3、Java图片验证码"></a>3、Java图片验证码</h2><p>敬请期待 :)</p>
-
-      
-
-      
-        <div class="page-reward">
-          <a href="javascript:;" class="page-reward-btn tooltip-top">
-            <div class="tooltip tooltip-east">
-            <span class="tooltip-item">
-              赏
-            </span>
-            <span class="tooltip-content">
-              <span class="tooltip-text">
-                <span class="tooltip-inner">
-                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
-                  <div class="reward-box">
-                    
-                    <div class="reward-box-item">
-                      <img class="reward-img" src="http://oxp7d1tae.bkt.clouddn.com/alipay.png">
-                      <span class="reward-type">支付宝</span>
-                    </div>
-                    
-                    
-                    <div class="reward-box-item">
-                      <img class="reward-img" src="http://oxp7d1tae.bkt.clouddn.com/wechat.png">
-                      <span class="reward-type">微信</span>
-                    </div>
-                    
-                  </div>
-                </span>
-              </span>
-            </span>
-          </div>
-          </a>
-        </div>
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
+        <div class="article-info info-on-right">
+          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
@@ -252,131 +211,19 @@ var _hmt = _hmt || [];
 		</ul>
 	</div>
 
-      
+          
 
-      
-
-      
-        
-<div class="share-btn share-icons tooltip-left">
-  <div class="tooltip tooltip-east">
-    <span class="tooltip-item">
-      <a href="javascript:;" class="share-sns share-outer">
-        <i class="icon icon-share"></i>
-      </a>
-    </span>
-    <span class="tooltip-content">
-      <div class="share-wrap">
-        <div class="share-icons">
-          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
-            <i class="icon icon-weibo"></i>
-          </a>
-          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
-            <i class="icon icon-weixin"></i>
-          </a>
-          <a class="qq share-sns" href="javascript:;" data-type="qq">
-            <i class="icon icon-qq"></i>
-          </a>
-          <a class="douban share-sns" href="javascript:;" data-type="douban">
-            <i class="icon icon-douban"></i>
-          </a>
-          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
-            <i class="icon icon-qzone"></i>
-          </a>
-          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
-            <i class="icon icon-facebook"></i>
-          </a>
-          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
-            <i class="icon icon-twitter"></i>
-          </a>
-          <a class="google share-sns" href="javascript:;" data-type="google">
-            <i class="icon icon-google"></i>
-          </a>
         </div>
-      </div>
-    </span>
-  </div>
-</div>
-
-<div class="page-modal wx-share js-wx-box">
-    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
-    <p>扫一扫，分享到微信</p>
-    <div class="wx-qrcode">
-      <img src="http://s.jiathis.com/qrcode.php?url=https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/30/VerifyCode-Java/" alt="微信分享二维码">
-    </div>
-</div>
-
-<div class="mask js-mask"></div>
-      
-      <div class="clearfix"></div>
-    </div>
+        <div class="clearfix"></div>
+    </header>
   </div>
 </article>
-
-  
-<nav id="article-nav">
-  
-    <a href="/2017/11/02/Servlet-apply-one/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          Servlet常用用法（一）
-        
-      </div>
-    </a>
   
   
-    <a href="/2017/10/29/Servlet-basic/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Servlet基础知识</div>
-      <i class="icon-circle-right"></i>
-    </a>
-  
-</nav>
-
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-  
-  
+    </div></section>
   
 
-  
-
-  
-
-  
-  <div id="gitment-ctn"></div> 
-<link rel="stylesheet" href="//imsun.github.io/gitment/style/default.css">
-<script src="//imsun.github.io/gitment/dist/gitment.browser.js"></script>
-<script>
-var gitment = new Gitment({
-  id: "https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/30/VerifyCode-Java/",
-  owner: 'zjs1224522500',
-  repo: 'zjs1224522500.github.io',
-  oauth: {
-    client_id: 'cccb9b919b08c6e61099',
-    client_secret: 'ab2ce55de1b91e9ed7c6f3e819a32ea0b1ca617b',
-  },
-})
-gitment.render('gitment-ctn')
-</script>
-  
+    
 
 
           </div>
@@ -399,8 +246,8 @@ gitment.render('gitment-ctn')
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: true,
-		isArchive: false,
+		isPost: false,
+		isArchive: true,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,

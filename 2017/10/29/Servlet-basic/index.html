@@ -6,21 +6,22 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://github.com/zjs1224522500/zjs1224522500.github.io">
-  <title>验证码Java实现 | Elvis</title>
+  <title>Servlet基础知识 | Elvis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="验证码Java实现">
+  <meta name="description" content="1、什么是Servlet？&amp;gt; Java Servlet 是运行在 Web 服务器或应用服务器上的程序，它是作为来自 Web 浏览器或其他 HTTP 客户端的请求和 HTTP 服务器上的数据库或应用程序之间的中间层。 个人见解:Servlet本质属于MVC架构模式中的C（controller）层，充当控制器的角色 2、Servlet架构  3、Servlet声明周期 Servlet 通过调用">
 <meta name="keywords" content="JavaWeb">
 <meta property="og:type" content="article">
-<meta property="og:title" content="验证码Java实现">
-<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/30/VerifyCode-Java/index.html">
+<meta property="og:title" content="Servlet基础知识">
+<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/29/Servlet-basic/index.html">
 <meta property="og:site_name" content="Elvis">
-<meta property="og:description" content="验证码Java实现">
-<meta property="og:image" content="http://oxp7d1tae.bkt.clouddn.com/%E9%AA%8C%E8%AF%81%E7%A0%81.png">
-<meta property="og:updated_time" content="2017-10-29T10:19:10.609Z">
+<meta property="og:description" content="1、什么是Servlet？&amp;gt; Java Servlet 是运行在 Web 服务器或应用服务器上的程序，它是作为来自 Web 浏览器或其他 HTTP 客户端的请求和 HTTP 服务器上的数据库或应用程序之间的中间层。 个人见解:Servlet本质属于MVC架构模式中的C（controller）层，充当控制器的角色 2、Servlet架构  3、Servlet声明周期 Servlet 通过调用">
+<meta property="og:image" content="http://www.runoob.com/wp-content/uploads/2014/07/servlet-arch.jpg">
+<meta property="og:image" content="http://www.runoob.com/wp-content/uploads/2014/07/Servlet-LifeCycle.jpg">
+<meta property="og:updated_time" content="2017-11-01T12:10:50.587Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="验证码Java实现">
-<meta name="twitter:description" content="验证码Java实现">
-<meta name="twitter:image" content="http://oxp7d1tae.bkt.clouddn.com/%E9%AA%8C%E8%AF%81%E7%A0%81.png">
+<meta name="twitter:title" content="Servlet基础知识">
+<meta name="twitter:description" content="1、什么是Servlet？&amp;gt; Java Servlet 是运行在 Web 服务器或应用服务器上的程序，它是作为来自 Web 浏览器或其他 HTTP 客户端的请求和 HTTP 服务器上的数据库或应用程序之间的中间层。 个人见解:Servlet本质属于MVC架构模式中的C（controller）层，充当控制器的角色 2、Servlet架构  3、Servlet声明周期 Servlet 通过调用">
+<meta name="twitter:image" content="http://www.runoob.com/wp-content/uploads/2014/07/servlet-arch.jpg">
   
     <link rel="alternative" href="/atom.xml" title="Elvis" type="application/atom+xml">
   
@@ -174,34 +175,318 @@ var _hmt = _hmt || [];
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-VerifyCode-Java" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-Servlet-basic" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      验证码Java实现
+      Servlet基础知识
     </h1>
   
 
         
-        <a href="/2017/10/30/VerifyCode-Java/" class="archive-article-date">
-  	<time datetime="2017-10-29T21:28:52.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-10-29</time>
+        <a href="/2017/10/29/Servlet-basic/" class="archive-article-date">
+  	<time datetime="2017-10-28T21:28:52.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-10-28</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="验证码Java实现"><a href="#验证码Java实现" class="headerlink" title="验证码Java实现"></a>验证码Java实现</h1><p><img src="http://oxp7d1tae.bkt.clouddn.com/%E9%AA%8C%E8%AF%81%E7%A0%81.png" alt="image"><br><a id="more"></a></p>
-<h2 id="1、Servlet实现验证码"><a href="#1、Servlet实现验证码" class="headerlink" title="1、Servlet实现验证码"></a>1、<code>Servlet</code>实现验证码</h2><h3 id="实现步骤"><a href="#实现步骤" class="headerlink" title="实现步骤:"></a>实现步骤:</h3><ul>
-<li>1、服务端随机生成验证码：利用<code>java.awt</code>中的相关类，譬如<code>Graphics</code> <strong>（核心）</strong>,<code>BufferedImage</code></li>
-<li>2、利用<code>Servlet</code>进行<code>Client</code>和<code>Server</code>的交互，进行验证码的获取，以及表单的客户端验证码输入和服务端存储的记录进行验证。</li>
+        <h1 id="1、什么是Servlet？"><a href="#1、什么是Servlet？" class="headerlink" title="1、什么是Servlet？"></a>1、什么是<code>Servlet</code>？</h1><h2 id="gt-Java-Servlet-是运行在-Web-服务器或应用服务器上的程序，它是作为来自-Web-浏览器或其他-HTTP-客户端的请求和-HTTP-服务器上的数据库或应用程序之间的中间层。"><a href="#gt-Java-Servlet-是运行在-Web-服务器或应用服务器上的程序，它是作为来自-Web-浏览器或其他-HTTP-客户端的请求和-HTTP-服务器上的数据库或应用程序之间的中间层。" class="headerlink" title="&gt; Java Servlet 是运行在 Web 服务器或应用服务器上的程序，它是作为来自 Web 浏览器或其他 HTTP 客户端的请求和 HTTP 服务器上的数据库或应用程序之间的中间层。"></a>&gt; <code>Java Servlet</code> 是运行在 <code>Web</code> 服务器或应用服务器上的程序，它是作为来自 <code>Web</code> 浏览器或其他 <code>HTTP</code> 客户端的请求和 <code>HTTP</code> 服务器上的数据库或应用程序之间的中间层。</h2><blockquote>
+<p>个人见解:<code>Servlet</code>本质属于<code>MVC</code>架构模式中的<code>C（controller）</code>层，充当控制器的角色</p>
+<h1 id="2、Servlet架构"><a href="#2、Servlet架构" class="headerlink" title="2、Servlet架构"></a>2、<code>Servlet</code>架构</h1><p><img src="http://www.runoob.com/wp-content/uploads/2014/07/servlet-arch.jpg" alt="image"> <img src="http://www.runoob.com/wp-content/uploads/2014/07/Servlet-LifeCycle.jpg" alt="image"></p>
+<h1 id="3、Servlet声明周期"><a href="#3、Servlet声明周期" class="headerlink" title="3、Servlet声明周期"></a>3、<code>Servlet</code>声明周期</h1><ul>
+<li><code>Servlet</code> 通过调用 <code>init ()</code> 方法进行初始化。<ul>
+<li><code>init</code> 方法<strong>被设计成只调用一次</strong>。它在第一次创建 <code>Servlet</code> 时被调用，在后续每次用户请求时不再调用。当用户调用一个 <code>Servlet</code> 时，就会创建一个 <code>Servlet</code> 实例，<strong>每一个用户请求都会产生一个新的线程</strong>，适当的时候移交给 <code>doGet</code> 或 <code>doPost</code> 方法。<code>init()</code> 方法简单地创建或加载一些数据，这些数据将被用于 <code>Servlet</code> 的<strong>整个生命周期</strong>。<br><a href="http://blog.csdn.net/wgyscsf/article/details/50129367?ref=myread" target="_blank" rel="external">博文推荐：关于的servlet的单例模式(单实例多线程)的解释
+</a></li>
 </ul>
-<h3 id="核心代码：（验证码的生成）"><a href="#核心代码：（验证码的生成）" class="headerlink" title="核心代码：（验证码的生成）"></a>核心代码：（验证码的生成）</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ImageServlet</span> <span class="keyword">extends</span> <span class="title">HttpServlet</span> </span>&#123;</div><div class="line"></div><div class="line">	<span class="meta">@Override</span></div><div class="line">	<span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span></span></div><div class="line">			<span class="keyword">throws</span> ServletException, IOException &#123;</div><div class="line">		<span class="comment">//初始化图片类型</span></div><div class="line">		BufferedImage bufferedImage = <span class="keyword">new</span> BufferedImage(<span class="number">68</span>, <span class="number">22</span>, BufferedImage.TYPE_INT_RGB);</div><div class="line">		<span class="comment">//进行制图</span></div><div class="line">		Graphics graphics = bufferedImage.getGraphics();</div><div class="line">		<span class="comment">//RGB设置颜色并填充对应图像坐标像素点</span></div><div class="line">		Color color = <span class="keyword">new</span> Color(<span class="number">200</span>, <span class="number">150</span>, <span class="number">255</span>);</div><div class="line">		graphics.setColor(color);</div><div class="line">		graphics.fillRect(<span class="number">0</span>, <span class="number">0</span>, <span class="number">68</span>, <span class="number">22</span>);</div><div class="line">		<span class="keyword">char</span>[] chars = <span class="string">"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"</span>.toCharArray();</div><div class="line">		Random random = <span class="keyword">new</span> Random();</div><div class="line">		<span class="keyword">int</span> length = chars.length, index;</div><div class="line"></div><div class="line">		<span class="comment">//循环随机生成验证码</span></div><div class="line">		StringBuffer stringBuffer = <span class="keyword">new</span> StringBuffer();</div><div class="line">		<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">4</span>; i++) &#123;</div><div class="line">			index = random.nextInt(length);</div><div class="line">			<span class="comment">//设置验证码的不同颜色并记录验证码</span></div><div class="line">			graphics.setColor(</div><div class="line">					<span class="keyword">new</span> Color(random.nextInt(<span class="number">88</span>), random.nextInt(<span class="number">188</span>), random.nextInt(<span class="number">255</span>)));</div><div class="line">			graphics.drawString(chars[index] + <span class="string">""</span>, (i * <span class="number">15</span>) + <span class="number">3</span>, <span class="number">18</span>);</div><div class="line">			stringBuffer.append(chars[index]);</div><div class="line">		&#125;</div><div class="line">		<span class="comment">//将验证码的记录值存储在session中</span></div><div class="line">		req.getSession().setAttribute(<span class="string">"picCode"</span>, stringBuffer.toString());</div><div class="line">		<span class="comment">//将生成的图片写入Response的输出流中</span></div><div class="line">		ImageIO.write(bufferedImage, <span class="string">"JPG"</span>, resp.getOutputStream());</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<h2 id="2、插件实现验证码："><a href="#2、插件实现验证码：" class="headerlink" title="2、插件实现验证码："></a>2、插件实现验证码：</h2><h2 id="常见验证码组件-Jcaptcha和Kaptcha"><a href="#常见验证码组件-Jcaptcha和Kaptcha" class="headerlink" title="- 常见验证码组件 Jcaptcha和Kaptcha"></a>- 常见验证码组件 <code>Jcaptcha</code>和<code>Kaptcha</code></h2><p>敬请期待 :)</p>
-<h2 id="3、Java图片验证码"><a href="#3、Java图片验证码" class="headerlink" title="3、Java图片验证码"></a>3、Java图片验证码</h2><p>敬请期待 :)</p>
+</li>
+<li><code>Servlet</code> 调用 <code>service()</code> 方法来处理客户端的请求。<ul>
+<li><code>service()</code> 方法是执行实际任务的主要方法。<code>Servlet</code> 容器（即 <code>Web</code> 服务器）调用 <code>service()</code> 方法来处理来自客户端（浏览器）的请求，并把格式化的响应写回给客户端。<br><a href="http://blog.csdn.net/macroway/article/details/1428541" target="_blank" rel="external">扩展阅读：Http协议中的方法</a></li>
+</ul>
+</li>
+<li><code>Servlet</code> 通过调用 <code>destroy()</code> 方法终止（结束）。<ul>
+<li>destroy() 方法只会被调用一次，在 Servlet 生命周期结束时被调用。destroy() 方法可以让您的 Servlet 关闭数据库连接、停止后台线程、把 Cookie 列表或点击计数器写入到磁盘，并执行其他类似的清理活动。在调用 destroy() 方法之后，servlet 对象被标记为垃圾回收。</li>
+</ul>
+</li>
+<li>最后，<code>Servlet</code> 是由 <code>JVM</code> 的垃圾回收器进行垃圾回收的。</li>
+</ul>
+</blockquote>
+<h1 id="4、Servlet获取请求头信息"><a href="#4、Servlet获取请求头信息" class="headerlink" title="4、Servlet获取请求头信息"></a>4、<code>Servlet</code>获取请求头信息</h1><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cookie[] getCookies()</td>
+<td>返回一个数组，包含客户端发送该请求的所有的 Cookie 对象。  </td>
+</tr>
+<tr>
+<td>Enumeration getAttributeNames()</td>
+<td>返回一个枚举，包含提供给该请求可用的属性名称。</td>
+</tr>
+<tr>
+<td>Enumeration getHeaderNames()</td>
+<td>返回一个枚举，包含在该请求中包含的所有的头名。</td>
+</tr>
+<tr>
+<td>Enumeration getParameterNames()</td>
+<td>返回一个 String 对象的枚举，包含在该请求中包含的参数的名称。</td>
+</tr>
+<tr>
+<td>HttpSession getSession()</td>
+<td>返回与该请求关联的当前 session 会话，或者如果请求没有 session 会话，则创建一个。</td>
+</tr>
+<tr>
+<td>HttpSession getSession(boolean create)</td>
+<td>返回与该请求关联的当前 HttpSession，或者如果没有当前会话，且创建是真的，则返回一个新的 session 会话。</td>
+</tr>
+<tr>
+<td>Locale getLocale()</td>
+<td>基于 Accept-Language 头，返回客户端接受内容的首选的区域设置。</td>
+</tr>
+<tr>
+<td>Object getAttribute(String name)</td>
+<td>以对象形式返回已命名属性的值，如果没有给定名称的属性存在，则返回 null。</td>
+</tr>
+<tr>
+<td>ServletInputStream getInputStream()</td>
+<td>使用 ServletInputStream，以二进制数据形式检索请求的主体。</td>
+</tr>
+<tr>
+<td>String getAuthType()</td>
+<td>返回用于保护 Servlet 的身份验证方案的名称，例如，”BASIC” 或 “SSL”，如果JSP没有受到保护则返回 null。</td>
+</tr>
+<tr>
+<td>String getCharacterEncoding()</td>
+<td>返回请求主体中使用的字符编码的名称。</td>
+</tr>
+<tr>
+<td>String getContentType()</td>
+<td>返回请求主体的 MIME 类型，如果不知道类型则返回 null。</td>
+</tr>
+<tr>
+<td>String getContextPath()</td>
+<td>返回指示请求上下文的请求 URI 部分。</td>
+</tr>
+<tr>
+<td>String getHeader(String name)</td>
+<td>以字符串形式返回指定的请求头的值。</td>
+</tr>
+<tr>
+<td>String getMethod()</td>
+<td>返回请求的 HTTP 方法的名称，例如，GET、POST 或 PUT。</td>
+</tr>
+<tr>
+<td>String getParameter(String name)</td>
+<td>以字符串形式返回请求参数的值，或者如果参数不存在则返回 null。</td>
+</tr>
+<tr>
+<td>String getPathInfo()</td>
+<td>当请求发出时，返回与客户端发送的 URL 相关的任何额外的路径信息。</td>
+</tr>
+<tr>
+<td>String getProtocol()</td>
+<td>返回请求协议的名称和版本。</td>
+</tr>
+<tr>
+<td>String getQueryString()</td>
+<td>返回包含在路径后的请求 URL 中的查询字符串。</td>
+</tr>
+<tr>
+<td>String getRemoteAddr()</td>
+<td>返回发送请求的客户端的互联网协议（IP）地址。</td>
+</tr>
+<tr>
+<td>String getRemoteHost()</td>
+<td>返回发送请求的客户端的完全限定名称。</td>
+</tr>
+<tr>
+<td>String getRemoteUser()</td>
+<td>如果用户已通过身份验证，则返回发出请求的登录用户，或者如果用户未通过身份验证，则返回 null。</td>
+</tr>
+<tr>
+<td>String getRequestURI()</td>
+<td>从协议名称直到 HTTP 请求的第一行的查询字符串中，返回该请求的 URL 的一部分。</td>
+</tr>
+<tr>
+<td>String getRequestedSessionId()</td>
+<td>返回由客户端指定的 session 会话 ID。</td>
+</tr>
+<tr>
+<td>String getServletPath()</td>
+<td>返回调用 JSP 的请求的 URL 的一部分。</td>
+</tr>
+<tr>
+<td>String[] getParameterValues(String name)</td>
+<td>返回一个字符串对象的数组，包含所有给定的请求参数的值，如果参数不存在则返回 null。</td>
+</tr>
+<tr>
+<td>boolean isSecure()</td>
+<td>返回一个布尔值，指示请求是否使用安全通道，如 HTTPS。</td>
+</tr>
+<tr>
+<td>int getContentLength()</td>
+<td>以字节为单位返回请求主体的长度，并提供输入流，或者如果长度未知则返回 -1。</td>
+</tr>
+<tr>
+<td>int getIntHeader(String name)</td>
+<td>返回指定的请求头的值为一个 int 值。</td>
+</tr>
+<tr>
+<td>int getServerPort()</td>
+<td>返回接收到这个请求的端口号。</td>
+</tr>
+<tr>
+<td>int getParameterMap()</td>
+<td>将参数封装成 Map 类型。</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>示例代码<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">Enumeration headerNames = request.getHeaderNames();</div><div class="line"></div><div class="line"><span class="keyword">while</span>(headerNames.hasMoreElements()) &#123;</div><div class="line">    String paramName = (String)headerNames.nextElement();</div><div class="line">    out.print(<span class="string">"&lt;tr&gt;&lt;td&gt;"</span> + paramName + <span class="string">"&lt;/td&gt;\n"</span>);</div><div class="line">    String paramValue = request.getHeader(paramName);</div><div class="line">    out.println(<span class="string">"&lt;td&gt; "</span> + paramValue + <span class="string">"&lt;/td&gt;&lt;/tr&gt;\n"</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h1 id="5、设置HTTP响应报头的方法"><a href="#5、设置HTTP响应报头的方法" class="headerlink" title="5、设置HTTP响应报头的方法"></a>5、设置<code>HTTP</code>响应报头的方法</h1><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>String encodeRedirectURL(String url)</td>
+<td>为 sendRedirect 方法中使用的指定的 URL 进行编码，或者如果编码不是必需的，则返回 URL 未改变。</td>
+</tr>
+<tr>
+<td>String encodeURL(String url)</td>
+<td>对包含 session 会话 ID 的指定 URL 进行编码，或者如果编码不是必需的，则返回 URL 未改变。</td>
+</tr>
+<tr>
+<td>boolean containsHeader(String name)</td>
+<td>返回一个布尔值，指示是否已经设置已命名的响应报头。</td>
+</tr>
+<tr>
+<td>boolean isCommitted()</td>
+<td>返回一个布尔值，指示响应是否已经提交。</td>
+</tr>
+<tr>
+<td>void addCookie(Cookie cookie)</td>
+<td>把指定的 cookie 添加到响应。</td>
+</tr>
+<tr>
+<td>void addDateHeader(String name, long date)</td>
+<td>添加一个带有给定的名称和日期值的响应报头。</td>
+</tr>
+<tr>
+<td>void addHeader(String name, String value)</td>
+<td>添加一个带有给定的名称和值的响应报头。</td>
+</tr>
+<tr>
+<td>void addIntHeader(String name, int value)</td>
+<td>添加一个带有给定的名称和整数值的响应报头。</td>
+</tr>
+<tr>
+<td>void flushBuffer()</td>
+<td>强制任何在缓冲区中的内容被写入到客户端。</td>
+</tr>
+<tr>
+<td>void reset()</td>
+<td>清除缓冲区中存在的任何数据，包括状态码和头。</td>
+</tr>
+<tr>
+<td>void resetBuffer()</td>
+<td>清除响应中基础缓冲区的内容，不清除状态码和头。</td>
+</tr>
+<tr>
+<td>void sendError(int sc)</td>
+<td>使用指定的状态码发送错误响应到客户端，并清除缓冲区。</td>
+</tr>
+<tr>
+<td>void sendError(int sc, String msg)</td>
+<td>使用指定的状态发送错误响应到客户端。</td>
+</tr>
+<tr>
+<td>void sendRedirect(String location)</td>
+<td>使用指定的重定向位置 URL 发送临时重定向响应到客户端。</td>
+</tr>
+<tr>
+<td>void setBufferSize(int size)</td>
+<td>为响应主体设置首选的缓冲区大小。</td>
+</tr>
+<tr>
+<td>void setCharacterEncoding(String charset)</td>
+<td>设置被发送到客户端的响应的字符编码（MIME 字符集）例如，UTF-8。</td>
+</tr>
+<tr>
+<td>void setContentLength(int len)</td>
+<td>设置在 HTTP Servlet 响应中的内容主体的长度，该方法设置 HTTP Content-Length 头。</td>
+</tr>
+<tr>
+<td>void setContentType(String type)</td>
+<td>如果响应还未被提交，设置被发送到客户端的响应的内容类型。</td>
+</tr>
+<tr>
+<td>void setDateHeader(String name, long date)</td>
+<td>设置一个带有给定的名称和日期值的响应报头。</td>
+</tr>
+<tr>
+<td>void setHeader(String name, String value)</td>
+<td>设置一个带有给定的名称和值的响应报头。</td>
+</tr>
+<tr>
+<td>void setIntHeader(String name, int value)</td>
+<td>设置一个带有给定的名称和整数值的响应报头。</td>
+</tr>
+<tr>
+<td>void setLocale(Locale loc)</td>
+<td>如果响应还未被提交，设置响应的区域。</td>
+</tr>
+<tr>
+<td>void setStatus(int sc)</td>
+<td>为该响应设置状态码。</td>
+</tr>
+</tbody>
+</table>
+<h1 id="6、Servlet中的HTTP状态码"><a href="#6、Servlet中的HTTP状态码" class="headerlink" title="6、Servlet中的HTTP状态码"></a>6、<code>Servlet</code>中的<code>HTTP</code>状态码</h1><h2 id="请求报文和响应报文的格式"><a href="#请求报文和响应报文的格式" class="headerlink" title="请求报文和响应报文的格式"></a>请求报文和响应报文的格式</h2><ul>
+<li>初始状态行 + 回车换行符（回车+换行）</li>
+<li>零个或多个标题行+回车换行符</li>
+<li>一个空白行，即回车换行符</li>
+<li>一个可选的消息主体，比如文件、查询数据或查询输出  </li>
+</ul>
+<h5 id="例子如下："><a href="#例子如下：" class="headerlink" title="例子如下："></a>例子如下：</h5><figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">HTTP/1.1 200 OK            // HTTP版本 状态码 对应状态码的短消息</div><div class="line">Content-Type: text/html    // 报文头中包含的各个属性信息:键值对的形式</div><div class="line">Header2: ...</div><div class="line">...</div><div class="line">HeaderN: ...</div><div class="line">  (Blank Line)</div><div class="line"><span class="meta">&lt;!doctype ...&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span>...<span class="tag">&lt;/<span class="name">head</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></div><div class="line">...</div><div class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></div></pre></td></tr></table></figure>
+<h2 id="设置-HTTP-状态代码的方法"><a href="#设置-HTTP-状态代码的方法" class="headerlink" title="设置 HTTP 状态代码的方法"></a>设置 HTTP 状态代码的方法</h2><ul>
+<li>由于状态代码的产生都是服务端对于客户端发起的请求进行的相应的回应的过程中产生的，所以我们通过调用<code>HttpServletResponse</code>中的相关方法来进行对状态码的设置。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>public void setStatus ( int statusCode )</td>
+<td>该方法设置一个任意的状态码。setStatus 方法接受一个 int（状态码）作为参数。如果您的反应包含了一个特殊的状态码和文档，请确保在使用 PrintWriter 实际返回任何内容之前调用 setStatus。</td>
+</tr>
+<tr>
+<td>public void sendRedirect(String url)</td>
+<td>该方法生成一个 302 响应，连同一个带有新文档 URL 的 Location 头。</td>
+</tr>
+<tr>
+<td>public void sendError(int code, String message)</td>
+<td>该方法发送一个状态码（通常为 404），连同一个在 HTML 文档内部自动格式化并发送到客户端的短消息。</td>
+</tr>
+</tbody>
+</table>
 
       
 
@@ -302,7 +587,7 @@ var _hmt = _hmt || [];
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="http://s.jiathis.com/qrcode.php?url=https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/30/VerifyCode-Java/" alt="微信分享二维码">
+      <img src="http://s.jiathis.com/qrcode.php?url=https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/29/Servlet-basic/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -316,18 +601,18 @@ var _hmt = _hmt || [];
   
 <nav id="article-nav">
   
-    <a href="/2017/11/02/Servlet-apply-one/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2017/10/30/VerifyCode-Java/" id="article-nav-newer" class="article-nav-link-wrap">
       <i class="icon-circle-left"></i>
       <div class="article-nav-title">
         
-          Servlet常用用法（一）
+          验证码Java实现
         
       </div>
     </a>
   
   
-    <a href="/2017/10/29/Servlet-basic/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Servlet基础知识</div>
+    <a href="/2017/10/25/Docker-start/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Docker入门笔记</div>
       <i class="icon-circle-right"></i>
     </a>
   
@@ -366,7 +651,7 @@ var _hmt = _hmt || [];
 <script src="//imsun.github.io/gitment/dist/gitment.browser.js"></script>
 <script>
 var gitment = new Gitment({
-  id: "https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/30/VerifyCode-Java/",
+  id: "https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/29/Servlet-basic/",
   owner: 'zjs1224522500',
   repo: 'zjs1224522500.github.io',
   oauth: {
