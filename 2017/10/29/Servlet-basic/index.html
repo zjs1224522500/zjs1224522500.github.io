@@ -8,19 +8,19 @@
   <link rel="dns-prefetch" href="https://github.com/zjs1224522500/zjs1224522500.github.io">
   <title>Servlet基础知识 | Elvis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="1、什么是Servlet？&amp;gt; Java Servlet 是运行在 Web 服务器或应用服务器上的程序，它是作为来自 Web 浏览器或其他 HTTP 客户端的请求和 HTTP 服务器上的数据库或应用程序之间的中间层。 个人见解:Servlet本质属于MVC架构模式中的C（controller）层，充当控制器的角色 2、Servlet架构  3、Servlet声明周期 Servlet 通过调用">
+  <meta name="description" content="1、什么是Servlet？&amp;gt; Java Servlet 是运行在 Web 服务器或应用服务器上的程序，它是作为来自 Web 浏览器或其他 HTTP 客户端的请求和 HTTP 服务器上的数据库或应用程序之间的中间层。 个人见解:Servlet本质属于MVC架构模式中的C（controller）层，充当控制器的角色">
 <meta name="keywords" content="JavaWeb">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Servlet基础知识">
 <meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/10/29/Servlet-basic/index.html">
 <meta property="og:site_name" content="Elvis">
-<meta property="og:description" content="1、什么是Servlet？&amp;gt; Java Servlet 是运行在 Web 服务器或应用服务器上的程序，它是作为来自 Web 浏览器或其他 HTTP 客户端的请求和 HTTP 服务器上的数据库或应用程序之间的中间层。 个人见解:Servlet本质属于MVC架构模式中的C（controller）层，充当控制器的角色 2、Servlet架构  3、Servlet声明周期 Servlet 通过调用">
+<meta property="og:description" content="1、什么是Servlet？&amp;gt; Java Servlet 是运行在 Web 服务器或应用服务器上的程序，它是作为来自 Web 浏览器或其他 HTTP 客户端的请求和 HTTP 服务器上的数据库或应用程序之间的中间层。 个人见解:Servlet本质属于MVC架构模式中的C（controller）层，充当控制器的角色">
 <meta property="og:image" content="http://www.runoob.com/wp-content/uploads/2014/07/servlet-arch.jpg">
 <meta property="og:image" content="http://www.runoob.com/wp-content/uploads/2014/07/Servlet-LifeCycle.jpg">
-<meta property="og:updated_time" content="2017-11-01T12:10:50.587Z">
+<meta property="og:updated_time" content="2017-11-03T12:35:59.273Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Servlet基础知识">
-<meta name="twitter:description" content="1、什么是Servlet？&amp;gt; Java Servlet 是运行在 Web 服务器或应用服务器上的程序，它是作为来自 Web 浏览器或其他 HTTP 客户端的请求和 HTTP 服务器上的数据库或应用程序之间的中间层。 个人见解:Servlet本质属于MVC架构模式中的C（controller）层，充当控制器的角色 2、Servlet架构  3、Servlet声明周期 Servlet 通过调用">
+<meta name="twitter:description" content="1、什么是Servlet？&amp;gt; Java Servlet 是运行在 Web 服务器或应用服务器上的程序，它是作为来自 Web 浏览器或其他 HTTP 客户端的请求和 HTTP 服务器上的数据库或应用程序之间的中间层。 个人见解:Servlet本质属于MVC架构模式中的C（controller）层，充当控制器的角色">
 <meta name="twitter:image" content="http://www.runoob.com/wp-content/uploads/2014/07/servlet-arch.jpg">
   
     <link rel="alternative" href="/atom.xml" title="Elvis" type="application/atom+xml">
@@ -196,7 +196,7 @@ var _hmt = _hmt || [];
     <div class="article-entry" itemprop="articleBody">
       
         <h1 id="1、什么是Servlet？"><a href="#1、什么是Servlet？" class="headerlink" title="1、什么是Servlet？"></a>1、什么是<code>Servlet</code>？</h1><h2 id="gt-Java-Servlet-是运行在-Web-服务器或应用服务器上的程序，它是作为来自-Web-浏览器或其他-HTTP-客户端的请求和-HTTP-服务器上的数据库或应用程序之间的中间层。"><a href="#gt-Java-Servlet-是运行在-Web-服务器或应用服务器上的程序，它是作为来自-Web-浏览器或其他-HTTP-客户端的请求和-HTTP-服务器上的数据库或应用程序之间的中间层。" class="headerlink" title="&gt; Java Servlet 是运行在 Web 服务器或应用服务器上的程序，它是作为来自 Web 浏览器或其他 HTTP 客户端的请求和 HTTP 服务器上的数据库或应用程序之间的中间层。"></a>&gt; <code>Java Servlet</code> 是运行在 <code>Web</code> 服务器或应用服务器上的程序，它是作为来自 <code>Web</code> 浏览器或其他 <code>HTTP</code> 客户端的请求和 <code>HTTP</code> 服务器上的数据库或应用程序之间的中间层。</h2><blockquote>
-<p>个人见解:<code>Servlet</code>本质属于<code>MVC</code>架构模式中的<code>C（controller）</code>层，充当控制器的角色</p>
+<p>个人见解:<code>Servlet</code>本质属于<code>MVC</code>架构模式中的<code>C（controller）</code>层，充当控制器的角色<br><a id="more"></a></p>
 <h1 id="2、Servlet架构"><a href="#2、Servlet架构" class="headerlink" title="2、Servlet架构"></a>2、<code>Servlet</code>架构</h1><p><img src="http://www.runoob.com/wp-content/uploads/2014/07/servlet-arch.jpg" alt="image"> <img src="http://www.runoob.com/wp-content/uploads/2014/07/Servlet-LifeCycle.jpg" alt="image"></p>
 <h1 id="3、Servlet声明周期"><a href="#3、Servlet声明周期" class="headerlink" title="3、Servlet声明周期"></a>3、<code>Servlet</code>声明周期</h1><ul>
 <li><code>Servlet</code> 通过调用 <code>init ()</code> 方法进行初始化。<ul>
@@ -611,8 +611,8 @@ var _hmt = _hmt || [];
     </a>
   
   
-    <a href="/2017/10/25/Docker-start/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Docker入门笔记</div>
+    <a href="/2017/10/25/Docker-cmd/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Docker常用命令</div>
       <i class="icon-circle-right"></i>
     </a>
   
@@ -746,11 +746,11 @@ getOwnMetadataKeys:function(t){return o(i(t),arguments.length<2?void 0:u(argumen
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+                <a href="javascript:void(0)" class="js-tag color4">服务器</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">服务器</a>
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
               </li>
              
               <li class="article-tag-list-item">
