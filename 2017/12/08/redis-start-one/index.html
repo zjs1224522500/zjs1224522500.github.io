@@ -6,19 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://github.com/zjs1224522500/zjs1224522500.github.io">
-  <title>Servlet常用用法（二）-文件上传下载 | Elvis</title>
+  <title>Redis安装与配置 | Elvis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="3、Servlet实现文件上传下载文件上传：原理（Servlet） 通过使用文件上传下载组件，通过读取请求中的文件的输入流，在预先协商好的路径下根据对应的文件名创建相应的文件对象，将提交的文件对象FileItem写入对应的文件中。 在Servlet3.0中可以使用注解@MultiPartConfig将一个servlet标识为支持文件上传，将Multipart/form-data的POST请求封装为">
-<meta name="keywords" content="JavaWeb">
+  <meta name="description" content="1、为什么使用Redis？ MySQL为代表的关系型数据库在web2.0时代出现一系列效率低下，可扩展性差等问题，从而产生了NoSQL NoSQL介绍–菜鸟教程 而Redis则是NoSQL中的键值对数据库中最广泛应用的一种。除此以为还有MongoDB(文档存储数据库)">
+<meta name="keywords" content="Redis">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Servlet常用用法（二）-文件上传下载">
-<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/11/03/Servlet-apply-two/index.html">
+<meta property="og:title" content="Redis安装与配置">
+<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/12/08/redis-start-one/index.html">
 <meta property="og:site_name" content="Elvis">
-<meta property="og:description" content="3、Servlet实现文件上传下载文件上传：原理（Servlet） 通过使用文件上传下载组件，通过读取请求中的文件的输入流，在预先协商好的路径下根据对应的文件名创建相应的文件对象，将提交的文件对象FileItem写入对应的文件中。 在Servlet3.0中可以使用注解@MultiPartConfig将一个servlet标识为支持文件上传，将Multipart/form-data的POST请求封装为">
-<meta property="og:updated_time" content="2017-11-03T12:34:52.726Z">
+<meta property="og:description" content="1、为什么使用Redis？ MySQL为代表的关系型数据库在web2.0时代出现一系列效率低下，可扩展性差等问题，从而产生了NoSQL NoSQL介绍–菜鸟教程 而Redis则是NoSQL中的键值对数据库中最广泛应用的一种。除此以为还有MongoDB(文档存储数据库)">
+<meta property="og:updated_time" content="2017-12-07T12:02:20.713Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Servlet常用用法（二）-文件上传下载">
-<meta name="twitter:description" content="3、Servlet实现文件上传下载文件上传：原理（Servlet） 通过使用文件上传下载组件，通过读取请求中的文件的输入流，在预先协商好的路径下根据对应的文件名创建相应的文件对象，将提交的文件对象FileItem写入对应的文件中。 在Servlet3.0中可以使用注解@MultiPartConfig将一个servlet标识为支持文件上传，将Multipart/form-data的POST请求封装为">
+<meta name="twitter:title" content="Redis安装与配置">
+<meta name="twitter:description" content="1、为什么使用Redis？ MySQL为代表的关系型数据库在web2.0时代出现一系列效率低下，可扩展性差等问题，从而产生了NoSQL NoSQL介绍–菜鸟教程 而Redis则是NoSQL中的键值对数据库中最广泛应用的一种。除此以为还有MongoDB(文档存储数据库)">
   
     <link rel="alternative" href="/atom.xml" title="Elvis" type="application/atom+xml">
   
@@ -172,61 +172,80 @@ var _hmt = _hmt || [];
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-Servlet-apply-two" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-redis-start-one" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      Servlet常用用法（二）-文件上传下载
+      Redis安装与配置
     </h1>
   
 
         
-        <a href="/2017/11/03/Servlet-apply-two/" class="archive-article-date">
-  	<time datetime="2017-11-02T21:28:52.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-11-02</time>
+        <a href="/2017/12/08/redis-start-one/" class="archive-article-date">
+  	<time datetime="2017-12-07T20:00:29.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-12-07</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="3、Servlet实现文件上传下载"><a href="#3、Servlet实现文件上传下载" class="headerlink" title="3、Servlet实现文件上传下载"></a>3、<code>Servlet</code>实现文件上传下载</h1><h3 id="文件上传："><a href="#文件上传：" class="headerlink" title="文件上传："></a>文件上传：</h3><h4 id="原理（Servlet）"><a href="#原理（Servlet）" class="headerlink" title="原理（Servlet）"></a>原理（Servlet）</h4><ul>
-<li>通过使用文件上传下载组件，通过读取请求中的文件的输入流，在预先协商好的路径下根据对应的文件名创建相应的文件对象，将提交的文件对象<code>FileItem</code>写入对应的文件中。</li>
-<li>在<code>Servlet3.0</code>中可以使用注解<code>@MultiPartConfig</code>将一个<code>servlet</code>标识为<strong>支持文件上传</strong>，将<code>Multipart/form-data</code>的<code>POST</code>请求封装为成<code>Part</code>，通过<code>Part</code>对上传的文件进行操作。对应的在<code>Servlet</code>处理请求时使用<code>getPart()</code>和<code>getParts()</code>方法来获取对应的文件对象（<code>input</code>对应的<code>file</code>标签）<h4 id="框架对应的文件上传方法"><a href="#框架对应的文件上传方法" class="headerlink" title="框架对应的文件上传方法"></a>框架对应的文件上传方法</h4></li>
-<li><code>SpringMVC</code>中用的是<code>MultipartFile</code>来进行文件上传 所以我们首先要配置<code>MultipartResolver</code>:<strong>用于处理表单中的<code>file</code></strong></li>
+        <h2 id="1、为什么使用Redis？"><a href="#1、为什么使用Redis？" class="headerlink" title="1、为什么使用Redis？"></a>1、为什么使用Redis？</h2><ul>
+<li><code>MySQL</code>为代表的关系型数据库在<code>web2.0</code>时代出现一系列效率低下，可扩展性差等问题，从而产生了<code>NoSQL</code> <a href="http://www.runoob.com/mongodb/nosql.html" target="_blank" rel="external">NoSQL介绍–菜鸟教程</a></li>
+<li>而<code>Redis</code>则是<code>NoSQL</code>中的键值对数据库中最广泛应用的一种。除此以为还有<code>MongoDB</code>(文档存储数据库)</li>
 </ul>
 <a id="more"></a>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">&lt;!-- 文件上传组件 --&gt;</div><div class="line">    &lt;bean class=&quot;org.springframework.web.multipart.commons.CommonsMultipartResolver&quot;&gt;</div><div class="line">        &lt;property name=&quot;defaultEncoding&quot; value=&quot;UTF-8&quot;/&gt;</div><div class="line">        &lt;property name=&quot;maxUploadSize&quot; value=&quot;500000&quot;/&gt;</div><div class="line">    &lt;/bean&gt;</div></pre></td></tr></table></figure>
+<h2 id="Redis相关命令"><a href="#Redis相关命令" class="headerlink" title="Redis相关命令"></a>Redis相关命令</h2><ul>
+<li><a href="http://www.runoob.com/redis/redis-commands.html" target="_blank" rel="external">菜鸟教程Redis命令</a><h5 id="Redis通用命令"><a href="#Redis通用命令" class="headerlink" title="Redis通用命令"></a>Redis通用命令</h5></li>
+<li><code>keys *</code>//查看所有的key</li>
+<li><code>keys my?</code>//通配符查看</li>
+<li><code>del key1 key2 key3</code>//删除key</li>
+<li><code>exists key</code>//判断是否存在</li>
+<li><code>rename key1 key2</code>//更改键的名字 </li>
+<li><code>expire key num</code>//设置过期时间，单位为s</li>
+<li><code>ttl key</code>//key剩余时间</li>
+<li><code>type key</code>//查看类型</li>
+</ul>
+<h2 id="Redis的安装启动"><a href="#Redis的安装启动" class="headerlink" title="Redis的安装启动"></a>Redis的安装启动</h2><h4 id="windows下"><a href="#windows下" class="headerlink" title="windows下"></a><code>windows</code>下</h4><ul>
+<li><p>在<code>redis</code>的安装目录下使用 <code>redis-server.exe redis.windows.conf</code>命令启动<code>Redis</code></p>
 <ul>
-<li>传输过程中一直使用<code>MultipartFile</code>，而在磁盘对应的文件读写中则使用<code>java.io.file</code>；对应<code>MultipartFile</code>有几个关键方法：<ul>
-<li><strong>String getContentType()</strong>//获取文件MIME类型</li>
-<li><strong>InputStream getInputStream()</strong>//后去文件流</li>
-<li><strong>String getName()</strong> //获取表单中文件组件的名字</li>
-<li><strong>String getOriginalFilename()</strong>//获取上传文件的原名</li>
-<li><strong>boolean isEmpty()</strong> //是否为空</li>
-<li><strong>void transferTo(File dest)</strong> //保存到一个目标文件中。</li>
-</ul>
+<li>如果设置了<code>redis</code>的安装路径为相应的系统环境变量，则可以省略路径,直接使用<code>redis-server.exe</code>,如果省略配置文件信息，对应的使用默认配置。</li>
+<li><strong>注意：</strong>如果启动时遇到了<code>Creating Server TCP listening socket *:6379: bind:</code>,则需要<figure class="highlight cmd"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">&gt; redis-cli.exe</div><div class="line">&gt; shutdown</div><div class="line">&gt; <span class="keyword">exit</span></div><div class="line">&gt; redis-server.exe redis.windows.conf</div></pre></td></tr></table></figure>
 </li>
 </ul>
-<blockquote>
-<p>文件上传过程中可能存在<strong>文件名中文乱码</strong>的问题，常常是因为<code>request</code>的相关编码问题，为了能够统一解决，最好的方式时利用<strong>字符过滤器</strong>对所有请求进行整体的编码。其中<code>Spring</code>自带的字符过滤器就是比较好的选择。也可以使用自己定义的字符过滤器。</p>
-</blockquote>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="comment">&lt;!--start Spring自带字符过滤器 --&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">filter</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>EncodingFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">filter-class</span>&gt;</span>org.springframework.web.filter.CharacterEncodingFilter<span class="tag">&lt;/<span class="name">filter-class</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">init-param</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>encoding<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>UTF-8<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></div><div class="line">        <span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">init-param</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>forceEncoding<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>true<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></div><div class="line">        <span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="name">filter</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">filter-mapping</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>EncodingFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="name">filter-mapping</span>&gt;</span></div><div class="line">    <span class="comment">&lt;!--end Spring自带字符过滤器 --&gt;</span></div></pre></td></tr></table></figure>
-<h3 id="文件下载："><a href="#文件下载：" class="headerlink" title="文件下载："></a>文件下载：</h3><h4 id="原理（Servlet）-1"><a href="#原理（Servlet）-1" class="headerlink" title="原理（Servlet）"></a>原理（Servlet）</h4><ul>
-<li>通过请求提交的指定的文件名，在服务器端根据路径和请求参数创建相应的文件对象和文件流，并利用字节数组将创建得到的文件流写入到<code>response</code>对应的输出流<code>ServletOutputStream</code>中，并指定<code>response</code>对应的一些头的属性，譬如<code>ContentType</code>中对应的<code>MIME类型</code>和<code>Content-Disposition</code>中对应的文件打开方式，然后随<code>response</code>发送到客户端。</li>
-<li>在使用框架下载文件的过程中，通常和原生<code>Servlet</code>的处理方法保持一致，但往往需要构造<code>RestFul</code>风格的响应，故常常需要将下载文件作为一种特殊的响应类型（<code>SteamRestResponse</code><strong>流类型</strong>），还是需要设置<code>response</code>对应的头的属性。<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line">/**</div><div class="line"> * 响应流返回结果</div><div class="line"> *</div><div class="line"> * @param file     文件信息</div><div class="line"> * @param fileName 下载时显示的文件名称</div><div class="line"> * @return 空</div><div class="line"> * @throws IOException 将文件写入流中可能存在IO异常</div><div class="line"> */</div><div class="line">public RestResponse streamResponse(FileInfo file, String fileName) throws IOException &#123;</div><div class="line"></div><div class="line">	HttpServletResponse response = getResponseContext();</div><div class="line"></div><div class="line">	//设置响应类型</div><div class="line">	response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);</div><div class="line">	response.setHeader(&quot;Accept-Ranges&quot;, &quot;bytes&quot;);</div><div class="line">	response.setIntHeader(&quot;Accept-Length&quot;, Math.toIntExact(file.getSize()));// 解决乱码问题</div><div class="line"></div><div class="line">	// FireFox用ISO-8859-1</div><div class="line">	String encodedFileName;</div><div class="line">	if (Browser.IE.getName() == getClientBrowser())&#123;</div><div class="line">	    encodedFileName = URLEncoder.encode(fileName, &quot;UTF-8&quot;);</div><div class="line">	&#125; else &#123;</div><div class="line">	    encodedFileName = new String(fileName.getBytes(), &quot;ISO-8859-1&quot;);</div><div class="line">	&#125;</div><div class="line">	response.setHeader(&quot;Content-Disposition&quot;,&quot;attachment; filename=\&quot;&quot; + encodedFileName + &quot;\&quot;; filename*=utf-8&apos;&apos;&quot; + encodedFileName);</div><div class="line"></div><div class="line">	Path path = Paths.get(file.getPath());</div><div class="line">	Files.copy(path, response.getOutputStream());</div><div class="line"></div><div class="line">	return successResponse();</div><div class="line">	&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>指定<code>redis</code>对应的主机地址和端口号<code>redis-cli.exe -h 127.0.0.1 -p 6379</code></p>
+</li>
+<li>可以进行如下操作则启动成功：<figure class="highlight cmd"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6739</span> &gt; <span class="built_in">set</span> name elvis</div><div class="line">OK</div><div class="line"><span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6739</span> &gt; get name</div><div class="line">"elvis"</div></pre></td></tr></table></figure>
 </li>
 </ul>
-<h3 id="文件上传下载过程中对应的文件路径的问题"><a href="#文件上传下载过程中对应的文件路径的问题" class="headerlink" title="文件上传下载过程中对应的文件路径的问题"></a>文件上传下载过程中对应的文件路径的问题</h3><ul>
-<li>由于开发和生产环境的不同，可能对应的需要保存文件上传下载的目录也有所不同，为了保证程序的的可移植性，常常需要采用相对路径来进行文件的相关存储，但又为了保证各个项目之间的数据能够独立，所以我们常把对应的文件存储在对应的项目目录下，并利用数据库持久化文件的相关数据，譬如<code>MIME类型</code>，<code>文件大小</code>，<code>MD5摘要</code>,<code>存放的路径</code>等等一系列信息。</li>
-<li>为了实现上述功能，我们常常使用<code>Context</code>或<code>Config</code>来获取在<code>web.xml</code>中的定义的初始化参数（文件相对路径）。代码示例如下：</li>
-<li><p>web.xml</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">&lt;!-- 通过使用ServletContext去获取 --&gt;</div><div class="line">&lt;context-param&gt;</div><div class="line">    &lt;param-name&gt;uploadPath&lt;/param-name&gt;</div><div class="line">    &lt;param-value&gt;data&lt;/param-value&gt;</div><div class="line">&lt;/context-param&gt;</div><div class="line"></div><div class="line">&lt;!-- 通过使用ServletConfig去获取 --&gt;</div><div class="line">&lt;servlet&gt;</div><div class="line">    &lt;init-param&gt;</div><div class="line">        &lt;param-name&gt;uploadPath&lt;/param-name&gt;</div><div class="line">        &lt;param-value&gt;data&lt;/param-value&gt;</div><div class="line">    &lt;/init-param&gt;</div><div class="line">&lt;/servlet&gt;</div></pre></td></tr></table></figure>
+<h4 id="linux下"><a href="#linux下" class="headerlink" title="linux下"></a><code>linux</code>下</h4><ul>
+<li><p>安装：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ wget http://download.redis.io/releases/redis-<span class="number">4</span>.<span class="number">0</span>.<span class="number">2</span>.tar.gz</div><div class="line">$ tar xzf redis-<span class="number">4</span>.<span class="number">0</span>.<span class="number">2</span>.tar.gz</div><div class="line">$ <span class="built_in">cd</span> redis-<span class="number">4</span>.<span class="number">0</span>.<span class="number">2</span></div><div class="line">$ make//编译之后在安装目录下的src目录下会出现编译后的redis服务程序redis-server,还有用于测试的客户端程序redis-cl</div></pre></td></tr></table></figure>
 </li>
-<li><p>servlet或controller中</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">ServletContext servletContext = req.getServletContext();</div><div class="line">ServletConfig servletConfig = getServletConfig();</div><div class="line"><span class="comment">//使用servlet</span></div><div class="line">String uploadPath = servletContext.getRealPath(<span class="string">"/"</span>) + File.separator + servletConfig.getInitParameter(<span class="string">"uploadPath"</span>);</div><div class="line">				</div><div class="line"><span class="comment">//使用context				</span></div><div class="line">String directory = servletContext.getRealPath(<span class="string">"/"</span>) + File.separator + servletContext.getInitParameter(<span class="string">"uploadPath"</span>);</div></pre></td></tr></table></figure></li>
+<li><p>启动：(注意要使用的redis.conf的位置)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ cd src</div><div class="line">$ ./redis-server ../redis.conf</div></pre></td></tr></table></figure>
+</li>
+<li><p>服务器端运行<code>redis-server</code>时建议将配置文件中的<code>daemonize</code>为<code>yes</code>，即默认以后台程序方式运行。</p>
+</li>
+<li><p>服务器端运行client进行测试</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ ./redis-cli.exe</div><div class="line">$ set key xxx</div><div class="line">OK</div><div class="line">$ get key</div><div class="line">xxx</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="Redis的配置"><a href="#Redis的配置" class="headerlink" title="Redis的配置"></a>Redis的配置</h2><ul>
+<li>获取相关配置：<code>CONFIG GET 配置名</code>   <ul>
+<li>注：可以使用通配符 <code>*</code> 获取全部配置</li>
+</ul>
+</li>
+<li>编辑配置：<ul>
+<li>方式一：修改对应<code>conf</code>配置文件</li>
+<li>方式二：<code>CONFIG SET 配置名 新的值</code></li>
+</ul>
+</li>
+<li>参数说明：<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div></pre></td><td class="code"><pre><div class="line">1. Redis默认不是以守护进程的方式运行，可以通过该配置项修改，使用yes启用守护进程</div><div class="line">    daemonize no</div><div class="line">2. 当Redis以守护进程方式运行时，Redis默认会把pid写入/var/run/redis.pid文件，可以通过pidfile指定</div><div class="line">    pidfile /var/run/redis.pid</div><div class="line">3. 指定Redis监听端口，默认端口为6379，作者在自己的一篇博文中解释了为什么选用6379作为默认端口，因为6379在手机按键上MERZ对应的号码，而MERZ取自意大利歌女Alessia Merz的名字</div><div class="line">    port 6379</div><div class="line">4. 绑定的主机地址</div><div class="line">    bind 127.0.0.1</div><div class="line">5.当 客户端闲置多长时间后关闭连接，如果指定为0，表示关闭该功能</div><div class="line">    timeout 300</div><div class="line">6. 指定日志记录级别，Redis总共支持四个级别：debug、verbose、notice、warning，默认为verbose</div><div class="line">    loglevel verbose</div><div class="line">7. 日志记录方式，默认为标准输出，如果配置Redis为守护进程方式运行，而这里又配置为日志记录方式为标准输出，则日志将会发送给/dev/null</div><div class="line">    logfile stdout</div><div class="line">8. 设置数据库的数量，默认数据库为0，可以使用SELECT &lt;dbid&gt;命令在连接上指定数据库id</div><div class="line">    databases 16</div><div class="line">9. 指定在多长时间内，有多少次更新操作，就将数据同步到数据文件，可以多个条件配合</div><div class="line">    save &lt;seconds&gt; &lt;changes&gt;</div><div class="line">    Redis默认配置文件中提供了三个条件：</div><div class="line">    save 900 1</div><div class="line">    save 300 10</div><div class="line">    save 60 10000</div><div class="line">    分别表示900秒（15分钟）内有1个更改，300秒（5分钟）内有10个更改以及60秒内有10000个更改。</div><div class="line"> </div><div class="line">10. 指定存储至本地数据库时是否压缩数据，默认为yes，Redis采用LZF压缩，如果为了节省CPU时间，可以关闭该选项，但会导致数据库文件变的巨大</div><div class="line">    rdbcompression yes</div><div class="line">11. 指定本地数据库文件名，默认值为dump.rdb</div><div class="line">    dbfilename dump.rdb</div><div class="line">12. 指定本地数据库存放目录</div><div class="line">    dir ./</div><div class="line">13. 设置当本机为slav服务时，设置master服务的IP地址及端口，在Redis启动时，它会自动从master进行数据同步</div><div class="line">    slaveof &lt;masterip&gt; &lt;masterport&gt;</div><div class="line">14. 当master服务设置了密码保护时，slav服务连接master的密码</div><div class="line">    masterauth &lt;master-password&gt;</div><div class="line">15. 设置Redis连接密码，如果配置了连接密码，客户端在连接Redis时需要通过AUTH &lt;password&gt;命令提供密码，默认关闭</div><div class="line">    requirepass foobared</div><div class="line">16. 设置同一时间最大客户端连接数，默认无限制，Redis可以同时打开的客户端连接数为Redis进程可以打开的最大文件描述符数，如果设置 maxclients 0，表示不作限制。当客户端连接数到达限制时，Redis会关闭新的连接并向客户端返回max number of clients reached错误信息</div><div class="line">    maxclients 128</div><div class="line">17. 指定Redis最大内存限制，Redis在启动时会把数据加载到内存中，达到最大内存后，Redis会先尝试清除已到期或即将到期的Key，当此方法处理 后，仍然到达最大内存设置，将无法再进行写入操作，但仍然可以进行读取操作。Redis新的vm机制，会把Key存放内存，Value会存放在swap区</div><div class="line">    maxmemory &lt;bytes&gt;</div><div class="line">18. 指定是否在每次更新操作后进行日志记录，Redis在默认情况下是异步的把数据写入磁盘，如果不开启，可能会在断电时导致一段时间内的数据丢失。因为 redis本身同步数据文件是按上面save条件来同步的，所以有的数据会在一段时间内只存在于内存中。默认为no</div><div class="line">    appendonly no</div><div class="line">19. 指定更新日志文件名，默认为appendonly.aof</div><div class="line">     appendfilename appendonly.aof</div><div class="line">20. 指定更新日志条件，共有3个可选值： </div><div class="line">    no：表示等操作系统进行数据缓存同步到磁盘（快） </div><div class="line">    always：表示每次更新操作后手动调用fsync()将数据写到磁盘（慢，安全） </div><div class="line">    everysec：表示每秒同步一次（折衷，默认值）</div><div class="line">    appendfsync everysec</div><div class="line"> </div><div class="line">21. 指定是否启用虚拟内存机制，默认值为no，简单的介绍一下，VM机制将数据分页存放，由Redis将访问量较少的页即冷数据swap到磁盘上，访问多的页面由磁盘自动换出到内存中（在后面的文章我会仔细分析Redis的VM机制）</div><div class="line">     vm-enabled no</div><div class="line">22. 虚拟内存文件路径，默认值为/tmp/redis.swap，不可多个Redis实例共享</div><div class="line">     vm-swap-file /tmp/redis.swap</div><div class="line">23. 将所有大于vm-max-memory的数据存入虚拟内存,无论vm-max-memory设置多小,所有索引数据都是内存存储的(Redis的索引数据 就是keys),也就是说,当vm-max-memory设置为0的时候,其实是所有value都存在于磁盘。默认值为0</div><div class="line">     vm-max-memory 0</div><div class="line">24. Redis swap文件分成了很多的page，一个对象可以保存在多个page上面，但一个page上不能被多个对象共享，vm-page-size是要根据存储的 数据大小来设定的，作者建议如果存储很多小对象，page大小最好设置为32或者64bytes；如果存储很大大对象，则可以使用更大的page，如果不 确定，就使用默认值</div><div class="line">     vm-page-size 32</div><div class="line">25. 设置swap文件中的page数量，由于页表（一种表示页面空闲或使用的bitmap）是在放在内存中的，，在磁盘上每8个pages将消耗1byte的内存。</div><div class="line">     vm-pages 134217728</div><div class="line">26. 设置访问swap文件的线程数,最好不要超过机器的核数,如果设置为0,那么所有对swap文件的操作都是串行的，可能会造成比较长时间的延迟。默认值为4</div><div class="line">     vm-max-threads 4</div><div class="line">27. 设置在向客户端应答时，是否把较小的包合并为一个包发送，默认为开启</div><div class="line">    glueoutputbuf yes</div><div class="line">28. 指定在超过一定的数量或者最大的元素超过某一临界值时，采用一种特殊的哈希算法</div><div class="line">    hash-max-zipmap-entries 64</div><div class="line">    hash-max-zipmap-value 512</div><div class="line">29. 指定是否激活重置哈希，默认为开启（后面在介绍Redis的哈希算法时具体介绍）</div><div class="line">    activerehashing yes</div><div class="line">30. 指定包含其它的配置文件，可以在同一主机上多个Redis实例之间使用同一份配置文件，而同时各个实例又拥有自己的特定配置文件</div><div class="line">    include /path/to/local.conf</div></pre></td></tr></table></figure>
+</li>
 </ul>
 
       
@@ -272,7 +291,7 @@ var _hmt = _hmt || [];
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">JavaWeb</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Redis</a>
         		</li>
       		
 		</ul>
@@ -328,7 +347,7 @@ var _hmt = _hmt || [];
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="http://s.jiathis.com/qrcode.php?url=https://github.com/zjs1224522500/zjs1224522500.github.io/2017/11/03/Servlet-apply-two/" alt="微信分享二维码">
+      <img src="http://s.jiathis.com/qrcode.php?url=https://github.com/zjs1224522500/zjs1224522500.github.io/2017/12/08/redis-start-one/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -342,18 +361,18 @@ var _hmt = _hmt || [];
   
 <nav id="article-nav">
   
-    <a href="/2017/11/19/tinySpring-learnOne-IOC/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2017/12/08/redis-data-structure-two/" id="article-nav-newer" class="article-nav-link-wrap">
       <i class="icon-circle-left"></i>
       <div class="article-nav-title">
         
-          tinySpring学习笔记（一）-实现IOC容器
+          Redis数据类型
         
       </div>
     </a>
   
   
-    <a href="/2017/11/02/Servlet-apply-one/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Servlet常用用法（一）</div>
+    <a href="/2017/11/19/tinySpring-learnOne-IOC/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">tinySpring学习笔记（一）-实现IOC容器</div>
       <i class="icon-circle-right"></i>
     </a>
   
@@ -392,7 +411,7 @@ var _hmt = _hmt || [];
 <script src="//imsun.github.io/gitment/dist/gitment.browser.js"></script>
 <script>
 var gitment = new Gitment({
-  id: "https://github.com/zjs1224522500/zjs1224522500.github.io/2017/11/03/Servlet-apply-two/",
+  id: "https://github.com/zjs1224522500/zjs1224522500.github.io/2017/12/08/redis-start-one/",
   owner: 'zjs1224522500',
   repo: 'zjs1224522500.github.io',
   oauth: {

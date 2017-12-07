@@ -6,19 +6,17 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://github.com/zjs1224522500/zjs1224522500.github.io">
-  <title>Servlet常用用法（二）-文件上传下载 | Elvis</title>
+  <title>Archives: 2017/12 | Elvis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="3、Servlet实现文件上传下载文件上传：原理（Servlet） 通过使用文件上传下载组件，通过读取请求中的文件的输入流，在预先协商好的路径下根据对应的文件名创建相应的文件对象，将提交的文件对象FileItem写入对应的文件中。 在Servlet3.0中可以使用注解@MultiPartConfig将一个servlet标识为支持文件上传，将Multipart/form-data的POST请求封装为">
-<meta name="keywords" content="JavaWeb">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Servlet常用用法（二）-文件上传下载">
-<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/11/03/Servlet-apply-two/index.html">
+  <meta name="description" content="电子科技大学软件工程在读，JavaWeb学习ing">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Elvis">
+<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/archives/2017/12/index.html">
 <meta property="og:site_name" content="Elvis">
-<meta property="og:description" content="3、Servlet实现文件上传下载文件上传：原理（Servlet） 通过使用文件上传下载组件，通过读取请求中的文件的输入流，在预先协商好的路径下根据对应的文件名创建相应的文件对象，将提交的文件对象FileItem写入对应的文件中。 在Servlet3.0中可以使用注解@MultiPartConfig将一个servlet标识为支持文件上传，将Multipart/form-data的POST请求封装为">
-<meta property="og:updated_time" content="2017-11-03T12:34:52.726Z">
+<meta property="og:description" content="电子科技大学软件工程在读，JavaWeb学习ing">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Servlet常用用法（二）-文件上传下载">
-<meta name="twitter:description" content="3、Servlet实现文件上传下载文件上传：原理（Servlet） 通过使用文件上传下载组件，通过读取请求中的文件的输入流，在预先协商好的路径下根据对应的文件名创建相应的文件对象，将提交的文件对象FileItem写入对应的文件中。 在Servlet3.0中可以使用注解@MultiPartConfig将一个servlet标识为支持文件上传，将Multipart/form-data的POST请求封装为">
+<meta name="twitter:title" content="Elvis">
+<meta name="twitter:description" content="电子科技大学软件工程在读，JavaWeb学习ing">
   
     <link rel="alternative" href="/atom.xml" title="Elvis" type="application/atom+xml">
   
@@ -172,237 +170,98 @@ var _hmt = _hmt || [];
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-Servlet-apply-two" class="article article-type-post " itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
+            
   
-    <h1 class="article-title" itemprop="name">
-      Servlet常用用法（二）-文件上传下载
+  
+    
+    
+      
+      
+      <section class="archives-wrap">
+        <div class="archive-year-wrap">
+          <a href="/archives/2017" class="archive-year">2017</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      	<div class="article-meta">
+	      	<a href="/2017/12/08/redis-data-structure-two/" class="archive-article-date">
+  	<time datetime="2017-12-07T20:00:29.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-12-07</time>
+</a>
+        </div>
+    	 
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2017/12/08/redis-data-structure-two/">Redis数据类型</a>
     </h1>
   
 
-        
-        <a href="/2017/11/03/Servlet-apply-two/" class="archive-article-date">
-  	<time datetime="2017-11-02T21:28:52.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-11-02</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="3、Servlet实现文件上传下载"><a href="#3、Servlet实现文件上传下载" class="headerlink" title="3、Servlet实现文件上传下载"></a>3、<code>Servlet</code>实现文件上传下载</h1><h3 id="文件上传："><a href="#文件上传：" class="headerlink" title="文件上传："></a>文件上传：</h3><h4 id="原理（Servlet）"><a href="#原理（Servlet）" class="headerlink" title="原理（Servlet）"></a>原理（Servlet）</h4><ul>
-<li>通过使用文件上传下载组件，通过读取请求中的文件的输入流，在预先协商好的路径下根据对应的文件名创建相应的文件对象，将提交的文件对象<code>FileItem</code>写入对应的文件中。</li>
-<li>在<code>Servlet3.0</code>中可以使用注解<code>@MultiPartConfig</code>将一个<code>servlet</code>标识为<strong>支持文件上传</strong>，将<code>Multipart/form-data</code>的<code>POST</code>请求封装为成<code>Part</code>，通过<code>Part</code>对上传的文件进行操作。对应的在<code>Servlet</code>处理请求时使用<code>getPart()</code>和<code>getParts()</code>方法来获取对应的文件对象（<code>input</code>对应的<code>file</code>标签）<h4 id="框架对应的文件上传方法"><a href="#框架对应的文件上传方法" class="headerlink" title="框架对应的文件上传方法"></a>框架对应的文件上传方法</h4></li>
-<li><code>SpringMVC</code>中用的是<code>MultipartFile</code>来进行文件上传 所以我们首先要配置<code>MultipartResolver</code>:<strong>用于处理表单中的<code>file</code></strong></li>
-</ul>
-<a id="more"></a>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">&lt;!-- 文件上传组件 --&gt;</div><div class="line">    &lt;bean class=&quot;org.springframework.web.multipart.commons.CommonsMultipartResolver&quot;&gt;</div><div class="line">        &lt;property name=&quot;defaultEncoding&quot; value=&quot;UTF-8&quot;/&gt;</div><div class="line">        &lt;property name=&quot;maxUploadSize&quot; value=&quot;500000&quot;/&gt;</div><div class="line">    &lt;/bean&gt;</div></pre></td></tr></table></figure>
-<ul>
-<li>传输过程中一直使用<code>MultipartFile</code>，而在磁盘对应的文件读写中则使用<code>java.io.file</code>；对应<code>MultipartFile</code>有几个关键方法：<ul>
-<li><strong>String getContentType()</strong>//获取文件MIME类型</li>
-<li><strong>InputStream getInputStream()</strong>//后去文件流</li>
-<li><strong>String getName()</strong> //获取表单中文件组件的名字</li>
-<li><strong>String getOriginalFilename()</strong>//获取上传文件的原名</li>
-<li><strong>boolean isEmpty()</strong> //是否为空</li>
-<li><strong>void transferTo(File dest)</strong> //保存到一个目标文件中。</li>
-</ul>
-</li>
-</ul>
-<blockquote>
-<p>文件上传过程中可能存在<strong>文件名中文乱码</strong>的问题，常常是因为<code>request</code>的相关编码问题，为了能够统一解决，最好的方式时利用<strong>字符过滤器</strong>对所有请求进行整体的编码。其中<code>Spring</code>自带的字符过滤器就是比较好的选择。也可以使用自己定义的字符过滤器。</p>
-</blockquote>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="comment">&lt;!--start Spring自带字符过滤器 --&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">filter</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>EncodingFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">filter-class</span>&gt;</span>org.springframework.web.filter.CharacterEncodingFilter<span class="tag">&lt;/<span class="name">filter-class</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">init-param</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>encoding<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>UTF-8<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></div><div class="line">        <span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">init-param</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>forceEncoding<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>true<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></div><div class="line">        <span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="name">filter</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">filter-mapping</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>EncodingFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="name">filter-mapping</span>&gt;</span></div><div class="line">    <span class="comment">&lt;!--end Spring自带字符过滤器 --&gt;</span></div></pre></td></tr></table></figure>
-<h3 id="文件下载："><a href="#文件下载：" class="headerlink" title="文件下载："></a>文件下载：</h3><h4 id="原理（Servlet）-1"><a href="#原理（Servlet）-1" class="headerlink" title="原理（Servlet）"></a>原理（Servlet）</h4><ul>
-<li>通过请求提交的指定的文件名，在服务器端根据路径和请求参数创建相应的文件对象和文件流，并利用字节数组将创建得到的文件流写入到<code>response</code>对应的输出流<code>ServletOutputStream</code>中，并指定<code>response</code>对应的一些头的属性，譬如<code>ContentType</code>中对应的<code>MIME类型</code>和<code>Content-Disposition</code>中对应的文件打开方式，然后随<code>response</code>发送到客户端。</li>
-<li>在使用框架下载文件的过程中，通常和原生<code>Servlet</code>的处理方法保持一致，但往往需要构造<code>RestFul</code>风格的响应，故常常需要将下载文件作为一种特殊的响应类型（<code>SteamRestResponse</code><strong>流类型</strong>），还是需要设置<code>response</code>对应的头的属性。<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line">/**</div><div class="line"> * 响应流返回结果</div><div class="line"> *</div><div class="line"> * @param file     文件信息</div><div class="line"> * @param fileName 下载时显示的文件名称</div><div class="line"> * @return 空</div><div class="line"> * @throws IOException 将文件写入流中可能存在IO异常</div><div class="line"> */</div><div class="line">public RestResponse streamResponse(FileInfo file, String fileName) throws IOException &#123;</div><div class="line"></div><div class="line">	HttpServletResponse response = getResponseContext();</div><div class="line"></div><div class="line">	//设置响应类型</div><div class="line">	response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);</div><div class="line">	response.setHeader(&quot;Accept-Ranges&quot;, &quot;bytes&quot;);</div><div class="line">	response.setIntHeader(&quot;Accept-Length&quot;, Math.toIntExact(file.getSize()));// 解决乱码问题</div><div class="line"></div><div class="line">	// FireFox用ISO-8859-1</div><div class="line">	String encodedFileName;</div><div class="line">	if (Browser.IE.getName() == getClientBrowser())&#123;</div><div class="line">	    encodedFileName = URLEncoder.encode(fileName, &quot;UTF-8&quot;);</div><div class="line">	&#125; else &#123;</div><div class="line">	    encodedFileName = new String(fileName.getBytes(), &quot;ISO-8859-1&quot;);</div><div class="line">	&#125;</div><div class="line">	response.setHeader(&quot;Content-Disposition&quot;,&quot;attachment; filename=\&quot;&quot; + encodedFileName + &quot;\&quot;; filename*=utf-8&apos;&apos;&quot; + encodedFileName);</div><div class="line"></div><div class="line">	Path path = Paths.get(file.getPath());</div><div class="line">	Files.copy(path, response.getOutputStream());</div><div class="line"></div><div class="line">	return successResponse();</div><div class="line">	&#125;</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h3 id="文件上传下载过程中对应的文件路径的问题"><a href="#文件上传下载过程中对应的文件路径的问题" class="headerlink" title="文件上传下载过程中对应的文件路径的问题"></a>文件上传下载过程中对应的文件路径的问题</h3><ul>
-<li>由于开发和生产环境的不同，可能对应的需要保存文件上传下载的目录也有所不同，为了保证程序的的可移植性，常常需要采用相对路径来进行文件的相关存储，但又为了保证各个项目之间的数据能够独立，所以我们常把对应的文件存储在对应的项目目录下，并利用数据库持久化文件的相关数据，譬如<code>MIME类型</code>，<code>文件大小</code>，<code>MD5摘要</code>,<code>存放的路径</code>等等一系列信息。</li>
-<li>为了实现上述功能，我们常常使用<code>Context</code>或<code>Config</code>来获取在<code>web.xml</code>中的定义的初始化参数（文件相对路径）。代码示例如下：</li>
-<li><p>web.xml</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">&lt;!-- 通过使用ServletContext去获取 --&gt;</div><div class="line">&lt;context-param&gt;</div><div class="line">    &lt;param-name&gt;uploadPath&lt;/param-name&gt;</div><div class="line">    &lt;param-value&gt;data&lt;/param-value&gt;</div><div class="line">&lt;/context-param&gt;</div><div class="line"></div><div class="line">&lt;!-- 通过使用ServletConfig去获取 --&gt;</div><div class="line">&lt;servlet&gt;</div><div class="line">    &lt;init-param&gt;</div><div class="line">        &lt;param-name&gt;uploadPath&lt;/param-name&gt;</div><div class="line">        &lt;param-value&gt;data&lt;/param-value&gt;</div><div class="line">    &lt;/init-param&gt;</div><div class="line">&lt;/servlet&gt;</div></pre></td></tr></table></figure>
-</li>
-<li><p>servlet或controller中</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">ServletContext servletContext = req.getServletContext();</div><div class="line">ServletConfig servletConfig = getServletConfig();</div><div class="line"><span class="comment">//使用servlet</span></div><div class="line">String uploadPath = servletContext.getRealPath(<span class="string">"/"</span>) + File.separator + servletConfig.getInitParameter(<span class="string">"uploadPath"</span>);</div><div class="line">				</div><div class="line"><span class="comment">//使用context				</span></div><div class="line">String directory = servletContext.getRealPath(<span class="string">"/"</span>) + File.separator + servletContext.getInitParameter(<span class="string">"uploadPath"</span>);</div></pre></td></tr></table></figure></li>
-</ul>
-
-      
-
-      
-        <div class="page-reward">
-          <a href="javascript:;" class="page-reward-btn tooltip-top">
-            <div class="tooltip tooltip-east">
-            <span class="tooltip-item">
-              赏
-            </span>
-            <span class="tooltip-content">
-              <span class="tooltip-text">
-                <span class="tooltip-inner">
-                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
-                  <div class="reward-box">
-                    
-                    <div class="reward-box-item">
-                      <img class="reward-img" src="http://oxp7d1tae.bkt.clouddn.com/alipay.png">
-                      <span class="reward-type">支付宝</span>
-                    </div>
-                    
-                    
-                    <div class="reward-box-item">
-                      <img class="reward-img" src="http://oxp7d1tae.bkt.clouddn.com/wechat.png">
-                      <span class="reward-type">微信</span>
-                    </div>
-                    
-                  </div>
-                </span>
-              </span>
-            </span>
-          </div>
-          </a>
-        </div>
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
+        <div class="article-info info-on-right">
+          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">JavaWeb</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Redis</a>
         		</li>
       		
 		</ul>
 	</div>
 
-      
+          
 
-      
-
-      
-        
-<div class="share-btn share-icons tooltip-left">
-  <div class="tooltip tooltip-east">
-    <span class="tooltip-item">
-      <a href="javascript:;" class="share-sns share-outer">
-        <i class="icon icon-share"></i>
-      </a>
-    </span>
-    <span class="tooltip-content">
-      <div class="share-wrap">
-        <div class="share-icons">
-          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
-            <i class="icon icon-weibo"></i>
-          </a>
-          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
-            <i class="icon icon-weixin"></i>
-          </a>
-          <a class="qq share-sns" href="javascript:;" data-type="qq">
-            <i class="icon icon-qq"></i>
-          </a>
-          <a class="douban share-sns" href="javascript:;" data-type="douban">
-            <i class="icon icon-douban"></i>
-          </a>
-          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
-            <i class="icon icon-qzone"></i>
-          </a>
-          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
-            <i class="icon icon-facebook"></i>
-          </a>
-          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
-            <i class="icon icon-twitter"></i>
-          </a>
-          <a class="google share-sns" href="javascript:;" data-type="google">
-            <i class="icon icon-google"></i>
-          </a>
         </div>
-      </div>
-    </span>
-  </div>
-</div>
-
-<div class="page-modal wx-share js-wx-box">
-    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
-    <p>扫一扫，分享到微信</p>
-    <div class="wx-qrcode">
-      <img src="http://s.jiathis.com/qrcode.php?url=https://github.com/zjs1224522500/zjs1224522500.github.io/2017/11/03/Servlet-apply-two/" alt="微信分享二维码">
-    </div>
-</div>
-
-<div class="mask js-mask"></div>
-      
-      <div class="clearfix"></div>
-    </div>
+        <div class="clearfix"></div>
+    </header>
   </div>
 </article>
-
   
-<nav id="article-nav">
-  
-    <a href="/2017/11/19/tinySpring-learnOne-IOC/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          tinySpring学习笔记（一）-实现IOC容器
-        
-      </div>
-    </a>
-  
-  
-    <a href="/2017/11/02/Servlet-apply-one/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Servlet常用用法（一）</div>
-      <i class="icon-circle-right"></i>
-    </a>
-  
-</nav>
-
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      	<div class="article-meta">
+	      	<a href="/2017/12/08/redis-start-one/" class="archive-article-date">
+  	<time datetime="2017-12-07T20:00:29.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-12-07</time>
+</a>
         </div>
-        
-        
-    </div>
-</aside>
-
-
-
+    	 
   
-  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2017/12/08/redis-start-one/">Redis安装与配置</a>
+    </h1>
   
 
+        <div class="article-info info-on-right">
+          
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Redis</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+          
+
+        </div>
+        <div class="clearfix"></div>
+    </header>
+  </div>
+</article>
+  
+  
+    </div></section>
   
 
-  
-
-  
-  <div id="gitment-ctn"></div> 
-<link rel="stylesheet" href="//imsun.github.io/gitment/style/default.css">
-<script src="//imsun.github.io/gitment/dist/gitment.browser.js"></script>
-<script>
-var gitment = new Gitment({
-  id: "https://github.com/zjs1224522500/zjs1224522500.github.io/2017/11/03/Servlet-apply-two/",
-  owner: 'zjs1224522500',
-  repo: 'zjs1224522500.github.io',
-  oauth: {
-    client_id: 'cccb9b919b08c6e61099',
-    client_secret: 'ab2ce55de1b91e9ed7c6f3e819a32ea0b1ca617b',
-  },
-})
-gitment.render('gitment-ctn')
-</script>
-  
+    
 
 
           </div>
@@ -425,8 +284,8 @@ gitment.render('gitment-ctn')
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: true,
-		isArchive: false,
+		isPost: false,
+		isArchive: true,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,

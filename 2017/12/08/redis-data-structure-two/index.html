@@ -6,19 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://github.com/zjs1224522500/zjs1224522500.github.io">
-  <title>Servlet常用用法（二）-文件上传下载 | Elvis</title>
+  <title>Redis数据类型 | Elvis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="3、Servlet实现文件上传下载文件上传：原理（Servlet） 通过使用文件上传下载组件，通过读取请求中的文件的输入流，在预先协商好的路径下根据对应的文件名创建相应的文件对象，将提交的文件对象FileItem写入对应的文件中。 在Servlet3.0中可以使用注解@MultiPartConfig将一个servlet标识为支持文件上传，将Multipart/form-data的POST请求封装为">
-<meta name="keywords" content="JavaWeb">
+  <meta name="description" content="Redis数据类型 Redis支持五种数据类型：string（字符串），hash（哈希），list（列表），set（集合）及zset(sorted set：有序集合)">
+<meta name="keywords" content="Redis">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Servlet常用用法（二）-文件上传下载">
-<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/11/03/Servlet-apply-two/index.html">
+<meta property="og:title" content="Redis数据类型">
+<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/12/08/redis-data-structure-two/index.html">
 <meta property="og:site_name" content="Elvis">
-<meta property="og:description" content="3、Servlet实现文件上传下载文件上传：原理（Servlet） 通过使用文件上传下载组件，通过读取请求中的文件的输入流，在预先协商好的路径下根据对应的文件名创建相应的文件对象，将提交的文件对象FileItem写入对应的文件中。 在Servlet3.0中可以使用注解@MultiPartConfig将一个servlet标识为支持文件上传，将Multipart/form-data的POST请求封装为">
-<meta property="og:updated_time" content="2017-11-03T12:34:52.726Z">
+<meta property="og:description" content="Redis数据类型 Redis支持五种数据类型：string（字符串），hash（哈希），list（列表），set（集合）及zset(sorted set：有序集合)">
+<meta property="og:updated_time" content="2017-12-07T12:02:08.397Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Servlet常用用法（二）-文件上传下载">
-<meta name="twitter:description" content="3、Servlet实现文件上传下载文件上传：原理（Servlet） 通过使用文件上传下载组件，通过读取请求中的文件的输入流，在预先协商好的路径下根据对应的文件名创建相应的文件对象，将提交的文件对象FileItem写入对应的文件中。 在Servlet3.0中可以使用注解@MultiPartConfig将一个servlet标识为支持文件上传，将Multipart/form-data的POST请求封装为">
+<meta name="twitter:title" content="Redis数据类型">
+<meta name="twitter:description" content="Redis数据类型 Redis支持五种数据类型：string（字符串），hash（哈希），list（列表），set（集合）及zset(sorted set：有序集合)">
   
     <link rel="alternative" href="/atom.xml" title="Elvis" type="application/atom+xml">
   
@@ -172,63 +172,120 @@ var _hmt = _hmt || [];
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-Servlet-apply-two" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-redis-data-structure-two" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      Servlet常用用法（二）-文件上传下载
+      Redis数据类型
     </h1>
   
 
         
-        <a href="/2017/11/03/Servlet-apply-two/" class="archive-article-date">
-  	<time datetime="2017-11-02T21:28:52.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-11-02</time>
+        <a href="/2017/12/08/redis-data-structure-two/" class="archive-article-date">
+  	<time datetime="2017-12-07T20:00:29.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-12-07</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="3、Servlet实现文件上传下载"><a href="#3、Servlet实现文件上传下载" class="headerlink" title="3、Servlet实现文件上传下载"></a>3、<code>Servlet</code>实现文件上传下载</h1><h3 id="文件上传："><a href="#文件上传：" class="headerlink" title="文件上传："></a>文件上传：</h3><h4 id="原理（Servlet）"><a href="#原理（Servlet）" class="headerlink" title="原理（Servlet）"></a>原理（Servlet）</h4><ul>
-<li>通过使用文件上传下载组件，通过读取请求中的文件的输入流，在预先协商好的路径下根据对应的文件名创建相应的文件对象，将提交的文件对象<code>FileItem</code>写入对应的文件中。</li>
-<li>在<code>Servlet3.0</code>中可以使用注解<code>@MultiPartConfig</code>将一个<code>servlet</code>标识为<strong>支持文件上传</strong>，将<code>Multipart/form-data</code>的<code>POST</code>请求封装为成<code>Part</code>，通过<code>Part</code>对上传的文件进行操作。对应的在<code>Servlet</code>处理请求时使用<code>getPart()</code>和<code>getParts()</code>方法来获取对应的文件对象（<code>input</code>对应的<code>file</code>标签）<h4 id="框架对应的文件上传方法"><a href="#框架对应的文件上传方法" class="headerlink" title="框架对应的文件上传方法"></a>框架对应的文件上传方法</h4></li>
-<li><code>SpringMVC</code>中用的是<code>MultipartFile</code>来进行文件上传 所以我们首先要配置<code>MultipartResolver</code>:<strong>用于处理表单中的<code>file</code></strong></li>
+        <h2 id="Redis数据类型"><a href="#Redis数据类型" class="headerlink" title="Redis数据类型"></a>Redis数据类型</h2><ul>
+<li>Redis支持五种数据类型：string（字符串），hash（哈希），list（列表），set（集合）及zset(sorted set：有序集合)</li>
 </ul>
 <a id="more"></a>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">&lt;!-- 文件上传组件 --&gt;</div><div class="line">    &lt;bean class=&quot;org.springframework.web.multipart.commons.CommonsMultipartResolver&quot;&gt;</div><div class="line">        &lt;property name=&quot;defaultEncoding&quot; value=&quot;UTF-8&quot;/&gt;</div><div class="line">        &lt;property name=&quot;maxUploadSize&quot; value=&quot;500000&quot;/&gt;</div><div class="line">    &lt;/bean&gt;</div></pre></td></tr></table></figure>
+<h4 id="string"><a href="#string" class="headerlink" title="string"></a>string</h4><ul>
+<li><code>string</code>是<code>redis</code>最基本的类型，你可以理解成与<code>Memcached</code>一模一样的类型，一个<code>key</code>对应一个<code>value</code>。</li>
+<li><code>string</code>类型是二进制安全的。意思是<code>redis</code>的<code>string</code>可以包含任何数据。比如jpg图片或者序列化的对象 。</li>
+<li><code>string</code>类型是<code>Redis</code>最基本的数据类型，一个键最大能存储<strong>512MB</strong>。<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div></pre></td><td class="code"><pre><div class="line">127.0.0.1:6739 &gt; set name elvis</div><div class="line">OK</div><div class="line">127.0.0.1:6739 &gt; get name</div><div class="line">&quot;elvis&quot;</div><div class="line">127.0.0.1:6739 &gt; getset name shunzi</div><div class="line">&quot;elvis&quot;</div><div class="line">127.0.0.1:6739 &gt; get name</div><div class="line">&quot;shunzi&quot;</div><div class="line">127.0.0.1:6739 &gt; del name</div><div class="line">(interger) 1</div><div class="line">127.0.0.1:6739 &gt; get name</div><div class="line">(nil)</div><div class="line"></div><div class="line">// 使用自增自减符，若变量不存在则初始化为0 </div><div class="line">127.0.0.1:6739 &gt; incr num</div><div class="line">(interger) 1</div><div class="line">127.0.0.1:6739 &gt; get num</div><div class="line">&quot;1&quot;</div><div class="line">127.0.0.1:6739 &gt; incr num</div><div class="line">(interger) 2</div><div class="line">127.0.0.1:6739 &gt; get num</div><div class="line">&quot;2&quot;</div><div class="line">127.0.0.1:6739 &gt; incr name</div><div class="line">(error) ERR value is not an integer or out of range</div><div class="line">127.0.0.1:6739 &gt; decr num</div><div class="line">(interger) 1</div><div class="line">127.0.0.1:6739 &gt; get num</div><div class="line">&quot;1&quot;</div><div class="line">127.0.0.1:6739 &gt; decr num2</div><div class="line">(interger) -1</div><div class="line"></div><div class="line">// incryby decrby</div><div class="line">127.0.0.1:6739 &gt; incrby num 5</div><div class="line">(interger) 6</div><div class="line">127.0.0.1:6739 &gt; incrby num3 5</div><div class="line">(interger) 5</div><div class="line">127.0.0.1:6739 &gt; decrby num 3</div><div class="line">(interger) 3</div><div class="line">127.0.0.1:6739 &gt; decrby num4 3</div><div class="line">(interger) -3</div><div class="line"></div><div class="line">// append返回拼接的字符串长度</div><div class="line">127.0.0.1:6739 &gt; append num 5</div><div class="line">(interger) 2</div><div class="line">127.0.0.1:6739 &gt; get num</div><div class="line">&quot;35&quot;</div><div class="line">127.0.0.1:6739 &gt; append num5 123</div><div class="line">(interger) 3</div><div class="line">127.0.0.1:6739 &gt; get num5 </div><div class="line">&quot;123&quot;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h4 id="Hash"><a href="#Hash" class="headerlink" title="Hash"></a>Hash</h4><ul>
+<li>Redis hash 是一个键值(key=&gt;value)对集合。</li>
+<li>Redis hash是一个string类型的field和value的映射表，hash特别适合用于存储对象。</li>
+<li>每个 hash 可以存储 232 -1 键值对（40多亿）。</li>
+</ul>
+<hr>
 <ul>
-<li>传输过程中一直使用<code>MultipartFile</code>，而在磁盘对应的文件读写中则使用<code>java.io.file</code>；对应<code>MultipartFile</code>有几个关键方法：<ul>
-<li><strong>String getContentType()</strong>//获取文件MIME类型</li>
-<li><strong>InputStream getInputStream()</strong>//后去文件流</li>
-<li><strong>String getName()</strong> //获取表单中文件组件的名字</li>
-<li><strong>String getOriginalFilename()</strong>//获取上传文件的原名</li>
-<li><strong>boolean isEmpty()</strong> //是否为空</li>
-<li><strong>void transferTo(File dest)</strong> //保存到一个目标文件中。</li>
-</ul>
+<li><code>HSET key field value</code>//设置键以及其中的属性（单个属性）</li>
+<li><code>HMSET key field value key value...</code>//设置键以及其中的属性(多个属性)</li>
+<li><code>HGETALL key</code>// 获取该键对应的所有属性名和属性值</li>
+<li><code>HGET key field</code> //获取该健对应的属性对应的值</li>
+<li><code>HMGET key field1 field2</code>//获取该键对应的多个属性的值</li>
+<li><code>HDEL key field1 field2</code>//删除对应的键对应的属性</li>
+<li><code>del key</code>//删除键对应的value</li>
+<li><code>HEXISTS key field</code>//判断键对应的对象中是否存在field属性,存在返回1 否返回0</li>
+<li><code>HLEN key</code>//获取键对应的属性个数</li>
+<li><code>hkeys key</code>//获取键对应的属性的属性名</li>
+<li><code>hvals key</code>//获取键对应的属性 的属性值<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">127.0.0.1:6379&gt; HMSET user:1 username zhangjianshun password 123456 age 18 college UESTC</div><div class="line">OK</div><div class="line">127.0.0.1:6379&gt; HGETALL user:1</div><div class="line">1) &quot;username&quot;</div><div class="line">2) &quot;zhnagjianshun&quot;</div><div class="line">3) &quot;password&quot;</div><div class="line">4) &quot;123456&quot;</div><div class="line">5) &quot;age&quot;</div><div class="line">6) &quot;18&quot;</div><div class="line">7) &quot;college&quot;</div><div class="line">8) &quot;UESTC&quot;</div><div class="line">127.0.0.1:6379&gt; HGET user:1 college</div><div class="line">&quot;UESTC&quot;</div><div class="line">127.0.0.1:6379&gt; hincrby user:1 age 2</div><div class="line">(interger) 20</div><div class="line">127.0.0.1:6379&gt; hexists user:1 username</div><div class="line">(interger) 1</div></pre></td></tr></table></figure>
 </li>
 </ul>
-<blockquote>
-<p>文件上传过程中可能存在<strong>文件名中文乱码</strong>的问题，常常是因为<code>request</code>的相关编码问题，为了能够统一解决，最好的方式时利用<strong>字符过滤器</strong>对所有请求进行整体的编码。其中<code>Spring</code>自带的字符过滤器就是比较好的选择。也可以使用自己定义的字符过滤器。</p>
-</blockquote>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="comment">&lt;!--start Spring自带字符过滤器 --&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">filter</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>EncodingFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">filter-class</span>&gt;</span>org.springframework.web.filter.CharacterEncodingFilter<span class="tag">&lt;/<span class="name">filter-class</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">init-param</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>encoding<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>UTF-8<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></div><div class="line">        <span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">init-param</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>forceEncoding<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>true<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></div><div class="line">        <span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="name">filter</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">filter-mapping</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>EncodingFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="name">filter-mapping</span>&gt;</span></div><div class="line">    <span class="comment">&lt;!--end Spring自带字符过滤器 --&gt;</span></div></pre></td></tr></table></figure>
-<h3 id="文件下载："><a href="#文件下载：" class="headerlink" title="文件下载："></a>文件下载：</h3><h4 id="原理（Servlet）-1"><a href="#原理（Servlet）-1" class="headerlink" title="原理（Servlet）"></a>原理（Servlet）</h4><ul>
-<li>通过请求提交的指定的文件名，在服务器端根据路径和请求参数创建相应的文件对象和文件流，并利用字节数组将创建得到的文件流写入到<code>response</code>对应的输出流<code>ServletOutputStream</code>中，并指定<code>response</code>对应的一些头的属性，譬如<code>ContentType</code>中对应的<code>MIME类型</code>和<code>Content-Disposition</code>中对应的文件打开方式，然后随<code>response</code>发送到客户端。</li>
-<li>在使用框架下载文件的过程中，通常和原生<code>Servlet</code>的处理方法保持一致，但往往需要构造<code>RestFul</code>风格的响应，故常常需要将下载文件作为一种特殊的响应类型（<code>SteamRestResponse</code><strong>流类型</strong>），还是需要设置<code>response</code>对应的头的属性。<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line">/**</div><div class="line"> * 响应流返回结果</div><div class="line"> *</div><div class="line"> * @param file     文件信息</div><div class="line"> * @param fileName 下载时显示的文件名称</div><div class="line"> * @return 空</div><div class="line"> * @throws IOException 将文件写入流中可能存在IO异常</div><div class="line"> */</div><div class="line">public RestResponse streamResponse(FileInfo file, String fileName) throws IOException &#123;</div><div class="line"></div><div class="line">	HttpServletResponse response = getResponseContext();</div><div class="line"></div><div class="line">	//设置响应类型</div><div class="line">	response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);</div><div class="line">	response.setHeader(&quot;Accept-Ranges&quot;, &quot;bytes&quot;);</div><div class="line">	response.setIntHeader(&quot;Accept-Length&quot;, Math.toIntExact(file.getSize()));// 解决乱码问题</div><div class="line"></div><div class="line">	// FireFox用ISO-8859-1</div><div class="line">	String encodedFileName;</div><div class="line">	if (Browser.IE.getName() == getClientBrowser())&#123;</div><div class="line">	    encodedFileName = URLEncoder.encode(fileName, &quot;UTF-8&quot;);</div><div class="line">	&#125; else &#123;</div><div class="line">	    encodedFileName = new String(fileName.getBytes(), &quot;ISO-8859-1&quot;);</div><div class="line">	&#125;</div><div class="line">	response.setHeader(&quot;Content-Disposition&quot;,&quot;attachment; filename=\&quot;&quot; + encodedFileName + &quot;\&quot;; filename*=utf-8&apos;&apos;&quot; + encodedFileName);</div><div class="line"></div><div class="line">	Path path = Paths.get(file.getPath());</div><div class="line">	Files.copy(path, response.getOutputStream());</div><div class="line"></div><div class="line">	return successResponse();</div><div class="line">	&#125;</div></pre></td></tr></table></figure>
-</li>
+<h4 id="List"><a href="#List" class="headerlink" title="List"></a>List</h4><ul>
+<li>Redis 列表是简单的字符串列表，按照插入顺序排序。你可以添加一个元素到列表的头部（左边）或者尾部（右边）。</li>
+<li>列表最多可存储 232 - 1 元素 (4294967295, 每个列表可存储40多亿)。</li>
+<li><code>lpush key value1 value2 ...</code>//从左开始添加</li>
+<li><code>rpush key value1 value2 ...</code>//从右开始添加</li>
+<li><code>lrange key index1 index2</code>//从左开始查看index1 ~ index2,若index为负数，则倒数对应的个数</li>
+<li><code>lpop key</code>//左端弹出，之后list中该元素</li>
+<li><code>rpop key</code>//右端弹出</li>
+<li><code>llen key</code>//获取元素个数</li>
+<li><code>lpushx key value</code>//仅仅当key存在时才进行插入，同理rpushx</li>
+<li><code>lremo key count value</code>//删除指定count个值为value的元素，若count&lt;0，删除顺序反向，若count=0，则删除所有的对应的value</li>
+<li><code>lset key index value</code>//设定对应的角标的值，index若为-1，则为末尾</li>
+<li><code>linsert key before/after value newValue</code>//在指定元素前后插入新元素 </li>
 </ul>
-<h3 id="文件上传下载过程中对应的文件路径的问题"><a href="#文件上传下载过程中对应的文件路径的问题" class="headerlink" title="文件上传下载过程中对应的文件路径的问题"></a>文件上传下载过程中对应的文件路径的问题</h3><ul>
-<li>由于开发和生产环境的不同，可能对应的需要保存文件上传下载的目录也有所不同，为了保证程序的的可移植性，常常需要采用相对路径来进行文件的相关存储，但又为了保证各个项目之间的数据能够独立，所以我们常把对应的文件存储在对应的项目目录下，并利用数据库持久化文件的相关数据，譬如<code>MIME类型</code>，<code>文件大小</code>，<code>MD5摘要</code>,<code>存放的路径</code>等等一系列信息。</li>
-<li>为了实现上述功能，我们常常使用<code>Context</code>或<code>Config</code>来获取在<code>web.xml</code>中的定义的初始化参数（文件相对路径）。代码示例如下：</li>
-<li><p>web.xml</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">&lt;!-- 通过使用ServletContext去获取 --&gt;</div><div class="line">&lt;context-param&gt;</div><div class="line">    &lt;param-name&gt;uploadPath&lt;/param-name&gt;</div><div class="line">    &lt;param-value&gt;data&lt;/param-value&gt;</div><div class="line">&lt;/context-param&gt;</div><div class="line"></div><div class="line">&lt;!-- 通过使用ServletConfig去获取 --&gt;</div><div class="line">&lt;servlet&gt;</div><div class="line">    &lt;init-param&gt;</div><div class="line">        &lt;param-name&gt;uploadPath&lt;/param-name&gt;</div><div class="line">        &lt;param-value&gt;data&lt;/param-value&gt;</div><div class="line">    &lt;/init-param&gt;</div><div class="line">&lt;/servlet&gt;</div></pre></td></tr></table></figure>
-</li>
-<li><p>servlet或controller中</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">ServletContext servletContext = req.getServletContext();</div><div class="line">ServletConfig servletConfig = getServletConfig();</div><div class="line"><span class="comment">//使用servlet</span></div><div class="line">String uploadPath = servletContext.getRealPath(<span class="string">"/"</span>) + File.separator + servletConfig.getInitParameter(<span class="string">"uploadPath"</span>);</div><div class="line">				</div><div class="line"><span class="comment">//使用context				</span></div><div class="line">String directory = servletContext.getRealPath(<span class="string">"/"</span>) + File.separator + servletContext.getInitParameter(<span class="string">"uploadPath"</span>);</div></pre></td></tr></table></figure></li>
+<hr>
+<h5 id="常用于消息队列的使用场景"><a href="#常用于消息队列的使用场景" class="headerlink" title="常用于消息队列的使用场景"></a>常用于消息队列的使用场景</h5><ul>
+<li><code>rpoplpush key1 key2</code>//弹出key1的一个元素压入key2</li>
 </ul>
-
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">redis <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6379</span>&gt; lpush database redis</div><div class="line">(integer) <span class="number">1</span></div><div class="line">redis <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6379</span>&gt; lpush database mongodb</div><div class="line">(integer) <span class="number">2</span></div><div class="line">redis <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6379</span>&gt; lpush database rabitmq</div><div class="line">(integer) <span class="number">3</span></div><div class="line">redis <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6379</span>&gt; lrange database <span class="number">0</span> <span class="number">10</span></div><div class="line"><span class="number">1</span>) "rabitmq"</div><div class="line"><span class="number">2</span>) "mongodb"</div><div class="line"><span class="number">3</span>) "redis"</div><div class="line">redis <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6379</span>&gt;</div></pre></td></tr></table></figure>
+<h4 id="Set"><a href="#Set" class="headerlink" title="Set"></a>Set</h4><ul>
+<li><code>Redis</code>的<code>Set</code>是<code>string</code>类型的无序集合。不允许出现重复的元素，</li>
+<li>集合是通过哈希表实现的，所以添加，删除，查找的复杂度都是O(1)。</li>
+<li>集合中最大的成员数为 232 - 1(4294967295, 每个集合可存储40多亿个成员)。</li>
+</ul>
+<hr>
+<ul>
+<li><code>sadd key member</code>// 添加一个string元素到,key对应的set集合中，成功返回1,如果元素已经在集合中返回0,key对应的set不存在返回错误。</li>
+<li><code>srem key value1 value2</code>//删除key对应的set中指定的value</li>
+<li><code>smembers key</code>//列举key对应的set中的所有value</li>
+<li><code>sismember key value</code>//判断在该集合中是否存在该元素，返回布尔值</li>
+<li><code>sdiff key1 key2</code>//两个集合的差集运算</li>
+<li><code>sinter key1 key2</code>//两个集合的交集运算</li>
+<li><code>sunion key1 key2</code>//两个集合的并集运算，自动去重</li>
+<li><code>scard key</code>//集合对应的元素个数</li>
+<li><code>srandmember key</code>//随机返回集合中的成员</li>
+<li><code>sdiffstore key1 key2 key3</code>//求交集之后存储到kwy3，同理差集并集</li>
+</ul>
+<h5 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h5><ul>
+<li>获取唯一性数据</li>
+<li>用于维护数据对象之间的关联关系（集合运算）</li>
+</ul>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">redis <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6379</span>&gt; sadd runoob redis</div><div class="line">(integer) <span class="number">1</span></div><div class="line">redis <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6379</span>&gt; sadd runoob mongodb</div><div class="line">(integer) <span class="number">1</span></div><div class="line">redis <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6379</span>&gt; sadd runoob rabitmq</div><div class="line">(integer) <span class="number">1</span></div><div class="line">redis <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6379</span>&gt; sadd runoob rabitmq</div><div class="line">(integer) <span class="number">0</span></div><div class="line">redis <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6379</span>&gt; smembers runoob</div><div class="line"></div><div class="line"><span class="number">1</span>) "rabitmq"</div><div class="line"><span class="number">2</span>) "mongodb"</div><div class="line"><span class="number">3</span>) "redis"</div></pre></td></tr></table></figure>
+<h4 id="zset-sorted-set：有序集合"><a href="#zset-sorted-set：有序集合" class="headerlink" title="zset (sorted set：有序集合)"></a>zset (sorted set：有序集合)</h4><ul>
+<li>Redis zset 和 set 一样也是string类型元素的集合,且不允许重复的成员。</li>
+<li>不同的是每个元素都会关联一个double类型的分数。redis正是通过分数来为集合中的成员进行从小到大的排序。</li>
+<li>zset的成员是唯一的,但分数(score)却可以重复。</li>
+<li><code>zadd key score member</code>//添加元素到集合，元素在集合中存在则更新对应score</li>
+<li><code>zscore key member</code>//获取对应的分数</li>
+<li><code>zcard key</code>//获取对应的元素个数</li>
+<li><code>zrem key mem1 mem2</code>//删除集合中对应的元素</li>
+<li><code>zrange key index1 index2</code>//显示对应的下表范围内的元素，可使用参数<code>withscores</code>来决定是否显示对应的参数。默认由小到大排序</li>
+<li><code>zrevrange key index1 index2</code>//从大到小</li>
+<li><code>zrenrangebyrank key index1 index2</code>//根据顺序删除指定范围的元素</li>
+<li><code>zrenrangebyscore key index1 index2</code>//根据分数范围删除指定的元素</li>
+<li><code>zrangebyscore key1 index1 index2 withscores</code>//显示分数在指定范围内的元素，还可以使用<code>limit index1 index2</code>限定返回的个数</li>
+<li><code>zincrby key score member</code>//指定成员的分数加分score</li>
+<li><code>zcount key score1 score2</code>//显示指定的分数范围内的元素个数</li>
+</ul>
+<hr>
+<h5 id="应用场景："><a href="#应用场景：" class="headerlink" title="应用场景："></a>应用场景：</h5><ul>
+<li>积分排行榜</li>
+<li>构建数据索引</li>
+</ul>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">redis <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6379</span>&gt; zadd runoob <span class="number">0</span> redis</div><div class="line">(integer) <span class="number">1</span></div><div class="line">redis <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6379</span>&gt; zadd runoob <span class="number">0</span> mongodb</div><div class="line">(integer) <span class="number">1</span></div><div class="line">redis <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6379</span>&gt; zadd runoob <span class="number">0</span> rabitmq</div><div class="line">(integer) <span class="number">1</span></div><div class="line">redis <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6379</span>&gt; zadd runoob <span class="number">0</span> rabitmq</div><div class="line">(integer) <span class="number">0</span></div><div class="line">redis <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6379</span>&gt; ZRANGEBYSCORE runoob <span class="number">0</span> <span class="number">1000</span></div><div class="line"></div><div class="line"><span class="number">1</span>) "redis"</div><div class="line"><span class="number">2</span>) "mongodb"</div><div class="line"><span class="number">3</span>) "rabitmq"</div></pre></td></tr></table></figure>
       
 
       
@@ -272,7 +329,7 @@ var _hmt = _hmt || [];
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">JavaWeb</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Redis</a>
         		</li>
       		
 		</ul>
@@ -328,7 +385,7 @@ var _hmt = _hmt || [];
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="http://s.jiathis.com/qrcode.php?url=https://github.com/zjs1224522500/zjs1224522500.github.io/2017/11/03/Servlet-apply-two/" alt="微信分享二维码">
+      <img src="http://s.jiathis.com/qrcode.php?url=https://github.com/zjs1224522500/zjs1224522500.github.io/2017/12/08/redis-data-structure-two/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -342,18 +399,9 @@ var _hmt = _hmt || [];
   
 <nav id="article-nav">
   
-    <a href="/2017/11/19/tinySpring-learnOne-IOC/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          tinySpring学习笔记（一）-实现IOC容器
-        
-      </div>
-    </a>
   
-  
-    <a href="/2017/11/02/Servlet-apply-one/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Servlet常用用法（一）</div>
+    <a href="/2017/12/08/redis-start-one/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Redis安装与配置</div>
       <i class="icon-circle-right"></i>
     </a>
   
@@ -392,7 +440,7 @@ var _hmt = _hmt || [];
 <script src="//imsun.github.io/gitment/dist/gitment.browser.js"></script>
 <script>
 var gitment = new Gitment({
-  id: "https://github.com/zjs1224522500/zjs1224522500.github.io/2017/11/03/Servlet-apply-two/",
+  id: "https://github.com/zjs1224522500/zjs1224522500.github.io/2017/12/08/redis-data-structure-two/",
   owner: 'zjs1224522500',
   repo: 'zjs1224522500.github.io',
   oauth: {
