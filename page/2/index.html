@@ -172,6 +172,118 @@ var _hmt = _hmt || [];
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-tomcat-one" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/10/20/tomcat-one/">深入剖析Tomcat读书笔记（一）</a>
+    </h1>
+  
+
+        
+        <a href="/2017/10/20/tomcat-one/" class="archive-article-date">
+  	<time datetime="2017-10-19T21:28:52.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-10-19</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><h2 id="1、Servlet容器是如何工作的？"><a href="#1、Servlet容器是如何工作的？" class="headerlink" title="1、Servlet容器是如何工作的？"></a>1、Servlet容器是如何工作的？</h2><ul>
+<li>创建一个<code>Request</code>对象，用可能会在<code>Servlet</code>中使用的信息填充该<code>Request</code>对象;</li>
+<li>创建一个调用<code>Servlet</code>的<code>response</code>对象，用来向WEB客户端发送响应；</li>
+<li>调用<code>Servlet</code>的<code>service()</code>方法,将<code>Request</code>对象和<code>Response</code>对象。</li>
+</ul>
+<blockquote>
+<h3 id="复习Servlet的生命周期"><a href="#复习Servlet的生命周期" class="headerlink" title="复习Servlet的生命周期"></a>复习Servlet的生命周期</h3><ul>
+<li>Servlet 通过调用 <code>init ()</code> 方法进行初始化。</li>
+<li>Servlet 调用 <code>service()</code> 方法来处理客户端的请求。</li>
+<li>Servlet 通过调用 <code>destroy()</code> 方法终止（结束）。</li>
+<li>最后，Servlet 是由 JVM 的垃圾回收器进行垃圾回收的。</li>
+</ul>
+</blockquote>
+<h2 id="2、Catalina"><a href="#2、Catalina" class="headerlink" title="2、Catalina"></a>2、Catalina</h2><ul>
+<li><code>Catalina</code>是一个成熟的软件，设计和开发的十分优雅，功能结构也是模块化的，主要分为以下两个模块：<ul>
+<li><code>连接器</code> :负责将请求和容器相关联，为每个接收到的HTTP请求创建一个<code>request</code>对象和一个<code>response</code>，然后将处理过程交给容器。</li>
+<li><code>容器</code>：从连接器中接受到<code>request</code>和<code>response</code>对象，并调用相应的<code>Servlet</code>的<code>service()</code>方法。</li>
+</ul>
+</li>
+</ul>
+<h1 id="第一章-简单的Web服务器"><a href="#第一章-简单的Web服务器" class="headerlink" title="第一章 简单的Web服务器"></a>第一章 简单的Web服务器</h1><ul>
+<li>通过复习<code>Java套接字编程</code>，搭建一个简单的<code>Web服务器</code>，同时复习了计算机网络的相关知识以及<code>JavaIO</code>中的<code>输入输出流</code>相关操作。</li>
+</ul>
+<h2 id="WEB服务器的工作原理"><a href="#WEB服务器的工作原理" class="headerlink" title="WEB服务器的工作原理"></a>WEB服务器的工作原理</h2><ul>
+<li>服务器利用相应的<code>服务器套接字(ServerSocket)</code>（又称<code>连接套接字,欢迎套接字(WelcomeSocket)</code>）对相应的IP地址和端口进行监听，等待客户端发送相关连接请求;</li>
+<li><code>客户端的套接字(ClientSocket)</code>提出连接请求，要连接的目标是<code>ServerSocket</code>。为此，<code>CllientSocket</code>必须首先描述它要连接的服务器的套接字，指出服务器端套接字的地址<code>Host</code>和端口号<code>port</code>，然后就向<code>服务器端套接字</code>提出连接请求;</li>
+<li>当<code>服务器端套接字(ServerSocket)</code>监听到或者说接收到<code>客户端套接字(ClientSocket)</code>的连接请求时，就响应<code>客户端套接字</code>的请求，建立一个新的线程，把<code>服务器端套接字</code>的描述发 给客户端，一旦客户端确认了此描述，双方就正式建立连接。而<code>服务器端套接字</code>继续处于监听状态，继续接收其他<code>客户端套接字</code>的连接请求;<code>服务器端套接字(ServerSocket)</code>在收到请求时会调用<code>accept()</code>方法为客户端创建一个新的套接字<code>连接套接字（connection socket）</code>，实质上和客户端建立连接之后进行通信的是<code>连接套接字</code></li>
+</ul>
+<h2 id="在编写过程中遇到的问题：-待解决"><a href="#在编写过程中遇到的问题：-待解决" class="headerlink" title="在编写过程中遇到的问题：(待解决)"></a>在编写过程中遇到的问题：(待解决)</h2><h3 id="编写代码时抛出异常："><a href="#编写代码时抛出异常：" class="headerlink" title="编写代码时抛出异常："></a>编写代码时抛出异常：</h3><blockquote>
+<p>java.net.SocketException: Software caused connection abort: socket write error.</p>
+</blockquote>
+<ul>
+<li>通过debug初步分析的结果是在浏览器生成发送给客户端响应时的输出流的<code>write()</code>函数出现了问题,查阅资料显示为<strong>在write()时输出流被提前关闭</strong></li>
+</ul>
+<h3 id="测试过程中存在的问题："><a href="#测试过程中存在的问题：" class="headerlink" title="测试过程中存在的问题："></a>测试过程中存在的问题：</h3><blockquote>
+<p>IE浏览器测试成功，谷歌浏览器测试失败.</p>
+</blockquote>
+        
+          <a class="article-more-a" href="/2017/10/20/tomcat-one/#more">more >></a>
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">服务器</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2017/10/20/tomcat-one/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-Adapter" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -892,6 +1004,14 @@ getOwnMetadataKeys:function(t){return o(i(t),arguments.length<2?void 0:u(argumen
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">算法</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">JavaSE</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">JavaWeb</a>
               </li>
              
@@ -900,15 +1020,11 @@ getOwnMetadataKeys:function(t){return o(i(t),arguments.length<2?void 0:u(argumen
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">JavaSE</a>
+                <a href="javascript:void(0)" class="js-tag color2">Spring</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">Redis</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">Spring</a>
               </li>
             
             <div class="clearfix"></div>
