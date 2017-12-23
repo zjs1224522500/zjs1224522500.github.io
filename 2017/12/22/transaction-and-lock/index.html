@@ -6,17 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://github.com/zjs1224522500/zjs1224522500.github.io">
-  <title>Tag: Spring | Elvis</title>
+  <title>事务和锁 | Elvis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="电子科技大学软件工程在读，JavaWeb学习ing">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Elvis">
-<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/tags/Spring/index.html">
+  <meta name="description" content="事务和锁事务的定义 事务（Transaction），一般是指要做的或所做的事情。在计算机术语中是指访问并可能更新数据库中各种数据项的一个程序执行单元(unit)。事务(Transaction)是访问并可能更新数据库中各种数据项的一个程序执行单元(unit)。 事务通常由高级数据库操纵语言或编程语言（如SQL，C++或Java）书写的用户程序的执行所引起，并用形如begin transaction和">
+<meta name="keywords" content="数据库">
+<meta property="og:type" content="article">
+<meta property="og:title" content="事务和锁">
+<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/12/22/transaction-and-lock/index.html">
 <meta property="og:site_name" content="Elvis">
-<meta property="og:description" content="电子科技大学软件工程在读，JavaWeb学习ing">
+<meta property="og:description" content="事务和锁事务的定义 事务（Transaction），一般是指要做的或所做的事情。在计算机术语中是指访问并可能更新数据库中各种数据项的一个程序执行单元(unit)。事务(Transaction)是访问并可能更新数据库中各种数据项的一个程序执行单元(unit)。 事务通常由高级数据库操纵语言或编程语言（如SQL，C++或Java）书写的用户程序的执行所引起，并用形如begin transaction和">
+<meta property="og:updated_time" content="2017-12-23T05:10:25.819Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Elvis">
-<meta name="twitter:description" content="电子科技大学软件工程在读，JavaWeb学习ing">
+<meta name="twitter:title" content="事务和锁">
+<meta name="twitter:description" content="事务和锁事务的定义 事务（Transaction），一般是指要做的或所做的事情。在计算机术语中是指访问并可能更新数据库中各种数据项的一个程序执行单元(unit)。事务(Transaction)是访问并可能更新数据库中各种数据项的一个程序执行单元(unit)。 事务通常由高级数据库操纵语言或编程语言（如SQL，C++或Java）书写的用户程序的执行所引起，并用形如begin transaction和">
   
     <link rel="alternative" href="/atom.xml" title="Elvis" type="application/atom+xml">
   
@@ -170,60 +172,306 @@ var _hmt = _hmt || [];
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-transaction-and-lock" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2017" class="archive-year">2017</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/11/19/tinySpring-learnOne-IOC/" class="archive-article-date">
-  	<time datetime="2017-11-18T16:01:49.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-11-18</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/11/19/tinySpring-learnOne-IOC/">tinySpring学习笔记（一）-实现IOC容器</a>
+    <h1 class="article-title" itemprop="name">
+      事务和锁
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2017/12/22/transaction-and-lock/" class="archive-article-date">
+  	<time datetime="2017-12-21T20:13:04.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-12-21</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="事务和锁"><a href="#事务和锁" class="headerlink" title="事务和锁"></a>事务和锁</h2><h3 id="事务的定义"><a href="#事务的定义" class="headerlink" title="事务的定义"></a>事务的定义</h3><blockquote>
+<p>事务（Transaction），一般是指要做的或所做的事情。在计算机术语中是指访问并可能更新数据库中各种数据项的一个程序执行单元(unit)。<strong>事务(Transaction)是访问并可能更新数据库中各种数据项的一个程序执行单元(unit)。</strong> 事务通常由高级数据库操纵语言或编程语言（如SQL，C++或Java）书写的用户程序的执行所引起，并用形如begin transaction和end transaction语句（或函数调用）来界定。事务由事务开始(begin transaction)和事务结束(end transaction)之间执行的全体操作组成。<a href="https://baike.baidu.com/item/%E4%BA%8B%E5%8A%A1/5945882?fr=aladdin" target="_blank" rel="external">–来自百度百科</a></p>
+</blockquote>
+<a id="more"></a>
+<h5 id="简而言之：-事务（Transaction）是并发控制的基本单位。"><a href="#简而言之：-事务（Transaction）是并发控制的基本单位。" class="headerlink" title="简而言之： 事务（Transaction）是并发控制的基本单位。"></a>简而言之： 事务（Transaction）是并发控制的基本单位。</h5><ul>
+<li>所谓的事务，它是一个操作序列，这些操作要么都执行，要么都不执行，它是一个不可分割的工作单位。</li>
+</ul>
+<blockquote>
+<p>举个例子：银行转账问题中，账户A向账户B转账，对应的会有两个操作，账户A减去对应的转账金额，账户B增加对应的转账金额。这两个操作要么都执行要么都不执行，此时应该把这两个操作看做一个事务，从而保证数据一致性。</p>
+</blockquote>
+<h3 id="事务的特点-ACID"><a href="#事务的特点-ACID" class="headerlink" title="事务的特点 ACID"></a>事务的特点 ACID</h3><ul>
+<li><strong>原子性（Atomicity）</strong>：一个事务是一个不可分割的工作单位，事务中包括的诸操作要么都做，要么都不做。</li>
+<li><strong>一致性（Consistency）</strong>：事务必须是使数据库从一个一致性状态变到另一个一致性状态。一致性与原子性是密切相关的。</li>
+<li><strong>隔离性（Isolation）</strong>：一个事务的执行不能被其他事务干扰。即一个事务内部的操作及使用的数据对并发的其他事务是隔离的，并发执行的各个事务之间不能互相干扰。</li>
+<li><strong>持久性（Durability）</strong>：持久性也称永久性（permanence），指一个事务一旦提交，它对数据库中数据的改变就应该是永久性的。接下来的其他操作或故障不应该对其有任何影响。</li>
+</ul>
+<h3 id="事务对应的语句"><a href="#事务对应的语句" class="headerlink" title="事务对应的语句"></a>事务对应的语句</h3><ul>
+<li><strong>BEGIN TRANSACTION 开始事务</strong></li>
+<li><strong>COMMIT TRANSACTION 提交事务</strong></li>
+<li><strong>ROLLBACK TRANSACTION 回滚事务</strong></li>
+</ul>
+<h3 id="事务并发控制"><a href="#事务并发控制" class="headerlink" title="事务并发控制"></a>事务并发控制</h3><h4 id="事务不考虑隔离性引发的问题"><a href="#事务不考虑隔离性引发的问题" class="headerlink" title="事务不考虑隔离性引发的问题"></a>事务不考虑隔离性引发的问题</h4><ul>
+<li><strong>脏读</strong>：此种异常时因为一个事务读取了另一个事务修改了但是未提交的数据，当修改的事务进行回滚操作时将造成读取事务异常。</li>
+<li><strong>不可重复读</strong>：在一个事务内读取表中的某一行数据，多次读取结果不同。（一个事务读取到了另外一个事务提交的数据）</li>
+<li><strong>幻读（虚读）</strong>：指在一个事务内读取到了别的事务插入的数据，导致前后读取不一致。例如读整个表，即表的行数，例如第一次读某个表有3条记录，第二次读该表又有4条记录 （<strong>和不可重复读的不同：不可重复读针对的是数据的值，幻读针对的是数据的数量</strong>）</li>
+</ul>
+<h4 id="数据库事务隔离级别（SQL标准定义）"><a href="#数据库事务隔离级别（SQL标准定义）" class="headerlink" title="数据库事务隔离级别（SQL标准定义）"></a>数据库事务隔离级别（SQL标准定义）</h4><ul>
+<li><strong>READ UNCOMMITTED（未提交读）</strong>：事务中的修改，即使没有提交，其他事务也可以看得到。很容易导致<strong>脏读</strong>等众多问题，<strong>如无必要，很少使用</strong></li>
+<li><strong>READ COMMITTED（提交读）</strong>：大多数数据库系统默认的隔离级别（除Mysql等）。这种隔离级别就是一个事务的开始，只能看到已经完成的事务的结果，正在执行的，是无法被其他事务看到的。这种级别会出现读取旧数据的现象，即<strong>不可重复读</strong>的问题。</li>
+<li><strong>REPEATABLE READ（可重复读）</strong>：解决了脏读的问题，该级别保证了每行的记录的结果是一致的，也就是上面说的读了旧数据的问题，但是却无法解决另一个问题，幻行，顾名思义就是突然蹦出来的行数据。指的就是某个事务在读取某个范围的数据，但是另一个事务又向这个范围的数据去插入数据，导致多次读取的时候，数据的行数不一致。即<strong>幻读</strong>。<strong>–MYSQL默认隔离级别</strong></li>
+<li><strong>SERIALIZABLE（可串行化）</strong>：最高的隔离级别，它通过强制事务串行执行（注意是串行），避免了前面的幻读情况，由于他大量加上锁，导致大量的请求超时，因此性能会比较底下，在<strong>特别需要数据一致性且并发量不需要那么大的时候才可能考虑这个隔离级别</strong></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>隔离级别</th>
+<th>脏读可能性</th>
+<th>不可重复读可能性</th>
+<th>幻读可能性</th>
+<th>加锁读</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>READ UNCOMMITTED</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>READ COMMITTED</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>REPEATABLE READ</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>SERIALIZABLE</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<h4 id="数据库锁"><a href="#数据库锁" class="headerlink" title="数据库锁"></a>数据库锁</h4><h5 id="数据库锁的基本类型："><a href="#数据库锁的基本类型：" class="headerlink" title="数据库锁的基本类型："></a>数据库锁的基本类型：</h5><ul>
+<li><strong>X锁</strong>：<strong>exclusive</strong> 用于写操作<pre><code>- 某数据对象在没有加任何锁的情况下，一个事务可以对其加X锁，而其他事务就不能对其再加任何锁 
+</code></pre></li>
+<li><strong>S锁：share</strong> 用于读操作<pre><code>- 一个事务对某数据对象加了S 锁后，其他事务就不能对其加X锁，但可以加S锁
+</code></pre></li>
+<li><strong>U锁：update</strong><pre><code>- 事务要更新数据对象时，先申请该对象的U 锁。对象加了U锁，允许其他事务对它加S锁。在最后写入时，再申请将U锁升级为X锁。不必在全过程中加X
+</code></pre></li>
+</ul>
+<h5 id="不同级别的加锁协议"><a href="#不同级别的加锁协议" class="headerlink" title="不同级别的加锁协议"></a>不同级别的加锁协议</h5><ul>
+<li><strong>一级封锁协议（脏数据、不可重复读）</strong><ul>
+<li>任一事务在写某数据前，必须对其加上X锁，该事务结束后才释放。不采用S锁，读数据不用加锁。 </li>
+<li>事务结束包括正常结束（COMMIT）和非正常结束（ROLLBACK）。</li>
+</ul>
+</li>
+<li><strong>二级封锁协议（不可重复读）</strong><ul>
+<li>满足一级封锁协议，且任一事务在读取某数据前，必须对其加上S锁，<strong>读完后</strong> 就释放 </li>
+</ul>
+</li>
+<li><strong>三级封锁协议（）</strong><ul>
+<li>满足一级封锁协议，且任一事务在读取某数据前，必须对其加上S锁，<strong>事务结束后</strong> 释放锁</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>对应的我们便可以看到 <strong>隔离级别和加锁协议之间的关系</strong>：<br><strong>一级封锁协议 -&gt; READ UNCOMMITTED</strong><br><strong>二级封锁协议 -&gt; READ COMMITTED</strong><br><strong>三级封锁协议 -&gt; REPEATABLE READ</strong></p>
+</blockquote>
+<h6 id="其他加锁协议"><a href="#其他加锁协议" class="headerlink" title="其他加锁协议"></a>其他加锁协议</h6><ul>
+<li><p><strong>两阶段加锁协议：</strong></p>
+<ul>
+<li>整个事务分为两个阶段，前一个阶段为加锁，后一个阶段为解锁。在加锁阶段，事务只能加锁，也可以操作数据，但不能解锁，直到事务释放第一个锁，就进入解锁阶段，此过程中事务只能解锁，也可以操作数据，不能再加锁。两阶段锁协议使得事务具有较高的并发度，因为解锁不必发生在事务结尾。它的不足是没有解决死锁的问题，因为它在加锁阶段没有顺序要求。如两个事务分别申请了A, B锁，接着又申请对方的锁，此时进入死锁状态。</li>
+<li><strong>定理：若所有事务均遵守两段锁协议，则这些事务的所有交叉调度都是可串行化的。</strong></li>
+</ul>
+</li>
+<li><p>多粒度加锁协议</p>
+<ul>
+<li>行级锁：开销大，加锁慢；会出现死锁；锁定粒度最小，发生锁冲突的概率最低，并发度也最高。<strong>只在存储引擎层实现</strong></li>
+<li>页级锁：开销和加锁时间界于表锁和行锁之间；会出现死锁；锁定粒度界于表锁和行锁之间，并发度一般</li>
+<li>表级锁：开销小，加锁快；不会出现死锁；锁定粒度大，发生锁冲突的概率最高，并发度最低。</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://oxp7d1tae.bkt.clouddn.com/alipay.png">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://oxp7d1tae.bkt.clouddn.com/wechat.png">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Spring</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">数据库</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="http://s.jiathis.com/qrcode.php?url=https://github.com/zjs1224522500/zjs1224522500.github.io/2017/12/22/transaction-and-lock/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
   
   
-    </div></section>
+    <a href="/2017/12/14/arithmetic-sort-exercise-one/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">常见算法之寻找K大数</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+
+  
+  <div id="gitment-ctn"></div> 
+<link rel="stylesheet" href="//imsun.github.io/gitment/style/default.css">
+<script src="//imsun.github.io/gitment/dist/gitment.browser.js"></script>
+<script>
+var gitment = new Gitment({
+  id: "https://github.com/zjs1224522500/zjs1224522500.github.io/2017/12/22/transaction-and-lock/",
+  owner: 'zjs1224522500',
+  repo: 'zjs1224522500.github.io',
+  oauth: {
+    client_id: 'cccb9b919b08c6e61099',
+    client_secret: 'ab2ce55de1b91e9ed7c6f3e819a32ea0b1ca617b',
+  },
+})
+gitment.render('gitment-ctn')
+</script>
+  
 
 
           </div>
@@ -246,9 +494,9 @@ var _hmt = _hmt || [];
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
