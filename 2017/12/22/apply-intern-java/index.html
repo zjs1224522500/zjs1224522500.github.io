@@ -6,18 +6,18 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://github.com/zjs1224522500/zjs1224522500.github.io">
-  <title>2017.11找实习-面经 | Elvis</title>
+  <title>2017.11找实习-面经-Java | Elvis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="2017年11月，为了2018年上半年的企业实习投递了一系列简历并参与了相关面试。主要分为Java篇，数据库篇，网络篇，框架篇，算法篇和相关工具篇  面试的岗位主要是Java后端开发实习生的岗位. 主要面的有今日头条、百度、网易、搜狐、滴滴、SAP 较为简单的有所省略直接给相关问题或者直接上链接 较为常见的或者说比较重要的后续会单独写博文或者贴一些友链进行探讨 因为确实面试相关的博客已经很多很多">
 <meta name="keywords" content="面经">
 <meta property="og:type" content="article">
-<meta property="og:title" content="2017.11找实习-面经">
+<meta property="og:title" content="2017.11找实习-面经-Java">
 <meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/12/22/apply-intern-java/index.html">
 <meta property="og:site_name" content="Elvis">
 <meta property="og:description" content="2017年11月，为了2018年上半年的企业实习投递了一系列简历并参与了相关面试。主要分为Java篇，数据库篇，网络篇，框架篇，算法篇和相关工具篇  面试的岗位主要是Java后端开发实习生的岗位. 主要面的有今日头条、百度、网易、搜狐、滴滴、SAP 较为简单的有所省略直接给相关问题或者直接上链接 较为常见的或者说比较重要的后续会单独写博文或者贴一些友链进行探讨 因为确实面试相关的博客已经很多很多">
-<meta property="og:updated_time" content="2017-12-23T10:27:07.820Z">
+<meta property="og:updated_time" content="2017-12-26T14:39:27.782Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="2017.11找实习-面经">
+<meta name="twitter:title" content="2017.11找实习-面经-Java">
 <meta name="twitter:description" content="2017年11月，为了2018年上半年的企业实习投递了一系列简历并参与了相关面试。主要分为Java篇，数据库篇，网络篇，框架篇，算法篇和相关工具篇  面试的岗位主要是Java后端开发实习生的岗位. 主要面的有今日头条、百度、网易、搜狐、滴滴、SAP 较为简单的有所省略直接给相关问题或者直接上链接 较为常见的或者说比较重要的后续会单独写博文或者贴一些友链进行探讨 因为确实面试相关的博客已经很多很多">
   
     <link rel="alternative" href="/atom.xml" title="Elvis" type="application/atom+xml">
@@ -179,7 +179,7 @@ var _hmt = _hmt || [];
         
   
     <h1 class="article-title" itemprop="name">
-      2017.11找实习-面经
+      2017.11找实习-面经-Java
     </h1>
   
 
@@ -206,7 +206,9 @@ var _hmt = _hmt || [];
 <li>另外，不同岗位的直接看CS公共基础知识部分的即可（OS、计网、计组）<h4 id="此篇为Java篇，持续更新ing"><a href="#此篇为Java篇，持续更新ing" class="headerlink" title="此篇为Java篇，持续更新ing"></a>此篇为Java篇，持续更新ing</h4></li>
 </ul>
 </blockquote>
-<h2 id="1、Java基本知识"><a href="#1、Java基本知识" class="headerlink" title="1、Java基本知识"></a>1、Java基本知识</h2><h5 id="实现多线程的方式"><a href="#实现多线程的方式" class="headerlink" title="实现多线程的方式"></a>实现多线程的方式</h5><ul>
+<h2 id="1、Java基本知识"><a href="#1、Java基本知识" class="headerlink" title="1、Java基本知识"></a>1、Java基本知识</h2><h3 id="实现多线程的方式"><a href="#实现多线程的方式" class="headerlink" title="实现多线程的方式"></a>实现多线程的方式</h3><blockquote>
+<p><strong>之后会统一的进行并发编程的相关知识点的整理和总结</strong></p>
+<ul>
 <li>常见方式一：继承 Thread 类；对应的重写run()方法，start() 方法执行</li>
 <li>常见方式二：实现 Runable 接口；对应的重写run()方法，start() 方法执行</li>
 <li>方式三：实现Callable接口通过FutureTask包装器来创建Thread线程</li>
@@ -214,16 +216,38 @@ var _hmt = _hmt || [];
 <li><a href="https://www.cnblogs.com/wxd0108/p/5479442.html" target="_blank" rel="external">参考博文：Java中的多线程你只要看这一篇就够了</a></li>
 <li><a href="https://www.cnblogs.com/felixzh/p/6036074.html" target="_blank" rel="external">参考博文：JAVA多线程实现的四种方式</a></li>
 </ul>
+</blockquote>
 <a id="more"></a>
-<h5 id="list、map、set的区别和应用场景（集合框架）"><a href="#list、map、set的区别和应用场景（集合框架）" class="headerlink" title="list、map、set的区别和应用场景（集合框架）"></a>list、map、set的区别和应用场景（集合框架）</h5><h6 id="1-存放"><a href="#1-存放" class="headerlink" title="1.存放"></a>1.存放</h6><ul>
-<li>(1)List存放元素是有序，可重复</li>
-<li>(2)Set存放元素无需，不可重复</li>
-<li>(3)Map元素键值对形式存放，键无序不可重复，值可重复<h6 id="2-取出"><a href="#2-取出" class="headerlink" title="2.取出"></a>2.取出</h6></li>
-<li>(1)List取出元素for循环，foreach循环，Iterator迭代器迭代</li>
-<li>(2)Set取出元素foreach循环，Iterator迭代器迭代</li>
-<li>(3)Map取出元素需转换为Set，然后进行Iterator迭代器迭代，或转换为Entry对象进行Iterator迭代器迭代 </li>
+<h3 id="list、map、set的区别和应用场景（集合框架）"><a href="#list、map、set的区别和应用场景（集合框架）" class="headerlink" title="list、map、set的区别和应用场景（集合框架）"></a>list、map、set的区别和应用场景（集合框架）</h3><h6 id="1-存放"><a href="#1-存放" class="headerlink" title="1.存放"></a>1.存放</h6><ul>
+<li>(1)List存放元素是有序，可重复，继承Collection</li>
+<li><p>(2)Set存放元素无序，不可重复，继承Collection</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Collection</span>&lt;<span class="title">E</span>&gt; <span class="keyword">extends</span> <span class="title">Iterable</span>&lt;<span class="title">E</span>&gt; </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">int</span> <span class="title">size</span><span class="params">()</span></span>;</div><div class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">isEmpty</span><span class="params">()</span></span>;</div><div class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">contains</span><span class="params">()</span></span></div><div class="line">    <span class="keyword">boolean</span> <span class="title">add</span><span class="params">(E e)</span>;</div><div class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">remove</span><span class="params">(Object o)</span></span>;</div><div class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">containsAll</span><span class="params">(Collection&lt;?&gt; c)</span></span>;</div><div class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">addAll</span><span class="params">(Collection&lt;? extends E&gt; c)</span></span>;</div><div class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">removeAll</span><span class="params">(Collection&lt;?&gt; c)</span></span>;</div><div class="line">    <span class="comment">// 取交集</span></div><div class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">retainAll</span><span class="params">(Collection&lt;?&gt; c)</span></span>;</div><div class="line">    </div><div class="line">    Object[] toArray();</div><div class="line">    &lt;T&gt; T[] toArray(T[] a);</div><div class="line">    </div><div class="line">    <span class="function">Iterator&lt;E&gt; <span class="title">iterator</span><span class="params">()</span></span>;</div><div class="line"></div><div class="line">    <span class="comment">// ...</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>(3)Map元素键值对形式存放，键无序不可重复，值可重复</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Map</span>&lt;<span class="title">K</span>,<span class="title">V</span>&gt; </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">int</span> <span class="title">size</span><span class="params">()</span></span>;</div><div class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">isEmpty</span><span class="params">()</span></span>;</div><div class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">containsKey</span><span class="params">(Object key)</span></span>;</div><div class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">containsValue</span><span class="params">(Object value)</span></span>;</div><div class="line">    <span class="function">V <span class="title">get</span><span class="params">(Object key)</span></span>;</div><div class="line">    <span class="function">V <span class="title">put</span><span class="params">(K key, V value)</span></span>;</div><div class="line">    <span class="function">V <span class="title">remove</span><span class="params">(Object key)</span></span>;</div><div class="line">    <span class="function"><span class="keyword">void</span> <span class="title">putAll</span><span class="params">(Map&lt;? extends K, ? extends V&gt; m)</span></span>;</div><div class="line">    <span class="function"><span class="keyword">void</span> <span class="title">clear</span><span class="params">()</span></span>;</div><div class="line">    <span class="function">Set&lt;K&gt; <span class="title">keySet</span><span class="params">()</span></span>;</div><div class="line">    <span class="function">Collection&lt;V&gt; <span class="title">values</span><span class="params">()</span></span>;</div><div class="line">    Set&lt;Map.Entry&lt;K, V&gt;&gt; entrySet();</div><div class="line">    <span class="comment">//...</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
 </ul>
-<h6 id="linkedList和arrayList的区别"><a href="#linkedList和arrayList的区别" class="headerlink" title="linkedList和arrayList的区别"></a>linkedList和arrayList的区别</h6><ul>
+<h6 id="2-取出"><a href="#2-取出" class="headerlink" title="2.取出"></a>2.取出</h6><blockquote>
+<p><strong>Java8</strong> 可使用 <strong>lamda表达式</strong> 以及  <strong>函数式编程</strong> 实现访问集合中元素，此处暂不涉及，后续会统一对 <strong>Java8</strong> 的相关特性进行讲解。 </p>
+</blockquote>
+<ul>
+<li><p>(1)List取出元素for循环，foreach循环，Iterator迭代器迭代</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 使用 for 循环</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">printAllUsingFor</span><span class="params">(List&lt;E&gt; list)</span> </span>&#123;</div><div class="line">	<span class="comment">// 注意将size() 的调用尽可能减少调用次数并使用临时空间变量节省空间</span></div><div class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>, size = list.size(); i &lt; size; i++) &#123;</div><div class="line">		System.out.print(list.get(i));</div><div class="line">	&#125;</div><div class="line">	System.out.println();</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// 使用 foreach （其本质仍为迭代器，Java编译器在生成字节码时对应的修改为迭代器）</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">printAllUsingForEach</span><span class="params">(List&lt;E&gt; list)</span> </span>&#123;</div><div class="line">	<span class="keyword">for</span> (E e : list) &#123;</div><div class="line">		System.out.print(e);</div><div class="line">	&#125;</div><div class="line">	System.out.println();</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// 使用 迭代器</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">printAllUsingIterator</span><span class="params">(List&lt;E&gt; list)</span> </span>&#123;</div><div class="line">	<span class="keyword">for</span> (Iterator iterator = list.iterator(); iterator.hasNext(); ) &#123;</div><div class="line">		E e = (E) iterator.next();</div><div class="line">		System.out.print(e);</div><div class="line">	&#125;</div><div class="line">	System.out.println();</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// 最佳实践（list中存放的元素数目较少时无论采用哪种遍历方式，结果都相差不大</span></div><div class="line"><span class="comment">// 但当数据量相对较大时，则需要根据list的类型对应的进行遍历方式的调整。</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">printAll</span><span class="params">(List&lt;E&gt; list)</span> </span>&#123;</div><div class="line">	<span class="keyword">if</span> (list <span class="keyword">instanceof</span> RandomAccess) &#123;</div><div class="line">		printAllUsingFor(list);</div><div class="line">	&#125; <span class="keyword">else</span> &#123;</div><div class="line">		printAllUsingIterator(list);</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>(2)Set取出元素foreach循环，Iterator迭代器迭代</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 迭代器 与 List的迭代器访问同理，此处不再演示</span></div><div class="line"><span class="comment">// 同时 迭代器 与 foreach 效率相差无几，不再具体进行相关对比</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">printAllUsingForEach</span><span class="params">(Set&lt;E&gt; set)</span> </span>&#123;</div><div class="line">	<span class="keyword">for</span> (E e : set) &#123;</div><div class="line">		System.out.print(e);</div><div class="line">	&#125;</div><div class="line">	System.out.println();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>(3)Map取出元素需转换为Set，然后进行Iterator迭代器迭代，或转换为Entry对象进行Iterator迭代器迭代 </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 遍历 key 和 value，对应的也可以根据key去获取value</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">printKeySetAndValueSet</span><span class="params">(Map&lt;E, Object&gt; map)</span> </span>&#123;</div><div class="line">	<span class="keyword">for</span> (E e : map.keySet()) &#123;</div><div class="line">		System.out.println(<span class="string">"keys = "</span> + e);</div><div class="line">	&#125;</div><div class="line"></div><div class="line">	<span class="keyword">for</span> (Object value : map.values()) &#123;</div><div class="line">		System.out.println(<span class="string">"values = "</span> + value);</div><div class="line">	&#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// foreach</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">printAllUsingForEach</span><span class="params">(Map&lt;E, Object&gt; map)</span> </span>&#123;</div><div class="line">	<span class="keyword">for</span> (Map.Entry&lt;E, Object&gt; entry : map.entrySet()) &#123;</div><div class="line">		System.out.println(<span class="string">"key = "</span> + entry.getKey() + <span class="string">";value = "</span> + entry.getValue());</div><div class="line">	&#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// iterator 两种方式（是否使用泛型）</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">printAllUsingIterator</span><span class="params">(Map&lt;E, Object&gt; map)</span> </span>&#123;</div><div class="line">	<span class="keyword">for</span> (Iterator iterator = map.entrySet().iterator(); iterator.hasNext(); ) &#123;</div><div class="line">		<span class="comment">// 需要强转，遍历器返回的类型为 Object</span></div><div class="line">		Map.Entry&lt;E, Object&gt; entry = (Map.Entry) iterator.next();</div><div class="line">		System.out.println(<span class="string">"key = "</span> + entry.getKey() + <span class="string">"; value = "</span> + entry.getValue());</div><div class="line">	&#125;</div><div class="line">	</div><div class="line">	<span class="keyword">for</span> (Iterator&lt;Map.Entry&lt;E, Object&gt;&gt; iterator = map.entrySet().iterator(); iterator</div><div class="line">				.hasNext(); ) &#123;</div><div class="line">		<span class="comment">// 不需要强转，由于返回类型同 获得的遍历器 泛型一致</span></div><div class="line">		Map.Entry&lt;E, Object&gt; entry = iterator.next();</div><div class="line">		System.out.println(<span class="string">"key = "</span> + entry.getKey() + <span class="string">"; value = "</span> + entry.getValue());</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<blockquote>
+<p><a href="http://blog.csdn.net/u012442401/article/details/47850501" target="_blank" rel="external">相关博文：Java迭代器的使用以及和for的区别</a></p>
+</blockquote>
+<h4 id="List中的相关集合框架（ArrayList、LinkedList、Stack、Vector）"><a href="#List中的相关集合框架（ArrayList、LinkedList、Stack、Vector）" class="headerlink" title="List中的相关集合框架（ArrayList、LinkedList、Stack、Vector）"></a>List中的相关集合框架（ArrayList、LinkedList、Stack、Vector）</h4><h5 id="linkedList和arrayList的区别"><a href="#linkedList和arrayList的区别" class="headerlink" title="linkedList和arrayList的区别"></a>linkedList和arrayList的区别</h5><blockquote>
+<p>区别最主要是 <strong>顺序存储</strong> 和 <strong>链式存储</strong> 的区别</p>
+</blockquote>
+<ul>
 <li><p>1．对ArrayList和LinkedList而言，在列表末尾增加一个元素所花的开销都是固定的。对ArrayList而言，主要是在内部数组中增加一项，指向所添加的元素，偶尔可能会导致对数组重新进行分配；而对LinkedList而言，这个开销是统一的，分配一个内部Entry对象。</p>
 </li>
 <li><p>2．在ArrayList的中间插入或删除一个元素意味着这个列表中剩余的元素都会被移动；而在LinkedList的中间插入或删除一个元素的开销是固定的。</p>
@@ -236,6 +260,24 @@ var _hmt = _hmt || [];
 <blockquote>
 <p>可以这样说：当操作是在一列数据的后面添加数据而不是在前面或中间,并且需要随机地访问其中的元素时,使用ArrayList会提供比较好的性能；当你的操作是在一列数据的前面或中间添加或删除数据,并且按照顺序访问其中的元素时,就应该使用LinkedList了。 </p>
 </blockquote>
+<h5 id="ArrayList、Stack和Vector的主要区别"><a href="#ArrayList、Stack和Vector的主要区别" class="headerlink" title="ArrayList、Stack和Vector的主要区别"></a>ArrayList、Stack和Vector的主要区别</h5><ul>
+<li>1、Vector、Stack：线程安全；ArrayList、LinkedList：非线程安全。<strong>对于相关线程安全实现的机制将在并发编程中进行统一的讲解！</strong></li>
+<li>2、实现方式： LinkedList：双向链表，ArrayList，Vector，Stack：数组；</li>
+<li><p>3、Stack继承自Vector，只在Vector的基础上添加了几个Stack相关的方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">public class Stack&lt;E&gt; extends Vector&lt;E&gt; &#123;</div><div class="line">    public E push(E item) &#123;</div><div class="line">        // public synchronized void addElement(E obj)</div><div class="line">        addElement(item);</div><div class="line">        return item;</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    public synchronized E pop() &#123;...&#125;</div><div class="line">    public synchronized E peek() &#123;...&#125;</div><div class="line">    </div><div class="line">    public boolean empty() &#123;</div><div class="line">        return size() == 0;</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    public synchronized int search(Object o) &#123;</div><div class="line">        int i = lastIndexOf(o);</div><div class="line">        if (i &gt;= 0) &#123;</div><div class="line">            return size() - i;</div><div class="line">        &#125;</div><div class="line">        return -1;</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>4、ArrayList和Vector在动态扩容时有所不同。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// ArrayList</span></div><div class="line"><span class="keyword">int</span> newCapacity = (oldCapacity * <span class="number">3</span>)/<span class="number">2</span> + <span class="number">1</span>;  </div><div class="line"></div><div class="line"><span class="comment">// Vector</span></div><div class="line"><span class="keyword">int</span> newCapacity = (capacityIncrement &gt; <span class="number">0</span>) ?  </div><div class="line">            (oldCapacity + capacityIncrement) : (oldCapacity * <span class="number">2</span>);</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h4 id="Set相关的集合框架（HashSet、TreeSet）"><a href="#Set相关的集合框架（HashSet、TreeSet）" class="headerlink" title="Set相关的集合框架（HashSet、TreeSet）"></a>Set相关的集合框架（HashSet、TreeSet）</h4><h6 id="HashSet-和-TreeSet"><a href="#HashSet-和-TreeSet" class="headerlink" title="HashSet 和 TreeSet"></a>HashSet 和 TreeSet</h6><ul>
+<li><p>1.HashSet 是无序的，不能保证元素排列顺序，底层是由 HashMap 进行实现的。<strong>（讲HashMap时会进行具体阐述）</strong>，会根据对应的hashCode进行相关排序；TreeSet 是有序的，底层是通过 TreeMap 实现 <strong>（对应的会单独讲实现原理—红黑树 Entry）</strong> 的。TreeSet 通过使用 compareTo() 方法来比较然后升序排列，也可以定制排序逻辑。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">TreeSet treeSet = <span class="keyword">new</span> TreeSet();</div><div class="line">HashSet hashSet = <span class="keyword">new</span> HashSet();</div><div class="line">hashSet.add(<span class="number">1</span>);</div><div class="line">hashSet.add(<span class="number">0</span>);</div><div class="line">hashSet.add(<span class="number">3</span>);</div><div class="line">hashSet.add(<span class="number">2</span>);</div><div class="line">hashSet.add(-<span class="number">1</span>);</div><div class="line">System.out.println(hashSet);<span class="comment">// &gt;&gt; [0, -1, 1, 2, 3]</span></div><div class="line"></div><div class="line">treeSet.add(<span class="number">1</span>);</div><div class="line">treeSet.add(<span class="number">0</span>);</div><div class="line">treeSet.add(<span class="number">3</span>);</div><div class="line">treeSet.add(<span class="number">2</span>);</div><div class="line">treeSet.add(-<span class="number">1</span>);</div><div class="line">System.out.println(treeSet);<span class="comment">// &gt;&gt; [-1, 0, 1, 2, 3]</span></div></pre></td></tr></table></figure>
+</li>
+<li><p>2、HashSet 允许存放 null，但只能存放一个 null <strong>（由于Hash表的原因）</strong>，而 TreeSet 不能，会抛出对应的空指针异常。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">hashSet.add(1);</div><div class="line">hashSet.add(null);</div><div class="line">hashSet.add(null);</div><div class="line">System.out.println(hashSet); // &gt;&gt; [null,1]</div></pre></td></tr></table></figure>
+</li>
+</ul>
 <h6 id="hashMap的原理"><a href="#hashMap的原理" class="headerlink" title="hashMap的原理"></a>hashMap的原理</h6><ul>
 <li>会新开博文具体阐释三者原理和区别</li>
 <li><a href="http://blog.csdn.net/vking_wang/article/details/14166593" target="_blank" rel="external">参考友链：HashMap实现原理分析</a><h6 id="hashTable的原理"><a href="#hashTable的原理" class="headerlink" title="hashTable的原理"></a>hashTable的原理</h6></li>
@@ -244,7 +286,63 @@ var _hmt = _hmt || [];
 <li>会新开博文具体阐释三者原理和区别</li>
 <li><a href="http://www.importnew.com/16142.html" target="_blank" rel="external">参考友链：ConcurrentHashMap原理分析</a></li>
 </ul>
-<h4 id="Object中常用的方法"><a href="#Object中常用的方法" class="headerlink" title="Object中常用的方法"></a>Object中常用的方法</h4><h5 id="hashCode"><a href="#hashCode" class="headerlink" title="hashCode"></a>hashCode</h5><h5 id="equals-和"><a href="#equals-和" class="headerlink" title="equals 和 =="></a>equals 和 ==</h5><h5 id="clone"><a href="#clone" class="headerlink" title="clone"></a>clone</h5><h5 id="toString-NaN"><a href="#toString-NaN" class="headerlink" title="toString"></a>toString</h5><h4 id="Java程序从编写到运行的全过程："><a href="#Java程序从编写到运行的全过程：" class="headerlink" title="Java程序从编写到运行的全过程："></a>Java程序从编写到运行的全过程：</h4>
+<h4 id="Object中常用的方法"><a href="#Object中常用的方法" class="headerlink" title="Object中常用的方法"></a>Object中常用的方法</h4><h5 id="hashCode"><a href="#hashCode" class="headerlink" title="hashCode"></a>hashCode</h5><ul>
+<li><p>Object 类会提供 hashCode() 方法的声明并使用 native 关键字标志其由非java语言实现，具体的方法实现在外部。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">public native int hashCode();</div></pre></td></tr></table></figure>
+</li>
+<li><p>String 中的 hashCode()。hash 对应的算法.<br><a href="http://blog.csdn.net/tayanxunhua/article/details/20525251" target="_blank" rel="external">相关博文：关于hashcode 里面 使用31 系数的问题</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">s[0]*31^&#123;(n-1)&#125; + s[1]*31^&#123;(n-2)&#125; + ... + s[n-1]</div></pre></td></tr></table></figure>
+</li>
+<li><p>String类是用它的value值作为参数来计算hashCode的，也就是说，相同的value就一定会有相同的hashCode值。但反之不成立，即hashCode相同，value值不一定相同。这种情况又被称为<strong>hash冲撞（冲突）</strong>,hashMap中对应的解决方式就是hashCode相同的对象再构造一个线性表。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">hashCode</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">int</span> h = hash;</div><div class="line">    <span class="keyword">if</span> (h == <span class="number">0</span> &amp;&amp; value.length &gt; <span class="number">0</span>) &#123;</div><div class="line">        <span class="keyword">char</span> val[] = value;</div><div class="line">        </div><div class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; value.length; i++) &#123;</div><div class="line">            h = <span class="number">31</span> * h + val[i];</div><div class="line">        &#125;</div><div class="line">        hash = h;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> h;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>当然最好的 <strong>hashCode()</strong> 方法则是所有不同的对象都能有各自的 <strong>Hash码</strong>，同时注意在设计对应的 <strong>hashCode()</strong> 方法时，</p>
+<blockquote>
+<p>无论何时，对同一个对象调用hashCode()都应该产生同样的值。如果在讲一个对象用put()添加进HashMap时产生一个hashCdoe值，而用get()取出时却产生了另一个hashCode值，那么就无法获取该对象了。所以如果你的hashCode方法依赖于对象中易变的数据，用户就要当心了，因为此数据发生变化时，hashCode()方法就会生成一个不同的散列码.—<strong>By Effective Java</strong></p>
+</blockquote>
+</li>
+<li><p><a href="http://blog.csdn.net/benjaminzhang666/article/details/9468605" target="_blank" rel="external">参考博文：重写HashCode的内存变化过程以及两种重写hashCode方式的比较</a></p>
+</li>
+<li><a href="http://blog.csdn.net/sunmenggmail/article/details/18660699" target="_blank" rel="external">参考博文：通用的Java hashCode重写方案</a></li>
+</ul>
+<h5 id="equals-和"><a href="#equals-和" class="headerlink" title="equals 和 =="></a>equals 和 ==</h5><p><a href="https://www.cnblogs.com/Eason-S/p/5524837.html" target="_blank" rel="external">参考博文：equals和==的区别小结</a></p>
+<h6 id=""><a href="#" class="headerlink" title="=="></a>==</h6><ul>
+<li>== 比较的是变量(栈)内存中存放的对象的(堆)内存地址，用来判断两个对象的地址是否相同，即是否是指相同一个对象。比较的是真正意义上的指针操作。</li>
+</ul>
+<h6 id="equals"><a href="#equals" class="headerlink" title="equals()"></a>equals()</h6><ul>
+<li>equals用来比较的是两个对象的内容是否相等，由于所有的类都是继承自java.lang.Object类的，所以适用于所有对象，如果没有对该方法进行覆盖的话，调用的仍然是Object类中的方法，而Object中的equals方法返回的却是==的判断。</li>
+<li><p>默认的 equals() 和 String 中的 equals()</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">equals</span><span class="params">(Object obj)</span> </span>&#123;</div><div class="line">    <span class="keyword">return</span> (<span class="keyword">this</span> == obj);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">equals</span><span class="params">(Object anObject)</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (<span class="keyword">this</span> == anObject) &#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (anObject <span class="keyword">instanceof</span> String) &#123;</div><div class="line">        String anotherString = (String)anObject;</div><div class="line">        <span class="keyword">int</span> n = count;</div><div class="line">        <span class="keyword">if</span> (n == anotherString.count) &#123;</div><div class="line">            <span class="keyword">char</span> v1[] = value;</div><div class="line">            <span class="keyword">char</span> v2[] = anotherString.value;</div><div class="line">            <span class="keyword">int</span> i = offset;</div><div class="line">            <span class="keyword">int</span> j = anotherString.offset;</div><div class="line">            <span class="keyword">while</span> (n-- != <span class="number">0</span>) &#123;</div><div class="line">                <span class="keyword">if</span> (v1[i++] != v2[j++])</div><div class="line">                    <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>对于自定义的对象，当重写 equals() 方法时需要对应的重写 hashCode() 方法</p>
+<ul>
+<li>1、如果两个对象相同（即用equals比较返回true），那么它们的hashCode值一定要相同；</li>
+<li>2、如果两个对象的hashCode相同，它们并不一定相同(即用equals比较返回false)</li>
+</ul>
+</li>
+<li>考虑到 Java 的集合框架中有很多关于 Hash 表的相关实现。hashCode() 的效率相对于复杂的业务逻辑对应的 equals() 方法而言是要高得多的。所以在相关数据结构中采用先 hash 的方式再利用 equals() 进行相关比较能够更好的提高性能，同时保证 hash 表中存放的元素不相同。</li>
+</ul>
+<h6 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h6><ul>
+<li>1、原生类型如:int/char/boolean等使用 <strong>==</strong> 进行比较，自定义的对象使用 <strong>equals()</strong></li>
+<li>2、<strong>==</strong> 返回true如果两个引用指向相同的对象，<strong>equals()</strong> 的返回结果依赖于具体业务实现</li>
+<li>3、字符串的对比使用 <strong>equals()</strong> 代替 <strong>==</strong> 操作符</li>
+</ul>
+<h5 id="clone"><a href="#clone" class="headerlink" title="clone"></a>clone</h5><ul>
+<li><a href="http://blog.csdn.net/zhangjg_blog/article/details/18369201" target="_blank" rel="external">参考博文：详解Java中的clone方法 – 原型模式</a></li>
+<li><a href="http://blog.csdn.net/rebirth_love/article/details/51792014" target="_blank" rel="external">参考博文：java之clone方法的使用</a></li>
+<li>浅拷贝 和 深拷贝 的区别此处不再赘述。其实是 引用复制 和 内存复制的区别</li>
+<li>用法：实现对应的Cloneable接口，重写对应 clone() 方法，并调用父类 super.clone()</li>
+<li><strong>注意</strong>：完全意义上的深拷贝几乎是不存在的如果在拷贝一个对象时，要想让这个拷贝的对象和源对象完全彼此独立，那么在引用链上的每一级对象都要被显式的拷贝。所以创建彻底的深拷贝是非常麻烦的，尤其是在引用关系非常复杂的情况下， 或者在引用链的某一级上引用了一个第三方的对象，而这个对象没有实现clone方法， 那么在它之后的所有引用的对象都是被共享的。</li>
+</ul>
+<h5 id="toString-NaN"><a href="#toString-NaN" class="headerlink" title="toString"></a>toString</h5><ul>
+<li><p>若自定义的对象未重写 <strong>toString()</strong> 方法，则会调用父类 <strong>Object</strong> 对应的 <strong>toString()</strong> 输出对应的 <strong>对象的地址</strong>.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</div><div class="line">   <span class="keyword">return</span> getClass().getName() + <span class="string">"@"</span> + Integer.toHexString(hashCode());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>调用 print相关函数时，会默认调用 toString()</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">println</span><span class="params">(Object x)</span> </span>&#123;</div><div class="line">    String s = String.valueOf(x);</div><div class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</div><div class="line">        print(s);</div><div class="line">        newLine();</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">valueOf</span><span class="params">(Object obj)</span> </span>&#123;</div><div class="line">    <span class="keyword">return</span> (obj == <span class="keyword">null</span>) ? <span class="string">"null"</span> : obj.toString();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h4 id="Java程序从编写到运行的全过程："><a href="#Java程序从编写到运行的全过程：" class="headerlink" title="Java程序从编写到运行的全过程："></a>Java程序从编写到运行的全过程：</h4>
       
 
       
@@ -358,9 +456,18 @@ var _hmt = _hmt || [];
   
 <nav id="article-nav">
   
+    <a href="/2017/12/22/transaction-and-lock/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          事务和锁
+        
+      </div>
+    </a>
   
-    <a href="/2017/12/22/transaction-and-lock/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">事务和锁</div>
+  
+    <a href="/2017/12/14/arithmetic-sort-exercise-one/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">常见算法之寻找K大数</div>
       <i class="icon-circle-right"></i>
     </a>
   
@@ -502,19 +609,19 @@ getOwnMetadataKeys:function(t){return o(i(t),arguments.length<2?void 0:u(argumen
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">JavaSE</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">随笔</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">JavaWeb</a>
+                <a href="javascript:void(0)" class="js-tag color2">JavaSE</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">面经</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">JavaWeb</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -526,11 +633,11 @@ getOwnMetadataKeys:function(t){return o(i(t),arguments.length<2?void 0:u(argumen
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">Redis</a>
+                <a href="javascript:void(0)" class="js-tag color2">Spring</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">Spring</a>
+                <a href="javascript:void(0)" class="js-tag color1">Redis</a>
               </li>
              
               <li class="article-tag-list-item">
