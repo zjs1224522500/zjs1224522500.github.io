@@ -15,12 +15,12 @@
 <meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/12/22/apply-intern-java/index.html">
 <meta property="og:site_name" content="Elvis">
 <meta property="og:description" content="2017年11月，为了2018年上半年的企业实习投递了一系列简历并参与了相关面试。   主要分为Java篇，数据库篇，网络篇，框架篇，算法篇和相关工具篇    面试的岗位主要是Java后端开发实习生的岗位. 主要面的有今日头条、百度、网易、搜狐、滴滴、SAP 较为简单的有所省略直接给相关问题或者直接上链接 较为常见的或者说比较重要的后续会单独写博文或者贴一些友链进行探讨 因为确实面试相关的博客已">
-<meta property="og:image" content="http://chart.googleapis.com/chart?cht=tx&chl=s[0]*31^{(n-1)}%20+%20s[1]*31^{(n-2)}%20+%20...%20+%20s[n-1]">
-<meta property="og:updated_time" content="2017-12-27T07:16:54.714Z">
+<meta property="og:image" content="http://chart.googleapis.com/chart?cht=tx&chl=s[0]*31^{(n-1">
+<meta property="og:updated_time" content="2017-12-27T07:21:24.493Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="2017.11找实习-面经-Java">
 <meta name="twitter:description" content="2017年11月，为了2018年上半年的企业实习投递了一系列简历并参与了相关面试。   主要分为Java篇，数据库篇，网络篇，框架篇，算法篇和相关工具篇    面试的岗位主要是Java后端开发实习生的岗位. 主要面的有今日头条、百度、网易、搜狐、滴滴、SAP 较为简单的有所省略直接给相关问题或者直接上链接 较为常见的或者说比较重要的后续会单独写博文或者贴一些友链进行探讨 因为确实面试相关的博客已">
-<meta name="twitter:image" content="http://chart.googleapis.com/chart?cht=tx&chl=s[0]*31^{(n-1)}%20+%20s[1]*31^{(n-2)}%20+%20...%20+%20s[n-1]">
+<meta name="twitter:image" content="http://chart.googleapis.com/chart?cht=tx&chl=s[0]*31^{(n-1">
   
     <link rel="alternative" href="/atom.xml" title="Elvis" type="application/atom+xml">
   
@@ -300,8 +300,7 @@ var _hmt = _hmt || [];
 <li><p>String 中的 hashCode()。hash 对应的算法.<br><a href="http://blog.csdn.net/tayanxunhua/article/details/20525251" target="_blank" rel="external">相关博文：关于hashcode 里面 使用31 系数的问题</a></p>
 </li>
 </ul>
-<html><br>&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp&amp;nbsp<br><img src="http://chart.googleapis.com/chart?cht=tx&chl=s[0]*31^{(n-1)}%20+%20s[1]*31^{(n-2)}%20+%20...%20+%20s[n-1]" style="border:none;" align="middle"><br></html>
-
+<p><img src="http://chart.googleapis.com/chart?cht=tx&amp;chl=s[0]*31^{(n-1" alt="image">}%20+%20s[1]*31^{(n-2)}%20+%20…%20+%20s[n-1])</p>
 <ul>
 <li><p>String类是用它的value值作为参数来计算hashCode的，也就是说，相同的value就一定会有相同的hashCode值。但反之不成立，即hashCode相同，value值不一定相同。这种情况又被称为<strong>hash冲撞（冲突）</strong>,hashMap中对应的解决方式就是hashCode相同的对象再构造一个线性表。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">hashCode</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">int</span> h = hash;</div><div class="line">    <span class="keyword">if</span> (h == <span class="number">0</span> &amp;&amp; value.length &gt; <span class="number">0</span>) &#123;</div><div class="line">        <span class="keyword">char</span> val[] = value;</div><div class="line">        </div><div class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; value.length; i++) &#123;</div><div class="line">            h = <span class="number">31</span> * h + val[i];</div><div class="line">        &#125;</div><div class="line">        hash = h;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> h;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
