@@ -6,19 +6,17 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://github.com/zjs1224522500/zjs1224522500.github.io">
-  <title>Redis安装与配置 | Elvis</title>
+  <title>Archives: 2018 | Elvis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="1、为什么使用Redis？ MySQL为代表的关系型数据库在web2.0时代出现一系列效率低下，可扩展性差等问题，从而产生了NoSQL NoSQL介绍–菜鸟教程 而Redis则是NoSQL中的键值对数据库中最广泛应用的一种。除此以为还有MongoDB(文档存储数据库)">
-<meta name="keywords" content="Redis">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Redis安装与配置">
-<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2017/12/08/redis-start-one/index.html">
+  <meta name="description" content="电子科技大学软件工程在读，JavaWeb学习ing">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Elvis">
+<meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/archives/2018/index.html">
 <meta property="og:site_name" content="Elvis">
-<meta property="og:description" content="1、为什么使用Redis？ MySQL为代表的关系型数据库在web2.0时代出现一系列效率低下，可扩展性差等问题，从而产生了NoSQL NoSQL介绍–菜鸟教程 而Redis则是NoSQL中的键值对数据库中最广泛应用的一种。除此以为还有MongoDB(文档存储数据库)">
-<meta property="og:updated_time" content="2017-12-07T12:02:20.713Z">
+<meta property="og:description" content="电子科技大学软件工程在读，JavaWeb学习ing">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Redis安装与配置">
-<meta name="twitter:description" content="1、为什么使用Redis？ MySQL为代表的关系型数据库在web2.0时代出现一系列效率低下，可扩展性差等问题，从而产生了NoSQL NoSQL介绍–菜鸟教程 而Redis则是NoSQL中的键值对数据库中最广泛应用的一种。除此以为还有MongoDB(文档存储数据库)">
+<meta name="twitter:title" content="Elvis">
+<meta name="twitter:description" content="电子科技大学软件工程在读，JavaWeb学习ing">
   
     <link rel="alternative" href="/atom.xml" title="Elvis" type="application/atom+xml">
   
@@ -172,256 +170,60 @@ var _hmt = _hmt || [];
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-redis-start-one" class="article article-type-post " itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
+            
   
-    <h1 class="article-title" itemprop="name">
-      Redis安装与配置
+  
+    
+    
+      
+      
+      <section class="archives-wrap">
+        <div class="archive-year-wrap">
+          <a href="/archives/2018" class="archive-year">2018</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      	<div class="article-meta">
+	      	<a href="/2018/04/11/tinyspring-learnTwo-AOP/" class="archive-article-date">
+  	<time datetime="2018-04-10T16:01:49.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-04-10</time>
+</a>
+        </div>
+    	 
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2018/04/11/tinyspring-learnTwo-AOP/">tinySpring学习笔记（二）-实现AOP</a>
     </h1>
   
 
-        
-        <a href="/2017/12/08/redis-start-one/" class="archive-article-date">
-  	<time datetime="2017-12-07T20:00:29.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-12-07</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="1、为什么使用Redis？"><a href="#1、为什么使用Redis？" class="headerlink" title="1、为什么使用Redis？"></a>1、为什么使用Redis？</h2><ul>
-<li><code>MySQL</code>为代表的关系型数据库在<code>web2.0</code>时代出现一系列效率低下，可扩展性差等问题，从而产生了<code>NoSQL</code> <a href="http://www.runoob.com/mongodb/nosql.html" target="_blank" rel="external">NoSQL介绍–菜鸟教程</a></li>
-<li>而<code>Redis</code>则是<code>NoSQL</code>中的键值对数据库中最广泛应用的一种。除此以为还有<code>MongoDB</code>(文档存储数据库)</li>
-</ul>
-<a id="more"></a>
-<h2 id="Redis相关命令"><a href="#Redis相关命令" class="headerlink" title="Redis相关命令"></a>Redis相关命令</h2><ul>
-<li><a href="http://www.runoob.com/redis/redis-commands.html" target="_blank" rel="external">菜鸟教程Redis命令</a><h5 id="Redis通用命令"><a href="#Redis通用命令" class="headerlink" title="Redis通用命令"></a>Redis通用命令</h5></li>
-<li><code>keys *</code>//查看所有的key</li>
-<li><code>keys my?</code>//通配符查看</li>
-<li><code>del key1 key2 key3</code>//删除key</li>
-<li><code>exists key</code>//判断是否存在</li>
-<li><code>rename key1 key2</code>//更改键的名字 </li>
-<li><code>expire key num</code>//设置过期时间，单位为s</li>
-<li><code>ttl key</code>//key剩余时间</li>
-<li><code>type key</code>//查看类型</li>
-</ul>
-<h2 id="Redis的安装启动"><a href="#Redis的安装启动" class="headerlink" title="Redis的安装启动"></a>Redis的安装启动</h2><h4 id="windows下"><a href="#windows下" class="headerlink" title="windows下"></a><code>windows</code>下</h4><ul>
-<li><p>在<code>redis</code>的安装目录下使用 <code>redis-server.exe redis.windows.conf</code>命令启动<code>Redis</code></p>
-<ul>
-<li>如果设置了<code>redis</code>的安装路径为相应的系统环境变量，则可以省略路径,直接使用<code>redis-server.exe</code>,如果省略配置文件信息，对应的使用默认配置。</li>
-<li><strong>注意：</strong>如果启动时遇到了<code>Creating Server TCP listening socket *:6379: bind:</code>,则需要<figure class="highlight cmd"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">&gt; redis-cli.exe</div><div class="line">&gt; shutdown</div><div class="line">&gt; <span class="keyword">exit</span></div><div class="line">&gt; redis-server.exe redis.windows.conf</div></pre></td></tr></table></figure>
-</li>
-</ul>
-</li>
-<li><p>指定<code>redis</code>对应的主机地址和端口号<code>redis-cli.exe -h 127.0.0.1 -p 6379</code></p>
-</li>
-<li>可以进行如下操作则启动成功：<figure class="highlight cmd"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6739</span> &gt; <span class="built_in">set</span> name elvis</div><div class="line">OK</div><div class="line"><span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span>:<span class="number">6739</span> &gt; get name</div><div class="line">"elvis"</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h4 id="linux下"><a href="#linux下" class="headerlink" title="linux下"></a><code>linux</code>下</h4><ul>
-<li><p>安装：</p>
-<figure class="highlight cmd"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ wget http://download.redis.io/releases/redis-<span class="number">4</span>.<span class="number">0</span>.<span class="number">2</span>.tar.gz</div><div class="line">$ tar xzf redis-<span class="number">4</span>.<span class="number">0</span>.<span class="number">2</span>.tar.gz</div><div class="line">$ <span class="built_in">cd</span> redis-<span class="number">4</span>.<span class="number">0</span>.<span class="number">2</span></div><div class="line">$ make//编译之后在安装目录下的src目录下会出现编译后的redis服务程序redis-server,还有用于测试的客户端程序redis-cl</div></pre></td></tr></table></figure>
-</li>
-<li><p>启动：(注意要使用的redis.conf的位置)</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ cd src</div><div class="line">$ ./redis-server ../redis.conf</div></pre></td></tr></table></figure>
-</li>
-<li><p>服务器端运行<code>redis-server</code>时建议将配置文件中的<code>daemonize</code>为<code>yes</code>，即默认以后台程序方式运行。</p>
-</li>
-<li><p>服务器端运行client进行测试</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ ./redis-cli.exe</div><div class="line">$ set key xxx</div><div class="line">OK</div><div class="line">$ get key</div><div class="line">xxx</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h2 id="Redis的配置"><a href="#Redis的配置" class="headerlink" title="Redis的配置"></a>Redis的配置</h2><ul>
-<li>获取相关配置：<code>CONFIG GET 配置名</code>   <ul>
-<li>注：可以使用通配符 <code>*</code> 获取全部配置</li>
-</ul>
-</li>
-<li>编辑配置：<ul>
-<li>方式一：修改对应<code>conf</code>配置文件</li>
-<li>方式二：<code>CONFIG SET 配置名 新的值</code></li>
-</ul>
-</li>
-<li>参数说明：<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div></pre></td><td class="code"><pre><div class="line">1. Redis默认不是以守护进程的方式运行，可以通过该配置项修改，使用yes启用守护进程</div><div class="line">    daemonize no</div><div class="line">2. 当Redis以守护进程方式运行时，Redis默认会把pid写入/var/run/redis.pid文件，可以通过pidfile指定</div><div class="line">    pidfile /var/run/redis.pid</div><div class="line">3. 指定Redis监听端口，默认端口为6379，作者在自己的一篇博文中解释了为什么选用6379作为默认端口，因为6379在手机按键上MERZ对应的号码，而MERZ取自意大利歌女Alessia Merz的名字</div><div class="line">    port 6379</div><div class="line">4. 绑定的主机地址</div><div class="line">    bind 127.0.0.1</div><div class="line">5.当 客户端闲置多长时间后关闭连接，如果指定为0，表示关闭该功能</div><div class="line">    timeout 300</div><div class="line">6. 指定日志记录级别，Redis总共支持四个级别：debug、verbose、notice、warning，默认为verbose</div><div class="line">    loglevel verbose</div><div class="line">7. 日志记录方式，默认为标准输出，如果配置Redis为守护进程方式运行，而这里又配置为日志记录方式为标准输出，则日志将会发送给/dev/null</div><div class="line">    logfile stdout</div><div class="line">8. 设置数据库的数量，默认数据库为0，可以使用SELECT &lt;dbid&gt;命令在连接上指定数据库id</div><div class="line">    databases 16</div><div class="line">9. 指定在多长时间内，有多少次更新操作，就将数据同步到数据文件，可以多个条件配合</div><div class="line">    save &lt;seconds&gt; &lt;changes&gt;</div><div class="line">    Redis默认配置文件中提供了三个条件：</div><div class="line">    save 900 1</div><div class="line">    save 300 10</div><div class="line">    save 60 10000</div><div class="line">    分别表示900秒（15分钟）内有1个更改，300秒（5分钟）内有10个更改以及60秒内有10000个更改。</div><div class="line"> </div><div class="line">10. 指定存储至本地数据库时是否压缩数据，默认为yes，Redis采用LZF压缩，如果为了节省CPU时间，可以关闭该选项，但会导致数据库文件变的巨大</div><div class="line">    rdbcompression yes</div><div class="line">11. 指定本地数据库文件名，默认值为dump.rdb</div><div class="line">    dbfilename dump.rdb</div><div class="line">12. 指定本地数据库存放目录</div><div class="line">    dir ./</div><div class="line">13. 设置当本机为slav服务时，设置master服务的IP地址及端口，在Redis启动时，它会自动从master进行数据同步</div><div class="line">    slaveof &lt;masterip&gt; &lt;masterport&gt;</div><div class="line">14. 当master服务设置了密码保护时，slav服务连接master的密码</div><div class="line">    masterauth &lt;master-password&gt;</div><div class="line">15. 设置Redis连接密码，如果配置了连接密码，客户端在连接Redis时需要通过AUTH &lt;password&gt;命令提供密码，默认关闭</div><div class="line">    requirepass foobared</div><div class="line">16. 设置同一时间最大客户端连接数，默认无限制，Redis可以同时打开的客户端连接数为Redis进程可以打开的最大文件描述符数，如果设置 maxclients 0，表示不作限制。当客户端连接数到达限制时，Redis会关闭新的连接并向客户端返回max number of clients reached错误信息</div><div class="line">    maxclients 128</div><div class="line">17. 指定Redis最大内存限制，Redis在启动时会把数据加载到内存中，达到最大内存后，Redis会先尝试清除已到期或即将到期的Key，当此方法处理 后，仍然到达最大内存设置，将无法再进行写入操作，但仍然可以进行读取操作。Redis新的vm机制，会把Key存放内存，Value会存放在swap区</div><div class="line">    maxmemory &lt;bytes&gt;</div><div class="line">18. 指定是否在每次更新操作后进行日志记录，Redis在默认情况下是异步的把数据写入磁盘，如果不开启，可能会在断电时导致一段时间内的数据丢失。因为 redis本身同步数据文件是按上面save条件来同步的，所以有的数据会在一段时间内只存在于内存中。默认为no</div><div class="line">    appendonly no</div><div class="line">19. 指定更新日志文件名，默认为appendonly.aof</div><div class="line">     appendfilename appendonly.aof</div><div class="line">20. 指定更新日志条件，共有3个可选值： </div><div class="line">    no：表示等操作系统进行数据缓存同步到磁盘（快） </div><div class="line">    always：表示每次更新操作后手动调用fsync()将数据写到磁盘（慢，安全） </div><div class="line">    everysec：表示每秒同步一次（折衷，默认值）</div><div class="line">    appendfsync everysec</div><div class="line"> </div><div class="line">21. 指定是否启用虚拟内存机制，默认值为no，简单的介绍一下，VM机制将数据分页存放，由Redis将访问量较少的页即冷数据swap到磁盘上，访问多的页面由磁盘自动换出到内存中（在后面的文章我会仔细分析Redis的VM机制）</div><div class="line">     vm-enabled no</div><div class="line">22. 虚拟内存文件路径，默认值为/tmp/redis.swap，不可多个Redis实例共享</div><div class="line">     vm-swap-file /tmp/redis.swap</div><div class="line">23. 将所有大于vm-max-memory的数据存入虚拟内存,无论vm-max-memory设置多小,所有索引数据都是内存存储的(Redis的索引数据 就是keys),也就是说,当vm-max-memory设置为0的时候,其实是所有value都存在于磁盘。默认值为0</div><div class="line">     vm-max-memory 0</div><div class="line">24. Redis swap文件分成了很多的page，一个对象可以保存在多个page上面，但一个page上不能被多个对象共享，vm-page-size是要根据存储的 数据大小来设定的，作者建议如果存储很多小对象，page大小最好设置为32或者64bytes；如果存储很大大对象，则可以使用更大的page，如果不 确定，就使用默认值</div><div class="line">     vm-page-size 32</div><div class="line">25. 设置swap文件中的page数量，由于页表（一种表示页面空闲或使用的bitmap）是在放在内存中的，，在磁盘上每8个pages将消耗1byte的内存。</div><div class="line">     vm-pages 134217728</div><div class="line">26. 设置访问swap文件的线程数,最好不要超过机器的核数,如果设置为0,那么所有对swap文件的操作都是串行的，可能会造成比较长时间的延迟。默认值为4</div><div class="line">     vm-max-threads 4</div><div class="line">27. 设置在向客户端应答时，是否把较小的包合并为一个包发送，默认为开启</div><div class="line">    glueoutputbuf yes</div><div class="line">28. 指定在超过一定的数量或者最大的元素超过某一临界值时，采用一种特殊的哈希算法</div><div class="line">    hash-max-zipmap-entries 64</div><div class="line">    hash-max-zipmap-value 512</div><div class="line">29. 指定是否激活重置哈希，默认为开启（后面在介绍Redis的哈希算法时具体介绍）</div><div class="line">    activerehashing yes</div><div class="line">30. 指定包含其它的配置文件，可以在同一主机上多个Redis实例之间使用同一份配置文件，而同时各个实例又拥有自己的特定配置文件</div><div class="line">    include /path/to/local.conf</div></pre></td></tr></table></figure>
-</li>
-</ul>
-
-      
-
-      
-        <div class="page-reward">
-          <a href="javascript:;" class="page-reward-btn tooltip-top">
-            <div class="tooltip tooltip-east">
-            <span class="tooltip-item">
-              赏
-            </span>
-            <span class="tooltip-content">
-              <span class="tooltip-text">
-                <span class="tooltip-inner">
-                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
-                  <div class="reward-box">
-                    
-                    <div class="reward-box-item">
-                      <img class="reward-img" src="http://oxp7d1tae.bkt.clouddn.com/alipay.png">
-                      <span class="reward-type">支付宝</span>
-                    </div>
-                    
-                    
-                    <div class="reward-box-item">
-                      <img class="reward-img" src="http://oxp7d1tae.bkt.clouddn.com/wechat.png">
-                      <span class="reward-type">微信</span>
-                    </div>
-                    
-                  </div>
-                </span>
-              </span>
-            </span>
-          </div>
-          </a>
-        </div>
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
+        <div class="article-info info-on-right">
+          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Redis</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Spring</a>
         		</li>
       		
 		</ul>
 	</div>
 
-      
+          
 
-      
-
-      
-        
-<div class="share-btn share-icons tooltip-left">
-  <div class="tooltip tooltip-east">
-    <span class="tooltip-item">
-      <a href="javascript:;" class="share-sns share-outer">
-        <i class="icon icon-share"></i>
-      </a>
-    </span>
-    <span class="tooltip-content">
-      <div class="share-wrap">
-        <div class="share-icons">
-          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
-            <i class="icon icon-weibo"></i>
-          </a>
-          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
-            <i class="icon icon-weixin"></i>
-          </a>
-          <a class="qq share-sns" href="javascript:;" data-type="qq">
-            <i class="icon icon-qq"></i>
-          </a>
-          <a class="douban share-sns" href="javascript:;" data-type="douban">
-            <i class="icon icon-douban"></i>
-          </a>
-          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
-            <i class="icon icon-qzone"></i>
-          </a>
-          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
-            <i class="icon icon-facebook"></i>
-          </a>
-          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
-            <i class="icon icon-twitter"></i>
-          </a>
-          <a class="google share-sns" href="javascript:;" data-type="google">
-            <i class="icon icon-google"></i>
-          </a>
         </div>
-      </div>
-    </span>
-  </div>
-</div>
-
-<div class="page-modal wx-share js-wx-box">
-    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
-    <p>扫一扫，分享到微信</p>
-    <div class="wx-qrcode">
-      <img src="http://s.jiathis.com/qrcode.php?url=https://github.com/zjs1224522500/zjs1224522500.github.io/2017/12/08/redis-start-one/" alt="微信分享二维码">
-    </div>
-</div>
-
-<div class="mask js-mask"></div>
-      
-      <div class="clearfix"></div>
-    </div>
+        <div class="clearfix"></div>
+    </header>
   </div>
 </article>
-
-  
-<nav id="article-nav">
-  
-    <a href="/2017/12/14/arithmetic-sort-exercise-one/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          常见算法之寻找K大数
-        
-      </div>
-    </a>
   
   
-    <a href="/2017/12/08/redis-data-structure-two/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Redis数据类型</div>
-      <i class="icon-circle-right"></i>
-    </a>
-  
-</nav>
-
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-  
-  
+    </div></section>
   
 
-  
-
-  
-
-  
-  <div id="gitment-ctn"></div> 
-<link rel="stylesheet" href="//imsun.github.io/gitment/style/default.css">
-<script src="//imsun.github.io/gitment/dist/gitment.browser.js"></script>
-<script>
-var gitment = new Gitment({
-  id: "https://github.com/zjs1224522500/zjs1224522500.github.io/2017/12/08/redis-start-one/",
-  owner: 'zjs1224522500',
-  repo: 'zjs1224522500.github.io',
-  oauth: {
-    client_id: 'cccb9b919b08c6e61099',
-    client_secret: 'ab2ce55de1b91e9ed7c6f3e819a32ea0b1ca617b',
-  },
-})
-gitment.render('gitment-ctn')
-</script>
-  
+    
 
 
           </div>
@@ -444,8 +246,8 @@ gitment.render('gitment-ctn')
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: true,
-		isArchive: false,
+		isPost: false,
+		isArchive: true,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
