@@ -8,17 +8,17 @@
   <link rel="dns-prefetch" href="https://github.com/zjs1224522500/zjs1224522500.github.io">
   <title>tinySpring学习笔记（二）-实现AOP | Elvis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="AOP及其实现 AOP分为配置(Pointcut，Advice)，织入(Weave)两部分工作，当然还有一部分是将AOP整合到整个容器的生命周期中。  step1-使用JDK动态代理实现AOP织入 git checkout step-7-method-interceptor-by-jdk-dynamic-proxy   织入（weave）相对简单，我们先从它开始。Spring AOP的织入点是Ao">
+  <meta name="description" content="AOP及其实现 AOP分为配置(Pointcut，Advice)，织入(Weave)两部分工作，当然还有一部分是将AOP整合到整个容器的生命周期中。  step1-使用JDK动态代理实现AOP织入 git checkout step-7-method-interceptor-by-jdk-dynamic-proxy">
 <meta name="keywords" content="Spring">
 <meta property="og:type" content="article">
 <meta property="og:title" content="tinySpring学习笔记（二）-实现AOP">
 <meta property="og:url" content="https://github.com/zjs1224522500/zjs1224522500.github.io/2018/04/11/tinyspring-learnTwo-AOP/index.html">
 <meta property="og:site_name" content="Elvis">
-<meta property="og:description" content="AOP及其实现 AOP分为配置(Pointcut，Advice)，织入(Weave)两部分工作，当然还有一部分是将AOP整合到整个容器的生命周期中。  step1-使用JDK动态代理实现AOP织入 git checkout step-7-method-interceptor-by-jdk-dynamic-proxy   织入（weave）相对简单，我们先从它开始。Spring AOP的织入点是Ao">
-<meta property="og:updated_time" content="2018-04-10T14:42:50.384Z">
+<meta property="og:description" content="AOP及其实现 AOP分为配置(Pointcut，Advice)，织入(Weave)两部分工作，当然还有一部分是将AOP整合到整个容器的生命周期中。  step1-使用JDK动态代理实现AOP织入 git checkout step-7-method-interceptor-by-jdk-dynamic-proxy">
+<meta property="og:updated_time" content="2018-04-10T14:45:03.239Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="tinySpring学习笔记（二）-实现AOP">
-<meta name="twitter:description" content="AOP及其实现 AOP分为配置(Pointcut，Advice)，织入(Weave)两部分工作，当然还有一部分是将AOP整合到整个容器的生命周期中。  step1-使用JDK动态代理实现AOP织入 git checkout step-7-method-interceptor-by-jdk-dynamic-proxy   织入（weave）相对简单，我们先从它开始。Spring AOP的织入点是Ao">
+<meta name="twitter:description" content="AOP及其实现 AOP分为配置(Pointcut，Advice)，织入(Weave)两部分工作，当然还有一部分是将AOP整合到整个容器的生命周期中。  step1-使用JDK动态代理实现AOP织入 git checkout step-7-method-interceptor-by-jdk-dynamic-proxy">
   
     <link rel="alternative" href="/atom.xml" title="Elvis" type="application/atom+xml">
   
@@ -198,6 +198,7 @@ var _hmt = _hmt || [];
 <h3 id="step1-使用JDK动态代理实现AOP织入"><a href="#step1-使用JDK动态代理实现AOP织入" class="headerlink" title="step1-使用JDK动态代理实现AOP织入"></a>step1-使用JDK动态代理实现AOP织入</h3><blockquote>
 <p>git checkout step-7-method-interceptor-by-jdk-dynamic-proxy</p>
 </blockquote>
+<a id="more"></a>
 <ul>
 <li>织入（weave）相对简单，我们先从它开始。Spring AOP的织入点是AopProxy，它包含一个方法Object getProxy()来获取代理后的对象。<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">AopProxy</span> </span>&#123;</div><div class="line">    <span class="function">Object <span class="title">getProxy</span><span class="params">()</span></span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 </li>
