@@ -1,0 +1,854 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Flavor of IO | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+Distributed Storage System Basic Serie 1 - Flavor of IO.
+Here is the basic of linux io and try to compare io operation..." />
+    <meta name="keywords" content="存储" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200612094331.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-06-12"><i class="fa fa-calendar"></i><span class="lately">7 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/flavor-of-io/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/flavor-of-io/"> </span>
+              </a>
+              <span id="/flavor-of-io/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Flavor of IO</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>Distributed Storage System Basic Serie 1 - Flavor of IO.</li>
+<li>Here is the basic of linux io and try to compare io operations.</li>
+<li>The content is based on the <a href="https://medium.com/databasss/on-disk-io-part-1-flavours-of-io-8e1ace1de017">On Disk IO - Flavors of IO</a> and I will present my understanding.</li>
+<li>Only summary, not details.</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="disk-io">Disk I/O</h2>
+<h3 id="flavors-of-io">Flavors of I/O</h3>
+<ul>
+<li>Syscalls: open, write, read, fsync, sync, close
+<ul>
+<li>System I/O can be defined as any operation that writes data into the storage layers accessible only to the kernel's address space via the kernel's system call interface.</li>
+</ul>
+</li>
+<li>Standard IO: fopen, fwrite, fread, fflush, fclose
+<ul>
+<li>Usually provided by library</li>
+<li>Writes using these functions may not result in system calls, meaning that the data still lives in buffers in the application's address space after making such a function call.</li>
+</ul>
+</li>
+<li>Vectored IO: writev, readv</li>
+<li>Memory mapped IO: open, mmap, msync, munmap
+<ul>
+<li>similar to the system I/O</li>
+<li>Files are still opened and closed using the same interfaces, but access to the file data is performed by mapping that data into the process' address space, and then performing memory read and write operations as you would with any other application buffer.</li>
+</ul>
+</li>
+</ul>
+<h4 id="io-api">I/O API</h4>
+<h5 id="system-io">System I/O</h5>
+<ul>
+<li>Open: <code>open()</code>, <code>creat()</code></li>
+<li>Write: <code>write()</code>, <code>aio_write()</code>, <code>pwrite()</code>, <code>pwritev()</code></li>
+<li>Sync: <code>fsync()</code>, <code>sync()</code></li>
+<li>Close: <code>close()</code></li>
+</ul>
+<h5 id="stream-io">Stream I/O</h5>
+<ul>
+<li>
+<p>Open: <code>fopen()</code>, <code>fdopen()</code>, <code>freopen()</code></p>
+</li>
+<li>
+<p>Write: <code>fwrite()</code>, <code>fputc()</code>, <code>fputs()</code>, <code>putc()</code>, <code>putchar()</code>, <code>puts()</code></p>
+</li>
+<li>
+<p>Sync: <code>fflush()</code>, followed by <code>fsync()</code> or <code>sync()</code></p>
+<ul>
+<li><code>fflush()</code> flush the data in library cache to the disk (actual page cache)</li>
+<li><code>fsync()</code> flush the data in page cache to disks and metedata to disks. (Usually contains 2 operations: data and metedata)</li>
+<li><code>fdatasync()</code> flush the data definitely and flush the metedata if necessary.(Such as the file size changed.)</li>
+</ul>
+</li>
+<li>
+<p>Close: <code>fclose()</code></p>
+</li>
+</ul>
+<h5 id="memory-mapped-io">Memory mapped IO</h5>
+<ul>
+<li>Open: <code>open()</code>, <code>creat()</code></li>
+<li>Map: <code>mmap()</code></li>
+<li>Write: <code>memcpy()</code>, <code>memmove()</code>, <code>read()</code>, or any other routine that writes to application memory</li>
+<li>Sync: <code>msync()</code></li>
+<li>Unmap: <code>munmap()</code></li>
+<li>Close: <code>close()</code></li>
+</ul>
+<h4 id="sectorblockpage">Sector/Block/Page</h4>
+<ul>
+<li>Sector is the smallest unit of data transfer for block device. And size is always 512 bytes in most disk devices.</li>
+<li>The smallest addressable unit of File System is block. Block is a group of multiple adjacent sectors requested by a device driver. 512/1024/2048/4096 bytes.</li>
+<li>Virtual Memory works with pages, which map to filesystem blocks. Typical page size is 4096 bytes. (Usually IO is done through the Virtual Memory, which caches requested filesystem blocks in memory and serves as a buffer for intermediate operations)</li>
+<li><strong>Virtual Memory pages map to Filesystem blocks, which map to Block Device sectors.</strong></li>
+</ul>
+<h4 id="standard-io">Standard IO</h4>
+<ul>
+<li>When reading the data, Page Cache is addressed first. If the data is absent, the Page Fault is triggered and contents are paged in. (This means that reads, performed against the currently unmapped area will take longer)</li>
+<li>During writes, buffer contents are first written to Page Cache. ( This means that data does not reach the disk right away. The actual hardware write is done when Kernel decides it’s time to perform a writeback of the dirty page)</li>
+<li>Standard IO takes a user space buffer (Byte Buffer) and then copies it’s content to the page cache. <strong>When the O_DIRECT flag is used, the buffer is written directly to the block device. (It means O_DIRECT will not use page cache)</strong></li>
+<li>Byte Buffer in Application is implemented by application to try to align with single page(4K) in Page Cache. (For example, in program, we usually create a buffer array to send/receive data)<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200612092724.png" alt="20200612092724" loading="lazy"></li>
+</ul>
+<h5 id="page-cache">Page Cache</h5>
+<ul>
+<li>Page Cache stores the recently accessed fragments of files that are more likely to be accessed in the nearest time.</li>
+<li>How Buffered IO works: Applications perform reads and writes through the Kernel Page Cache, which allows sharing pages processes, serving reads from cache and throttling writes to reduce IO.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200612094331.png" alt="20200612094331" loading="lazy"></li>
+<li>Read OP:
+<ul>
+<li>Cache Miss: block device -&gt; kernel page cache -&gt; application</li>
+<li>Cache Hit: kernel page cache -&gt; application</li>
+<li>Cache evict/flush: LRU Pages (Least Recently Used)</li>
+</ul>
+</li>
+<li>Write OP:
+<ul>
+<li>application -&gt; kernel page cache (Mark Page Dirty) -&gt; (Wait Flush/Writeback) disk</li>
+<li>Flush/Writeback Strategy: thresholds of dirty page; period flush.
+<ul>
+<li><a href="https://www.kernel.org/doc/Documentation/sysctl/vm.txt">https://www.kernel.org/doc/Documentation/sysctl/vm.txt</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>Temporal locality principle (时间局部性原理)</strong>: Recently accessed pages will be accessed again at some point in nearest future.</li>
+<li><strong>Spatial Locality (空间局部性)</strong>: implies that the elements physically located nearby have a good chance of being located close to each other. This principle is used in a process called “prefetch” that loads file contents ahead of time anticipating their access and amortizing some of the IO costs.</li>
+<li><strong>Page Cache also improves IO performance by delaying writes and coalescing adjacent reads.</strong></li>
+<li><strong>Buffer cache is same as page cache in recent years.</strong></li>
+</ul>
+<h5 id="direct-io">Direct IO</h5>
+<ul>
+<li>Direct IO: Bypass the Page Cache, and offer a fine-grained control over IO operations. Most used in systems which implement cache by self.</li>
+<li>PostgreSQL use direct io in WAL, since they are sure this log data will not be reused immediately.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200612112115.png" alt="20200612112115" loading="lazy"></li>
+<li><strong>Notice: <code>fsync()</code> is still required for files opened with O_DIRECT in order to save the data to stable storage</strong>.
+<ul>
+<li>It is decided by specific file system and operations. Some file systems contain metadata cache, if you create a new file, you should write all data and metadata to disks, but <code>O_DIRECT</code> option only can make sure the data be stored on the disk. The metadata stored in file system cache need other sync operations to be flushed to disks.</li>
+<li>Some operations may not change the metadata, so O_DIRECT option can make sure data be flushed to disk right although without <code>fsync()</code>. So in MySQL configuration, you can set different options for <code>innodb_flush_method</code>, such as <code>O_DIRECT</code>, <code>O_DIRECT_NO_FSYNC</code>. You can view details by clicking <a href="https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_flush_method">https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_flush_method</a></li>
+<li>You can refer <a href="https://zhuanlan.zhihu.com/p/134669835">Zhihu：使用O_DIRECT_NO_FSYNC来提升MySQL性能</a></li>
+</ul>
+</li>
+</ul>
+<h5 id="block-alignment">Block Alignment</h5>
+<ul>
+<li>Unaligned writes.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200612113237.png" alt="20200612113237" loading="lazy"></li>
+<li>Aligned writes.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200612113305.png" alt="20200612113305" loading="lazy"></li>
+<li><strong>Whether or not O_DIRECT flag is used, it is always a good idea to make sure your reads and writes are block aligned.</strong> Although page cache will help to make sure write is aligned.</li>
+</ul>
+<h5 id="nonblocking-filesystem-io">Nonblocking FileSystem IO</h5>
+<ul>
+<li><strong>There’s no true “nonblocking” Filesystem IO</strong>.</li>
+<li>Compared with sockets i/o, block device operations are considered non-blocking. Filesystem IO delays are not taken into account by the system. Possibly this decision was made because there’s a more or less hard time bound on operation completion.</li>
+<li>The <strong>NIO</strong> concept is always used in network.</li>
+</ul>
+<h4 id="memory-mapping">Memory Mapping</h4>
+<ul>
+<li><strong>Memory mapping (mmap) allows you to access a file as if it was loaded in memory entirely.</strong><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200612114554.png" alt="20200612114554" loading="lazy"></li>
+<li>Different mode:
+<ul>
+<li>private mmap: write would trigger copy-on-write of the page in question in order to leave the original page intact and keep the changes private.</li>
+<li>shared mmap: the file mapping is shared with other processes so they can see updates to the mapped memory segment. Additionally, changes are carried through to the underlying file (precise control over which requires the use of <strong>msync</strong>).</li>
+</ul>
+</li>
+<li>Memory Space Allocate: Lazy Manner. First I/O operation trigger a page fault and allocate the appropriate page.</li>
+<li>Adavantages and Disadvantages:
+<ul>
+<li>Advantages:
+<ul>
+<li>Avoid creating an extraneous copy of the buffer in memory</li>
+<li>Avoid system call (less subsequent context switch)</li>
+</ul>
+</li>
+<li>Disadvatages:
+<ul>
+<li>imposes overhead of the kernel data structures required for managing the memory mappings</li>
+<li>Memory-mapped file size limit: Most of the time, the kernel code is much more memory-friendly anyways and 64 bit architectures allow mapping larger files.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Usage: MongoDB default storage engine was mmap-backed.</li>
+</ul>
+<h4 id="page-cache-optimization">Page cache optimization</h4>
+<ul>
+<li>Page case is at the cost of control loss.</li>
+<li>One of the ways of informing the kernel about your intentions is using <strong>fadvise</strong>.
+<ul>
+<li>FADV_SEQUENTIAL specifies that the file is read sequentially, from lower offsets to higher ones, so the kernel can make sure to fetch the pages in advance, before the actual read occurs.</li>
+<li>FADV_RANDOM disables read-ahead, evicting pages that are unlikely to be accessed any time soon from the page cache.</li>
+<li>FADV_WILLNEED notifies the OS that the page will be needed by the process in the near future. This gives the kernel an opportunity to cache the page ahead of time and, when the read operation occurs, to serve it from the page cache instead of page-faulting.</li>
+<li>FADV_DONTNEED advises the kernel that it can free the cache for the corresponding pages (making sure that the data is synchronised with the disk beforehand).</li>
+<li>There’s one more flag (FADV_NOREUSE), but on Linux it has no effect.</li>
+</ul>
+</li>
+<li><strong>Just as the name suggests, fadvise is only acting advisory. The kernel is not obligated to do exactly as fadvise suggests.</strong></li>
+<li>Usage: RocksDB</li>
+<li>call <strong>mlock</strong>: It allows you to force pages to be held in memory. This means that once the page is loaded into memory, all subsequent operations will be served from the page cache.</li>
+</ul>
+<h4 id="aio">AIO</h4>
+<ul>
+<li>Asynchronous IO (AIO). AIO is an interface allowing to initiate multiple IO operations and register callbacks that will be triggered on their completion.</li>
+</ul>
+<h5 id="io_submit">io_submit</h5>
+<ul>
+<li>allows passing one or multiple commands, holding a buffer, offset and an operation that has to be performed.</li>
+</ul>
+<h5 id="io_getevents">io_getevents</h5>
+<ul>
+<li>Completions can be queried by using <code>io_getevents</code>, a call that allows to collect result events for corresponding commands.</li>
+</ul>
+<h5 id="others">Others</h5>
+<ul>
+<li>Linux AIO has several shortcomings:
+<ul>
+<li>the syscalls API isn’t exposed by the glibc and requires a library for wiring them up (libaio seems to be the most popular)</li>
+<li>Despite several attempts to fix that, only file descriptors with O_DIRECT flag are supported, so buffered asynchronous operations won’t work. Besides, some operations, such as stat, fsync, open and some others aren’t fully asynchronou</li>
+</ul>
+</li>
+<li>Differences between <strong>Linux AIO</strong> and <strong>POSIX AIO</strong>
+<ul>
+<li>The Posix AIO implementation on Linux is implemented completely in user space and does not use this Linux-specific AIO subsystem at all.</li>
+</ul>
+</li>
+</ul>
+<h4 id="vectored-io">Vectored IO</h4>
+<ul>
+<li>One, possibly less popular, method of performing IO operations is Vectored IO (also known as Scatter/Gather). It is called this way because it operates on a vector of buffers and allows reading and writing data to/from disk using multiple buffers per system call.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200612134338.png" alt="20200612134338" loading="lazy"></li>
+</ul>
+<h5 id="advantages">Advantages</h5>
+<ul>
+<li>Such an approach can help by allowing reading smaller chunks (therefore avoiding allocation of large memory areas for contiguous blocks).</li>
+<li>Reduce the amount of system calls required to fill up all these buffers with data from disk</li>
+<li>Reads and writes are atomic: The kernel prevents other processes from performing IO on the same descriptor during read and write operations, guaranteeing data integrity.</li>
+</ul>
+<h5 id="usage">Usage</h5>
+<ul>
+<li>A few databases use the Vectored IO. This might be because general purpose databases work with a bunch of files simultaneously, trying to guarantee liveness for each running operation and reduce their latencies, so and data is accessed and cached block-wise.</li>
+<li>Vectored IO is more useful for analytics workloads and/or columnar databases, where the data is stored on disk contiguously, and its processing can be done in parallel in sparse blocks. One of the examples is Apache Arrow.</li>
+</ul>
+<h3 id="reference">Reference</h3>
+<ul>
+<li>Ensuring data reaches disk: <a href="https://lwn.net/Articles/457667/">https://lwn.net/Articles/457667/</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200612193331.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/amplification-and-rum/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-06-13">2020-06-13</time>
+                  <h4 class="title white no-margin">Amplification and RUM</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200612084833.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/distributed-storage-system-basic/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-06-12">2020-06-12</time>
+                  <h4 class="title white no-margin">Distributed Storage System Basic</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

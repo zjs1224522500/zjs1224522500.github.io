@@ -1,0 +1,866 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>深入剖析Tomcat读书笔记（一） | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+该系列博文主要是介绍Web应用容器的一些原理。
+结合JavaEE的基础只是，介绍核心思想和实现机制
+介绍容器中其他组件，系列一。
+
+
+
+前言
+1、Servlet容器是如何工作的？
+
+创建一个Request对象，用可能会在Servlet中..." />
+    <meta name="keywords" content="服务器,WEB容器" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://1.bp.blogspot.com/-FJN5mv7udjk/WdYQhsxOOUI/AAAAAAAAAU0/0a1mgN6N0-c4sgbuLHYOyU9yK0tbhpJeACLcBGAs/s728-e100/apache-tomcat-rce-exploit.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2017-10-19"><i class="fa fa-calendar"></i><span class="lately">3 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/tomcat-one/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/tomcat-one/"> </span>
+              </a>
+              <span id="/tomcat-one/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-0 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-1 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">深入剖析Tomcat读书笔记（一）</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>该系列博文主要是介绍Web应用容器的一些原理。</li>
+<li>结合JavaEE的基础只是，介绍核心思想和实现机制</li>
+<li>介绍容器中其他组件，系列一。</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h1 id="前言">前言</h1>
+<h2 id="1-servlet容器是如何工作的">1、Servlet容器是如何工作的？</h2>
+<ul>
+<li>创建一个<code>Request</code>对象，用可能会在<code>Servlet</code>中使用的信息填充该<code>Request</code>对象;</li>
+<li>创建一个调用<code>Servlet</code>的<code>response</code>对象，用来向WEB客户端发送响应；</li>
+<li>调用<code>Servlet</code>的<code>service()</code>方法,将<code>Request</code>对象和<code>Response</code>对象。</li>
+</ul>
+<blockquote>
+<h3 id="复习servlet的生命周期">复习Servlet的生命周期</h3>
+<ul>
+<li>Servlet 通过调用 <code>init ()</code> 方法进行初始化。</li>
+<li>Servlet 调用 <code>service()</code> 方法来处理客户端的请求。</li>
+<li>Servlet 通过调用 <code>destroy()</code> 方法终止（结束）。</li>
+<li>最后，Servlet 是由 JVM 的垃圾回收器进行垃圾回收的。</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="2-catalina">2、Catalina</h2>
+<ul>
+<li><code>Catalina</code>是一个成熟的软件，设计和开发的十分优雅，功能结构也是模块化的，主要分为以下两个模块：
+<ul>
+<li><code>连接器</code> :负责将请求和容器相关联，为每个接收到的HTTP请求创建一个<code>request</code>对象和一个<code>response</code>，然后将处理过程交给容器。</li>
+<li><code>容器</code>：从连接器中接受到<code>request</code>和<code>response</code>对象，并调用相应的<code>Servlet</code>的<code>service()</code>方法。</li>
+</ul>
+</li>
+</ul>
+<h1 id="第一章-简单的web服务器">第一章 简单的Web服务器</h1>
+<ul>
+<li>通过复习<code>Java套接字编程</code>，搭建一个简单的<code>Web服务器</code>，同时复习了计算机网络的相关知识以及<code>JavaIO</code>中的<code>输入输出流</code>相关操作。</li>
+</ul>
+<h2 id="web服务器的工作原理">WEB服务器的工作原理</h2>
+<ul>
+<li>服务器利用相应的<code>服务器套接字(ServerSocket)</code>（又称<code>连接套接字,欢迎套接字(WelcomeSocket)</code>）对相应的IP地址和端口进行监听，等待客户端发送相关连接请求;</li>
+<li><code>客户端的套接字(ClientSocket)</code>提出连接请求，要连接的目标是<code>ServerSocket</code>。为此，<code>CllientSocket</code>必须首先描述它要连接的服务器的套接字，指出服务器端套接字的地址<code>Host</code>和端口号<code>port</code>，然后就向<code>服务器端套接字</code>提出连接请求;</li>
+<li>当<code>服务器端套接字(ServerSocket)</code>监听到或者说接收到<code>客户端套接字(ClientSocket)</code>的连接请求时，就响应<code>客户端套接字</code>的请求，建立一个新的线程，把<code>服务器端套接字</code>的描述发 给客户端，一旦客户端确认了此描述，双方就正式建立连接。而<code>服务器端套接字</code>继续处于监听状态，继续接收其他<code>客户端套接字</code>的连接请求;<code>服务器端套接字(ServerSocket)</code>在收到请求时会调用<code>accept()</code>方法为客户端创建一个新的套接字<code>连接套接字（connection socket）</code>，实质上和客户端建立连接之后进行通信的是<code>连接套接字</code></li>
+</ul>
+<h2 id="在编写过程中遇到的问题待解决">在编写过程中遇到的问题：(待解决)</h2>
+<h3 id="编写代码时抛出异常">编写代码时抛出异常：</h3>
+<blockquote>
+<p>java.net.SocketException: Software caused connection abort: socket write error.</p>
+</blockquote>
+<ul>
+<li>通过debug初步分析的结果是在浏览器生成发送给客户端响应时的输出流的<code>write()</code>函数出现了问题,查阅资料显示为<strong>在write()时输出流被提前关闭</strong></li>
+</ul>
+<h3 id="测试过程中存在的问题">测试过程中存在的问题：</h3>
+<blockquote>
+<p>IE浏览器测试成功，谷歌浏览器测试失败.</p>
+</blockquote>
+<h1 id="第二章-一个简单的servlet容器">第二章 一个简单的Servlet容器</h1>
+<h2 id="servlet容器的搭建">Servlet容器的搭建</h2>
+<ul>
+<li>
+<p>基于第一章WEB服务器的搭建，（第一章的WEB服务器只能访问服务器端的静态资源），在能访问静态资源<code>static resources</code>的基础之上，能够处理<code>Servlet</code>对应的相关请求并调用<code>Servlet</code>对应的类的方法。</p>
+</li>
+<li>
+<p><strong>采用类加载器加载URI中对应的Servlet类名对应的类 + newInstance() 实例化的方法来实例化Servlet类</strong></p>
+</li>
+</ul>
+<h3 id="new关键字-和-newinstance实例化的区别">new关键字 和 newInstance实例化的区别</h3>
+<blockquote>
+<p><strong>new关键字 和 newInstance实例化的区别</strong></p>
+<ul>
+<li>创建对象的方式不一样，前者是创建一个新对象,后者是使用类加载机制.</li>
+<li>new创建一个类的时候，这个类可以没有被加载。但是使用newInstance()方法的时候，就必须保证：
+<ul>
+<li>1、这个类已经加载；</li>
+<li>2、这个类已经连接了。</li>
+</ul>
+</li>
+<li>newInstance: 弱类型。低效率。只能调用无参构造。<br>
+new: 强类型。相对高效。能调用任何public构造。</li>
+</ul>
+<hr>
+<p><a href="http://blog.csdn.net/gudu1289/article/details/46638495"><strong>参考博客：newInstance() 和 new 有什么区别?</strong></a></p>
+</blockquote>
+<h3 id="servletservertwo相比servletseverone">ServletServerTwo相比ServletSeverOne</h3>
+<ul>
+<li><strong>使用了外观模式Facade（结构型）</strong></li>
+</ul>
+<h4 id="外观模式">外观模式</h4>
+<blockquote>
+<ul>
+<li>概述：我们通过外观的包装，使应用程序只能看到外观对象，而不会看到具体的细节对象，这样无疑会降低应用程序的复杂度，并且提高了程序的可维护性。</li>
+<li>为子系统中的一组接口提供一个一致的界面， Facade模式定义了一个高层接口，这个接口使得这一子系统更加容易使用。引入外观角色之后，用户只需要直接与外观角色交互，用户与子系统之间的复杂关系由外观角色来实现，从而降低了系统的耦合度</li>
+</ul>
+</blockquote>
+<hr>
+<blockquote>
+<p><a href="http://blog.csdn.net/hguisu/article/details/7533759">参考博客：设计模式（九）外观模式Facade（结构型）</a></p>
+</blockquote>
+<h1 id="连接器">连接器</h1>
+<ul>
+<li><code>连接器</code>：用于更好地创建<code>Request(HttpServletRequest)</code>对象和<code>Response(HttpServletResponse)</code>对象，并传递给<code>service()</code>方法</li>
+</ul>
+<blockquote>
+<p>Servlet,GenericServlet,HttpServlet之间的异同：<a href="http://www.cnblogs.com/libingbin/p/5960456.html">Servlet简介与Servlet和HttpServlet运行的流程</a></p>
+</blockquote>
+<h2 id="stringmanager">StringManager</h2>
+<blockquote>
+<p>每个包对应的<code>StringManager</code>实例，用于读取当前包下的存放异常和错误消息的<code>properties</code>文件。</p>
+</blockquote>
+<ul>
+<li>每个包对应一个<code>StringManager</code>实例，采用单例模式进行单例对象的获取，以包名<code>package name</code>作为入参。</li>
+</ul>
+<blockquote>
+<p>单例模式复习：通过将构造方法私有化，使用公有化的方法来调用构造方法来保证单例。</p>
+</blockquote>
+<ul>
+<li>通过将包名<code>package name</code>作为键值对的键，在<code>StringManager</code>对应的<code>HashTable</code>中去查找，使用<code>StringManager</code>的<code>getManager()</code>方法来获取到<code>StringManger</code>实例。</li>
+<li>获取到<code>StringManager</code>实例后，再使用<code>getString(String key)</code>，以错误码作为入参来获取具体的错误信息。</li>
+</ul>
+<h2 id="httpconnector">HttpConnector</h2>
+<ul>
+<li>等待<code>Http</code>请求</li>
+<li>为每个请求创建相应的<code>HttpProcessor</code>实例</li>
+<li>调用<code>process()</code>方法</li>
+</ul>
+<h2 id="httpprocessor">HttpProcessor</h2>
+<h3 id="主要任务">主要任务</h3>
+<ul>
+<li>创建一个<code>HttpRequest</code>对象
+<ul>
+<li>同时引入<code>HTTP</code>请求的<code>Header</code>和<code>Cookie</code>和请求参数以及相关方法。</li>
+</ul>
+</li>
+<li>创建一个<code>HttpResponse</code>对象</li>
+<li>解析<code>HTTP</code>请求的第一行内容和请求头信息，填充<code>HttpRequest</code>对象</li>
+<li>将<code>Socket</code>作为入参，调用<code>process()</code>，并根据<code>URI</code>判断请求类型并作出相应的处理，把创建的<code>HttpRequest</code>和<code>HttpResponse</code>对象传递给不同类型的处理器。</li>
+<li>使用<code>StringManager</code>来发送错误消息</li>
+</ul>
+<h3 id="解析http请求">解析<code>HTTP</code>请求：</h3>
+<ul>
+<li>读取套接字的输入流；调用输入流的<code>read()</code>方法，从请求行中获取到了<code>方法</code>、<code>URI</code>、<code>HTTP协议版本</code>等信息；</li>
+<li>解析请求行：<br>
+<img src="http://oxp7d1tae.bkt.clouddn.com/URI.jpg" alt="image" loading="lazy">
+<ul>
+<li>会使用<code>SocketInputStream</code>的相关方法来解析请求头并提取出<code>URI</code>，再根据<code>URI</code>格式解析出<code>URI</code>中的相关信息（<strong>其中主要包括<code>Pathname</code>、<code>查询字符串Search</code>和<code>JSessionID</code></strong>），再为这些相关信息创建相应的对象，存储在<code>HttpRequest</code>中</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><strong><code>JSESSIONID</code>，用于携带会话标识符，会话标识符通常是作为<code>Cookie</code>嵌入的，但是当浏览器禁用了<code>Cookie</code>时，也可以将会话标识符嵌入到查询字符串中</strong><br>
+<img src="http://oxp7d1tae.bkt.clouddn.com/JSESSION.png" alt="image" loading="lazy"></p>
+</blockquote>
+<ul>
+<li>
+<p>解析请求头：</p>
+<ul>
+<li>在读取了请求头的名称和值后，调用<code>HttpRequest</code>的<code>addHeader()</code>方法，将其添加到<code>HttpRequest</code>对象的<code>HashMap</code>中。</li>
+<li>由于请求头中可能包含一些属性设置信息。例如<code>Content-type</code>,<code>Content-length</code>,<code>Cookies</code>等，则进行相应的处理后再填充到<code>HttpRequest</code>对象中。</li>
+</ul>
+</li>
+<li>
+<p>解析<code>Cookie</code></p>
+<ul>
+<li>什么是<code>Cookie</code>？</li>
+</ul>
+<blockquote>
+<p><strong>Cookie</strong> :<br>
+<code>Cookie</code>实际上是一小段的文本信息（<strong>键/值的形式</strong>）。客户端请求服务器，如果服务器需要记录该用户状态，就使用<code>response</code>向客户端浏览器颁发一个<code>Cookie</code>。客户端浏览器会把<code>Cookie</code>保存起来。当浏览器再请求该网站时，浏览器把请求的网址连同该<code>Cookie</code>一同提交给服务器。服务器检查该<code>Cookie</code>，以此来辨认用户状态。服务器还可以根据需要修改<code>Cookie</code>的内容。<br>
+<strong>产生原因</strong>： 由于HTTP是一种无状态的协议，服务器单从网络连接上无从知道客户身份。故需要引入一种来跟踪客户端的会话信息。<br>
+<a href="http://blog.csdn.net/fangaoxin/article/details/6952954/">参考博文：Cookie/Session机制详解</a></p>
+</blockquote>
+<ul>
+<li>核心函数<code>parseCookieHeader()</code> : 由于<code>Cookie</code>中存放的值是<code>键/值</code>的形式，例如：<br>
+<img src="http://oxp7d1tae.bkt.clouddn.com/%E6%8E%A7%E5%88%B6%E5%8F%B0%E6%89%93%E5%8D%B0cookie.png" alt="image" loading="lazy"><br>
+其中各个<strong>键值对</strong>之间是以分号进行分隔的，<strong>键</strong>和<strong>值</strong>之间又是以<code>=</code>号进行连接，所以该函数便是充分利用字符串的格式特性来对<code>Cookie</code>使用<code>while()</code>循环来进行解析。<br>
+<strong>源码如下</strong>：</li>
+</ul>
+<pre><code class="language-Java">    public static Cookie[] parseCookieHeader(String header) {
+    if (header != null &amp;&amp; header.length() &gt;= 1) {
+        ArrayList cookies = new ArrayList();
+        //注意循环体中的59和61，其实是ASCII码
+        while(header.length() &gt; 0) {
+            int semicolon = header.indexOf(59);
+            if (semicolon &lt; 0) {
+                semicolon = header.length();
+            }
+
+            if (semicolon == 0) {
+                break;
+            }
+
+            String token = header.substring(0, semicolon);
+            if (semicolon &lt; header.length()) {
+                header = header.substring(semicolon + 1);
+            } else {
+                header = &quot;&quot;;
+            }
+
+            try {
+                int equals = token.indexOf(61);
+                if (equals &gt; 0) {
+                    String name = token.substring(0, equals).trim();
+                    String value = token.substring(equals + 1).trim();
+                    cookies.add(new Cookie(name, value));
+                }
+            } catch (Throwable var7) {
+                ;
+            }
+        }
+
+        return (Cookie[])cookies.toArray(new Cookie[cookies.size()]);
+    } else {
+        return new Cookie[0];
+    }
+}
+</code></pre>
+</li>
+<li>
+<p>获取参数</p>
+<ul>
+<li>常见的获取参数的方法有<code>getParameterMap()</code>,<code>getParameter()</code>,<code>getParameterNames()</code>,<code>getParameterValues()</code>，这些方法都是在对请求报文中的参数进行了解析的基础之上展开的，都会调用<code>parseParameter()</code>方法。</li>
+</ul>
+<blockquote>
+<ul>
+<li><code>GET</code>请求报文中的参数位于<code>URI</code>中的<strong>查询字符串</strong>；</li>
+<li><code>POST</code>请求报文的参数则会存储在<code>HashMap</code>中，而且是一个比较特殊的<code>HashMap(ParameterMap)</code>，其中<code>ParameterMap</code>被设计成了一种相对安全的机制（只有在<code>locked</code>的布尔值为<code>false</code>时，才能对<code>HashMap</code>进行相应的修改）,被设计成这种机制是因为<code>HashMap</code>本身的线程安全问题。</li>
+</ul>
+</blockquote>
+</li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/media/images/fu-wu-qi.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/Docker-start/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2017-10-24">2017-10-24</time>
+                  <h4 class="title white no-margin">Docker入门笔记</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/media/images/she-ji-mo-shi.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/Adapter/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2017-10-06">2017-10-06</time>
+                  <h4 class="title white no-margin">适配器模式</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

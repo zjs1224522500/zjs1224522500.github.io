@@ -1,0 +1,895 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>常见的C语言库函数 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+常见的C语言库函数介绍（主要针对IO相关操作）
+部分函数仅为linux系统特有
+后续会对相关系统调用中涉及到的IO进行讲解
+
+
+
+常见的C语言库函数
+#include &lt;stdio.h&gt;
+int open(const cha..." />
+    <meta name="keywords" content="C语言,Linux" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://blog.shunzi.tech/post-images/c-header.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2019-08-21"><i class="fa fa-calendar"></i><span class="lately">1 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/c-header/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/c-header/"> </span>
+              </a>
+              <span id="/c-header/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-0 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-1 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">常见的C语言库函数</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>常见的C语言库函数介绍（主要针对IO相关操作）</li>
+<li>部分函数仅为linux系统特有</li>
+<li>后续会对相关系统调用中涉及到的IO进行讲解</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="常见的c语言库函数">常见的C语言库函数</h2>
+<h3 id="include-stdioh">#include &lt;stdio.h&gt;</h3>
+<h4 id="int-openconst-char-pathint-accessunsigned-mode">int open(const char *path,int access[,unsigned mode])</h4>
+<ul>
+<li>功能： 文件句柄 = open(&quot;文件名&quot;,打开模式|打开模式);</li>
+<li>参数：打开模式：
+<ul>
+<li>access模式：(最多使用以下模式中的一个，且必须有一个)
+<ul>
+<li><code>O_RDONLY</code>　以只读方式打开</li>
+<li><code>O_WRONLY</code>　以只写方式打开</li>
+<li><code>O_RDOWR</code>　 以读写方式打开</li>
+</ul>
+</li>
+<li>其他模式：（可选模式，可以同时存在，用或连接）
+<ul>
+<li><code>O_APPEND</code>：以后每次写文件时都会先将当前文件偏移量设置到文件末尾，但是读文件时时不影响的</li>
+<li><code>O_CREAT</code>：如果文件不存在则创建</li>
+<li><code>O_EXCL</code>：要打开的文件如果存在则出错，必须要和<code>O_CREAT</code>参数一起使用</li>
+<li><code>O_TRUNC</code>：打开文件的同时将文件中的内容清除</li>
+<li><code>O_NOCTTY</code>：如果打开的文件是终端设备，则不将此设备设置为进程的控制终端</li>
+<li><code>O_NONBLOCK</code>：如果打开的文件是一个管道、一个块设备文件或一个字符设备文件，则后续的I/O操作均设置为非阻塞方式</li>
+<li><code>O_SYNC</code>：使每次write都等到物理I/O操作完成</li>
+<li><code>S_IRUSR</code>： Permits the file's owner to read it.</li>
+<li><code>S_IWUSR</code>： Permits the file's owner to write to it.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>返回值：打开成功，返回文件句柄；失败返回 -1</li>
+</ul>
+<h4 id="int-closeint-handle">int close(int handle)</h4>
+<ul>
+<li>功能：关闭由文件句柄所指向的文件 关闭结果 = close(文件句柄)</li>
+<li>返回值：0(成功)，-1(失败)</li>
+</ul>
+<h4 id="file-fopenconst-char-path-const-char-mode">FILE* fopen(const char *path, const char *mode)</h4>
+<ul>
+<li>功能：打开一个特定的文件，并把一个流和这个文件相关联</li>
+<li>参数：
+<ul>
+<li><code>path</code>：文件路径对应的字符串</li>
+<li><code>mode</code>：打开模式，流形态
+<ul>
+<li><code>r</code>：打开只读文件，该文件必须存在</li>
+<li><code>w</code>：打开只写文件，已存在的文件将被清空</li>
+<li><code>r+</code>：以读写的方式打开文件，该文件必须存在</li>
+<li><code>w+</code>：打开可读写文件，已存在文件将被清空</li>
+<li><code>rb</code>：打开一个只读二进制文件，文件必须存在</li>
+<li><code>wb</code>：新建一个只写的二进制文件，已存在的将被清空</li>
+<li><code>rb+</code>：打开一个可读写的二进制文件，该文件必须存在</li>
+<li><code>wb+</code>：新建一个可读可写的二进制文件，已存在的将被清空</li>
+<li><code>a</code>：打开或者新建一个文本文件，只允许文件末尾追加写</li>
+<li><code>a</code>：打开或新建一个文本文件，可以读，但只允许在文件末尾追写</li>
+<li><code>ab</code>：打开或新建一个二进制文件，只允许在文件末尾追写</li>
+<li><code>ab+</code>：打开或新建一个二进制文件，可以读，但只允许在文件末尾追写</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>返回值：
+<ul>
+<li>成功：返回一个指向 FILE 结构的指针，该结构代表这个新创建的流。</li>
+<li>失败：返回一个空指针，errno会存储相关错误代码。</li>
+</ul>
+</li>
+</ul>
+<h4 id="int-fclosefile-stream">int fclose(FILE *stream);</h4>
+<ul>
+<li>功能：关闭文件流</li>
+<li>返回值：关闭成功，返回 0， 否则返回 EOF -1。输出流在关闭前会刷新对应的缓冲区。</li>
+</ul>
+<h4 id="int-fseekfile-stream-long-offset-int-fromwhere">int fseek(FILE *stream, long offset, int fromwhere);</h4>
+<ul>
+<li>功能：从指定位置将文件指针移动指定偏移量长度</li>
+<li>参数：
+<ul>
+<li><code>stream</code>：文件流指针</li>
+<li><code>offset</code>：要移动的偏移量长度</li>
+<li><code>fromwhere</code>：文件指针移动的起始位置
+<ul>
+<li><code>#define SEEK_CUR 1</code>：当前位置</li>
+<li><code>#define SEEK_END 2</code>：文件尾</li>
+<li><code>#define SEEK_SET 0</code>：文件头</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>返回值：成功，返回0，失败返回非0值，并设置error的值，可以用perror()函数输出错误。</li>
+</ul>
+<h4 id="long-ftellfile-stream">long ftell(FILE *stream);</h4>
+<ul>
+<li>功能：用于得到文件位置指针当前位置相对于文件首的偏移字节数。</li>
+<li>用法：使用fseek函数后再调用函数ftell()就能非常容易地确定文件的当前位置。利用函数 ftell() 也能方便地知道一个文件的长。如以下语句序列： fseek(fp, 0L,SEEK_END); len =ftell(fp); 首先将文件的当前位置移到文件的末尾，然后调用函数ftell()获得当前位置相对于文件首的位移，该位移值等于文件所含字节数。</li>
+</ul>
+<h4 id="size_t-fread-void-buffer-size_t-size-size_t-count-file-stream">size_t fread ( void *buffer, size_t size, size_t count, FILE *stream);</h4>
+<ul>
+<li>功能：从给定的流 stream 读取数据，最多读取count个项，每个项size个字节。</li>
+<li>参数：
+<ul>
+<li><code>buffer</code>：用于接受数据的内存地址</li>
+<li><code>size</code>：要读的每个数据项的字节数</li>
+<li><code>count</code>：要读取的数据项数目</li>
+<li><code>stream</code>：操作的输入流</li>
+</ul>
+</li>
+<li>返回值：调用成功返回实际读取到的项个数（小于或等于count），如果不成功或读到文件末尾返回 0。</li>
+</ul>
+<h4 id="size_t-fwriteconst-void-ptr-size_t-size-size_t-nmemb-file-stream">size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);</h4>
+<ul>
+<li>功能：向指定的文件中写入若干数据块，如成功执行则返回实际写入的数据块数目。该函数以二进制形式对文件进行操作，不局限于文本文件。</li>
+<li>参数：
+<ul>
+<li><code>ptr</code>：存放需要写入的数据的内存地址</li>
+<li><code>size</code>：要写入内容的单字节数</li>
+<li><code>count</code>：:要进行写入size字节的数据项的个数</li>
+<li><code>stream</code>：目标文件指针</li>
+</ul>
+</li>
+<li>返回值：如果成功，该函数返回一个 size_t 对象，表示元素的总数，该对象是一个整型数据类型。如果该数字与 nmemb 参数不同，则会显示一个错误</li>
+</ul>
+<h3 id="include-sysuioh">#include &lt;sys/uio.h&gt;</h3>
+<h4 id="ssize_t-preadint-fd-void-buf-size_t-count-off_t-offset">ssize_t pread(int fd, void *buf, size_t count, off_t offset);</h4>
+<ul>
+<li>功能：在指定偏移量的位置开始读取指定长度的个字节</li>
+<li>参数：
+<ul>
+<li><code>fd</code>：文件描述符</li>
+<li><code>*buf</code>：数据缓冲区指针，存放读取出来的数据</li>
+<li><code>count</code>：读取数据的字节数</li>
+<li><code>offset</code>：读的起始地址的偏移量， 读取地址=文件开始+偏移量。执行后文件偏移指针不变。</li>
+</ul>
+</li>
+<li>返回值：读取到缓冲区的字节数</li>
+</ul>
+<h4 id="ssize_t-pwriteint-fd-const-void-buf-size_t-count-off_t-offset">ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);</h4>
+<ul>
+<li>功能：在指定偏移量的位置上，写入对应的数据</li>
+<li>参数：
+<ul>
+<li><code>fd</code>：要写入数据的文件描述符</li>
+<li><code>*buf</code>：数据缓存区指针，存放要写入的数据</li>
+<li><code>count</code>：写入文件中的数据字节数</li>
+<li><code>offset</code>：偏移地址。写入地址=文件开始+offset。注意，执行后，文件偏移指针不变</li>
+</ul>
+</li>
+<li>返回值：写入到文件中的字节数</li>
+</ul>
+<h4 id="ssize_t-readvint-fd-const-struct-iovec-iov-int-iovcnt">ssize_t readv(int fd, const struct iovec *iov, int iovcnt);</h4>
+<ul>
+<li>功能：数据散布读到缓冲区中（散点输入）</li>
+<li>参数：
+<ul>
+<li><code>fd</code>：文件描述符</li>
+<li><code>*iov</code>：指向 <code>iovec</code>结构数组的一个指针。buffer
+<ul>
+<li><code>iov_base</code>：存放数据的缓冲区</li>
+<li><code>iov_len</code>：缓冲区的数据长度</li>
+</ul>
+</li>
+<li><code>iovcnt</code>：数组元素的个数。缓冲区的个数</li>
+</ul>
+</li>
+<li>返回值：读取的字节数</li>
+</ul>
+<h4 id="ssize_t-writevint-fd-const-struct-iovec-iov-int-iovcnt">ssize_t writev(int fd, const struct iovec *iov, int iovcnt);</h4>
+<ul>
+<li>功能：将散步在缓冲区的数据（可能不连续）一起写入到文件描述符对应的文件中去。</li>
+<li>参数：
+<ul>
+<li><code>fd</code>：文件描述符</li>
+<li><code>*iov</code>：指向<code>iovec</code>结构数组的一个指针。（要写入的数据）</li>
+<li><code>iovcnt</code>：<code>iovec</code>数组的长度，缓冲区的个数</li>
+</ul>
+</li>
+<li>返回值：写入的字节数</li>
+</ul>
+<h4 id="ssize_t-preadvint-fd-const-struct-iovec-iov-int-iovcnt-off_t-offset">ssize_t preadv(int fd, const struct iovec *iov, int iovcnt, off_t offset);</h4>
+<ul>
+<li>功能：在指定偏移量的位置上，将数据散布读到缓冲区中（散点输入）</li>
+<li>参数：
+<ul>
+<li><code>fd</code>：文件描述符</li>
+<li><code>*iov</code>：指向 <code>iovec</code>结构数组的一个指针。buffer
+<ul>
+<li><code>iov_base</code>：存放数据的缓冲区</li>
+<li><code>iov_len</code>：缓冲区的数据长度</li>
+</ul>
+</li>
+<li><code>iovcnt</code>：数组元素的个数。缓冲区的个数</li>
+<li><code>offset</code>：偏移量</li>
+</ul>
+</li>
+<li>返回值：读取的字节数</li>
+</ul>
+<h4 id="ssize_t-pwritevint-fd-const-struct-iovec-iov-int-iovcnt-off_t-offset">ssize_t pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset);</h4>
+<ul>
+<li>功能：在指定偏移量的位置上，将散步在缓冲区的数据（可能不连续）一起写入到文件描述符对应的文件中去。</li>
+<li>参数：
+<ul>
+<li><code>fd</code>：文件描述符</li>
+<li><code>*iov</code>：指向 <code>iovec</code>结构数组的一个指针。buffer
+<ul>
+<li><code>iov_base</code>：存放数据的缓冲区</li>
+<li><code>iov_len</code>：缓冲区的数据长度</li>
+</ul>
+</li>
+<li><code>iovcnt</code>：数组元素的个数。缓冲区的个数</li>
+<li><code>offset</code>：偏移量</li>
+</ul>
+</li>
+<li>返回值：写入的字节数。</li>
+</ul>
+<h3 id="includeunistdh">#include&lt;unistd.h&gt;</h3>
+<h4 id="int-fsyncint-fd">int fsync(int fd)</h4>
+<ul>
+<li>功能：确保文件 <code>fd</code> 所有已修改的内容已经正确同步到硬盘上，该调用会阻塞等待直到设备报告IO完成。(由于 <code>write()</code> 函数本质更新的是内存中的页缓存，而已经更新但还没刷入磁盘的页面，也叫脏页面，不会立即更新到硬盘中，而是由操作系统统一调度，如由专门的flusher内核线程在满足一定条件时，如一定时间间隔、内存中的脏页达到一定比例等条件，才将脏页面同步到硬盘上，通过将页面放入磁盘设备的IO请求队列来进行同步。所以 <code>write</code> 函数不会等到硬盘IO完成之后才返回，提供了一种‘松散的异步语义’，但是无法保证事务的持久化和一致性，此时则需要操作系统提供的同步IO原语来进行保证)</li>
+<li>参数：文件描述符</li>
+<li>返回值：成功 返回 0；失败 返回 -1</li>
+</ul>
+<h4 id="int-fdatasyncint-fd">int fdatasync(int fd);</h4>
+<ul>
+<li>功能：<code>fdatasync</code>的功能与<code>fsync</code>类似，但是仅仅在必要的情况下才会同步<code>metadata</code>（元数据主要包括文件大小、最后访问时间和修改时间等），因此可以减少一次IO写操作。其中必要的情况主要包括文件的尺寸（st_size）发生变化以及部分应用程序对于文件最后访问时间和修改时间的有严苛要求等。</li>
+</ul>
+<h3 id="incude-sysmmanh">#incude &lt;sys/mman.h&gt;</h3>
+<h4 id="int-msyncvoid-addr-size_t-length-int-flags">int msync(void *addr, size_t length, int flags)</h4>
+<ul>
+<li>功能：针对采用内存映射文件方式进行文件IO的操作，譬如<code>mmap</code>将文件的页缓存直接映射到进程的地址空间，通过写内存的方式来修改对应的文件，也提供了相应的同步系统调用来确保数据的持久化和一致性，往往在调用<code>munmap()</code>后才执行该操作。</li>
+<li>参数：
+<ul>
+<li><code>addr</code>：文件映射到进程空间的地址；</li>
+<li><code>lenth</code>：映射空间的大小;</li>
+<li><code>flags</code>：刷新的参数设置
+<ul>
+<li><code>MS_ASYNC</code>：异步，调用后立即返回，不等待更新完成</li>
+<li><code>MS_SYNC</code>：同步，调用后会等到更新完成返回</li>
+<li><code>MS_INVALIDATE</code>：通知使用该共享区域的进程，数据已经改变时，在共享内容更改之后，使得文件的其他映射失效，从而使得共享该文件的其他进程去重新获取最新值；</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>返回值：成功 返回 0；失败 返回 -1</li>
+</ul>
+<h3 id="参考链接">参考链接：</h3>
+<ul>
+<li><a href="https://blog.csdn.net/u014729236/article/details/82933361">[1] CSDN: 第5章 文件IO</a></li>
+<li><a href="https://blog.csdn.net/zhouxinlin2009/article/details/89633464">[2] CSDN：linux 同步IO: sync、fsync与fdatasync</a></li>
+<li><a href="https://www.jianshu.com/p/444646e02ef7?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation">[3] 简书：聊聊BIO，NIO和AIO (2)<br>
+</a></li>
+<li><a href="https://blog.csdn.net/babygjx/article/details/5740038">[4] CSDN：io.h头文件下的一些函数<br>
+</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/basic-concept-of-distributed-system.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/basic-concept-of-distributed-system/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-08-23">2019-08-23</time>
+                  <h4 class="title white no-margin">分布式系统基本概念</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/one.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/one/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-08-11">2019-08-11</time>
+                  <h4 class="title white no-margin">一</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

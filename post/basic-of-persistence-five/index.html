@@ -1,0 +1,840 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Series Five of Basic of Persistence -  Locality and The Fast File System | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+威斯康辛州大学操作系统书籍《Operating Systems: Three Easy Pieces》读书笔记系列之 Persistence（持久化）
+机缘巧合，因为项目以及最近的一些学术关注点，需要对存储系统底层原理进行回顾并加深理解..." />
+    <meta name="keywords" content="存储,读书笔记,OS" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-07-23"><i class="fa fa-calendar"></i><span class="lately">6 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/basic-of-persistence-five/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/basic-of-persistence-five/"> </span>
+              </a>
+              <span id="/basic-of-persistence-five/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-1 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-2 ctag-os" aria-label="">OS</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Series Five of Basic of Persistence -  Locality and The Fast File System</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>威斯康辛州大学操作系统书籍《Operating Systems: Three Easy Pieces》读书笔记系列之 Persistence（持久化）</li>
+<li>机缘巧合，因为项目以及最近的一些学术关注点，需要对存储系统底层原理进行回顾并加深理解，又恰好被推荐了这本书籍，故首先针对持久化章节进行了阅读。</li>
+<li>本篇为持久化技术的基础篇系列第五篇（局部性和 Fast File System），将以 FFS 为例，可以参考原版论文 <a href="https://dl.acm.org/doi/10.1145/989.990">A fast file system for UNIX</a></li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="chapter-index">Chapter Index</h2>
+<ul>
+<li><a href="">Basic of Persistence</a></li>
+<li>Basic of Persistence
+<ul>
+<li><a href="https://blog.shunzi.tech/post/flavor-of-io/">Flavor of IO</a></li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-one/">I/O Devices</a></li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-two/">Hard Disk Drives</a></li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-three/">Files and Directories</a></li>
+</ul>
+</li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-four/">File Systems Implementation</a></li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-five/">Locality and The Fast File System</a></li>
+<li><a href="https://blog.shunzi.tech/post/dist-block-consistency/#toc-heading-16">Crash Consistency: FSCK and Journaling</a></li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-six/">Log-structured File System</a></li>
+</ul>
+<h2 id="locality-and-the-fast-file-system">Locality and The Fast File System</h2>
+<ul>
+<li>最早的文件系统其数据结构设计如下。优势在于设计足够简单，也基本实现了文件系统的抽象：文件和目录的层级结构，但存在比较严重的性能问题，大约只能发挥磁盘带宽 2%。其根本原因在于这种文件系统把磁盘当作了随机访问的内存，数据的存放没有考虑到磁盘的特性，所以在定位数据时开销较大。（实际表现可能为数据块离元数据块较远，所以在读取元数据之后再读取数据块的话 seek 操作开销就很大）<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200723101444.png" alt="20200723101444" loading="lazy"></li>
+<li>除此以外，因为没有对空闲空间进行高效的管理，所以可能会造成碎片化，空闲空间列表指向的空闲空间可能散布整个磁盘，在分配文件时，它们只需要获取下一个空闲块，其结果是通过在磁盘上来回访问逻辑上连续的文件，从而显著降低性能。如图所示操作将会造成 E 散布磁盘，磁盘的访问无法充分利用顺序特性。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200723102636.png" alt="20200723102636" loading="lazy"></li>
+<li>所以现在操作系统都会有相应的磁盘碎片整理工具，它们重新组织磁盘上的数据，以连续地放置文件，并为一个或几个相邻区域腾出空闲空间，移动数据，然后重写索引节点，以反映更改。</li>
+<li>还有一个问题就是块大小，块太小将不利于数据的传输，因为需要进行多次的定位操作，但是可以最小化碎片化的程度。快太大，碎片化就更严重。</li>
+<li><strong>CRUX：如何组织磁盘上的数据提升性能？</strong></li>
+</ul>
+<h3 id="ffs-disk-awareness-is-the-solution">FFS: Disk Awareness Is The Solution</h3>
+<ul>
+<li>Fast File System (FFS) 基于磁盘感知的分配策略设计了文件系统。该文件系统开启了文件系统的新纪元，即对外仍然暴露相同的 API，只是在底层提供不同的实现。</li>
+</ul>
+<h3 id="organizing-structure-the-cylinder-group">Organizing Structure: The Cylinder Group</h3>
+<ul>
+<li>FFS 将磁盘划分成了多个 Cylinder Groups。一个 Cylinder 对应磁盘上的一组磁道，N 个 Cylinders 组成一组。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200723104510.png" alt="20200723104510" loading="lazy"></li>
+<li>现代文件系统对外暴露的是块的逻辑地址空间，并向客户端隐藏了实际的细节。因此现代文件系统将磁盘组织成了 block groups，每一个部分就是磁盘地址空间的一部分。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200723104944.png" alt="20200723104944" loading="lazy"></li>
+<li>不管您把它们称为柱体组还是块组，这些组都是FFS用来提高性能的核心机制。重要的是，通过在同一组中放置两个文件，FFS可以确保逐个访问不会导致跨磁盘查找时间过长。为了使用这些组来存取数据，就需要把文件和目录都放在一个组中，并且该组内只有包含了足够多的信息才能确保高效。如图所示，一个组内需要包含相应的一些信息。
+<ul>
+<li>Super block，每一个组中保留了超级块的副本信息，是为了防止原有的超级块损坏后无法访问文件系统，使用副本可以恢复。</li>
+<li>inode/data bitmap 用于追踪组内 inode 和 data 的分配情况</li>
+<li>数据块和 vsfs 一样用于存储数据，且作为一个组的最大组成部分。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200723105500.png" alt="20200723105500" loading="lazy"></li>
+</ul>
+</li>
+</ul>
+<h3 id="policies-how-to-allocate-files-and-directories">Policies: How To Allocate Files and Directories</h3>
+<ul>
+<li><strong>核心思想：把相关的数据放在一起</strong></li>
+<li>目录的放置：找一个组，已分配的目录较少，有大量空闲 inodes。</li>
+<li>文件的放置：确保数据块和 inode 在一个组中，同一个目录下的文件尽量放在一个目录中</li>
+<li>假设每组 10 inodes 和 10 data blocks。现在需要放置三个目录 <code>/</code>, <code>/a</code>, <code>/b</code> 和四个文件 <code>/a/c</code>，<code>/a/d</code>，<code>/a/e</code>，<code>/b/f</code>。假设目录占据一个块，文件占据两个块：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>group</th>
+<th>inodes</th>
+<th>data</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>/---------</td>
+<td>/---------</td>
+</tr>
+<tr>
+<td>1</td>
+<td>acde------</td>
+<td>accddee---</td>
+</tr>
+<tr>
+<td>2</td>
+<td>bf--------</td>
+<td>bff-------</td>
+</tr>
+<tr>
+<td>3</td>
+<td>----------</td>
+<td>----------</td>
+</tr>
+<tr>
+<td>4</td>
+<td>----------</td>
+<td>----------</td>
+</tr>
+<tr>
+<td>5</td>
+<td>----------</td>
+<td>----------</td>
+</tr>
+<tr>
+<td>6</td>
+<td>----------</td>
+<td>----------</td>
+</tr>
+<tr>
+<td>7</td>
+<td>----------</td>
+<td>----------</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>对比散步所有 inode 到所有组的分配策略，为了防止没有组的 inode table 被很快填满：对比之下，对文件/a/c、/a/d和/a/e的访问现在跨越三个组，而不是按FFS方法的一个组。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>group</th>
+<th>inodes</th>
+<th>data</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>/---------</td>
+<td>/---------</td>
+</tr>
+<tr>
+<td>1</td>
+<td>a---------</td>
+<td>a---------</td>
+</tr>
+<tr>
+<td>2</td>
+<td>b---------</td>
+<td>b---------</td>
+</tr>
+<tr>
+<td>3</td>
+<td>c---------</td>
+<td>cc--------</td>
+</tr>
+<tr>
+<td>4</td>
+<td>d---------</td>
+<td>dd--------</td>
+</tr>
+<tr>
+<td>5</td>
+<td>e---------</td>
+<td>ee--------</td>
+</tr>
+<tr>
+<td>6</td>
+<td>f---------</td>
+<td>ff--------</td>
+</tr>
+<tr>
+<td>7</td>
+<td>----------</td>
+<td>----------</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>目录中的文件通常是一起访问的</strong>：想象一下，编译一堆文件，然后将它们链接到一个可执行文件中，正是因为存在基于命名空间的局部性，确保了相关的文件之间的访问是又好又快的，FFS 才能提高相应的性能。</li>
+</ul>
+<h3 id="measuring-file-locality">Measuring File Locality</h3>
+<ul>
+<li>使用 SEER 来追踪和分析文件访问的距离。比如打开了文件 f，再打开 f 对应的路径长度为 0，因为是同一个文件，但假如位于同一个目录 dir 下的 f 和 g，先打开了 f 后打开了 g，那么访问距离就变成了 1，简而言之，就是寻找两个文件的相同父目录需要多少次操作。</li>
+<li>从下图所示的结果发现，约有 7% 的文件访问操作是针对已经打开了的文件，约有 40% 的操作是针对同一个文件或者同一个目录下的文件的访问。因此 FFS 的局部性假设是有一定根据的。</li>
+<li>除此以外从图中看出约有 25% （看 1 和 2 之间的纵轴差值）的数据访问对应的访问距离为 2，当用户以多层次的方式结构化了一组相关目录并在它们之间一致地跳转时，就会发生这种类型的局部性。比如 <code>proj/src/foo.c</code> 和 <code>proj/obj/foo.o</code>。FFS 不会捕获这种类型的局部性，因为这样的操作会造成更多的 seek。</li>
+<li>作为对比，还引入了 Random trace。通过 SEER Trace 中已经存在的文件进行随机的选择来模拟的，并计算对应的距离和分布。所以在随机的负载下，就很少表现出局部性。但是，因为最终每个文件都共享一个共同的祖先(例如根)，所以存在一些局部性，因此 random 作为比较点很有用<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200723112512.png" alt="20200723112512" loading="lazy"></li>
+</ul>
+<h3 id="the-large-file-exception">The Large-File Exception</h3>
+<ul>
+<li>大文件可能直接一次就填满整个数据块组，以这种方式填充块组是不可取的，因为这会防止随后的“相关”文件被放置在这个块组中，从而可能会损害文件访问位置。所以有必要设置单独的策略。</li>
+<li>大文件的分配策略就是 在第一个组中分配了一定数量的数据块之后，找到其他组继续分配该文件对应的数据块，可能会根据每个组的空间利用情况进行选择。</li>
+<li>假设一个组 10 inodes, 40 data blocks，文件 <code>/a</code> 大小为 30 个块<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200723114144.png" alt="20200723114144" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200723114153.png" alt="20200723114153" loading="lazy"></li>
+<li>但是这样散布之后可能会影响该大文件的访问性能，所以选择分片大小就显得十分重要，如果足够大，那就是大部分时间都在传输，少部分时间在 seek，是一种 amortization 策略。</li>
+<li>假设定位时间为 10ms，磁盘传输速度为 40MB/S，如果目标是一半时间用于定位，一半时间用于传输，即发挥 50% 的磁盘峰值带宽，那么每 10ms 定位之后就进行 10ms 的传输，对应的可以传输大约 409.6KB 的数据。对应如果发挥 90% 的峰值带宽，大约为 3.69MB，99% 峰值带宽大约为 40.6 MB，对应的离峰值越近，数据块大小也就越大。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200723145119.png" alt="20200723145119" loading="lazy"></li>
+<li>FFS 没有用这种方式来计算大文件在不同组之间的分布，而是采用了一个比较简单的方法，基于本身的 inode 的结构。每一个间接块，以及它所指向的所有块，都被放在不同的组中。4KB 大小的块，32 位地址，在该策略下就意味着 4MB 文件的 1024 个块会被放置到不同的组，唯一的例外是由直接指针指向的文件的第一个 48KB。</li>
+<li>从图示结果中不难发现磁盘传输率提升的越来越快，因为磁盘制造商擅长将更多的位元塞入同一表面，但与seek相关的驱动器的机械方面(磁盘臂速度和旋转速度)改进得相当缓慢。这意味着，随着时间的推移，机械成本会变得相对更昂贵，因此，为了摊销上述成本，您必须在各个 seek 之间转移更多的数据。</li>
+</ul>
+<h3 id="a-few-other-things-about-ffs">A Few Other Things About FFS</h3>
+<h4 id="sub-blocks">sub-blocks</h4>
+<ul>
+<li>小文件会带来一些磁盘内部的碎片现象，比如 2KB 的文件，使用 4KB 的块则其实是浪费了一半的空间。FFS 的设计者想到了一个简单的办法来解决，引入 <strong>sub-blocks</strong>，即文件系统可以分配给文件的一些较小的数据块。因此如果创建小文件，譬如 1KB 文件，将直接使用两个 sub-blocks 而不用浪费一个 4KB 的块大小。随着文件大小的增长，文件系统将持续分配 512 字节的块直到 4KB 的大小，在这时候，文件系统将分配一个 4KB 大小的块，并把小块数据复制到该大块中，然后释放掉小块的空间。</li>
+<li>这个过程可能不够高效，因为引入了额外的工作，譬如为了复制的一些 I/O，FFS 为了避免这种行为，修改了 libc 库，该库将缓冲写操作，然后将写操作直接写到 4KB 大小的块中，因此在大多数场景中完全避免了对小块的特殊处理。</li>
+</ul>
+<h4 id="disk-layout">disk layout</h4>
+<ul>
+<li>在 SCSI 以及其他现代设备接口之前，磁盘是比较简易的并且要求主机 CPU 亲历亲为地控制磁盘的操作。在 FFS 中，如果将文件放在磁盘的连续扇区上，就会出现问题。如下图左图所示，在顺序读的过程中，首先读数据块 0，完成之后读取数据块 1，但是读数据快 1 的时候可能发现磁盘已经转动过了，即需要再等待额外的完整的旋转时延才能读取数据块 1.</li>
+<li>FFS 采用了如下右图所示方法，通过在连续的数据块之间间隔一个其他的块的方式，在经过磁盘头之前，FFS 有足够的时间请求下一个块。事实上，FFS 能够计算出具体的需要多少个块来间隔，这个技术被称之为 <strong>parameterization</strong>，因为 FFS 会计算出磁盘的具体性能参数，并使用这些参数来决定精确的交错布局方案。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200723152257.png" alt="20200723152257" loading="lazy"></li>
+<li>这种方法可能也有问题，即性能上可能只能达到峰值的一半，因为扫描一个磁道上的所有数据的话必须旋转两次才可以全部访问到。但现代文件系统内部读取整个磁道，并将其缓冲在一个内部磁盘缓存中(由于这个原因通常称为磁道缓冲区)。<strong>即预取</strong>。而针对顺序读操作，则直接从对应的 track buffer 中缓存相应的数据。文件系统因此不再需要担心这些难以置信的底层细节。如果设计得当，抽象和高级接口可能是一件好事。</li>
+</ul>
+<h4 id="other">other</h4>
+<ul>
+<li>FFS 是首批支持较长的文件名的文件系统之一，从而在文件系统中启用更具表达性的名称，而不是传统的固定大小的方法</li>
+<li>FFS 引入了软链接</li>
+<li>FFS 也引入了 rename 原子操作</li>
+<li>引入了 advisory shared/exclusive locks 以方便地构建并发程序；</li>
+<li>引入了 Quotas 机制，让管理员能更合理地对每个用户实施配额限制，包括具体到inode 和 data block 数目的限制。</li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/basic-of-persistence-six/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-07-27">2020-07-27</time>
+                  <h4 class="title white no-margin">Series Six of Basic of Persistence -  Log-structured File System</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/basic-of-persistence-four/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-07-22">2020-07-22</time>
+                  <h4 class="title white no-margin">Series Four of Basic of Persistence -  File System Implementation</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

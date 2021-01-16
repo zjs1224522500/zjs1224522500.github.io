@@ -1,0 +1,829 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>intelligent cache research | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+本篇为智能缓存相关的研究调研，可能涉及 AI for System 以及相关缓存策略的设计
+智能缓存顾名思义为不同的负载下提供相应的缓存策略来保证缓存的高效，主要包含多种缓存策略执行和 IO 负载的捕捉两个方面，同时可能结合不同的缓存层..." />
+    <meta name="keywords" content="缓存" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200714201124.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-10-25"><i class="fa fa-calendar"></i><span class="lately">3 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/intelligent-cache-research/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/intelligent-cache-research/"> </span>
+              </a>
+              <span id="/intelligent-cache-research/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-0 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">intelligent cache research</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>本篇为智能缓存相关的研究调研，可能涉及 AI for System 以及相关缓存策略的设计</li>
+<li>智能缓存顾名思义为不同的负载下提供相应的缓存策略来保证缓存的高效，主要包含多种缓存策略执行和 IO 负载的捕捉两个方面，同时可能结合不同的缓存层级需要进行动态调整。</li>
+<li>缓存策略本身很难有普适的，现有做法和方案常常需要根据 IO 负载来进行决策，而对于 IO 负载的建模往往采用统计或者机器学习的方法</li>
+</ul>
+</blockquote>
+ <!-- more -->
+<h2 id="smart-ssd-cache">Smart SSD Cache</h2>
+<h3 id="oceanstor-v5-系列-v500r007-smartcache">OceanStor V5 系列 V500R007 SmartCache</h3>
+<ul>
+<li>参考 https://support.huawei.com/enterprise/zh/doc/EDOC1000181455/1064ba78</li>
+</ul>
+<h4 id="定义">定义</h4>
+<ul>
+<li>华为技术有限公司开发的 SmartCache 特性又叫智能数据缓存特性。</li>
+<li><strong>缓存池化</strong>：利用 SSD 盘对随机小I/O读取速度快的特点，将 SSD 盘组成智能缓存池，将访问频率高的随机小I/O读热点数据从传统的机械硬盘移动到由 SSD 盘组成的高速智能缓存池中。由于 SSD 盘的数据读取速度远远高于机械硬盘，所以 SmartCache 特性可以缩短热点数据的响应时间，从而提升系统的性能。</li>
+<li><strong>多粒度</strong>：SmartCache 将智能缓存池划分成多个分区，为业务提供细粒度的SSD缓存资源，不同的业务可以共享同一个分区，也可以分别使用不同的分区，各个分区之间互不影响。从而向关键应用提供更多的缓存资源，保障关键应用的性能。</li>
+</ul>
+<h4 id="场景">场景</h4>
+<ul>
+<li>SmartCache特性对LUN（块业务）和文件系统（文件业务）均有效。</li>
+<li>SmartCache特性可以提高业务的<strong>读性能</strong>。尤其是存在热点数据，且读操作多于写操作的随机小I/O业务场景。例如：OLTP（Online Transaction Processing ）应用、数据库、Web服务、文件服务应用等。</li>
+</ul>
+<h4 id="原理">原理</h4>
+<ul>
+<li>SmartCache特性在对SSD盘资源进行管理上，分为智能缓存池和SmartCache分区两部分。</li>
+</ul>
+<h5 id="智能缓存池">智能缓存池</h5>
+<ul>
+<li>智能缓存池管理本控制器的所有SSD盘，用以保证每个智能缓存分区的资源来自不同SSD盘，从而避免不同SSD盘负载不均衡。</li>
+<li>存储系统默认在每个控制器上生成一个智能缓存池。</li>
+</ul>
+<h5 id="读流程">读流程</h5>
+<ul>
+<li>SSD Cache 缓存命中<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201021162117.png" alt="20201021162117" loading="lazy"></li>
+<li>SmartCache读未命中
+<ul>
+<li>当从 HDD 读取到 RAM Cache 后，RAM Cache 将数据返回给应用服务器，同时 RAM Cache 将该数据同步到智能缓存池中。当智能缓存池容量不够时，则智能缓存池根据时间顺序释放旧数据，释放数据内存，完成旧数据的淘汰。</li>
+</ul>
+</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201021162235.png" alt="20201021162235" loading="lazy"></figure>
+<h5 id="smartcache分区">SmartCache分区</h5>
+<ul>
+<li>SmartCache分区负责为业务提供细粒度（4KB、8KB、16KB、32KB、64KB、128KB，与前端I/O自适应，即根据前端下发的I/O大小申请不同粒度的SSD缓存资源）的SSD缓存资源。</li>
+<li>每两个控制器创建一个默认的SmartCache分区。除了默认分区外，每两个控制器最多支持创建8个用户自定义分区。</li>
+<li>通过SmartCache分区调控，各业务独立使用所分配的SmartCache分区，避免不同类型应用之间的相互影响，保障存储系统整体的服务质量。可以通过设置SmartCache大小，实现不同业务与性能的最佳匹配。通过限制非关键应用的缓存资源，向关键应用提供更多的缓存资源，保障关键应用的性能。</li>
+<li>SmartCache分区负责为业务提供细粒度的SSD盘缓存资源，不同的业务可以共享同一个分区，也可以分别使用不同的分区，各个分区之间互不影响。</li>
+</ul>
+<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201021162705.png" alt="20201021162705" loading="lazy"></figure>
+<h3 id="machine-learning">Machine Learning</h3>
+<h4 id="date20-a-machine-learning-based-write-policy-for-ssd-cache-in-cloud-block-storage">DATE20 - A Machine Learning Based Write Policy for SSD Cache in Cloud Block Storage</h4>
+<ul>
+<li><strong>发现</strong>：作者在腾讯云的云存储环境中（主要是块存储系统），测试统计发现大约有 47.9% 的写操作是 write-only 的，即在某一个确定的时间窗口内所写的这些块不会再次被访问。那么这些 write-only 的写操作对应的数据放置在缓存中其实并不会带来性能的提升，反而会占据缓存容量，影响其他真正需要缓存的数据来进行缓存。</li>
+<li><strong>问题</strong>：现有的写策略大致分为两种：
+<ul>
+<li>将所有要写的数据加载到缓存中（write-back 和 write through）
+<ul>
+<li>write-back：在数据更新时只写入缓存Cache。只在数据被替换出缓存时，被修改的缓存数据才会被写到后端存储。此模式的优点是数据写入速度快，因为不需要写存储；缺点是一旦更新后的数据未被写入存储时出现系统掉电的情况，数据将无法找回。</li>
+<li>Write-through（直写模式）在数据更新时，同时写入缓存Cache和后端存储。此模式的优点是操作简单；缺点是因为数据修改需要同时写入存储，数据写入速度较慢。</li>
+</ul>
+</li>
+<li>不加载数据到缓存，直接写存储设备 （write-around）</li>
+</ul>
+</li>
+<li><strong>方案</strong>：提出了一种基于机器学习的方法来识别 write-only 数据和 normal 数据，针对不同类型的数据动态应用不同的写策略。最大的挑战是怎么样才能够实时地区分数据类型<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200714201124.png" alt="image" loading="lazy"></li>
+<li>使用了五种监督学习方法：Naive Bayes, Logistic Regression, Decision Tree, AdaBoost, and Random Forest。随机森林准确率最高，但是耗时最长，不满足实时性，朴素贝叶斯在准确率、召回率和预测时间上基本做到了 trade-off，所以最终选择了朴素贝叶斯。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master/img/blog/20200714201440.png" alt="image" loading="lazy"></li>
+<li><strong>数据指标的选择</strong>：不同于在文件级别或者片上系统的基于机器学习的优化，在块级系统中部署机器学习算法来分类不同的数据面临很大的障碍，因为块级能提供的信息是有限的，常用的信息包括时间特征和空间特征（如最近访问时间和最近访问的地址）。本文中我们扩展了数据指标到 IO 请求，收集了如 average write size, write request ratio 等，这是由于具有类似请求级别的数据往往表现出类似的访问特征
+<ul>
+<li>Temporal features：这些特性包括数据块的访问近因和时间间隔。
+<ul>
+<li>Last Access Timestamp 在本文中被定义成了当前时间和最近访问该块的时间间隔。</li>
+<li>Average Re-access Time Difference：对一个数据块进行两个相邻访问的时间间隔</li>
+</ul>
+</li>
+<li>Spatial features：这些特性包含地址信息，例如卷 ID、偏移量等
+<ul>
+<li>因为地址会随着时间不断变化，对算法的效果会有显著影响，在作者实现的算法中其实没有使用空间特征。</li>
+</ul>
+</li>
+<li>Request-level features
+<ul>
+<li>Average Request Size 平均请求大小，单位 KB，上界为 100KB</li>
+<li>Big Request Ratio 大请求比例，请求大小大于 64KB 即为大请求</li>
+<li>Small Request Ratio 小请求比例，请求小于 8KB 即为小请求</li>
+<li>Write Request Ratio 写请求的比例</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>统计粒度</strong>： 块设备的最小粒度为一个块，假设一个块为 8KB，如果我们为每一个块都统计对应的数据特征，因为块设备容量很大，那么统计这些特征就会造成巨大的开销，同时太大可能影响算法的准确率，所以实际应用过程中，作者采用了 1MB 为统计粒度（称之为 tablet），1MB 连续的数据块中所包含的最小物理块对应的数据特征相同，从而减少统计的开销。</li>
+<li>整个模型的工作流程如下：
+<ul>
+<li>写请求的所有数据被首先被写入到内存中并顺序地记录在日志文件中，然后当脏数据的比例达到阈值则刷回到后端存储服务器，当在内存写缓冲中要执行对应的刷回操作时，进行下一步</li>
+<li>分类器获取最近刷回的数据块的 tablet 特征并预测其写请求类型，如果是 write-only 跳转到下一步，如果不是（即为 normal data）跳转到第四步</li>
+<li>如果该数据位于 SSD Cache 中且为脏数据，那么首先将该脏数据刷回到 HDD。对应的数据块将直接在 HDD 上进行写</li>
+<li>数据块首先写入到 SSD 缓存然后使用 write-back 的策略异步刷回 HDD</li>
+</ul>
+</li>
+<li>分类器每天训练一次用于第二天的预测，系统运行过程中收集样本数据，当 SSD cache 发生 eviction 的时候将增加一个样本，如果 evicted-data 有一次或者多次读命中，该样本将被设置为 0，也就是 normal data，否则设置为 1，write-only data。在作者的想法中，真实的实现里，write-only 的数据块是指一个在从缓存中 evict 之前不会被读的块</li>
+<li><strong>效果</strong>：实验结果表明，与业界广泛部署的回写策略相比，ML-WP 减少了对 SSD 缓存的写流量 41.52%，同时提高了 2.61% 的命中率，降低了 37.52% 的平均读延迟</li>
+</ul>
+<h5 id="related-work">Related Work</h5>
+<ul>
+<li>
+<p><strong>写策略优化</strong></p>
+<ul>
+<li>ATC15 - Request-oriented durable write caching for application performance
+<ul>
+<li>分析IO工作负载（判断是否会发生争用），然后部署最合适的写策略，使用了固定的写策略</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>Cache Optimization Based on Machine Learning</strong>:</p>
+<ul>
+<li>MICRO16 Perceptron learning for reuse prediction
+<ul>
+<li>感知器学习用于判断 last-level cache 的重用预测 （神经网络做预测）</li>
+<li>通过使用多个能够展示程序和存储器行为的特征（七个参数化特征）来从多个视角对LLC中的缓存块的未来重用进行预测。利用预测的结果，设计三种cache的管理策略：block placement，replacement，bypass</li>
+<li>PC, address, reference count, etc</li>
+</ul>
+</li>
+<li>ICPP18 Efficient ssd caching by avoiding unnecessary writes using machine learning
+<ul>
+<li>使用机器学习（决策树）来进行一次访问排除，能够准确地识别和过滤一次访问的照片，并阻止它们写入cache，提高社交网络照片缓存服务的效率。更多的使用照片的相关数据以及用户的登录请求数据来作为数据集</li>
+<li>使用 reaccess distance 来定义是否为只访问一次的图像，被定义为从该图像进入cache 开始到下一次被访问之间的总的图像访问量</li>
+<li>命中率提高了17%，缓存写操作降低了79%，平均访问延迟降低了 7.5%</li>
+</ul>
+</li>
+<li>NSDI19 Flashield: a hybrid key-value cache that controls flash write amplification
+<ul>
+<li>由于键值更新会对 SSD 造成严重的有害的小随机I/O写操作，因此使用机器学习（支持向量机 SVM）的方法来选择期望读取频率更高的对象</li>
+<li>Flashield这里引入了Flashiness的概念，作为一个对象被Cache价值的一个评价指标，一个高Cache价值的对象要满足两点条件
+<ul>
+<li>一个对象在访问之后会在不远的将来访问n次(及以上)，这里的n作为参数定义，</li>
+<li>在将来的一段时间内不会被修改<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201021172230.png" alt="20201021172230" loading="lazy"></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="new-cache-policy">New Cache Policy</h3>
+<h4 id="tpds20-efficient-ssd-cache-for-cloud-block-storage-via-leveraging-block-reuse-distances">TPDS20 - Efficient SSD Cache for Cloud Block Storage via Leveraging Block Reuse Distances</h4>
+<ul>
+<li>
+<p><strong>发现</strong>：我们在一个典型云块存储的服务器端发现了这一点，有很大比例的块具有很大的重用距离，这意味着很多块只有在遥远的将来才会被重新引用。在这样的场景中，如果在每次 miss 时进行简单的替换，新访问的块会污染缓存，而不会给命中率带来任何好处，从而降低缓存效率。现有的缓存算法在存在较大的重用距离时，缓存效率往往不理想</p>
+<ul>
+<li>如下图所示，A 点意味着 CBS 访问中，有大约 50% 的块的重用距离大于 32GB，而对于内存和主机上的 IO 则要小得多</li>
+<li>因此，如果我们使用像LRU这样的缓存算法，当缓存大小等于或小于 32gb 时，50% 的重用块不会被命中<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201021174825.png" alt="20201021174825" loading="lazy"></li>
+</ul>
+</li>
+<li>
+<p><strong>现象分析</strong>：</p>
+<ul>
+<li>多数具有小重用距离的数据块已经被客户端缓存设备缓存和过滤。</li>
+<li>单个云磁盘的容量可以达到几十TB，这比传统磁盘高出几个数量级。因此，数据规模较大的云应用程序可能导致更大的重用距离</li>
+<li>在多租户共享云环境中，来自不同租户的访问会混合在一起，导致重用距离增加</li>
+</ul>
+</li>
+<li>
+<p><strong>贡献</strong>：我们提出了一种新的缓存算法，专为 CBS 和其他类似场景设计的 LEA，LEA在缓存未命中时默认不进行替换，除非满足某些(惰性)条件。条件包含两个方面：新访问块的频率 和 缓存中的候选逐出块的值（该值是指该块对缓存的重要性或有用性）。这样，块的缓存持续时间可以大大延长。更重要的是，可以大大减少对 SSD 的写操作，延长 SSD 的生命周期</p>
+</li>
+<li>
+<p><strong>Reuse Distance</strong>：数据块的重用距离定义为对同一块的两个连续引用之间的唯一数据量。例如 1-2-4-5-4-3-3-2 的块访问序列中，Block 2 的 reuse distance 就是三个块的大小，在有的研究中，Block 2 的 reuse distance 为 5 个块的大小。本文采用了第二种定义。</p>
+</li>
+<li>
+<p>传统的 LRU 当缓存空间满时，对每次miss进行替换，主要遵循时间局部性原则，这些缓存替换算法的主要目标是保留重用距离较小的块，驱逐重用距离较大的块。当大部分数据重用距离小于缓存大小时，这些算法可以有效地工作。</p>
+</li>
+</ul>
+<h5 id="lea-algorithm">LEA Algorithm</h5>
+<ul>
+<li>维护两个队列，Lazy Eviction List (LEL) 和 Block Identity List (BIL)。每个队列有两个端点 Insertion Point (IP) 和 Eviction Point (EP)
+<ul>
+<li>标识只包括块的卷号和地址信息(偏移量)。一个条目包含额外的块信息，如 last_access, reuse_distance, age, flag，等等。条目中的信息用于计算条目块的值。</li>
+<li>age 表示块的当前时间和最后一次访问时间(last_access)之间的时间差，如果 age 小于 reuse_distance，它表明该块对缓存具有较高的价值。这里的时间是逻辑时间，当一个新的块请求到来时，逻辑时间增加1。这里，重用距离是最后两次访问之间的时间(而不是访问之间的平均时间)。</li>
+<li>flag 也用来判断块的值，当块在 LEL 列表中命中时增加 1，当块被视为块驱逐候选，但由于懒惰替换还没有被驱逐时减少一半，如果 flag 大于 0，它表明该块对于缓存是有价值的。</li>
+</ul>
+</li>
+<li>当发生缓存 miss 时，LEA 不进行替换，只在满足延迟条件时将丢失的块标识插入 BIL 列表，否则，它将执行替换并将丢失的块条目插入到 LEL 列表中。如果在 BIL 列表中命中了一个块，那么它进入LEL列表的概率更高。通过这样做，间接地考虑了访问频率<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201021191310.png" alt="20201021191310" loading="lazy"></li>
+</ul>
+<h4 id="atc20-osca-an-online-model-based-cache-allocation-scheme-in-cloud-block-storage-systems">ATC20 - OSCA: An Online-Model Based Cache Allocation Scheme in Cloud Block Storage Systems</h4>
+<ul>
+<li>OSCA 可以在非常低的复杂度下找到接近最佳的配置方案，从而提高缓存服务器的总体效率
+<ul>
+<li>部署了一个新的缓存模型来获得云基础设施块存储系统中每个存储节点的 miss ratio curve (MRC)。使用一种低开销的方法来获得一个时间窗口内从重新访问流量与总流量之比的数据重用距离。然后将得到的重用距离分布转化为 miss ratio curve (MRC)。</li>
+<li>通过了解存储节点的缓存需求，将总命中流量指标定义为优化目标</li>
+<li>使用动态规划方法搜索接近最优的配置，并基于此解进行缓存重新分配</li>
+</ul>
+</li>
+<li>在实际工作负载下的实验结果表明，模型达到了一个平均值绝对误差(MAE)，可与现有的最先进的技术相媲美，但同时可以做到没有跟踪收集和处理的开销。由于命中率的提高，相对于在相同缓存内存的情况下对所有实例的等分配策略，OSCA 减少了到后端存储服务器的 IO 流量 13.2%<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201021194032.png" alt="20201021194032" loading="lazy"></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201107165512.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/osdi-Bourbon/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-11-06">2020-11-06</time>
+                  <h4 class="title white no-margin">From WiscKey to Bourbon: A Learned Index for Log-Structured Merge Trees</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200830135706.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/CephFS/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-10-14">2020-10-14</time>
+                  <h4 class="title white no-margin">Ceph FS 介绍和使用</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

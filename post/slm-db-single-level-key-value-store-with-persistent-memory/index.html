@@ -1,0 +1,938 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SLM-DB Single-Level Key-Value Store with Persistent Memory | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+FAST 2019 的文章《SLM-DB Single-Level Key-Value Store with Persistent Memory》
+这篇论文主要在新型存储器件Persistent Memory上针对传统的 LSM 树进行..." />
+    <meta name="keywords" content="Paper,存储" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/Arch-SLM-DB.png?raw=true');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2019-10-27"><i class="fa fa-calendar"></i><span class="lately">1 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/slm-db-single-level-key-value-store-with-persistent-memory/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/slm-db-single-level-key-value-store-with-persistent-memory/"> </span>
+              </a>
+              <span id="/slm-db-single-level-key-value-store-with-persistent-memory/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-0 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-1 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">SLM-DB Single-Level Key-Value Store with Persistent Memory</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>FAST 2019 的文章《SLM-DB Single-Level Key-Value Store with Persistent Memory》</li>
+<li>这篇论文主要在新型存储器件Persistent Memory上针对传统的 LSM 树进行了优化。</li>
+<li>本篇论文用于课程论文阅读汇报，故在此总结便于演讲。同时学习 NVM 相关基础知识。</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="摘要">摘要</h2>
+<ul>
+<li>这篇 Paper 主要研究了如何利用新型的字节型寻址器件 PM 来提升 KV 存储系统的性能。提出了一种新型的 KV 存储系统的架构设计 SLM-DB。</li>
+<li>SLM-DB 充分利用 B+ Tree 和 LSM Tree 的优势充分发挥 PM 的特性，实现了较高的读写性能，同时降低了写放大，实现了接近最优的读放大。</li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<ul>
+<li>两种传统的 KV 存储类型：一种是基于 B-Tree 的存储引擎，一种是基于 LSM 的存储引擎。</li>
+</ul>
+<h3 id="b-tree">B-Tree</h3>
+<ul>
+<li>特性：在读操作和范围查询操作方面表现较好，在写操作的性能方面表现较差，特别是针对大量的随机小写，并且由于需要动态地维护平衡结构往往就会有很严峻的写放大问题。</li>
+<li>B-Tree 类型的 KV 存储更适用于 读密集型的工作负载。</li>
+<li>实际的应用产品：KyotoCabinet</li>
+</ul>
+<h3 id="lsm-tree">LSM Tree</h3>
+<ul>
+<li>LSM-Tree 有较高的写性能，通过将相关 KV 缓冲在内存中并批量地将其顺序写入磁盘中。但该结构由于需要维护多层的结构来进行合并压缩归并排序等操作，导致了具有很严重的读写放大问题，在读性能方面表现较差</li>
+<li>LSM Tree 类型的 KV 存储更适用于 写密集型的工作负载。</li>
+<li>实际的应用产品：BigTable，LevelDB，RocksDB，Cassandra。</li>
+</ul>
+<h3 id="persistent-memory">Persistent Memory</h3>
+<ul>
+<li>一种新型的存储器件，具有与 DRAM 相当的读写性能，带宽相对 DRAM 较低，但也比 DRAM 拥有更大的容量，最重要的是具有持久性的相关功能</li>
+</ul>
+<h3 id="优化方式">优化方式</h3>
+<h4 id="读优化">读优化</h4>
+<ul>
+<li>利用 PM 的特性维护 B+ Tree 作为索引，加速数据的检索</li>
+</ul>
+<h4 id="写优化">写优化</h4>
+<ul>
+<li>利用 LSM 的特性来进行 KV 的写入操作，使用 PM 进行缓冲写入，省略了 WAL 的写开销</li>
+<li>采用单层的 LSM 结构来减小写放大问题带来的影响，但同时需要设计新的压缩算法来保证单层结构中的数据部分有序，从而保证范围查询的性能。</li>
+</ul>
+<h2 id="background-motivation">Background &amp; Motivation</h2>
+<h3 id="leveldb-introduction">LevelDB Introduction</h3>
+<h4 id="组成部分">组成部分</h4>
+<ul>
+<li><strong>Memory</strong>：使用传统的 DRAM 存储和操作 MemTable 和 Immutable Memtable</li>
+<li><strong>Disk</strong>：使用磁盘存储和操作多级的 SSTables</li>
+</ul>
+<h4 id="核心机制">核心机制</h4>
+<h5 id="写流程">写流程</h5>
+<ul>
+<li>写流程可以具体划分为插入和更新操作。当有记录要写入时，按照 Key 在 Memtable 中的对应的位置，判断该 Key 是否已经存在，如果存在则进行更新。不存在则相应地写入该 Key 和 Value。</li>
+<li>Memtable 是内存中存数据的地方，这些数据按 Key值排序，为了快速查找，会有红黑树之类的数据结构作为索引。当 Memtable 大小到一定阈值，先状态改变，变成 Immutable Memtable，然后新建一个 Memtable，启动一个后台线程就把 Immutable Memtable 存到一个文件，这个文件就是一个SSTable，相应地将文件刷入磁盘。</li>
+<li>随着 SSTable File的数量越来越多，触发对应的 Compaction 操作，将对应的 SSTable 文件进行合并，合并到新的数据层上。</li>
+</ul>
+<h5 id="读流程">读流程</h5>
+<ul>
+<li>首先在memtable中查找，没找到的话，再到 Immutable Memtable 上进行查找，还是没找到的话，再按时间顺序在SSTable文件中查找。当读数据的时候，如果某个记录不存在，需要读取所有的SSTable才能确定。所以一般每个SSTable文件生成的时候会带一个bloom filter，对这一点进行优化。</li>
+</ul>
+<h4 id="一致性保证">一致性保证</h4>
+<ul>
+<li>在内存中的写操作采用了 WAL 的机制来进行一致性的保证，统一地先进行日志写的操作，再进行实际的数据插入操作。</li>
+<li>在磁盘上的数据的一致性保证，采用了 MANIFEST 日志进行保证，针对来自内存的刷会操作和压缩操作都会进行对应的日志记录，主要记录 LSM Tree的结构变化数据。</li>
+</ul>
+<h4 id="延申参考链接">延申参考链接</h4>
+<ul>
+<li><a href="https://juejin.im/post/5bbbf7615188255c59672125">[1] 掘金：看图轻松理解数据结构与算法系列(NoSQL存储-LSM树)</a></li>
+<li><a href="https://juejin.im/post/5b1f69dee51d4506d25e31ea">[2] 掘金：一文带你了解 LSM Compaction</a></li>
+</ul>
+<h3 id="limitation-of-leveldb">Limitation of LevelDB</h3>
+<ul>
+<li>LevelDB 的几个核心问题：较低的读性能 和 严峻的读写放大问题</li>
+</ul>
+<h4 id="slow-read-operation">Slow Read Operation</h4>
+<ul>
+<li><strong>最少两次读块的操作</strong>：从 LevelDB 中的读流程中我们不难发现，针对在内存中未能命中的数据往往都意味着在磁盘上的每一个 Level 上都会有进行二分查找的操作，首先二分查找定位数据所在的文件 SSTable File；找到对应的文件以后，基于 SSTable File 中存储的数据索引再次进行二分查找，找到对应的数据块。<strong>一次读索引块，一次读数据块</strong></li>
+<li><strong>如果数据块中不包含，则需要进入下一级重复该操作</strong></li>
+<li>引入 <strong>Bloom Filter</strong>，一定程度上减小了读操作的开销。</li>
+</ul>
+<h4 id="high-write-and-read-amplification">High write and read amplification</h4>
+<h5 id="write-amplification">Write Amplification</h5>
+<ul>
+<li>LSM 通过维护垂直的多级有序数据结构 SSTables 来保证顺序写，从而提高写的速度，但对应的也就引入了维护该结构的开销。</li>
+<li>需要在不同的层级之间进行归并排序操作，同时需要常常进行数据压缩(Compaction)。</li>
+</ul>
+<h5 id="read-amplification">Read Amplification</h5>
+<ul>
+<li>由于 LSM 树的原因，读数据时往往需要在多个层级进行检索</li>
+<li>读取数据时，往往不仅需要读取该 Key 所对应的数据所在的数据块，还要读取对应的索引块和 Bloom Filter 块，索引块和 Bloom Filter块的数据和可能比 KV 本身大得多。</li>
+</ul>
+<h3 id="persistent-memory-2">Persistent Memory</h3>
+<h4 id="特性">特性</h4>
+<ul>
+<li>非易失，字节寻址</li>
+<li>PM 将通过内存总线进行连接，而不是块接口，所以针对PM的原子写操作应该为8byte大小，相比于传统的存储设备较小。</li>
+<li>为了保证一致性，需要保证内存操作的顺序</li>
+</ul>
+<h4 id="一致性保证-2">一致性保证</h4>
+<ul>
+<li>为了让内存的带宽最大化，现代的处理器可能会将内存写操作进行指令重排序。所以为了保证内存中的有序写，可能需要显式地使用如 CFLUSH 和 MFENCE等缓存刷新和内存隔离指令。</li>
+<li>针对一些在 PM 上的写操作，如果数据量超过了 8bytes，在系统故障的情况下可能出现数据部分更新成功的情况，因为 PM 只保证 8bytes 的原子性，为了解决这样的不一致问题，考虑使用日志或者 CoW（Copy on Write）等技术来解决。</li>
+</ul>
+<h3 id="基于-lsm-树的优化">基于 LSM 树的优化</h3>
+<h4 id="提高并行性">提高并行性</h4>
+<ul>
+<li>RockesDB(Facebook)：利用数据的特性（无重复Key），进行多线程压缩</li>
+<li>HyperLevelDB：通过更为细致的锁管理机制增加了写线程的并行性。</li>
+</ul>
+<h4 id="减小写放大">减小写放大</h4>
+<ul>
+<li>PebblesDB (SOSP'17)：借鉴跳表的思想，弱化全局有序的约束，将每一层进行分段，段之间保证有序，段内无序。</li>
+</ul>
+<h4 id="基于硬件的优化ssd">基于硬件的优化（SSD）</h4>
+<ul>
+<li>VT-Tree (FAST'13)</li>
+<li>WiscKey (FAST'16)：在 LSM-Tree 上做 Key 和 Value 的分离存储</li>
+</ul>
+<h2 id="single-level-merge-db">Single-Level Merge DB</h2>
+<figure data-type="image" tabindex="1"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/Arch-SLM-DB.png?raw=true" alt="image" loading="lazy"></figure>
+<h3 id="主要贡献">主要贡献</h3>
+<ul>
+<li>使用 PM 存储 MemTable、Immutable MemTable 来提高更强的一致性保证，同时减小一致性的开销</li>
+<li>在 PM 中引入 B+-Tree 作为索引，提高查询速度</li>
+<li>将磁盘中的多级数据结构转为单级数据结构，并设计了一种选择性压缩机制</li>
+</ul>
+<h3 id="persistent-memtable">Persistent MemTable</h3>
+<figure data-type="image" tabindex="2"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/papers/slmdb-inert-pm.png?raw=true" alt="image" loading="lazy"></figure>
+<ul>
+<li>MemTable 的核心数据结构为 <strong>跳表 SkipList</strong></li>
+<li>跳表的操作，如插入、更新、删除均可用 8bytes 的原子操作完成</li>
+<li>采用 PM 存储 MemTable，不再需要 WAL 来保证一致性</li>
+<li>针对跳表的索引部分不需要提供一致性保证，因为可以从原始数据中快速重建</li>
+</ul>
+<h4 id="insert">Insert</h4>
+<ul>
+<li>Insert(key, value, prevNode)</li>
+</ul>
+<pre><code>1: curNode := NewNode(key, value); // Create Node
+2: curNode.next := prevNode.next;  // Modify currentNode.next pointer
+3: mfence();                       // 插入内存屏障（读屏障），让高速缓存中的数据失效，重新从主内存加载数据
+4: clflush(curNode);               // 缓存刷新， 持久化 currentNode 数据
+5: mfence();                       // 插入内存屏障（写屏障），内存隔离，让写入缓存的最新数据写回到主内存
+6: prevNode.next := curNode;       // Modify preNode.next pointer
+7: mfence();                       // 插入内存屏障（读屏障），让高速缓存中的数据失效，重新从主内存加载数据
+8: clflush(prevNode.next);         // 缓存刷新，持久化 preNode 的修改
+9: mfence();                       // 插入内存屏障（写屏障），内存隔离，让写入缓存的最新数据写回到主内存
+</code></pre>
+<h5 id="延申链接">延申链接</h5>
+<ul>
+<li><a href="https://www.cnblogs.com/nju-lfk/p/8807860.html">[1] 博客园：内存屏障</a></li>
+</ul>
+<h3 id="b-tree-index-in-pm">B+-Tree Index in PM</h3>
+<h4 id="when-to-build-the-tree-and-some-key-info">When to Build the Tree And Some Key Info</h4>
+<ul>
+<li>当把 KV 键值对从 Immutable MemTable 中往 SSTable 中刷入时，把 Key 相关的索引信息插入到 B+ 树中，作为叶子节点。</li>
+<li>叶子节点包含的信息有：SSTable File 的标识符，文件内部对应的该 Key 的块的偏移量 和 数据块的大小。</li>
+<li>B+ Tree 的更新操作：更新已有的 KV 对时，首先创建对应该 Key 的索引对象，然后修改原有的在 B+ 树中的指针，指向新的索引对象。旧的索引信息将会被视为垃圾数据进行统一的垃圾回收。</li>
+<li>B+ Tree 的删除操作：当需要删除指定 Key 的数据时，则将该 Key 在 B+ 树中对应的索引信息删除。</li>
+<li>垃圾回收时使用 PM 管理器如 PMDK 来进行垃圾回收。</li>
+</ul>
+<h4 id="build-the-tree">Build the Tree</h4>
+<ul>
+<li>当 KV 从 Immutable MemTable 中往 SSTable 刷入时（即 Flush操作），SLD-DB 创建两个后台线程：一个线程用于创建新的 SSTable File，一个用于向 B+ 树中插入索引信息。</li>
+</ul>
+<h5 id="file-creation-thread">File Creation Thread</h5>
+<ul>
+<li>该线程创建一个新的 SSTable 文件，把 Immutable MemTable 中的数据（K-V）写入到该文件中。</li>
+<li>将该文件执行文件系统相关同步操作，如 fsync，同步到磁盘</li>
+<li>同步之后，该线程将刚刚存储的 KV 对添加到一个队列中。（由向 B+ 树插入索引的线程创建的队列）</li>
+</ul>
+<h5 id="b-tree-insertion-thread">B+ Tree insertion thread</h5>
+<ul>
+<li>创建相应的 KV 索引信息队列</li>
+<li>待数据写入线程将该队列填入数据之后，依次处理队列中的每个数据，构建 B+ 树</li>
+</ul>
+<h5 id="一致性保证-3">一致性保证</h5>
+<ul>
+<li>待 B+ Tree构建完成以后，将 LSM 树中组织结构的变化（例如 SSTable File 的元数据信息）以追加写的方式写入到 MANIFEST 文件中</li>
+</ul>
+<h5 id="其他">其他</h5>
+<ul>
+<li>待完成一致性的日志追加写操作之后，对应的删除PM中的 Immutable Memtable.</li>
+</ul>
+<h4 id="scanning-a-b-tree">Scanning a B+-tree</h4>
+<ul>
+<li>SLM-DB 提供了一个迭代器，主要用于扫描存储在磁盘中的 KV 键值对。支持 seek()、value()、next()等操作。
+<ul>
+<li>seek(k)：让迭代器指向 key 为 k 的键值对或者当 k 不存在时，指向比 k 稍大的 Key</li>
+<li>next()：将迭代器指针移动到下一个 Key</li>
+<li>value()：返回该 Key 对应的值</li>
+</ul>
+</li>
+<li>在 SLM-DB 中，实现了 B+ Tree 的迭代器，主要用于扫描存储在 SSTables 中的 Key。</li>
+</ul>
+<h3 id="selective-compaction-选择性压缩">Selective Compaction 选择性压缩</h3>
+<h4 id="why-need-compaction">Why need Compaction?</h4>
+<ul>
+<li>为了回收部分旧数据。（旧数据是由 Update 操作产生的，更新 Key 对应的值时，之前存储的该 Key 的数据就变成了老数据）</li>
+<li>提升存储在 SSTables 中的 KV 键值对的顺序性，从而提升 Range Query的性能，以免要查询的 Key 分布散落在多个 SSTable File上</li>
+</ul>
+<h4 id="what-is-selective-compaction">What is Selective Compaction?</h4>
+<ul>
+<li>有选择性地选出一些 SSTables 进行压缩</li>
+<li>SLM-DB 维护一个 候选压缩对象列表。（候选对象为具有一定特性的 SSTables）</li>
+</ul>
+<h4 id="when-execute">When execute?</h4>
+<ul>
+<li>通过启动一个后台的压缩线程来执行：
+<ul>
+<li>当 SSTable Files的一些结构性数据发生变化时</li>
+<li>针对一个确定的 SSTable File 出现了多次 seek 操作时</li>
+<li>当压缩对象候选列表里的文件数量大于一定的阈值时</li>
+</ul>
+</li>
+<li>执行时，从候选列表中根据一定的计算规则选出子集进行压缩。该规则主要是计算 SSTable Files 之间的重叠率，通过计算出和候选列表中的其他 SSTable Files 重叠率最高的 SSTable Files，然后进行压缩合并。</li>
+</ul>
+<h4 id="how-to-compact">How to compact?</h4>
+<ul>
+<li>同上文一样使用两个线程，一个用于文件创建，一个用于索引的插入。</li>
+<li>合并多个 SSTable Files时，需要检查该文件中的每一个键值对是有效数据还是老旧数据。通过查询 B+树中的索引信息来决定是否有效。如果有效，则需要和其他有效的数据进行归并排序，如果是老旧的数据则对应将其删除。</li>
+</ul>
+<h4 id="how-to-select">How to select?</h4>
+<ul>
+<li>SLM-DB 实现了三种选择算法：
+<ul>
+<li>Live-Key Ratio Select：有效 Key 比例选择</li>
+<li>Leaf Node Scan：B+树叶子节点扫描选择</li>
+<li>Degree of Sequentially per range query：根据顺序程度进行选择</li>
+</ul>
+</li>
+</ul>
+<h5 id="live-key-ratio-select">Live-Key Ratio Select</h5>
+<ul>
+<li>SLM-DB 统计每个 SSTable File 的有效 Key 比例，并且设定一个阈值，一旦比例低于该阈值，就会被添加到候选压缩对象列表中。</li>
+<li>Live-Key Ratio 是指每个 SSTable File 中有效 Key 的比例。有效 Key 是指仍然维护在 B+ Tree 中的 Key，也就是仍为该 Key 对应的最新值。</li>
+</ul>
+<h5 id="leaf-node-scan">Leaf Node Scan</h5>
+<ul>
+<li>在执行压缩时，将触发一次 B+ Tree 叶子节点的扫描操作，通过循环扫描的方式，统计出存储了 B+ Tree 上有指定 Key 所对应的 SSTable Files 的文件数量，如果文件数量大于阈值，将这些文件添加到候选队列中进行压缩。</li>
+<li>文件数量意味着在 LSM 结构中存在多个数据文件存储旧值。</li>
+</ul>
+<h5 id="degree-of-sequentially-per-range">Degree of Sequentially per range</h5>
+<ul>
+<li>将 range 操作拆分为多个 子范围查询操作，每个子范围查询对应的 Key 数量相等，然后追踪每个子范围查询访问的 SSTable File 的数量，一旦操作完成，找到访问最多文件的子范围查询，如果对应的文件数大于阈值，把这些对应的文件添加到候选人队列中等待压缩。</li>
+<li>该方法主要是为了提高数据分布式的顺序性。</li>
+</ul>
+<h2 id="存在的问题">存在的问题？</h2>
+<h3 id="1-b-树的引入带来的写放大问题何如">1. B+ 树的引入带来的写放大问题何如？</h3>
+<h3 id="2-b-树索引结构的维护的一致性如何保证">2. B+ 树索引结构的维护的一致性如何保证？</h3>
+<h3 id="3-针对大量小写的情况b-树是否会成为对应的性能瓶颈">3. 针对大量小写的情况，B+ 树是否会成为对应的性能瓶颈？</h3>
+<h2 id="论文延申">论文延申</h2>
+<h3 id="bloom-filter-布隆过滤器">Bloom Filter 布隆过滤器</h3>
+<ul>
+<li>本质上布隆过滤器是一种数据结构，比较巧妙的概率型数据结构（probabilistic data structure），特点是高效地插入和查询，可以用来告诉你 “某样东西一定不存在或者可能存在”。</li>
+</ul>
+<h4 id="特点">特点</h4>
+<ul>
+<li>相比于传统的 List、Set、Map 等数据结构，它更高效、占用空间更少，但是缺点是其返回的结果是概率性的，而不是确切的。</li>
+<li>如果布隆过滤器判断的结果为不存在，那么事实上一定不存在；但如果布隆过滤器判断的结果为存在，那么事实上不一定存在。</li>
+</ul>
+<h4 id="原理">原理</h4>
+<ul>
+<li>数据结构：bit 向量/数组（初始化全为0）</li>
+<li>支持的操作：添加（add）、判断是否存在（ifExsit）</li>
+<li>不支持的操作：删除（delete）</li>
+</ul>
+<h5 id="添加操作">添加操作</h5>
+<ul>
+<li>使用多个 Hash 函数将要添加的值进行 Hash，得到多个对应的结果，将 bit 向量上的对应位置置为1。</li>
+<li>每一次新的值都进行相同的操作，将对应位置置为0，但可能置0的位置已经为0了，所以仍然保持为1。</li>
+</ul>
+<h5 id="判断操作">判断操作</h5>
+<ul>
+<li>判断某个值是否已经存在，利用设定好的 Hash 函数对应的求出相应的 Hash 值，看这多个值对应的 bit 向量上是否全为1。如果不全为1，则一定不存在；如果全为1，则可能存在。（原因：不同的值可能产生哈希冲突同时使得某个位置上的值为1）</li>
+</ul>
+<h5 id="如何支持删除操作是个可以研究的问题">如何支持删除操作？(是个可以研究的问题)</h5>
+<ul>
+<li>对应的对每一位 bit 进行计数，采用计数删除的方式。但对应的会给每一位增加一个数值的开销。</li>
+<li>然而要保证安全地删除元素并非如此简单。首先我们必须保证删除的元素的确在布隆过滤器里面。这一点单凭这个过滤器是无法保证的。另外计数器回绕也会造成问题。</li>
+</ul>
+<h4 id="如何选择哈希函数个数-k-和布隆过滤器长度-m">如何选择哈希函数个数 k 和布隆过滤器长度 m</h4>
+<ul>
+<li>k 次哈希函数某一 bit 位未被置为 1 的概率为：</li>
+</ul>
+<pre><code class="language-math">(1 - \frac {1}{m})^k
+</code></pre>
+<ul>
+<li>插入n个元素后依旧为 1 的概率：</li>
+</ul>
+<pre><code class="language-math">1 - (1 - \frac {1}{m})^{kn}
+</code></pre>
+<ul>
+<li>标明某个元素是否在集合中所需的 k 个位置都按照如上的方法设置为 1，但是该方法可能会使算法错误的认为某一原本不在集合中的元素却被检测为在该集合中（False Positives）</li>
+</ul>
+<pre><code class="language-math">(1 - (1 - \frac {1}{m})^{kn})^k \approx (1 - e^{-kn/m})^k
+</code></pre>
+<ul>
+<li>选择合适的 k 和 m：n 为插入的元素个数，p 为误报率</li>
+</ul>
+<pre><code class="language-math">m = - n\ln p / (\ln 2)^2
+</code></pre>
+<pre><code class="language-math">k = \frac {m}{n} \ln2
+</code></pre>
+<h4 id="参考链接">参考链接</h4>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/43263751">[1] 知乎：详解布隆过滤器的原理，使用场景和注意事项</a></li>
+<li><a href="https://www.cnblogs.com/CodeBear/p/10911177.html">[2] CodeBear的园子：大白话布隆过滤器</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/file-systems-unit-as-distributed-storagelessons-from-10-years-of-ceph-evolution.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/file-systems-unit-as-distributed-storagelessons-from-10-years-of-ceph-evolution/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-11-07">2019-11-07</time>
+                  <h4 class="title white no-margin">File Systems Unit as Distributed Storage:Lessons from 10 Years of Ceph Evolution</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/exploiting-commutativity-for-practical-fast-replication.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/exploiting-commutativity-for-practical-fast-replication/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-10-17">2019-10-17</time>
+                  <h4 class="title white no-margin">Exploiting Commutativity For Practical Fast Replication</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

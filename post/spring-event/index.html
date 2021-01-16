@@ -1,0 +1,1034 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Spring Event | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+Introduce the Event in Spring.
+Explore the core concept in Spring Event.
+At the same time, introduce the design patter..." />
+    <meta name="keywords" content="Spring,设计模式" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('http://www.spring-event.com/wp-content/uploads/2017/11/logo.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2018-11-01"><i class="fa fa-calendar"></i><span class="lately">2 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/spring-event/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/spring-event/"> </span>
+              </a>
+              <span id="/spring-event/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-0 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-1 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Spring Event</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>Introduce the Event in Spring.</li>
+<li>Explore the core concept in Spring Event.</li>
+<li>At the same time, introduce the design pattern Observer</li>
+</ul>
+</blockquote>
+<!-- more -->
+<p><ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#spring-event">Spring Event</a>
+<ul>
+<li><a href="#observer-design-pattern">Observer Design Pattern</a>
+<ul>
+<li><a href="#scenario">Scenario</a></li>
+<li><a href="#design">Design</a>
+<ul>
+<li><a href="#model">Model</a></li>
+<li><a href="#abstract">Abstract</a></li>
+</ul>
+</li>
+<li><a href="#source-code">Source code</a>
+<ul>
+<li><a href="#companyjavanotifyobserver">Company.java#notifyObserver()</a></li>
+<li><a href="#employeejavatakeactionstring-msg">Employee.java#takeAction(String msg)</a></li>
+</ul>
+</li>
+<li><a href="#differences-with-publish-subscribe">Differences with Publish-Subscribe</a></li>
+</ul>
+</li>
+<li><a href="#spring-events">Spring Events</a>
+<ul>
+<li><a href="#event-publisher">Event Publisher</a>
+<ul>
+<li><a href="#1-domainevents-spring-data-jpa">1. @DomainEvents  - Spring Data JPA</a></li>
+<li><a href="#2-mannual-publish">2. Mannual Publish</a></li>
+</ul>
+</li>
+<li><a href="#event-listener">Event Listener</a>
+<ul>
+<li><a href="#1-eventlistener">1. @EventListener</a></li>
+<li><a href="#2-transactioneventlistener">2. @TransactionEventListener</a></li>
+</ul>
+</li>
+<li><a href="#explore">Explore</a>
+<ul>
+<li><a href="#how-to-event-process-method-in-listener-class">How to event process method in listener class</a></li>
+<li><a href="#where-to-call-method-multicastevent">Where to call method multicastEvent()</a></li>
+<li><a href="#reference">Reference :</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</p>
+<h2 id="spring-event">Spring Event</h2>
+<h3 id="observer-design-pattern">Observer Design Pattern</h3>
+<h4 id="scenario">Scenario</h4>
+<ul>
+<li>Elvis, James  and Ervin are looking for a job. And they all send their resume to SAP. The SAP will <strong>make an announcement, arrange interviews and send notification to them</strong>. So three guys will take the interviews.</li>
+</ul>
+<h4 id="design">Design</h4>
+<h5 id="model">Model</h5>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/dev-test/master/src/main/resources/pic/Observer.jpg" alt="image" loading="lazy"></figure>
+<h5 id="abstract">Abstract</h5>
+<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/dev-test/master/src/main/resources/pic/UML%20Observer.jpg" alt="image" loading="lazy"></figure>
+<h4 id="source-code">Source code</h4>
+<h5 id="companyjavanotifyobserver">Company.java#notifyObserver()</h5>
+<pre><code class="language-Java">    @Override
+    public void notifyObserver() {
+        employees.forEach(employee -&gt; employee.takeAction(announcement));
+    }
+
+    public void announcenMsg(String msg) {
+        this.setAnnouncement(msg);
+        notifyObserver();
+    }
+</code></pre>
+<h5 id="employeejavatakeactionstring-msg">Employee.java#takeAction(String msg)</h5>
+<pre><code class="language-Java">    @Override
+    public void takeAction(String msg) {
+        this.msg = msg;
+        interview();
+    }
+
+    public void interview() {
+        System.out.println(name + &quot; received msg : &quot; + msg + &quot; and will go to interview&quot;);
+    }
+</code></pre>
+<h4 id="differences-with-publish-subscribe">Differences with Publish-Subscribe</h4>
+<figure data-type="image" tabindex="3"><img src="http://5b0988e595225.cdn.sohucs.com/images/20171128/7c5a95aa8ee348d9b7dff8417e4edb4e.jpeg" alt="image" loading="lazy"></figure>
+<h3 id="spring-events">Spring Events</h3>
+<pre><code>sequenceDiagram
+Listener-&gt;&gt;Spring Context: Listen Event
+Observer-&gt;&gt;Publisher: Action Trigger
+Publisher-&gt;&gt;Spring Context: Publish Event
+Spring Context-&gt;&gt;Listener: Event
+Listener-&gt;&gt;Event Process: Event
+</code></pre>
+<figure data-type="image" tabindex="4"><img src="https://raw.githubusercontent.com/zjs1224522500/dev-test/master/src/main/resources/pic/Spring%20events.png" alt="image" loading="lazy"></figure>
+<h4 id="event-publisher">Event Publisher</h4>
+<h5 id="1-domainevents-spring-data-jpa">1. @DomainEvents  - Spring Data JPA</h5>
+<ul>
+<li>Annotate method in <strong>Domain Model</strong> class. (<strong>DDD</strong>)</li>
+<li>Publish single or multi events with return value of the method</li>
+<li>Method invoking time: Spring Data repository's <code>save(…)</code> methods is called.</li>
+<li><code>@AfterDomainEventPublication</code> is used to potentially clean the list of events to be published (among other uses) when <code>@DomainEvents</code> exists.</li>
+</ul>
+<pre><code class="language-Java">    @DomainEvents
+    AccountSaveEvent accountSaveEvent()
+    {
+        AccountSaveEvent accountSaveEvent = new AccountSaveEvent();
+        accountSaveEvent.setAccount(this);
+        accountSaveEvent.setEventType(&quot;AccountSaveEventByJPA&quot;);
+        return accountSaveEvent;
+    }
+
+    @AfterDomainEventPublication
+    void callbackMethod() {
+        System.out.println(&quot;DATA SAVED!\n&quot;+&quot;WELL DONE&quot;);
+    }
+</code></pre>
+<h5 id="2-mannual-publish">2. Mannual Publish</h5>
+<ul>
+<li><strong>ApplicationEventPublisher</strong></li>
+<li><strong>ApplicationContext</strong>
+<ul>
+<li>Extends interface <strong>ApplicationEventPublisher</strong></li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-Java">@Component
+public class AccountEventPublisher {
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    @Autowired
+    private ApplicationEventPublisher publisher;
+
+    public void publishEventByContext(Account account)
+    {
+        AccountSaveEvent event = new AccountSaveEvent();
+        event.setAccount(account);
+        event.setEventType(&quot;AccountSaveEventByContext&quot;);
+        System.out.println(&quot;====================================&quot;);
+        System.out.println(&quot;Start to publish AccountSaveEvent by context&quot;);
+        applicationContext.publishEvent(event);
+        System.out.println(&quot;End&quot;);
+        System.out.println(&quot;====================================&quot;);
+    }
+
+    public void publishEventByPublisher(Account account)
+    {
+        AccountSaveEvent event = new AccountSaveEvent();
+        event.setAccount(account);
+        event.setEventType(&quot;AccountSaveEventByPublisher&quot;);
+        System.out.println(&quot;====================================&quot;);
+        System.out.println(&quot;Start to publish AccountSaveEvent by publisher&quot;);
+        publisher.publishEvent(event);
+        System.out.println(&quot;End&quot;);
+        System.out.println(&quot;====================================&quot;);
+    }
+}
+</code></pre>
+<ul>
+<li>Publisher can publish any Object as Event, because Spring will help to use <strong>PayloadApplicationEvent</strong> to package the object.</li>
+</ul>
+<h4 id="event-listener">Event Listener</h4>
+<h5 id="1-eventlistener">1. @EventListener</h5>
+<ul>
+<li>Annotate method.</li>
+<li>Support <strong>SpEL</strong> for event condition match.</li>
+<li>Can listen multi event class.</li>
+</ul>
+<pre><code class="language-Java">    @EventListener(condition = &quot;#accountSaveApplicationEvent.valid&quot;)
+    public void handleEvent(AccountSaveApplicationEvent accountSaveApplicationEvent) {
+        System.out.println(&quot;======================================&quot;);
+        System.out.println(&quot;Listener listened AccountSaveApplicationEvent&quot;);
+        System.out.println(accountSaveApplicationEvent.getEventType());
+        System.out.println(&quot;======================================&quot;);
+    }
+</code></pre>
+<h5 id="2-transactioneventlistener">2. @TransactionEventListener</h5>
+<ul>
+<li>Base on <strong>@EventListener</strong>.</li>
+<li>phase : Bind the handling of an event to <strong>Transaction lifecycle</strong>.</li>
+<li>fallbackExecution: Config <strong>Transaction</strong> if mandatory for this event trigger.</li>
+</ul>
+<pre><code class="language-Java">    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void handleEvent(AccountSaveEvent accountSaveEvent) {
+        System.out.println(&quot;======================================&quot;);
+        System.out.println(&quot;Listener listened AccountSaveEvent&quot;);
+        System.out.println(accountSaveEvent.getEventType());
+        System.out.println(&quot;======================================&quot;);
+    }
+</code></pre>
+<h4 id="explore">Explore</h4>
+<h5 id="how-to-event-process-method-in-listener-class">How to event process method in listener class</h5>
+<ul>
+<li>class <strong>SimpleApplicationEventMulticaster</strong></li>
+</ul>
+<pre><code class="language-Java">    @Override
+	public void multicastEvent(ApplicationEvent event) {
+		multicastEvent(event, resolveDefaultEventType(event));
+	}
+
+	@Override
+	public void multicastEvent(final ApplicationEvent event, ResolvableType eventType) {
+		ResolvableType type = (eventType != null ? eventType : resolveDefaultEventType(event));
+		for (final ApplicationListener&lt;?&gt; listener : getApplicationListeners(event, type)) {
+			Executor executor = getTaskExecutor();
+			if (executor != null) {
+			    // new Runnable(){...} just define Runnable variable  
+				executor.execute(new Runnable() {
+					@Override
+					public void run() {
+						invokeListener(listener, event);
+					}
+				});
+			}
+			else {
+				invokeListener(listener, event);
+			}
+		}
+	}
+</code></pre>
+<ul>
+<li>As for <strong>executor</strong> in <strong>SimpleApplicationEventMulticaster</strong>, it is <strong>global executor</strong> for all Spring Event Listeners. So if we config an async executor and inject it to multicaster, all listeners will process event async.</li>
+</ul>
+<pre><code class="language-Java">@Configuration
+public class AsynchronousSpringEventsConfig implements AsyncConfigurer {
+
+    @Bean(name = &quot;applicationEventMulticaster&quot;)
+    public ApplicationEventMulticaster simpleApplicationEventMulticaster() {
+        SimpleApplicationEventMulticaster eventMulticaster
+                = new SimpleApplicationEventMulticaster();
+        // Inject the ThreadPoolTaskExecutor
+        eventMulticaster.setTaskExecutor(getAsyncExecutor());
+        return eventMulticaster;
+    }
+
+
+    @Override
+    public Executor getAsyncExecutor() {
+        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+        taskExecutor.setCorePoolSize(5);
+        taskExecutor.setMaxPoolSize(50);
+        taskExecutor.setQueueCapacity(25);
+        taskExecutor.initialize();
+
+        return taskExecutor;
+    }
+}
+</code></pre>
+<ul>
+<li>But if we want only several listeners to process event async, we can use <strong>@Async</strong> annotation and add some thread pool config. And <strong>@Async</strong> uses <strong>CglibAopDynamicProxy</strong> and <strong>AsyncExecutionInterceptor</strong> to find suitable executors to execute the annotated method.</li>
+</ul>
+<pre><code class="language-Java">public class AsyncExecutionInterceptor extends ... {
+    @Nullable
+    public Object invoke(MethodInvocation invocation) throws Throwable {
+        Class&lt;?&gt; targetClass = invocation.getThis() != null ? AopUtils.getTargetClass(invocation.getThis()) : null;
+        Method specificMethod = ClassUtils.getMostSpecificMethod(invocation.getMethod(), targetClass);
+        Method userDeclaredMethod = BridgeMethodResolver.findBridgedMethod(specificMethod);
+        // Find executors configured in configuration class.
+        AsyncTaskExecutor executor = this.determineAsyncExecutor(userDeclaredMethod);
+        if (executor == null) {
+            throw new IllegalStateException(&quot;No executor specified and no default executor set on AsyncExecutionInterceptor either&quot;);
+        } else {
+            Callable&lt;Object&gt; task = () -&gt; {
+                try {
+                    Object result = invocation.proceed();
+                    if (result instanceof Future) {
+                        return ((Future)result).get();
+                    }
+                } catch (ExecutionException var4) {
+                    this.handleError(var4.getCause(), userDeclaredMethod, invocation.getArguments());
+                } catch (Throwable var5) {
+                    this.handleError(var5, userDeclaredMethod, invocation.getArguments());
+                }
+
+                return null;
+            };
+            return this.doSubmit(task, executor, invocation.getMethod().getReturnType());
+        }
+    }
+}
+</code></pre>
+<ul>
+<li>How does ThreadPoolTaskExecutor execute method async, we can refer the source code in <strong>ThreadPoolExecutor.class</strong></li>
+</ul>
+<pre><code class="language-Java">    /**
+     * Executes the given task sometime in the future.  The task
+     * may execute in a new thread or in an existing pooled thread.
+     *
+     * If the task cannot be submitted for execution, either because this
+     * executor has been shutdown or because its capacity has been reached,
+     * the task is handled by the current {@code RejectedExecutionHandler}.
+     *
+     * @param command the task to execute
+     * @throws RejectedExecutionException at discretion of
+     *         {@code RejectedExecutionHandler}, if the task
+     *         cannot be accepted for execution
+     * @throws NullPointerException if {@code command} is null
+     */
+    public void execute(Runnable command) {
+        if (command == null)
+            throw new NullPointerException();
+        /*
+         * Proceed in 3 steps:
+         *
+         * 1. If fewer than corePoolSize threads are running, try to
+         * start a new thread with the given command as its first
+         * task.  The call to addWorker atomically checks runState and
+         * workerCount, and so prevents false alarms that would add
+         * threads when it shouldn't, by returning false.
+         *
+         * 2. If a task can be successfully queued, then we still need
+         * to double-check whether we should have added a thread
+         * (because existing ones died since last checking) or that
+         * the pool shut down since entry into this method. So we
+         * recheck state and if necessary roll back the enqueuing if
+         * stopped, or start a new thread if there are none.
+         *
+         * 3. If we cannot queue task, then we try to add a new
+         * thread.  If it fails, we know we are shut down or saturated
+         * and so reject the task.
+         */
+        int c = ctl.get();
+        if (workerCountOf(c) &lt; corePoolSize) {
+            if (addWorker(command, true))
+                return;
+            c = ctl.get();
+        }
+        if (isRunning(c) &amp;&amp; workQueue.offer(command)) {
+            int recheck = ctl.get();
+            if (! isRunning(recheck) &amp;&amp; remove(command))
+                reject(command);
+            else if (workerCountOf(recheck) == 0)
+                addWorker(null, false);
+        }
+        else if (!addWorker(command, false))
+            reject(command);
+    }
+</code></pre>
+<h5 id="where-to-call-method-multicastevent">Where to call method multicastEvent()</h5>
+<ul>
+<li>abstract class <strong>AbstractApplicationContext</strong></li>
+</ul>
+<pre><code class="language-Java">	protected void publishEvent(Object event, ResolvableType eventType) {
+		Assert.notNull(event, &quot;Event must not be null&quot;);
+		if (logger.isTraceEnabled()) {
+			logger.trace(&quot;Publishing event in &quot; + getDisplayName() + &quot;: &quot; + event);
+		}
+
+		// Decorate event as an ApplicationEvent if necessary
+		ApplicationEvent applicationEvent;
+		if (event instanceof ApplicationEvent) {
+			applicationEvent = (ApplicationEvent) event;
+		}
+		else {
+			applicationEvent = new PayloadApplicationEvent&lt;Object&gt;(this, event);
+			if (eventType == null) {
+				eventType = ((PayloadApplicationEvent) applicationEvent).getResolvableType();
+			}
+		}
+
+		// Multicast right now if possible - or lazily once the multicaster is initialized
+		if (this.earlyApplicationEvents != null) {
+			this.earlyApplicationEvents.add(applicationEvent);
+		}
+		else {
+			getApplicationEventMulticaster().multicastEvent(applicationEvent, eventType);
+		}
+
+		// Publish event via parent context as well...
+		if (this.parent != null) {
+			if (this.parent instanceof AbstractApplicationContext) {
+				((AbstractApplicationContext) this.parent).publishEvent(event, eventType);
+			}
+			else {
+				this.parent.publishEvent(event);
+			}
+		}
+	}
+</code></pre>
+<h5 id="reference">Reference :</h5>
+<p><a href="https://www.baeldung.com/spring-events">[1] Baeldung: How to use events in Spring</a><br>
+<a href="https://spring.io/blog/2015/02/11/better-application-events-in-spring-framework-4-2">[2] Spring Blog: Better application events in Spring Framework 4.2<br>
+</a><br>
+<a href="https://zoltanaltfatter.com/2017/06/09/publishing-domain-events-from-aggregate-roots/">[3] Zoltan Altfatter: Publishing domain events from aggregate roots</a><br>
+<a href="https://docs.spring.io/spring-data/jpa/docs/current/reference/html/">[4] Spring IO: Spring Data JPA - Reference Documentation</a><br>
+<a href="https://www.jianshu.com/p/b6ec06d6b594">[5] Pursue: Simple Analysis Domain Driven Design</a><br>
+<a href="https://docs.spring.io/spring/docs/5.1.1.RELEASE/spring-framework-reference/core.html#context-functionality-events">[6] Spring IO: Spring 5.1.1 RELEASE Reference Events</a><br>
+<a href="https://www.cnblogs.com/luohanguo/p/7825656.html">[7] luohanguo: The Obeserver Design Pattern</a><br>
+<a href="https://www.sohu.com/a/207062452_464084">[8] miaoyu: Differences between Observer and Publish-Subscribe Pattern</a><br>
+<a href="https://github.com/zjs1224522500/dev-test">[9] Github Source Code Example of Spring Events by Elvis</a><br>
+<a href="https://github.com/zjs1224522500/data-structure-and-arithmetic/tree/master/design_patterns/src/me/elvis/common/design/observer/another">[10] Github Source Code Example of Observer Design Pattern by Elvis</a><br>
+<a href="https://blog.csdn.net/caihaijiang/article/details/7460888">[11] CSDN Blog: Spring Event System</a></p>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://thejournal.com/~/media/EDU/THEJournal/Images/2015/02/20150224test644.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/how-to-develop-test/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-05-24">2019-05-24</time>
+                  <h4 class="title white no-margin">教你写测试</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/media/images/she-ji-mo-shi.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/design-pattern-factory/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2018-08-18">2018-08-18</time>
+                  <h4 class="title white no-margin">设计模式之工厂模式</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

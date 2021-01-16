@@ -1,0 +1,742 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ceph FS 介绍和使用 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+一个项目测试使用到了 CephFS，故简要整理 CephFS 资料和相关文档
+
+
+
+CephFS
+
+Ceph 常用命令
+Deploy a Ceph Cluster Manually
+
+Overview
+
+CephFS 应用相比于 RBD..." />
+    <meta name="keywords" content="存储,Ceph" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200830135706.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-10-14"><i class="fa fa-calendar"></i><span class="lately">3 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/CephFS/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/CephFS/"> </span>
+              </a>
+              <span id="/CephFS/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-1 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Ceph FS 介绍和使用</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>一个项目测试使用到了 CephFS，故简要整理 CephFS 资料和相关文档</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="cephfs">CephFS</h2>
+<ul>
+<li><a href="https://github.com/zjs1224522500/BlogIssue/issues/18">Ceph 常用命令</a></li>
+<li><a href="https://chaosd.github.io/2020/08/17/Deploy%20a%20Ceph%20Cluster%20Manually/">Deploy a Ceph Cluster Manually</a></li>
+</ul>
+<h3 id="overview">Overview</h3>
+<ul>
+<li>CephFS 应用相比于 RBD/RGW 不够广泛主要是因为文件系统采用树状结构管理数据（文件和目录）、基于查表寻址的设计理念与 Ceph 扁平化的数据管理方式、基于计算进行寻址的设计理念有些违背；其次文件系统的支持常常需要集中的元数据管理服务器来作为树状结构的统一入口，这又与 Ceph 去中心化、追求近乎无限的横向扩展能力的设计思想冲突。</li>
+<li>由于分布式文件系统的需求仍旧很大，应用场景尤为广泛，在 Ceph 不断的版本迭代中，CephFS 也取得了越来越好的支持。</li>
+</ul>
+<h3 id="背景">背景</h3>
+<ul>
+<li>要想实现分布式文件系统，那么就必须实现分布式文件系统的特点，即具有良好的横向扩展性，性能能够随着存储规模呈线性增长，为了实现这样的目标则需要对文件系统命名空间分而治之，即实现相应的负荷分担和负载均衡，采用相应的数据路由算法。</li>
+</ul>
+<h4 id="文件系统数据负载均衡分区">文件系统数据负载均衡分区</h4>
+<h5 id="静态子树分区">静态子树分区</h5>
+<ul>
+<li>手工分区，数据直接分配到某个固定的服务节点，负载不均衡时再手动调整。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201013150928.png" alt="20201013150928" loading="lazy"></li>
+</ul>
+<h5 id="hash-计算分区">HASH 计算分区</h5>
+<ul>
+<li>HASH 计算数据的存储位置，保证了数据分布的均衡，但如果环境变化（集群规模变化）此时需要固定原有的数据分区而减少数据的迁移，或者根据元数据的访问频率，要想保证 MDS 负载均衡，需要重新决定元数据的分布，此时则不适合使用 HASH</li>
+</ul>
+<h5 id="动态子树分区">动态子树分区</h5>
+<ul>
+<li>通过实时监控集群节点的负载，动态调整子树分布于不同的节点。这种方式适合各种异常场景，能根据负载的情况，动态的调整数据分布，不过如果大量数据的迁移肯定会导致业务抖动，影响性能。在元数据存储、流量控制和灵活的资源利用策略方面，动态分区比其他技术有许多优势。</li>
+<li>https://ceph.com/wp-content/uploads/2016/08/weil-mds-sc04.pdf<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201013151347.png" alt="20201013151347" loading="lazy"></li>
+<li>动态子树分区方法的核心是将文件系统作为层次结构处理。通过将层次结构的子树的权限委托给不同的元数据服务器，对文件系统进行分区。委托可以嵌套:例如，/usr可以分配给一个MDS，而/usr/local可以分配给另一个MDS。但是，在没有显式分配子树的情况下，嵌套在某个点下的整个目录树被假定驻留在同一台服务器上。</li>
+<li>这个结构中隐含着层次结构遍历的过程，以便找到并打开嵌套的索引节点，以便随后下降到文件层次结构中。这样的路径遍历对于验证POSIX语义所要求的嵌套项的用户访问权限也是必要的，对于在目录层次结构深处定位一个文件来说，这个过程可能代价很高。</li>
+<li>为了允许有效地处理客户机请求(以及正确响应它们所需的路径遍历)，每个MDS都缓存缓存中所有项的前缀索引节点，以便在任何时候缓存的层次结构子集仍然是树结构。也就是说，只有叶子项可以从缓存中过期;在目录中包含的项首先过期之前，不能删除目录。这允许对所有已知项进行权限验证，而不需要任何额外的I/O成本，并保持层次一致性。</li>
+<li>为了适应文件系统发展和工作负载变化的要求，MDS集群必须调整目录分区，以保持工作负载的最佳分布。动态分布是必要的，因为层次结构部分的大小和流行度都以一种不均匀和不可预测的方式随时间变化。通过允许MDS节点传输目录层次结构的子树的权限，元数据分区会随着时间的推移进行修改。MDS节点定期交换心跳消息，其中包括对其当前负载级别的描述。此时，忙碌的节点可以识别层次结构中适当流行的部分，并发起一个双重提交事务，将权限传递给非繁忙节点。在此交换过程中，所有活动状态和缓存的元数据都被转移到新的权威节点，这既是为了保持一致性，也是为了避免磁盘I/O，否则，新权威节点将需要磁盘I/O来重新读取它，而磁盘I/O会慢上几个数量级。</li>
+</ul>
+<h4 id="cephfs-mds-特点">CephFS MDS 特点</h4>
+<ul>
+<li>采用多实例消除性能瓶颈并提升可靠性</li>
+<li>采用大型日志文件和延迟删除日志机制提升元数据读写性能</li>
+<li>讲 Inode 内嵌至 Dentry 中来提升文件索引率</li>
+<li>采用目录分片重新定义命名空间层次结构，并且目录分片可以在 MDS 实例之间动态迁移，从而实现细粒度的流控和负载均衡机制</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200831094239.png" alt="20200831094239" loading="lazy"></figure>
+<h3 id="架构">架构</h3>
+<ul>
+<li>
+<p>虽然 Ceph 文件系统中的 inode 数据存储在 RADOS 中并由客户端直接访问，但是 inode 元数据和目录信息由Ceph metadata server (MDS)管理。MDS 充当所有与元数据相关的活动的中介，将结果信息存储在与文件数据不同的RADOS 池中。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200830135706.png" alt="20200830135706" loading="lazy"></p>
+</li>
+<li>
+<p>CephFS中的所有文件数据都存储为RADOS对象。CephFS客户端可以直接访问RADOS对文件数据进行操作。MDS只处理元数据操作。</p>
+</li>
+<li>
+<p>要读/写CephFS文件，客户端需要有相应inode的“文件读/写”功能。如果客户端没有需要的功能 caps，它发送一个“cap消息”给MDS，告诉MDS它想要什么。MDS将在可能的情况下向客户发布功能 caps。一旦客户端有了“文件读/写”功能，它就可以直接访问 RADOS 来读/写文件数据。文件数据以 <inode number>, <object index> 的形式存储为RADOS对象。如果文件只由一个客户端打开，MDS还会向唯一的客户端提供“文件缓存/缓冲区”功能。“文件缓存”功能意味着客户端缓存可以满足文件读取要求。“文件缓冲区”功能意味着可以在客户端缓存中缓冲文件写。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200831094239.png" alt="20200831094239" loading="lazy"></p>
+</li>
+</ul>
+<h4 id="cepgfs-client-访问示例">CepgFS Client 访问示例</h4>
+<ul>
+<li>Client 发送 open file 请求给 MDS</li>
+<li>MDS 返回 file node, file size, capability 和 stripe 信息</li>
+<li>Client 直接 READ/WRITE 数据到 OSDs（如果无 caps 信息需要先向 MDS 请求 caps）</li>
+<li>MDS 管理 Client 对该 file 的 capabilities</li>
+<li>Client 发送 close file 请求给 MDS，释放 file 的 capabilities，更新 file 的详细信息</li>
+</ul>
+<h4 id="mds-文件锁">MDS 文件锁</h4>
+<ul>
+<li>当客户机希望在 inode 上操作时，它将以各种方式查询 MDS，然后授予客户机一组功能。它们授予客户端以各种方式操作 inode 的权限。与其他网络文件系统(例如 NFS 或 SMB)的主要区别之一是，所授予的功能非常细粒度，多个客户机可能在同一个 inode 上拥有不同的功能。</li>
+<li>CephFS 客户机可以请求MDS代表它获取或更改 inode 元数据，但是MDS还可以为每个 inode 授予客户机功能 (caps)</li>
+</ul>
+<pre><code class="language-C">/* generic cap bits */
+#define CEPH_CAP_GSHARED     1  /* client can reads (s) */
+#define CEPH_CAP_GEXCL       2  /* client can read and update (x) */
+#define CEPH_CAP_GCACHE      4  /* (file) client can cache reads (c) */
+#define CEPH_CAP_GRD         8  /* (file) client can read (r) */
+#define CEPH_CAP_GWR        16  /* (file) client can write (w) */
+#define CEPH_CAP_GBUFFER    32  /* (file) client can buffer writes (b) */
+#define CEPH_CAP_GWREXTEND  64  /* (file) client can extend EOF (a) */
+#define CEPH_CAP_GLAZYIO   128  /* (file) client can perform lazy io (l) */
+</code></pre>
+<ul>
+<li>然后通过特定数量的位进行移位。这些表示 inode 的数据或元数据的一部分，在这些数据或元数据上被授予能力:</li>
+</ul>
+<pre><code class="language-C">/* per-lock shift */
+#define CEPH_CAP_SAUTH      2 /* A */
+#define CEPH_CAP_SLINK      4 /* L */
+#define CEPH_CAP_SXATTR     6 /* X */
+#define CEPH_CAP_SFILE      8 /* F */
+</code></pre>
+<ul>
+<li>一个 Cap 授予客户端 缓存和操作与 inode 关联的部分数据或元数据的能力。当另一个客户机需要访问相同的信息时，MDS 将撤销该 cap，而客户机最终将返回该功能，以及 inode 元数据的更新版本(如果它在保留功能时对其进行了更改)。</li>
+<li>客户机可以请求 cap，并且通常会获得这些 cap，但是当 MDS 面临竞争访问或内存压力时，这些 cap 可能会被 revoke。当一个 cap 被 revoke 时，客户端负责尽快返回它。未能及时这样做的客户端可能最终被阻塞并无法与集群通信。</li>
+<li>由于缓存是分布式的，所以 MDS 必须非常小心，以确保没有客户机拥有可能与其他客户机的 cap 或它自己执行的操作发生冲突的 cap。这使得 cephfs 客户机比 NFS 这样的文件系统依赖于更大的缓存一致性，在 NFS 中，客户机可以缓存数据和元数据，而这些数据和元数据在服务器上已经更改了。</li>
+<li>基于 caps，构建了 ceph 的分布式文件锁，分布式文件锁保证了多个客户端并发且细粒度访问同一文件、目录、文件系统，同时保证一致性、可靠性。ceph 实现的分布式文件系统锁，客户端可见部分是 caps，服务端可见部分包括 caps和各种 lock，每个类型的 lock 又有多种状态，根据客户端的请求、持有、释放情况，lock 转换自身状态，并和客户端同步 caps 信息。最终实现分布式锁的访问。</li>
+</ul>
+<h3 id="参考链接">参考链接</h3>
+<ul>
+<li><a href="https://www.jianshu.com/p/e7d79a0d5314">[1] CephFS 介绍及使用经验分享</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200714201124.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/intelligent-cache-research/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-10-25">2020-10-25</time>
+                  <h4 class="title white no-margin">intelligent cache research</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201016163845.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/fast20-some/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-10-12">2020-10-12</time>
+                  <h4 class="title white no-margin">FAST20 Some Interesting Papers Overview</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

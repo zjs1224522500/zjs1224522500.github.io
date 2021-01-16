@@ -1,0 +1,1036 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Database Internal - LSM-tree Summary | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+The LSM-tree basic in database system.
+Here is the basic of LSM-tree, including the knowledge of data structure and so..." />
+    <meta name="keywords" content="存储,数据库" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/微信截图_20200709152604.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-07-05"><i class="fa fa-calendar"></i><span class="lately">6 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/database-internal-lsm-tree-summary/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/database-internal-lsm-tree-summary/"> </span>
+              </a>
+              <span id="/database-internal-lsm-tree-summary/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-1 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Database Internal - LSM-tree Summary</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>The LSM-tree basic in database system.</li>
+<li>Here is the basic of LSM-tree, including the knowledge of data structure and some optimization.</li>
+<li>The content is based on the book <em><strong>Database Internal</strong></em>. I will present my understanding.</li>
+<li>Only summary, not details.</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="before-lsm-tree">Before LSM-tree</h2>
+<ul>
+<li>Mutable Structures VS Immutable Structures
+<ul>
+<li>Mutable: In-place Update.</li>
+<li>Immutable: Out-of-place Update</li>
+</ul>
+</li>
+<li>In-place Update VS Out-of-place Update:
+<ul>
+<li>In-place update storage structures are optimized for read performance: after locating data on disk, the record can be returned to the client. This comes at the expense of write performance: to update the data record in place, it first has to be located on disk</li>
+<li>Append-only storage is optimized for write performance. Writes do not have to locate records on disk to overwrite them. However, this is done at the expense of reads, which have to retrieve multiple data record versions and reconcile them.</li>
+</ul>
+</li>
+</ul>
+<h3 id="immutable-structures">Immutable Structures</h3>
+<ul>
+<li>Safety characteristics: once created, an immutable structure doesn’t change, all of its references can be accessed concurrently, and its integrity is guaranteed by the fact that it cannot be modified.</li>
+<li>Immutable files can hold multiple copies, more recent ones overwriting the older ones, while mutable files generally hold only the most recent value instead.</li>
+<li>Immutable LSM Trees use append-only storage and merge reconciliationn, and B-Trees locate data records on disk and update pages at their original offsets in the file.</li>
+</ul>
+<h2 id="lsm-tree">LSM-Tree</h2>
+<ul>
+<li>We concluded that space overhead and write amplification can be improved by using buffering, and there are two ways buffering:
+<ul>
+<li>To postpone propagating writes to diskresident pages</li>
+<li>To make write operations sequential.</li>
+</ul>
+</li>
+<li>LSM Tree uses buffering and append-only storage to achieve sequential writes.</li>
+<li>LSM Trees defer data file writes and buffer changes in a memory-resident table.</li>
+</ul>
+<h3 id="lsm-structure">LSM Structure</h3>
+<h4 id="two-components">Two components</h4>
+<ul>
+<li>Disk Components: Comprised of immutable segments and the disk component is organised as a B-tree, with 100% occupancy and read-only pages.</li>
+<li>Memory-resident tree contents are flushed on disk in parts. During a flush, for each flushed in-memory subtree, we find a corresponding subtree on disk and write out the merged contents of a memory-resident segment and disk-resident subtree into the new segment on disk.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200705115939.png" alt="20200705115939" loading="lazy"></li>
+<li>After the subtree is flushed, superseded memory-resident and disk-resident subtrees are discarded and replaced with the result of their merge, which becomes addressable from the preexisting sections of the disk-resident tree.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/TIM%E6%88%AA%E5%9B%BE20200707142529.png" alt="TIM截图20200707142529" loading="lazy"></li>
+<li>A merge can be implemented by advancing iterators reading the disk-resident leaf nodes and contents of the in-memory tree in lockstep. Since both sources are sorted, to produce a sorted merged result, we only need to know the current values of both +iterators during each step of the merge process.</li>
+<li>This approach is a logical extension and continuation of our conversation on immutable B-Trees. Copy-on-write B-Trees use B-Tree structure, but their nodes are not fully occupied, and they require copying pages on the root-leaf path and creating a parallel tree structure. Here, we do something similar, <strong>but since we buffer writes in memory, we amortize the costs of the disk-resident tree update.</strong></li>
+<li>As for merges and flushes:
+<ul>
+<li>As soon as the flush process starts, all new writes have to go to the new memtable. (<strong>Immutable Memtable and Mutable Memtable</strong>)</li>
+<li>During the subtree flush, both the disk-resident and flushing memory-resident subtree have to remain accessible for reads.</li>
+<li>Afer the flush, publishing merged contents, and discarding unmerged disk- and memory-resident contents have to be performed atomically.</li>
+</ul>
+</li>
+</ul>
+<h4 id="multicomponent-lsm-trees">Multicomponent LSM Trees</h4>
+<p>Let’s consider an alternative design, multicomponent LSM Trees that have more than just one disk-resident table.</p>
+<ul>
+<li>It quickly becomes evident that after multiple flushes we’ll end up with multiple disk resident tables, and their number will only grow over time. Since we do not always know exactly which tables are holding required data records, we might have to <strong>access multiple files</strong> to locate the searched data.</li>
+<li>Having to read from multiple sources instead of just one might get expensive. To mitigate this problem and keep the number of tables to minimum, a periodic merge process called <strong>compaction</strong> is triggered.</li>
+<li>Compaction picks several tables, reads their contents, merges them, and writes the merged result out to the new combined file. Old tables are discarded simultaneously with the appearance of the new merged table.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/TIM%E6%88%AA%E5%9B%BE20200709144547.png" alt="TIM截图20200709144547" loading="lazy"></li>
+</ul>
+<h4 id="in-memory-tables">In-memory Tables</h4>
+<ul>
+<li>
+<p><strong>Flush Strategy</strong>: Memtable flushes can be triggered periodically, or by using a size threshold.</p>
+</li>
+<li>
+<p>Before memtable can be flushed, the memtable has to be switched: a new memtable is allocated, and it becomes a target for all new writes, while the old one moves to the flushing state. These two steps have to be performed atomically.</p>
+<ul>
+<li>The flushing memtable remains available for reads until its contents are fully flushed.</li>
+<li>After this, the old memtable is discarded in favor of a newly written disk-resident table, which becomes available for reads.</li>
+</ul>
+</li>
+<li>
+<p>Components</p>
+<ul>
+<li>Current memtable: Receives writes and serves reads.</li>
+<li>Flushing memtable: Available for reads.</li>
+<li>On-disk ﬂush target: Does not participate in reads, as its contents are incomplete.</li>
+<li>Flushed tables: Available for reads as soon as the flushed memtable is discarded.</li>
+<li>Compacting tables: Currently merging disk-resident tables.</li>
+<li>Compacted tables: Created from flushed or other compacted tables.</li>
+</ul>
+</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_20200709152604.png" alt="微信截图_20200709152604" loading="lazy"></figure>
+<h5 id="crash-consistency">Crash Consistency</h5>
+<p>Until the memtable is fully flushed, the only disk-resident version of its contents is stored in the write-ahead log. When memtable contents are fully flushed on disk, the log can be trimmed, and the log section, holding operations applied to the flushed memtable, can be discarded.</p>
+<h3 id="updates-and-deletes">Updates And Deletes</h3>
+<ul>
+<li>Core: <strong>Out-of-Place Updates</strong></li>
+</ul>
+<h4 id="delete">Delete</h4>
+<h5 id="single-key-value">Single Key-Value</h5>
+<ul>
+<li>Example: Delete k1<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200709212848.png" alt="20200709212848" loading="lazy"></li>
+<li>Deletes need to be done by inserting a special delete entry (<em>called tombstone or a dormant certificate</em>) instead of removing directly.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200709213346.png" alt="20200709213346" loading="lazy"></li>
+<li>The reconciliation process picks up tombstones, and filters out the shadowed values.</li>
+</ul>
+<h5 id="range-key-value">Range Key-Value</h5>
+<ul>
+<li>Sometimes it might be useful to remove a consecutive range of keys rather than just a single key. This can be done using predicate deletes, which work by appending a delete entry with a predicate that sorts according to regular record-sorting rules. During reconciliation, data records matching the predicate are skipped and not returned to the client. Such as <code>DELETE FROM table WHERE key ≥ &quot;k2&quot; AND key &lt; &quot;k4&quot;</code>.</li>
+<li>Apache Cassandra implements this approach and calls it range tombstones. A range tombstone covers a range of keys rather than just a single key.</li>
+<li>When using range tombstones, resolution rules have to be carefully considered because of overlapping ranges and disk-resident table boundaries.For example, the following combination will hide data records associated with k2 and k3 from the final result:<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200709214053.png" alt="20200709214053" loading="lazy"></li>
+</ul>
+<h3 id="lsm-tree-lookups">LSM Tree Lookups</h3>
+<p>LSM Trees consist of multiple components. During lookups, more than one component is usually accessed, so their contents have to be merged and reconciled before they can be returned to the client.</p>
+<h4 id="merge-iteration">Merge-Iteration</h4>
+<p>Since contents of disk-resident tables are sorted, we can use a multiway merge-sort algorithm.</p>
+<ul>
+<li>A multiway merge-sort uses a priority queue, such as min-heap that holds up to N elements (where N is the number of iterators), which sorts its contents and prepares the next-in-line smallest element to be returned. The head of each iterator is placed into the queue. An element in the head of the queue is then the minimum of all iterators.</li>
+<li>When the smallest element is removed from the queue, the iterator associated with it is checked for the next value, which is then placed into the queue, which is re-sorted to preserve the order.</li>
+<li>Since all iterator contents are sorted, reinserting a value from the iterator that held the previous smallest value of all iterator heads also preserves an invariant that the queue still holds the smallest elements from all iterators. Whenever one of the iterators is exhausted, the algorithm proceeds without reinserting the next iterator head. The algorithm continues until either query conditions are satisfied or all iterators are exhausted.</li>
+</ul>
+<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200709223129.png" alt="20200709223129" loading="lazy"></figure>
+<ul>
+<li>It may happen that we encounter more than one data record for the same key during merge-iteration. From the priority queue and iterator invariants, we know that if each iterator only holds a single data record per key, and we end up with multiple records for the same key in the queue, these data records must have come from the different iterators.</li>
+<li>For example: two disk-resident tables:<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200709223925.png" alt="20200709223925" loading="lazy"></li>
+<li>The priority queue is filled from the iterator heads:<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200709223954.png" alt="20200709223954" loading="lazy"></li>
+<li>Key k1 is the smallest key in the queue and is appended to the result. Since it came from Iterator 2, we refill the queue from it:<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200709224019.png" alt="20200709224019" loading="lazy"></li>
+<li>Now, we have two records for the k2 key in the queue. We can be sure there are no other records with the same key in any iterator because of the aforementioned invariants. Same-key records are merged and appended to the merged result. The queue is refilled with data from both iterators:<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200709224109.png" alt="20200709224109" loading="lazy"></li>
+<li>Since all iterators are now empty, we append the remaining queue contents to the output:<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200709224132.png" alt="20200709224132" loading="lazy"></li>
+</ul>
+<h5 id="steps">Steps:</h5>
+<ol>
+<li>Initially, fill the queue with the first items from each iterator.</li>
+<li>Take the smallest element (head) from the queue.</li>
+<li>Refill the queue from the corresponding iterator, unless this iterator is exhausted.</li>
+</ol>
+<h5 id="overhead">Overhead</h5>
+<p>In terms of complexity, merging iterators is the same as merging sorted collections. It has O(N) memory overhead, where N is the number of iterators. A sorted collection of iterator heads is maintained with O(log N) (average case)</p>
+<h4 id="reconciliation">Reconciliation</h4>
+<p>Merge-iteration is just a single aspect of what has to be done to merge data from multiple sources. Another important aspect is <strong>reconciliation and conflict</strong> resolution of the data records associated with the same key.</p>
+<ul>
+<li>To reconcile data records, we need to understand which one of them takes precedence. Data records hold metadata necessary for this, such as timestamps. To establish the order between the items coming from multiple sources and find out which one is more recent, we can compare their timestamps.</li>
+<li>Records shadowed by the records with higher timestamps are not returned to the client or written during compaction.</li>
+</ul>
+<h4 id="maintenance-in-lsm-trees">Maintenance in LSM Trees</h4>
+<ul>
+<li>Compaction picks multiple disk-resident tables, iterates over their entire contents using the aforementioned merge and reconciliation algorithms, and writes out the results into the newly created table.</li>
+<li>Since disk-resident table contents are sorted, and because of the way merge-sort works, compaction has a theoretical memory usage upper bound, since it should only hold iterator heads in memory. All table contents are consumed sequentially, and the resulting merged data is also written out sequentially. These details may vary between implementations due to additional optimizations.</li>
+<li>Compacting tables remain available for reads until the compaction process finishes, which means that for the duration of compaction, it is required to have enough free space available on disk for a compacted table to be written.</li>
+<li>At any given time, multiple compactions can be executed in the system. However, these concurrent compactions usually work on nonintersecting sets of tables. A compaction writer can both merge several tables into one and partition one table into multiple tables.</li>
+</ul>
+<h5 id="leveled-compaction">Leveled Compaction</h5>
+<p>One of the frequently implemented compaction strategies is called leveled compaction. For example, it is used by RocksDB.</p>
+<ul>
+<li>Leveled compaction separates disk-resident tables into levels. Tables on each level have target sizes, and each level has a corresponding index number (identifier).</li>
+<li>Level-0 tables are created by flushing memtable contents. Tables in level 0 may contain overlapping key ranges. As soon as the number of tables on level 0 reaches a threshold, their contents are merged, creating new tables for level 1.</li>
+<li>Key ranges for the tables on level 1 and all levels with a higher index do not overlap, so level-0 tables have to be partitioned during compaction, split into ranges, and merged with tables holding corresponding key ranges. Alternatively, compaction can include all level-0 and level-1 tables, and output partitioned level-1 tables.</li>
+<li>Compactions on the levels with the higher indexes pick tables from two consecutive levels with overlapping ranges and produce a new table on a higher level.</li>
+</ul>
+<figure data-type="image" tabindex="3"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_20200711132923.png" alt="微信截图_20200711132923" loading="lazy"></figure>
+<ul>
+<li>Keeping different key ranges in the distinct tables reduces the number of tables accessed during the read. This is done by inspecting the table metadata and filtering out the tables whose ranges do not contain a searched key.</li>
+<li>Each level has a limit on the table size and the maximum number of tables. As soon as the number of tables on level 1 or any level with a higher index reaches a threshold, tables from the current level are merged with tables on the next level holding the overlapping key range.</li>
+</ul>
+<h5 id="size-tiered-compaction">Size-tiered compaction</h5>
+<p>In size-tiered compaction, rather than grouping disk-resident tables based on their level, they’re grouped by size: smaller tables are grouped with smaller ones, and bigger tables are grouped with bigger ones.</p>
+<ul>
+<li>Level 0 holds the smallest tables that were either flushed from memtables or created by the compaction process. When the tables are compacted, the resulting merged table is written to the level holding tables with corresponding sizes. The process continues recursively incrementing levels, compacting and promoting larger tables to higher levels, and demoting smaller tables to lower levels.</li>
+</ul>
+<h3 id="read-write-and-space-amplification">Read, Write, and Space Amplification</h3>
+<p>When implementing an optimal compaction strategy, we have to take multiple factors into consideration. One approach is to reclaim space occupied by duplicate records and reduce space overhead, which results in higher write amplification caused by rewriting tables continuously. The alternative is to avoid rewriting the data continuously, which increases read amplification (overhead from reconciling data records associated with the same key during the read), and space amplification (since redundant records are preserved for a longer time).</p>
+<ul>
+<li>Read amplification：Resulting from a need to address multiple tables to retrieve data.</li>
+<li>Write amplification：Caused by continuous rewrites by the compaction process.</li>
+<li>Space amplification：Arising from storing multiple records associated with the same key.</li>
+</ul>
+<h3 id="implementation-details">Implementation Details</h3>
+<ul>
+<li>how memory- and disk-resident tables are implemented</li>
+<li>how secondary indexes work</li>
+<li>how to reduce the number of diskresident tables accessed during read and</li>
+<li>new ideas related to log-structured storage.</li>
+</ul>
+<h4 id="sorted-string-tables">Sorted String Tables</h4>
+<p>Disk-resident tables are often implemented using Sorted String Tables (SSTables). As the name suggests, data records in SSTables are sorted and laid out in key order.</p>
+<ul>
+<li>SSTables usually consist of two components: index files and data files.</li>
+</ul>
+<h5 id="index-files">Index files</h5>
+<ul>
+<li>Index files are implemented using some structure allowing logarithmic lookups, such as <strong>B-Trees</strong>, or constant-time lookups, such as <strong>hashtables</strong>.</li>
+<li>The index component holds keys and data entries (offsets in the data file where the actual data records are located).</li>
+</ul>
+<h5 id="data-files">Data files</h5>
+<ul>
+<li>The data component consists of concatenated key-value pairs.</li>
+<li>The cell design and data record formats we discussed in Chapter 3 are largely applicable to SSTables. The main difference here is that cells are written sequentially and are not modified during the life cycle of the SSTable. Since the index files hold pointers to the data records stored in the data file, their offsets have to be known by the time the index is created.</li>
+<li>During compaction, data files can be read sequentially without addressing the index component, as data records in them are already ordered. Since tables merged during compaction have the same order, and merge-iteration is order-preserving, the resulting merged table is also created by writing data records sequentially in a single run. As soon as the file is fully written, it is considered immutable, and its disk-resident contents are not modified.</li>
+</ul>
+<h5 id="sstable-attached-secondary-indexes">SSTable-Attached Secondary Indexes</h5>
+<ul>
+<li>Apache Cassandra： SSTableAttached Secondary Indexes (SASI)
+<ul>
+<li>To allow indexing table contents not just by the primary key, but also by any other field, index structures and their life cycles are coupled with the SSTable life cycle, and an index is created per SSTable.</li>
+<li>When the memtable is flushed, its contents are written to disk, and secondary index files are created along with the SSTable primary key index.</li>
+</ul>
+</li>
+<li>Since LSM Trees buffer data in memory and indexes have to work for memory-resident contents as well as the disk-resident ones, SASI maintains a separate in-memory structure, indexing memtable contents.</li>
+</ul>
+<h4 id="bloom-filters">Bloom Filters</h4>
+<ul>
+<li>One of the ways to prevent table lookup is to store its key range (smallest and largest keys stored in the given table) in metadata, and check if the searched key belongs to the range of that table. This information is imprecise and can only tell us if the data record can be present in the table. To improve this situation, many implementations, including Apache Cassandra and RocksDB, use a data structure called a <strong>Bloom filter</strong>.</li>
+<li>Bloom filter can be used to tell if <em>the key might be in the table or is definitely not in the table</em>. Using Bloom filters associated with disk-resident tables helps to significantly reduce the number of tables accessed during a read.</li>
+<li>More details please visit <a href="https://blog.shunzi.tech/post/slm-db-single-level-key-value-store-with-persistent-memory/#toc-heading-44">Bloom Filters</a>;</li>
+</ul>
+<h4 id="skiplist">Skiplist</h4>
+<ul>
+<li>There are many different data structures for keeping sorted data in memory, and one that has been getting more popular recently because of its simplicity is called a <strong>skiplist</strong></li>
+<li>Skiplists do not require rotation or relocation for inserts and updates, and use probabilistic balancing instead. Skiplists are generally less cache-friendly than in-memory B-Trees, since skiplist nodes are small and randomly allocated in memory. Some implementations improve the situation by using unrolled linked lists.</li>
+<li>A skiplist consists of a series of nodes of a different height, building linked hierarchies allowing to skip ranges of items. Each node holds a key, and, unlike the nodes in a linked list, some nodes have more than just one successor. A node of height h is linked from one or more predecessor nodes of a height up to h. Nodes on the lowest level can be linked from nodes of any height.</li>
+<li>Node height is determined by a random function and is computed during insert. Nodes that have the same height form a level. The number of levels is capped to avoid infinite growth, and a maximum height is chosen based on how many items can be held by the structure. There are exponentially fewer nodes on each next level.</li>
+<li>Lookups work by following the node pointers on the highest level. As soon as the search encounters the node that holds a key that is greater than the searched one, its predecessor’s link to the node on the next level is followed. In other words, if the searched key is greater than the current node key, the search continues forward. If the searched key is smaller than the current node key, the search continues from the predecessor node on the next level. This process is repeated recursively until the searched key or its predecessor is located.</li>
+</ul>
+<h5 id="lookup-example">Lookup Example</h5>
+<ul>
+<li>Searching for key 7 in the skiplist
+<ul>
+<li>Follow the pointer on the highest level, to the node that holds key 10. 7 &lt; 10</li>
+<li>Since the searched key 7 is smaller than 10, the next-level pointer from the head node is followed, locating a node holding key 5. 7 &gt; 5</li>
+<li>The highest-level pointer on this node is followed, locating the node holding key 10 again. 7 &lt; 10</li>
+<li>The searched key 7 is smaller than 10, and the next-level pointer from the node holding key 5 is followed, locating a node holding the searched key 7.</li>
+</ul>
+</li>
+</ul>
+<figure data-type="image" tabindex="4"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200714110531.png" alt="20200714110531" loading="lazy"></figure>
+<h5 id="insert">Insert</h5>
+<ul>
+<li>During insert, an insertion point (node holding a key or its predecessor) is found using the aforementioned algorithm, and a new node is created. To build a tree-like hierarchy and keep balance, the height of the node is determined using a random number, generated based on a probability distribution.</li>
+<li>Pointers in predecessor nodes holding keys smaller than the key in a newly created node are linked to point to that node. Their higher-level pointers remain intact. Pointers in the newly created node are linked to corresponding successors on each level.</li>
+</ul>
+<h5 id="delete-2">Delete</h5>
+<ul>
+<li>orward pointers of the removed node are placed to predecessor nodes on corresponding levels.</li>
+</ul>
+<h5 id="other">Other</h5>
+<ul>
+<li>We can create a concurrent version of a skiplist by implementing a linearizability scheme that uses an additional fully_linked flag that determines whether or not the node pointers are fully updated. This flag can be set using compare-and-swap. This is required because the node pointers have to be updated on multiple levels to fully restore the skiplist structure</li>
+<li>In languages with an unmanaged memory model, reference counting or hazard pointers can be used to ensure that currently referenced nodes are not freed while they are accessed concurrently. This algorithm is deadlock-free, since nodes are always accessed from higher levels.</li>
+<li>Apache Cassandra uses skiplists for the secondary index memtable implementation. WiredTiger uses skiplists for some in-memory operations.</li>
+<li><a href="https://www.jianshu.com/p/9d8296562806">SkipList Details</a></li>
+</ul>
+<h4 id="disk-access">Disk Access</h4>
+<ul>
+<li>Since most of the table contents are disk-resident, and storage devices generally allow accessing data blockwise, many LSM Tree implementations rely on the page cache for disk accesses and intermediate caching. Many techniques described in “Buffer Management” on page 81, such as page eviction and pinning, still apply to log-structured storage.</li>
+<li>The most notable difference is that in-memory contents are immutable and therefore require no additional locks or latches for concurrent access. Reference counting is applied to make sure that currently accessed pages are not evicted from memory, and in-flight requests complete before underlying files are removed during compaction.</li>
+<li>Another difference is that data records in LSM Trees are not necessarily page aligned, and pointers can be implemented using absolute offsets rather than page IDs for addressing. In Figure 7-9, you can see records with contents that are not aligned with disk blocks. Some records cross the page boundaries and require loading several pages in memory.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200714151402.png" alt="20200714151402" loading="lazy"></li>
+</ul>
+<h4 id="compression">Compression</h4>
+<ul>
+<li>We’ve discussed compression already in context of B-Trees. Similar ideas are also applicable to LSM Trees. The main difference here is that LSM Tree tables are immutable, and are generally written in a single pass. When compressing data page-wise, compressed pages are not page aligned, as their sizes are smaller than that of uncompressed ones.</li>
+<li>To be able to address compressed pages, we need to keep track of the address boundaries when writing their contents. We could fill compressed pages with zeros, aligning them to the page size, but then we’d lose the benefits of compression.</li>
+<li>To make compressed pages addressable, we need an indirection layer which stores offsets and sizes of compressed pages. Figure 7-10 shows the mapping between compressed and uncompressed blocks. Compressed pages are always smaller than the originals, since otherwise there’s no point in compressing them.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200714152251.png" alt="20200714152251" loading="lazy"></li>
+<li>During compaction and flush, compressed pages are appended sequentially, and compression information (the original uncompressed page offset and the actual compressed page offset) is stored in a separate file segment. During the read, the compressed page offset and its size are looked up, and the page can be uncompressed and materialized in memory.</li>
+</ul>
+<h3 id="unordered-lsm-storage">Unordered LSM Storage</h3>
+<p>Unordered stores generally do not require a separate log and allow us to reduce the cost of writes by storing data records in insertion order.</p>
+<h4 id="bitcask">Bitcask</h4>
+<p>Bitcask, one of the storage engines used in Riak, is an unordered log-structured storage engine. Unlike the log-structured storage implementations discussed so far, it does not use memtables for buffering, and stores data records directly in <strong>logfiles</strong>.</p>
+<ul>
+<li>To make values searchable, Bitcask uses a data structure called <strong>keydir</strong>, which holds references to the latest data records for the corresponding keys. Old data records may still be present on disk, but are not referenced from keydir, and are garbage-collected during compaction. <em><strong>Keydir</strong> is implemented as an in-memory hashmap and has to be rebuilt from the logfiles during startup</em>.
+<ul>
+<li><strong>Write</strong>: During a write, a key and a data record are appended to the logfile sequentially, and the pointer to the newly written data record location is placed in keydir.</li>
+<li><strong>Read</strong>: Reads check the keydir to locate the searched key and follow the associated pointer to the logfile, locating the data record. Since at any given moment there can be only one value associated with the key in the keydir, point queries do not have to merge data from multiple sources. Figure 7-11 shows mapping between the keys and records in data files in Bitcask. Logfiles hold data records, and keydir points to the latest live data record associated with each key. Shadowed records in data files (ones that were superseded by later writes or deletes) are shown in gray.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200714155116.png" alt="20200714155116" loading="lazy"></li>
+<li><strong>Compaction</strong>: During compaction, contents of all logfiles are read sequentially, merged, and <strong>written to a new location</strong>, preserving only live data records and discarding the shadowed ones. Keydir is updated with new pointers to relocated data records.</li>
+</ul>
+</li>
+<li>Data records are stored directly in logfiles, so a separate write-ahead log doesn’t have to be maintained, which reduces both space overhead and write amplification. A downside of this approach is that <strong>it offers only point queries and doesn’t allow range scans</strong>, since items are unordered both in keydir and in data files.</li>
+</ul>
+<h5 id="benefits-and-disadvantages">Benefits and Disadvantages</h5>
+<ul>
+<li>Advantages of this approach are simplicity and great point query performance. Even though multiple versions of data records exist, only the latest one is addressed by keydir.</li>
+<li>However, having to keep all keys in memory and rebuilding keydir on startup are limitations that might be a deal breaker for some use cases.</li>
+<li>While this approach is great for point queries, it does not offer any support for range queries.</li>
+</ul>
+<h4 id="wisckey">WiscKey</h4>
+<p>WiscKey decouples sorting from garbage collection by keeping the keys sorted in LSM Trees, and keeping data records in unordered append-only files called vLogs (value logs). This approach can solve two problems mentioned while discussing Bitcask: a need to keep all keys in memory and to rebuild a hashtable on startup.</p>
+<ul>
+<li>Figure 7-12 shows key components of WiscKey, and mapping between keys and log files. vLog files hold unordered data records. Keys are stored in sorted LSM Trees, pointing to the latest data records in the logfiles.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200714155755.png" alt="20200714155755" loading="lazy"></li>
+<li>Since keys are typically much smaller than the data records associated with them, compacting them is significantly more efficient. This approach can be particularly useful for use cases with a low rate of updates and deletes, where garbage collection won’t free up as much disk space.</li>
+<li>The main challenge here is that because vLog data is unsorted, range scans require random I/O. WiscKey uses internal SSD parallelism to prefetch blocks in parallel during range scans and reduce random I/O costs. In terms of block transfers, the costs are still high: to fetch a single data record during the range scan, the entire page where it is located has to be read.</li>
+<li>During compaction, vLog file contents are read sequentially, merged, and written to a new location. Pointers (values in a key LSM Tree) are updated to point to these new locations. To avoid scanning entire vLog contents, WiscKey uses head and tail pointers, holding information about vLog segments that hold live keys.</li>
+<li>Since data in vLog is unsorted and contains no liveness information, the key tree has to be scanned to find which values are still live. Performing these checks during garbage collection introduces additional complexity: traditional LSM Trees can resolve file contents during compaction without addressing the key index.</li>
+<li><a href="https://blog.shunzi.tech/post/wisckey-separating-keys-from-values-in-ssd-conscious-storage/">More details please visist WiscKey in my Blog</a></li>
+</ul>
+<h3 id="concurrency-in-lsm-trees">Concurrency in LSM Trees</h3>
+<ul>
+<li>The main concurrency challenges in LSM Trees are related to switching table views (collections of memory- and disk-resident tables that change during flush and compaction) and log synchronization. Memtables are also generally accessed concurrently (except core-partitioned stores such as ScyllaDB), but concurrent in-memory data structures are out of the scope of this book.</li>
+</ul>
+<h4 id="flush-rules">Flush Rules</h4>
+<ul>
+<li>The new memtable has to become available for reads and writes.</li>
+<li>The old (flushing) memtable has to remain visible for reads.</li>
+<li>The flushing memtable has to be written on disk.</li>
+<li>Discarding a flushed memtable and making a flushed disk-resident table have to be performed as an atomic operation.</li>
+<li>The write-ahead log segment, holding log entries of operations applied to the flushed memtable, has to be discarded.</li>
+</ul>
+<h4 id="approaches">Approaches</h4>
+<ul>
+<li>Apache Cassandra solves these problems by using operation order barriers: all operations that were accepted for write will be waited upon prior to the memtable flush. This way the flush process (serving as a consumer) knows which other processes (acting as producers) depend on it.</li>
+</ul>
+<h5 id="synchronization-points">Synchronization points</h5>
+<ul>
+<li>Memtable switch: After this, all writes go only to the new memtable, making it primary, while the old one is still available for reads.</li>
+<li>Flush finalization: Replaces the old memtable with a flushed disk-resident table in the table view.</li>
+<li>Write-ahead log truncation: Discards a log segment holding records associated with a flushed memtable.</li>
+</ul>
+<h3 id="log-stacking">Log Stacking</h3>
+<ul>
+<li>Many modern filesystems are log structured: they buffer writes in a memory segment and flush its contents on disk when it becomes full in an append-only manner</li>
+<li>SSDs use log-structured storage, too, to deal with small random writes, minimize write overhead, improve wear leveling, and increase device lifetime.</li>
+<li>LSM Trees and SSDs are a good match, since sequential workloads and append-only writes help to reduce amplification from inplace updates, which negatively affect performance on SSDs.</li>
+<li>If we stack multiple log-structured systems on top each other, we can run into several problems that we were trying to solve using LSS, including write amplification, fragmentation, and poor performance. At the very least, we need to keep the SSD flash translation layer and the filesystem in mind when developing our applications</li>
+</ul>
+<h4 id="ftl-flash-translation-layer">FTL Flash Translation Layer</h4>
+<ul>
+<li>Using a log-structuring mapping layer in SSDs is motivated by two factors:
+<ul>
+<li>small random writes have to be batched together in a physical page</li>
+<li>the fact that SSDs work by using program/erase cycles.</li>
+</ul>
+</li>
+<li>Writes can be done only into previously erased pages. This means that a page cannot be programmed (in other words, written) unless it is empty (in other words, was erased).</li>
+<li>A single page cannot be erased, and only groups of pages in a block (typically holding 64 to 512 pages) can be erased together. Figure 7-13 shows a schematic representation of pages, grouped into blocks. The flash translation layer (FTL) translates logical page addresses to their physical locations and keeps track of page states (live, discarded, or empty). When FTL runs out of free pages, it has to perform garbage collection and erase discarded pages.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200714162356.png" alt="20200714162356" loading="lazy"></li>
+<li>There are no guarantees that all pages in the block that is about to be erased are discarded. Before the block can be erased, FTL has to relocate its live pages to one of the blocks containing empty pages. Figure 7-14 shows the process of moving live pages from one block to new locations.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200714162657.png" alt="20200714162657" loading="lazy"></li>
+<li>When all live pages are relocated, the block can be safely erased, and its empty pages become available for writes. Since FTL is aware of page states and state transitions and has all the necessary information, it is also responsible for SSD wear leveling.</li>
+</ul>
+<blockquote>
+<p>Wear leveling distributes the load evenly across the medium, avoiding hotspots, where blocks fail prematurely because of a high number of program-erase cycles. It is required, since flash memory cells can go through only a limited number of program-erase cycles, and using memory cells evenly helps to extend the lifetime of the device.</p>
+</blockquote>
+<h5 id="summary">Summary</h5>
+<ul>
+<li>In summary, the motivation for using log-structured storage on SSDs is to amortize I/O costs by batching small random writes together, which generally results in a smaller number of operations and, subsequently, reduces the number of times the garbage collection is triggered.</li>
+</ul>
+<h4 id="filesystem-logging">Filesystem Logging</h4>
+<p>On top of that, we get filesystems, many of which also use logging techniques for write buffering to reduce write amplification and use the underlying hardware optimally.</p>
+<ul>
+<li>Log stacking manifests in a few different ways. First, each layer has to perform its own bookkeeping, and most often the underlying log does not expose the information necessary to avoid duplicating the efforts.</li>
+<li>Figure 7-15 shows a mapping between a higher-level log (for example, the application) and a lower-level log (for example, the filesystem) resulting in redundant logging and different garbage collection patterns. Misaligned segment writes can make the situation even worse, since discarding a higher-level log segment may cause fragmentation and relocation of the neighboring segments’ parts.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200714163710.png" alt="20200714163710" loading="lazy"></li>
+<li>Because layers do not communicate LSS-related scheduling (for example, discarding or relocating segments), lower-level subsystems might perform redundant operations on discarded data or the data that is about to be discarded. Similarly, because there’s no single, standard segment size, it may happen that unaligned higher-level segments occupy multiple lower-level segments. All these overheads can be reduced or completely avoided.</li>
+<li>Even though we say that log-structured storage is all about sequential I/O, we have to keep in mind that database systems may have multiple write streams (for example, log writes parallel to data record writes). When considered on a hardware level, interleaved sequential write streams may not translate into the same sequential pattern: blocks are not necessarily going to be placed in write order. Figure 7-16 shows multiple streams overlapping in time, writing records that have sizes not aligned with the underlying hardware page size.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200714164222.png" alt="20200714164222" loading="lazy"></li>
+<li>This results in fragmentation that we tried to avoid. To reduce interleaving, some database vendors recommend keeping the log on a separate device to isolate workloads and be able to reason about their performance and access patterns independently. However, it is more important to keep partitions aligned to the underlying hardware and keep writes aligned to page size.</li>
+</ul>
+<h3 id="llama-and-mindful-stacking">LLAMA and Mindful Stacking</h3>
+<p>Bw-Tree is layered on top of a latch-free, log-structured, access-method aware (LLAMA) storage subsystem. This layering allows Bw-Trees to grow and shrink dynamically, while leaving garbage collection and page management transparent for the tree. Here, we’re most interested in the access-method aware part, demonstrating the benefits of coordination between the software layers.</p>
+<ul>
+<li>Without access-method awareness, interleaved delta nodes that belong to different logical nodes will be written in their insertion order. Bw-Tree awareness in LLAMA allows for the consolidation of several delta nodes into a single contiguous physical location. If two updates in delta nodes cancel each other (for example, an insert followed by delete), their logical consolidation can be performed as well, and only the latter delete can be persisted.</li>
+<li>LSS garbage collection can also take care of consolidating the logical Bw-Tree node contents. This means that garbage collection will not only reclaim the free space, but also significantly reduce the physical node fragmentation. If garbage collection only rewrote several delta nodes contiguously, they would still take the same amount of space, and readers would need to perform the work of applying the delta updates to the base node. At the same time, if a higher-level system consolidated the nodes and wrote them contiguously to the new locations, LSS would still have to garbage-collect the old versions.</li>
+<li>By being aware of Bw-Tree semantics, several deltas may be rewritten as a single base node with all deltas already applied during garbage collection. This reduces the total space used to represent this Bw-Tree node and the latency required to read the page while reclaiming the space occupied by discarded pages.</li>
+<li>You can see that, when considered carefully, stacking can yield many benefits. It is not necessary to always build tightly coupled single-level structures. Good APIs and exposing the right information can significantly improve efficiency.</li>
+</ul>
+<h4 id="open-channel-ssds">Open-Channel SSDs</h4>
+<p>An alternative to stacking software layers is to skip all indirection layers and use the<br>
+hardware directly. For example, it is possible to avoid using a filesystem and flash translation layer by developing for Open-Channel SSDs.</p>
+<ul>
+<li>This way, we can avoid at least two layers of logs and have more control over wear-leveling, garbage collection, data placement, and scheduling.
+<ul>
+<li>One of the implementations that uses this approach is LOCS (LSM Tree-based KV Store on Open-Channel SSD)
+<ul>
+<li>Wang, Peng, Guangyu Sun, Song Jiang, Jian Ouyang, Shiding Lin, Chen Zhang, and Jason Cong. 2014. “An Efficient Design and Implementation of LSM-tree based Key-Value Store on Open-Channel SSD.” EuroSys ’14 Proceedings of the Ninth European Conference on Computer Systems (April): Article 16. https://doi.org/10.1145/2592798.2592804.</li>
+</ul>
+</li>
+<li>Another example using Open-Channel SSDs is LightNVM, implemented in the Linux kernel
+<ul>
+<li>Bjørling, Matias, Javier González, and Philippe Bonnet. 2017. “LightNVM: the Linux open-channel SSD subsystem.” In Proceedings of the 15th Usenix Conference on File and Storage Technologies (FAST’17), 359-373. USENIX.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>You can draw a parallel with using the O_DIRECT flag to bypass the kernel page cache, which gives better control, but requires manual page management.</li>
+<li>Software Defined Flash (SDF) <strong>[OUYANG14 SDF: software-defined flash for web-scale internet storage systems.”]</strong>, a hardware/software codesigned OpenChannel SSDs system, exposes an asymmetric I/O interface that takes SSD specifics into consideration.
+<ul>
+<li>Sizes of read and write units are different, and write unit size corresponds to erase unit size (block), which greatly reduces write amplification. This setting is ideal for log-structured storage, since there’s only one software layer that performs garbage collection and relocates pages.</li>
+<li>Additionally, developers have access to internal SSD parallelism, since every channel in SDF is exposed as a separate block device, which can be used to further improve performance.</li>
+</ul>
+</li>
+<li>Hiding complexity behind a simple API might sound compelling, but can cause complications in cases in which software layers have different semantics. Exposing some underlying system internals may be beneficial for better integration.</li>
+</ul>
+<h3 id="summary-2">Summary</h3>
+<ul>
+<li>Log-structured storage is used everywhere: from the flash translation layer, to filesystems and database systems. It helps to reduce write amplification by batching small random writes together in memory. To reclaim space occupied by removed segments, LSS periodically triggers garbage collection.</li>
+<li>LSM Trees take some ideas from LSS and help to build index structures managed in a log-structured manner: writes are batched in memory and flushed on disk; shadowed data records are cleaned up during compaction.</li>
+<li>It is important to remember that many software layers use LSS, and make sure that layers are stacked optimally. Alternatively, we can skip the filesystem level altogether and access hardware directly</li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200714203149.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/AI-for-Systems-index/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-07-14">2020-07-14</time>
+                  <h4 class="title white no-margin">AI For System Papers Index</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/database-internal-b-tree-summary/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-06-14">2020-06-14</time>
+                  <h4 class="title white no-margin">Database Internal - B-tree Summary</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

@@ -1,0 +1,1022 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WiscKey: Separating Keys from Values in SSD-Conscious Storage | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+文章题目：WiscKey: Separating Keys from Values in SSD-Conscious Storage。FAST 16 上的文章，该论文的延申发表在 TOS17。
+结合之前阅读的 SLM DB 关于 LSM..." />
+    <meta name="keywords" content="Paper,存储" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://blog.shunzi.tech/post-images/wisckey-separating-keys-from-values-in-ssd-conscious-storage.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2019-12-20"><i class="fa fa-calendar"></i><span class="lately">1 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/wisckey-separating-keys-from-values-in-ssd-conscious-storage/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/wisckey-separating-keys-from-values-in-ssd-conscious-storage/"> </span>
+              </a>
+              <span id="/wisckey-separating-keys-from-values-in-ssd-conscious-storage/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-0 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-1 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">WiscKey: Separating Keys from Values in SSD-Conscious Storage</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>文章题目：WiscKey: Separating Keys from Values in SSD-Conscious Storage。FAST 16 上的文章，该论文的延申发表在 TOS17。</li>
+<li>结合之前阅读的 SLM DB 关于 LSM KV 存储的优化方案，想要对 LSM 有更深入的理解</li>
+<li>该篇论文主要基于 LSM 的持久化 KV 存储提出了一种数据布局方式来进行优化，尤其是针对 SSD 设备</li>
+<li>BTW, 一篇会议转期刊的典型范例....（逃</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li>WiscKey，一种基于 LSM Tree 的持久化 KV 存储且具有面向性能的数据布局的优化方案</li>
+<li>WiscKey 的设计是高度 SSD 优化的，利用了设备的顺序和随机性能特性</li>
+<li>相比于 LevelDB 和 RocksDB 都有较大的性能提升</li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<h3 id="相关概念引入">相关概念引入</h3>
+<ul>
+<li>持久化 KV 存储：由于其高效的插入、点查找和范围查询等特性，持久化存储成为了众多现代应用存储的基础。</li>
+<li>LSM-Trees KV Store：
+<ul>
+<li>针对写敏感型的负载，基于 LSM Tree 的 KV 存储方案已经成为了行业的主流解决方案。</li>
+<li>LSM Tree 由于其保证了顺序性，同时采用批量写的方式，相比于 B Tree引入的随机小写，是更利于硬件设备的 IO，因为无论是 SSD 还是 HDD，顺序写的性能都好于随机写</li>
+</ul>
+</li>
+</ul>
+<h3 id="要解决的问题">要解决的问题</h3>
+<ul>
+<li>LSM Tree 为了保证顺序性，存在较为严峻的写放大问题（具体成因请参考 LSM Tree 相关介绍）</li>
+<li>LSM Tree 的相关特性对于现有的 SSD 不是特别友好（未能充分利用 SSD 的特性）
+<ul>
+<li><strong>SSD 的随机写和顺序写性能差距相对较小，原始 LSM Tree 得不偿失</strong>，因此为了减少随机写而使用大量顺序写可能会对存储带宽造成不必要的浪费（HDD 由于顺序写和随机写的性能差距较大，即便 LSM Tree 存在严峻的写放大问题，但保证了顺序写的特性也使得 LSM 在 HDD 上的实现能显著提升性能）</li>
+<li><strong>SSD 内部的并行机制未能得到充分利用</strong>，原始的 LSM Tree 未考虑到 SSD 内部的并行性；</li>
+<li><strong>SSD 寿命会受写放大问题的严重影响</strong>，原始的 LSM Tree 严峻的写放大问题会导致大量的重复写</li>
+</ul>
+</li>
+</ul>
+<h3 id="提出的方案简介">提出的方案简介</h3>
+<ul>
+<li>WiscKey：基于 LSM 的通用实现 LevelDB，提出的针对 SSD 进行优化的持久化 KV 存储方案</li>
+<li>核心思想：将 Key 和 Value 分离，Key 存储在 LSM Tree 中，Value 存储在 Log 中。（解耦了键排序和垃圾回收）</li>
+<li>实现的效果：保留了 LSM Tree的优势，减小了写放大问题</li>
+</ul>
+<h4 id="解决问题的方式">解决问题的方式</h4>
+<ul>
+<li>排序时，避免 Value 不必要的迁移来减小写放大</li>
+<li>LSM Tree 只存储 Key，数据量变小，从而减小对存储设备的访问次数，更利于使用缓存</li>
+</ul>
+<h4 id="该方案面临的挑战和解决方案">该方案面临的挑战和解决方案</h4>
+<h5 id="分离-kv">分离 KV</h5>
+<ul>
+<li>Value 不再有序存储，会影响 range query（范围查询）的性能 -&gt; 利用 SSD 内部的并行性来提升范围查询的性能（<strong>弥补措施</strong>）</li>
+<li>需要对 Value 进行垃圾回收，回收无效的空间 -&gt; 提出了一种轻量级的 online 垃圾回收机制，它只涉及顺序I/Os</li>
+<li>崩溃一致性如何实现 -&gt; 利用了现代文件系统中的一个特性，即不会在崩溃时附加垃圾数据，设计了一致性保证机制来实现和 LSM Tree 一样的效果</li>
+</ul>
+<h3 id="方案测试效果简介">方案测试效果简介</h3>
+<ul>
+<li>比较对象：LevelDB、RocksDB</li>
+<li>测试负载：LevelDB’s microbenchmark，YCSB macrobenchmarks</li>
+</ul>
+<h4 id="测试结果">测试结果：</h4>
+<ul>
+<li>LevelDB’s microbenchmark：
+<ul>
+<li>Load Database：WiscKey 比 LevelDB 快 2.5x - 111x</li>
+<li>Random lookups：WiscKey 比 LevelDB 快 1.6x - 14x</li>
+<li>Write Small Values in Random Order：Worse</li>
+<li>Large Dataset is ranged-quried sequentially：Worse</li>
+</ul>
+</li>
+<li>YCSB macrobenchmarks：
+<ul>
+<li>六种负载下，WiscKey 表现均更好</li>
+</ul>
+</li>
+</ul>
+<h2 id="background">Background</h2>
+<ul>
+<li>该章节主要针对 <strong>LSM Tree</strong>、<strong>LevelDB</strong>、<strong>读写放大问题</strong> 和 <strong>新型存储器件</strong> 四部分进行叙述。</li>
+</ul>
+<h3 id="lsm-tree-leveldb">LSM Tree &amp; LevelDB</h3>
+<figure data-type="image" tabindex="1"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/papers/LSM%20Tree%20and%20LevelDB.png?raw=true" alt="image" loading="lazy"></figure>
+<ul>
+<li>LSM Tree 和 LevelDB 的原理和读写流程以及一致性的保证方式，此处不再赘述。</li>
+<li>可参考我的另外一篇读书报告中的笔记 <a href="https://zhuanlan.zhihu.com/p/89597031">知乎：SLM-DB KV Store with Persistent Memory</a></li>
+</ul>
+<h3 id="读写放大问题">读写放大问题</h3>
+<ul>
+<li>以 LevelDB 为例，分析其存在的读写放大问题</li>
+<li><strong>根本原因：保证磁盘上的数据严格全局有序</strong></li>
+</ul>
+<h4 id="主要原因">主要原因</h4>
+<ul>
+<li>写：
+<ul>
+<li>磁盘上的层级之间的大小限制通常有 10 倍之差，意味着从上层 L(i) 往下一层 L(i+1) 压缩时，最坏的情况下可能需要读取 L(i+1) 层的所有数据来和 L(i) 层的数据进行归并排序，排序完成后将新的数据结果写入到 L(i+1) 层，故在简单的两层数据压缩过程中最坏的情况下就可能出现十次的 SSTable file 数据迁移。</li>
+<li>如果数据需要从 L0 层迁移到 L6 层这种极端情况时，数据迁移次数则将达到 50 次。</li>
+</ul>
+</li>
+<li>读：
+<ul>
+<li>造成读放大的原因之一：多层结构导致查询操作需要对多层进行数据查询。最坏的情况，查询操作扫描了 L0 层的8个 SSTable File，未找到继续在下一层寻找，直到 L6 层，即总计查询 8+6 = 14 个文件。（L0 层的每一个 SSTable 文件中存储的 Key 是可能重叠的，所以需要遍历 L0 层的所有 SSTable 文件，而 L1-L6 层中的 Key 是严格有序的，故只需要读取一个文件）</li>
+<li>造成读放大的原因之二：为了在 SSTable 文件中找到 Key 对应的 Value 往往需要读取多个元数据块。（索引块、布隆过滤器块和数据块）。如读取一个 1KB 的 KV 对，需要读取 16KB 的索引块、4KB 的布隆过滤器块和 4KB 的数据块，即读放大 24 倍</li>
+<li>所以最坏的情况下，读放大将达到 24*14 = 336 倍，小 IO 甚至可能造成更严峻的读放大问题。</li>
+</ul>
+</li>
+</ul>
+<h3 id="新型存储器件">新型存储器件</h3>
+<h4 id="lsm-适用于-ssd-的原因">LSM 适用于 SSD 的原因</h4>
+<ul>
+<li>SSD 同 HDD 类似，随机 IO 的性能比起顺序 IO 的性能较差。</li>
+<li>随机写对于 SSD 的损害极大，由于 SSD 本身的擦除写机制和垃圾回收机制。</li>
+<li>故需要使用 LSM 来保证写入数据的顺序性</li>
+</ul>
+<h4 id="ssd-其他特性">SSD 其他特性</h4>
+<ul>
+<li>SSD 的随机 IO 性能和顺序 IO 性能差距较小，相比于 HDD</li>
+<li>SSD 的随机 IO 性能要好于 HDD 的随机性能</li>
+<li><strong>测试发现 SSD 的并发随机写性能在某些场景下接近 SSD 的顺序写性能</strong><br>
+<img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/papers/ssd-concurrent-random-io.png?raw=true" alt="image" loading="lazy"></li>
+</ul>
+<h2 id="wisckey">WiscKey</h2>
+<ul>
+<li>四个核心思想：
+<ul>
+<li>分离 Key 和 Value，Key 存储在 LSM Tree 中，Value 存储在单独的日志文件中</li>
+<li>针对存储在日志文件中的无序 Value 的处理，（范围查询时需要对硬盘进行随机访问），WiscKey 利用 SSD 内部的并行性提升随机读性能</li>
+<li>WiscKey 使用专门的崩溃一致性保障机制和垃圾回收机制来高效管理 Value 对应的 log</li>
+<li>WiscKey 在保证一致性的前提下移除了 LSM-tree 日志来提升性能，尤其是减小了小IO的开销</li>
+</ul>
+</li>
+</ul>
+<h3 id="key-value-分离">Key-Value 分离</h3>
+<ul>
+<li>该方法解决的问题：传统的 LSM-Tree 中性能开销最大的任务是后台压缩，压缩是为了保证顺序 IO 进行的操作，主要是在磁盘上的多层级结构之间对 SSTable 文件进行归并排序，所以涉及到大量的文件的读取迁移等操作。</li>
+</ul>
+<h4 id="理论基础">理论基础</h4>
+<ul>
+<li>WiscKey 发现排序只需要对 Key 排序，Value 以 SSD 友好的形式存储在其他地方，Key 和 Value 之间使用地址进行关联，故在 LSM Tree 中存储的是 Key-Address。该方式可以极大地减小排序过程中的数据量，从而减小写放大问题。16B Key - 1024B Value，传统的两层之间的写放大系数为 10 倍，采用 WiscKey 后，（16*10 + 1024）/ （16 + 1024） = 1.14 。<strong>注意此处放大系数的计算不准确，放大过程中还有存储的地址的大小</strong>。</li>
+<li>减小了写放大问题，也就对应地减少了 SSD 上的擦除写，从而延长了 SSD 的使用寿命</li>
+<li>是否引入了新的读放大问题？存在，但较小的读放大带来的是整体性能的提升。由于 LSM Tree 中存储的数据量显著减少，相比于传统的从 LSM Tree 中读取 KV 对的数据信息，WiscKey 这种先读取 Key，再根据对应的地址去读 Value 对应的读取的速度在数据量相对较大的情况下是更快的。除此以外还可以针对数据量较小的 LSM Tree 使用内存缓存来加速对 Key 的检索。</li>
+</ul>
+<h4 id="架构和流程">架构和流程</h4>
+<figure data-type="image" tabindex="2"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/papers/WiscKey%20Arch.png?raw=true" alt="image" loading="lazy"></figure>
+<h5 id="组成">组成：</h5>
+<ul>
+<li>LSM Tree - 存储 &lt;Key, Address&gt;</li>
+<li>Value Log File - 存储 Value</li>
+</ul>
+<h5 id="流程">流程</h5>
+<ul>
+<li><strong>Insert</strong>：首先将 Value 追加写到 Value Log 中，然后将 Key 和 Value 对应的地址信息（地址信息主要包含对应的偏移量 vlog-offset 和 Value 的数据大小 value-size）组成的键值对插入到 LSM Tree 中</li>
+<li><strong>Delete</strong>：直接在 LSM Tree 中删除对应的 Key，不涉及 Value Log，对应的 Value 由垃圾回收机制统一地进行处理。</li>
+<li><strong>Point/Range Query</strong>： 先去 LSM Tree 中检索对应的 Key，拿到其对应的 Value Address 信息后对应地从 Value Log File 中去读取对应的 Value。</li>
+</ul>
+<h3 id="kv-分离对应的挑战存在的问题">KV 分离对应的挑战（存在的问题）</h3>
+<h4 id="并行范围查询-parallel-range-query">并行范围查询 Parallel Range Query</h4>
+<ul>
+<li>Range Query 的重要性以及应用场景不再赘述，简单介绍 LevelDB 为了实现 Range Qurey 对外提供的 API。
+<ul>
+<li>Seek(key), Next(), Prev(), Key(), Value()</li>
+<li>首先 seek 到起始 Key，然后调用 Next 或者 Prev 一个接一个地检索 Key，真正需要获取该指针对应的 Key 时调用 Key(), Value 则调用 Value()</li>
+</ul>
+</li>
+</ul>
+<h5 id="存在的问题">存在的问题</h5>
+<ul>
+<li>传统的 LSM Tree 如 LevelDB，在进行 Range Query 操作时，由于其 KV 对是顺序地保存在 LSM Tree 中的，故可以进行顺序的 IO 就可以读取出来；但是针对 WiscKey 将 KV 分离了的方案，不可避免地就造成了对 Value 的随机写问题。</li>
+<li>关于随机写以及 SSD 的随机写的特性在前述章节中已经介绍到，性能相对较差。</li>
+</ul>
+<h5 id="解决思路和实现">解决思路和实现</h5>
+<ul>
+<li><strong>解决思路</strong>：前述章节有测试过 SSD 内部并行随机 IO 的性能，在一定条件下是可以达到顺序 IO 的速度的，故考虑提高并行性来减小随机 IO 带来的影响。</li>
+<li><strong>实现方式</strong>：针对 Range Qurey 的操作， 一旦请求了一个连续的键-值对序列，WiscKey 就开始按顺序从 LSM 树中读取大量的后续键，将对应的 Key Address 信息插入到一个队列中，然后启动多线程去从该队列中获取地址信息再并发地去 Value Log File 中读取对应的 Value 信息。</li>
+</ul>
+<h4 id="垃圾回收机制的实现-garbage-collection">垃圾回收机制的实现 Garbage Collection</h4>
+<ul>
+<li>传统的 LSM Tree 中垃圾回收的方式是针对要删除的数据或者过时的数据进行标记，在执行压缩过程中对垃圾数据进行回收。</li>
+<li>由于 WiscKey 没有对 Value 的压缩过程，所以需要单独设计一套垃圾回收的机制对 Value 进行垃圾回收。</li>
+</ul>
+<h5 id="垃圾回收实现思路">垃圾回收实现思路</h5>
+<ul>
+<li>最简单的方式（最直接的方式）：扫描 LSM Tree 中存储的所有有效 Key 对应的有效地址信息，将 Value Log 文件中存储的无对应 Key 的 Value 标记为了垃圾数据，再进行回收</li>
+<li>更高效的方式：调整 WiscKey 的数据布局。</li>
+</ul>
+<h5 id="实现方式">实现方式</h5>
+<ul>
+<li>数据布局：在 Value Log 中除了存取 Value 对应的信息外，同时存取 Key 对应的数据信息。数据单元成为 Tuple，其中包含 key size, value size, key, value。</li>
+<li>设置头尾指针来进行垃圾回收操作，尾指针只会在垃圾回收时被移动，头指针只会在有数据追加写入到 Value Log File 中时才会移动。</li>
+<li><strong>垃圾回收的过程</strong>：WiscKey 从尾指针指向的位置读取一个 Chunk 大小的 KV 键值对的集合，大约数 MB，通过查询 LSM Tree 中是否有该集合内的键信息来判断当前 Value 是否有被覆盖写或者删除。判断为有效状态的 Value 将追加写到头指针指向的位置，然后释放尾指针对应的一个 Chunk 的存储空间，并更新尾指针的位置。<br>
+<img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/papers/WiscKey%20Garbage%20Collection.png?raw=true" alt="image" loading="lazy"></li>
+</ul>
+<h5 id="垃圾回收过程中一致性的保证">垃圾回收过程中一致性的保证</h5>
+<ul>
+<li>为了避免出现数据丢失（如在垃圾回收过程中发生了故障），需要保证在释放对应的存储空间之前追加写入的新的有效 Value 和新的尾指针持久化到了设备上。</li>
+<li>WiscKey 实现垃圾回收过程中的一致性的步骤：
+<ul>
+<li>追加写入新的 Value 值到 Value Log 中</li>
+<li>调用 fsync()，将 Value Log File 进行同步</li>
+<li>同步地将新的 Value 地址和尾指针地址写入到 LSM Tree 中。（尾指针的存储形式为 Key:tail - Value:tail-vlog-offset）</li>
+<li>最后进行相应的垃圾回收，释放对应的空间</li>
+</ul>
+</li>
+</ul>
+<h5 id="垃圾回收的时机">垃圾回收的时机</h5>
+<ul>
+<li>WiscKey 可以根据实际需求进行配置，主要有以下两种方式：
+<ul>
+<li>周期性地进行垃圾回收</li>
+<li>到达一定阈值时触发垃圾回收</li>
+</ul>
+</li>
+</ul>
+<h4 id="崩溃一致性的保证-crash-consistency">崩溃一致性的保证 Crash Consistency</h4>
+<ul>
+<li>传统的 LSM Tree 的崩溃一致性保证使用了 WAL 来保证 KV 对的原子性插入，恢复时也能严格按照插入的顺序进行恢复，但 LSM Tree 由于采用了 KV 分离的方式使得一致性的保证机制实现变得更为复杂。</li>
+<li>WiscKey 一致性机制的实现利用了文件系统的一个特性：即一旦出现了系统故障，发生数据丢失时，针对顺序写入的数据序列 X1 X2 X3...，一旦 X1 丢失，那么 X1 之后的数据都将丢失。具体的讲解请参考 OSDI 14 的一篇文章 All File Systems Are Not Created Equal: On the Complexity of Crafting Crash-Consistent Applications。</li>
+</ul>
+<h5 id="实现方式处理流程">实现方式/处理流程</h5>
+<ul>
+<li>由于数据造成的数据丢失，如果未能在 LSM Tree 中找到对应的丢失的 Key，那么处理方式和传统的 LSM Tree 一样，返回空或者 Key 不存在。（即便其 Value 已经写入到了 Vlog 文件中，会对其进行垃圾回收）</li>
+<li>如果 LSM Tree 中存在要查找的 Key，那么将会比传统的 LSM Tree 多一次校验的操作，该校验操作主要校验从 LSM Tree 中查询到的 Value 地址信息是否在有效的 Vlog File 的范围内；其次校验该地址对应的 Value 上存取的 Key 和要查询的 Key 是否一致。如果校验失败，则对应地删除 LSM Tree 中的 Key，并返回给客户端 Key Not Found。</li>
+<li>对 Vlog 上查询到的 Value 校验，可以利用对应的 Key 信息，也可以引入 Magic Number 或者校验和的机制让校验更简单。</li>
+<li>当用户请求同步插入数据时，LSM Tree 还保证了键值对在系统崩溃后的持久性；而 WiscKey 也可以通过在向 LSM Tree 中同步插入对应的 Key 之前将 Vlog 上的数据同步刷回来实现同步的数据插入。</li>
+</ul>
+<h3 id="优化方案">优化方案</h3>
+<ul>
+<li>KV 分离对应地引发了新的思考，关于 Value Log 的写操作和原有 LSM Tree Log 写操作，优化方案将主要针对提升相应的日志写的性能展开。</li>
+</ul>
+<h4 id="value-log-write-buffer">Value-Log Write Buffer</h4>
+<ul>
+<li>针对每次对 Value Log 的写入操作，都将进行系统调用 write()，对于某些插入敏感型的负载，会对文件系统发起大量的小写操作，针对不同的设备的带宽，选择合适大小的写入单元就显得十分必要。</li>
+</ul>
+<h5 id="写">写</h5>
+<ul>
+<li>为了减小开销，WiscKey 利用了用户空间的缓冲机制，只有当缓冲池中数据达到设置的阈值或者用户使用同步插入操作时，才将数据进行刷回，从而减小 write() 调用的次数。</li>
+</ul>
+<h5 id="读">读</h5>
+<ul>
+<li>查询操作，WiscKey 首先搜索 VLog Buffer 中是否存在要查询的键，如果不存在再从 Vlog File 中去读取。</li>
+</ul>
+<h5 id="存在的问题-2">存在的问题</h5>
+<ul>
+<li>当系统故障时，可能导致缓冲区中的数据丢失，其崩溃一致性的保证同 LevelDB 实现相同。    <strong>疑问？？？？？</strong></li>
+</ul>
+<h4 id="优化-lsm-tree-log">优化 LSM Tree Log</h4>
+<ul>
+<li>LSM Tree Log 设计之初就是为了保证保证插入 LSM Tree 中的键值对的一致性，当出现故障时，能够从日志文件中按照插入顺序正确地恢复出来。</li>
+<li>WiscKey 由于在垃圾回收机制的设计中，将 Vlog 上存储的数据结构中加入了 Ket 的信息，就已经起到了只存取 Key 的 LSM Tree Log 的作用。</li>
+</ul>
+<h5 id="故障恢复">故障恢复</h5>
+<ul>
+<li>故障恢复时可以直接通过扫描 Vlog 上的数据来对 LSM 中的 Key 进行恢复。</li>
+<li>数据恢复的方式，即 Vlog 扫描的方式还是分为两种：
+<ul>
+<li>（最简单但最低效）扫描整个 Vlog 文件来进行数据恢复</li>
+<li><strong>更高效的方式</strong>：为了只扫描部分数据，又因为垃圾回收机制中引入了 HEAD 指针，该指针只会在有数据写入的时候移动，所以 WiscKey 通过将该 HEAD 指针的信息以 &lt;head, head-vlog-offset&gt; 的方式插入到 LSM Tree 中。</li>
+</ul>
+</li>
+<li><strong>数据恢复的流程</strong>： 当打开数据库时，WiscKey 根据存储在 LSM Tree 中的最近的 HEAD 信息来对 VLog 文件进行扫描，直到扫描到尾指针队对应的位置为止。</li>
+<li>针对大量的小写操作，省略了 LSM Tree Log 的写操纵将显著提升性能。</li>
+</ul>
+<h3 id="实现">实现</h3>
+<ul>
+<li>由于 Vlog 会被多种组件访问，故采用 posix_fadvise() 来预定义 vlog 的不同的访问模式，例如 允许查询操作对 vlog 进行随机访问，垃圾回收器只能顺序地从尾指针的位置读取，并顺序地追加写入到头指针对应的地址。</li>
+<li>范围查询使用了线程池来对线程进行管理，默认32线程，当有确定数量的地址插入到查询队列中时，则并发地执行查询操作，并将这些值对应地自动缓存到缓冲区中，</li>
+<li>为了实现高效的垃圾回收，采用了现代文件系统常用的 hole-punching 机制，从而保证 WiscKey 弹性地使用存储空间。</li>
+</ul>
+<h2 id="evaluation">Evaluation</h2>
+<h3 id="测试环境">测试环境</h3>
+<ul>
+<li>Processors: 2 x Intel(R) Xeon(R) CPU E5-2667 v2 @ 3.30GHz</li>
+<li>Memory：64-GB</li>
+<li>Operating System：64-bit Linux 3.14</li>
+<li>File System：ext4</li>
+<li>Storage Device：500-GB Samsung 840 EVO SSD (SeqR 500MB/S, SeqW 400MB, RandRead 如前图测试SSD内部并行性)</li>
+<li>Workload：Microbenchmarks，YCSB Benchmarks</li>
+</ul>
+<h3 id="microbenchmarks">Microbenchmarks</h3>
+<ul>
+<li>使用了 LevelDB 默认的 Microbenchmarks， 即 db_bench</li>
+<li>Key Size 固定 16B， Value Size 变化</li>
+<li>禁用了数据压缩</li>
+</ul>
+<h4 id="load-performance-加载性能">Load Performance 加载性能</h4>
+<ul>
+<li>分为了 Seq Load 和 Rand Load。（区别在于构造数据库时插入数据的顺序，一个有序插入，一个随机插入）</li>
+</ul>
+<h5 id="图表解释">图表解释</h5>
+<ul>
+<li>Figure 7 &amp; Figure 9 都分别展示了顺序加载和随机加载数据随着 Value 大小的变化的性能变化，不难发现 WiscKey 方案充分利用了设备的带宽，而 LevelDB 的性能表现和设备带宽相去甚远，尤其是针对随机加载数据的过程。</li>
+<li>Figure 8 展示了 LevelDB 在顺序加载数据的时候，针对不同 Value 大小的负载的加载时间分布。主要有三个部分的时间消耗：写日志文件、写 MemTable，等 Memtable 刷回到磁盘</li>
+<li>Figure 10 更直观地统计了写放大系数</li>
+</ul>
+<figure data-type="image" tabindex="3"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/papers/WiscKey-LoadPerformance.png?raw=true" alt="image" loading="lazy"></figure>
+<h5 id="原因分析">原因分析</h5>
+<ul>
+<li>顺序加载和随机加载的性能，WiscKey 表现较好主要是没有了 LSM Tree 中较大的日志开销，且 WiscKey 省略了 LSM Tree 中的日志，采用了 Vlog 的方式，直接进行追加写；LevelDB 性能较差主要是因为后台的压缩线程占用了磁盘的大量带宽，从而影响了 LevelDB 在处理来自客户端的请求时的吞吐量有所下降。WiscKey 由于在 LSM 上只存取了少量的 Key 数据，所以开销较小，使得带宽能够更好地被利用。</li>
+<li>Figure 8 中，Value 较小时，时间主要花费在日志文件的写入上（耗时较长的原因前文有叙述，主要是因为小 IO 对应了多次的 fsync() 的调用）；针对大 IO，日志的写入和 Memtable 的排序是相对高效，而 Memtable 的刷回成为了此时的瓶颈</li>
+<li>WiscKey 写放大系数特别小的原因主要是 WiscKey 中的 LSM Tree 数据量较小</li>
+</ul>
+<h4 id="query-performance-查询性能">Query Performance 查询性能</h4>
+<figure data-type="image" tabindex="4"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/papers/WiscKey-QueryPerformance.png?raw=true" alt="image" loading="lazy"></figure>
+<h5 id="分析">分析</h5>
+<ul>
+<li>针对 Figure 11，即便 WiscKey 需要同时查询 LSM Tree 和 Value Log，吞吐量仍然比 LevelDB 要好，主要是因为 LevelDB 存在前文提到的严峻的读放大问题，而 WiscKey 由于 LSM Tree 本身的体量较小，对应的读放大问题没那么严峻，除此以外，WiscKey 中的 LSM Tree 不会存在太多的压缩过程带来的 IO 影响。</li>
+<li>针对 Figure 12，LevelDB 针对无论是随机还是顺序的数据加载的 range query，在 Value 为 4KB 之前吞吐量都呈上升趋势，超过 4KB 之后，因为一个 SSTable File 只能存储更少的数量的 KV 键值对，开销将主要集中在打开大量的 SSTable 文件上以及读取索引数据块和布隆过滤器数据，所以吞吐量开始呈下降趋势，而 WiscKey 在这方面的开销要小的多，所以针对 Value 大于 4KB 时，WiscKey 表现更好。</li>
+<li>对于 Value 大小为 64-B，WiscKey的性能要比 LevelDB 差 12 倍，这是由于设备对于小请求大小的并行随机读吞吐量有限; WiscKey 在具有更高并行随机读吞吐量的高端 SSD 上的相对性能更好。此外，这种工作负载是最坏的情况，即数据库是随机填充的，而 vLog 中的数据是未排序的</li>
+<li>对于顺序加载的负载，Figure 12 中显示的数据趋势与随机加载的负载是相似的。针对 64B 大小的 Value， WiscKey 的性能表现还是差于 LSM Tree。但相比于随机加载的数据，差异相对较小，故可以采用对随机加载到 vlog 的数据进行排序来提高 WiscKey 的性能，以减小 64B 场景下同 LevelDB 的差距。</li>
+</ul>
+<h4 id="其他测试">其他测试</h4>
+<figure data-type="image" tabindex="5"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/papers/WiscKey-OtherOverhead.png?raw=true" alt="image" loading="lazy"></figure>
+<h5 id="垃圾回收机制">垃圾回收机制</h5>
+<ul>
+<li>使用随机加载的负载进行垃圾回收性能的测试，因为该负载下垃圾回收的影响将会显著影响整个方案的性能。</li>
+<li>测试方式：先随机加载数据，然后删除一定比例的数据，触发垃圾回收，此时再随机加载数据，测试此时的性能表现。</li>
+<li>该测试下，Value Size 为 4KB，测试不同比例的空闲空间的情况下的性能。</li>
+<li>分析：当垃圾回收器发现数据 100% 无效时，即所有的数据都是垃圾数据，此时由于没有拷贝写的开销，性能只下降了约 10%；而针对部分数据有效的情况，下降约为 35%，因为需要后台垃圾回收线程进行额外的写操作。但即便下降了 35%，性能仍然比 LevelDB 高至少 70%。</li>
+</ul>
+<h5 id="崩溃一致性测试">崩溃一致性测试</h5>
+<ul>
+<li>测试工具：ALICE，该工具选择并模拟一组多方位的系统崩溃，这些崩溃都很有可能导致数据的不一致性</li>
+<li>测试用例：触发少量的同步和异步的 PUT 操作，在 ext4, xfs, btrfs 上都进行了测试，无数据不一致的问题发生</li>
+<li>同时还测试了故障恢复时间，主要是测试最长恢复时间。LevelDB 的最长恢复时间取决于 Log File 的大小，而该文件在 Memtable 写入磁盘之前最大，WiscKey 也是在该情况下恢复需要的时间最长。针对 1KB Value，LevelDB 需要大约 0.7s 进行恢复，而 WiscKey 需要大约 2.6s.</li>
+</ul>
+<h5 id="space-amplification-空间放大">Space Amplification 空间放大</h5>
+<ul>
+<li>之前的研究只关注了读写放大的问题，很少有人关注到空间放大问题。空间放大系数是指数据库在磁盘上的占用的实际大小和逻辑意义上的数据库大小的比值。例如 1KB 的 KV 键值对，在磁盘上可能占用了 4KB 的空间，那么空间放大系数就是 4。</li>
+<li>传统的 LSM Tree 中的压缩过程则就减小了相应的空间放大问题，从而提高磁盘空间的利用率。对于顺序加载的负载，空间放大系数通常接近 1，而对于随机加载的负载或者覆盖写的负载，空间放大系数通常大于 1（当无效的垃圾数据还没来得及被回收的时候）。</li>
+<li>Figure 14 中则主要显示了随机加载 100GB 的数据集时各自方案在存储空间上的开销。其中 WiscKey-GC 在存储空间上的开销随着 Value 大小的不断增大，即元数据信息相比于 Value 足够小的时候，其 WiscKey-GC 的空间开销接近用户真实数据的大小，即元数据的大小相对较小。但 WiscKey 的空间开销相对于 LevelDB 更大。</li>
+<li>没有一个存储系统可以实现同时减小写放大、读放大和空间放大。存储系统往往在这三项放大系数之间做了相应的权衡。LevelDB 为了降低空间放大系数，引入了压缩机制，对应地也就引入了严峻的写放大问题。而 WiscKey 中为了减小负载运行过程中的 IO 放大，不可避免地引入了空间放大问题。</li>
+</ul>
+<h5 id="cpu-usage-cpu-利用率">CPU Usage - CPU 利用率</h5>
+<figure data-type="image" tabindex="6"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/papers/WiscKey-CPU%20Usage.png?raw=true" alt="image" loading="lazy"></figure>
+<ul>
+<li>针对顺序写负载，由于 LevelDB 消耗了大量的时间在 WAL 的开销上，每一个 KV 对都需要进行编码后存储在对应的日志文件上，对应 CPU 的开销也就相对更大。而 WiscKey 的优化方案中由于省略了写前日志的开销，使得 CPU 的占用率也相对较低。</li>
+<li>针对 RangeQuery，由于 WiscKey 中采用了多线程进行并发地读写，使得其 CPU 占用率高于 LevelDB。</li>
+<li>由于 LevelDB 中大量的操作（single writer, background compress）都是使用的单线程技术，所以其实 CPU 不是限制 LevelDB 的性能瓶颈，而 RocksDB 则是有针对多核系统进行了涉及，使用了多线程进行压缩。</li>
+</ul>
+<h3 id="ycsb-benchmarks">YCSB Benchmarks</h3>
+<ul>
+<li>YCSB Benchmarks 的介绍不在此处进行赘述，主要是利用不同读写比例的操作来进行真实场景的模拟，对 KV 存储系统进行测试。<br>
+<img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/papers/WiscKey-YCSB.png?raw=true" alt="image" loading="lazy"></li>
+<li>值得注意的一点是，对于 WiscKey 的垃圾回收机制，当使用小 Value 时，由于垃圾回收的单元默认大小为一个 Chunk，也就是 4MB，所以 Value 较小对应的键值对的数量就较多，从而需要去 LSM Tree 中检查该 Key 是否有效的次数也越多，使得性能会相对地下降。</li>
+</ul>
+<h2 id="related-work">Related Work</h2>
+<h3 id="其他方案介绍">其他方案介绍</h3>
+<h4 id="基于-hash-table-的-kv-store">基于 Hash Table 的 KV Store</h4>
+<ul>
+<li>FAWN：将 KV 对保存在 SSD 上只进行追加写的日志上，在内存里维护哈希表存储索引来加速查询。</li>
+<li>FlashStore 和 SkimpyStash：遵循了 FAWN 的设计，但优化了内存中的哈希索引。FlashStore 使用 cuckoo 哈希并对 Key 进行压缩签名；SkimpyStash 使用线性链接将哈希表的一部分移动到 SSD</li>
+<li>BufferHash：使用多个内存 HASH 表，并使用布隆过滤器来选择对应的 HASH 表进行查询操作</li>
+<li>SILT：主要面向内存进行优化，组合使用了日志结构化树、哈希表和有序表的数据结构</li>
+</ul>
+<h4 id="优化原始-lsm-tree-的-kv-store">优化原始 LSM Tree 的 KV Store</h4>
+<ul>
+<li>bLSM：提供了一个新的合并调度器来限制写延迟，从而保持稳定的写吞吐量，并且还使用了布隆过滤器来提高性能。</li>
+<li>VT-tree：通过使用间接层，VT-tree[50]避免了在压缩过程中对任何之前已排序的键-值对进行排序</li>
+<li>LOCS：将内部flash通道暴露给LSM-tree键值存储，该存储可以利用丰富的并行性实现更有效的压缩。</li>
+<li>Atlas：一个基于ARM处理器和擦除编码的分布式键值存储，它将键和值存储在不同的硬盘上。</li>
+<li>LSM-trie：使用 trie 结构来组织键，并提出了一种基于 trie 的更有效的压缩方法;但是，这种设计牺牲了 LSM-tree 的一些特性，比如对范围查询的有效支持。</li>
+<li>RocksDB：由于RocksDB的设计与LevelDB在本质上相似，所以它的写入放大率仍然很高，但相比于 LevelDB 使用了多线程进行压缩。</li>
+<li>Walnut：一个混合对象存储，它在 LSM 树中存储小对象，并将大对象直接写入文件系统。</li>
+<li>IndexFS：将其元数据存储在<br>
+具有列式模式的 LSM-tree，以加快插入的吞吐量</li>
+<li>Purity：通过仅对索引进行排序并按时间顺序存储元组来将其索引与数据元组分离</li>
+</ul>
+<h4 id="基于其他数据结构的-kv-存储引擎">基于其他数据结构的 KV 存储引擎</h4>
+<ul>
+<li>TokuDB：基于分形树 fractal tree 索引的，它缓冲内部节点中的更新;键没有排序，为了获得良好的性能，必须在内存中维护一个大索引。</li>
+<li>ForestDB：使用 HB+-trie 有效地索引长键，提高了性能，减少了内部节点的空间开销</li>
+<li>NVMKV：一个支持 FTL 的键值存储，它使用本地 FTL 功能，比如稀疏寻址和事务支持，还为键值存储提出了将多个请求分组到单个操作的向量接口</li>
+</ul>
+<h4 id="克服内存中键值存储的可伸缩性瓶颈的优化方案">克服内存中键值存储的可伸缩性瓶颈的优化方案</h4>
+<ul>
+<li>Mastree</li>
+<li>MemC3</li>
+<li>Memcache</li>
+<li>MICA</li>
+<li>cLSM</li>
+<li><strong>以上方案可能用于之后在 WiscKey 基础上再进行优化</strong></li>
+</ul>
+<h2 id="references">References</h2>
+<ul>
+<li>Patrick ONeil, Edward Cheng, Dieter Gawlick,<br>
+and Elizabeth ONeil. The Log-Structured MergeTree (LSM-tree). Acta Informatica, 33(4):351–385,1996.</li>
+</ul>
+<h2 id="problems">Problems</h2>
+<h2 id="extend">Extend</h2>
+<h2 id="参考链接">参考链接</h2>
+<ul>
+<li><a href="http://blog.chinaunix.net/uid-26111972-id-3342278.html">[1] ChinaUnix：LevelDb之七:根据Key读取记录</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/80668555">[2] 知乎：LevelDb 源码阅读--读操作</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/fast-2017-2019.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/fast-2017-2019/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-01-09">2020-01-09</time>
+                  <h4 class="title white no-margin">FAST 2017-2019</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/paper-read-and-write.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/paper-read-and-write/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-12-12">2019-12-12</time>
+                  <h4 class="title white no-margin">文献阅读和写作技巧</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

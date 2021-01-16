@@ -1,0 +1,1148 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Series Three of Basic of Persistence -  Files and Directories | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+威斯康辛州大学操作系统书籍《Operating Systems: Three Easy Pieces》读书笔记系列之 Persistence（持久化）
+机缘巧合，因为项目以及最近的一些学术关注点，需要对存储系统底层原理进行回顾并加深理解..." />
+    <meta name="keywords" content="存储,读书笔记,OS" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-07-21"><i class="fa fa-calendar"></i><span class="lately">6 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/basic-of-persistence-three/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/basic-of-persistence-three/"> </span>
+              </a>
+              <span id="/basic-of-persistence-three/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-1 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-2 ctag-os" aria-label="">OS</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Series Three of Basic of Persistence -  Files and Directories</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>威斯康辛州大学操作系统书籍《Operating Systems: Three Easy Pieces》读书笔记系列之 Persistence（持久化）</li>
+<li>机缘巧合，因为项目以及最近的一些学术关注点，需要对存储系统底层原理进行回顾并加深理解，又恰好被推荐了这本书籍，故首先针对持久化章节进行了阅读。</li>
+<li>本篇为持久化技术的基础篇系列第三篇（文件与目录）。</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="chapter-index">Chapter Index</h2>
+<ul>
+<li>Basic of Persistence
+<ul>
+<li><a href="https://blog.shunzi.tech/post/flavor-of-io/">Flavor of IO</a></li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-one/">I/O Devices</a></li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-two/">Hard Disk Drives</a></li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-three/">Files and Directories</a></li>
+</ul>
+</li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-four/">File Systems Implementation</a></li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-five/">Locality and The Fast File System</a></li>
+<li><a href="https://blog.shunzi.tech/post/dist-block-consistency/#toc-heading-16">Crash Consistency: FSCK and Journaling</a></li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-six/">Log-structured File System</a></li>
+</ul>
+<h2 id="files-and-directories">Files and Directories</h2>
+<ul>
+<li>CRUX：如何管理持久化存储设备？
+<ul>
+<li>操作系统如何管理持久化存储设备</li>
+<li>APIs 是什么样的</li>
+<li>实现的重要方面有哪些？</li>
+</ul>
+</li>
+</ul>
+<h3 id="files-and-directories-2">Files and Directories</h3>
+<ul>
+<li>Process 是 CPU 的虚拟化表现形式，Address Space 是内存的虚拟化表现形式，而存储的虚拟化表现形式即为 Files and Directories.</li>
+<li><strong>文件</strong> 只是一个线性字节数组，每个字节都可以读写。文件通常会有一个 low-level 的名称，没有显示地暴露给用户，通常是指 <strong>inode number</strong>. 操作系统不知道文件的具体结构，而文件系统的作用就是保证你读取数据时和你当初存取时的数据完全一样，实现起来看似容易实则复杂。</li>
+<li><strong>目录</strong> 也会有一个 low-level 的名称，如 inode number。但是相比于文件，目录的内容更为具体，即一些 low-level name 和用户可读 name 的数据对。比如，有一个文件 low-level name 为 “10”， user-readable name 为 “foo”，其所在的目录就将包含一个数据对信息 (“foo”, “10”)。目录中的每一个数据对都会有对应的文件或者子目录，从而形成一个目录树结构。</li>
+<li>目录树起始于 root 目录（基于 UNIX 的系统的根目录通常为 /），使用某种分隔符来命名后续的子目录，直到指定所需的文件或目录为止。而文件名又由两部分组成，以 . 进行分割，前半部分为文件的名称，后半部分为文件的格式。</li>
+<li>因此，在UNIX系统中，文件系统提供了一种统一的方式来访问磁盘、u盘、CD-ROM、许多其他设备上的文件，实际上还有许多其他东西上的文件，这些文件都位于单个目录树下<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200721100631.png" alt="20200721100631" loading="lazy"></li>
+</ul>
+<h3 id="the-file-system-interface">The File System Interface</h3>
+<ul>
+<li>creating, accessing, and deleting files</li>
+</ul>
+<h4 id="creating-files">Creating Files</h4>
+<ul>
+<li>系统调用 <code>open()</code>，通过传递 <code>O_CREAT</code> 标识来创建文件。返回文件描述符。</li>
+</ul>
+<pre><code class="language-C">int fd = open(&quot;foo&quot;, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR);
+</code></pre>
+<ul>
+<li>参数解释：
+<ul>
+<li><code>O_CREAT</code>：如果文件不存在则创建文件</li>
+<li><code>O_WRONLY</code>：文件只能被写入</li>
+<li><code>O_TRUNC</code>：如果文件已经存在，则将其截断为零字节大小，从而删除任何现有内容</li>
+<li><code>S_IRUSR|S_IWUSR</code>：第三个参数指定权限，在本例中使文件所有者可读和可写</li>
+</ul>
+</li>
+<li>操作系统按进程管理文件描述符，一个文件描述符本质就是一个数字，每个进程都是私有的，在 UNIX 中用于访问文件。所以在进程对应的数据结构中，相应地保存了对应的文件描述符：最多保存 NOFILE 个描述符</li>
+</ul>
+<pre><code class="language-C">struct proc {
+  ...
+  struct file *ofile[NOFILE]; // Open files
+  ...
+};
+</code></pre>
+<h4 id="reading-and-writing-files">Reading And Writing Files</h4>
+<ul>
+<li><a href="https://www.cnblogs.com/ccorz/p/Linux-strace-zhui-zong-ming-ling-xiang-jie.html">博客园 - Linux strace追踪命令详解</a></li>
+<li>读写命令示例：</li>
+</ul>
+<pre><code class="language-shell">prompt&gt; echo hello &gt; foo
+prompt&gt; cat foo
+hello
+prompt&gt;
+</code></pre>
+<ul>
+<li>使用 <code>strace</code> 追踪命令 <code>cat</code>：
+<ul>
+<li>首先打开文件 <code>open</code>，只读模式 <code>O_RDONLY</code>，使用64位偏移量 <code>O_LARGEFILE</code>，返回了一个值为 3 的文件描述符。
+<ul>
+<li>为什么返回 3，不是返回 0 或 1？因为每个运行的进程已经打开了三个文件，分别是标准输入(进程可以读取以接收输入)、标准输出(进程可以写入以将信息转储到屏幕上)和标准错误(进程可以向其中写入错误消息)，分别对应了 0，1，2</li>
+</ul>
+</li>
+<li><code>read</code> 读系统调用重复地从一个文件中读取一些字节：第一个参数对应文件描述符，表明读取哪一个文件，第二个参数执行了一个缓冲区，用于存放读取之后的数据，使用 <code>strace</code> 则显示了对应的读取结果；第三个参数对应缓冲区的大小 4KB，返回值为读取的数据的字节大写，即 <code>hello</code> 5 个字节加上 <code>\n</code> 共 6 字节。</li>
+<li><code>write</code> 将读取到的字符串写到标准输出的文件描述符中，但可能不是直接调用 <code>write</code> 系统调用，可能使用了 <code>printf</code> 封装进行格式化输出，最终再调用了 <code>write</code>。</li>
+<li>然后继续 <code>read</code>，但是因为文件没有额外的数据需要读取，返回 0 即告知程序数据该文件数据读取结束</li>
+<li><code>close</code> 关闭读取完了的文件描述符，至此整个文件读取完毕。</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-shell">prompt&gt; strace cat foo
+...
+open(&quot;foo&quot;, O_RDONLY|O_LARGEFILE) = 3
+read(3, &quot;hello\n&quot;, 4096) = 6
+write(1, &quot;hello\n&quot;, 6) = 6
+hello
+read(3, &quot;&quot;, 4096) = 0
+close(3) = 0
+...
+prompt&gt;
+</code></pre>
+<ul>
+<li>写操作采用了类似的步骤，首先打开相应的文件，然后调用写操作，大文件可能会重复执行写操作很多次，最后关闭该文件。可以使用 <code>strace</code> 相应的操作，也可以追踪自己编写的程序。</li>
+</ul>
+<pre><code>[root@ca11 shunzitest]# strace echo hello &gt; foo
+execve(&quot;/usr/bin/echo&quot;, [&quot;echo&quot;, &quot;hello&quot;], [/* 32 vars */]) = 0
+brk(NULL)                               = 0x802000
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7efd61a1e000
+access(&quot;/etc/ld.so.preload&quot;, R_OK)      = -1 ENOENT (No such file or directory)
+open(&quot;/etc/ld.so.cache&quot;, O_RDONLY|O_CLOEXEC) = 3
+fstat(3, {st_mode=S_IFREG|0644, st_size=104858, ...}) = 0
+mmap(NULL, 104858, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7efd61a04000
+close(3)                                = 0
+open(&quot;/lib64/libc.so.6&quot;, O_RDONLY|O_CLOEXEC) = 3
+read(3, &quot;\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0\340$\2\0\0\0\0\0&quot;..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=2151672, ...}) = 0
+mmap(NULL, 3981792, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7efd61431000
+mprotect(0x7efd615f3000, 2097152, PROT_NONE) = 0
+mmap(0x7efd617f3000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1c2000) = 0x7efd617f3000
+mmap(0x7efd617f9000, 16864, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7efd617f9000
+close(3)                                = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7efd61a03000
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7efd61a01000
+arch_prctl(ARCH_SET_FS, 0x7efd61a01740) = 0
+mprotect(0x7efd617f3000, 16384, PROT_READ) = 0
+mprotect(0x606000, 4096, PROT_READ)     = 0
+mprotect(0x7efd61a1f000, 4096, PROT_READ) = 0
+munmap(0x7efd61a04000, 104858)          = 0
+brk(NULL)                               = 0x802000
+brk(0x823000)                           = 0x823000
+brk(NULL)                               = 0x823000
+open(&quot;/usr/lib/locale/locale-archive&quot;, O_RDONLY|O_CLOEXEC) = 3
+fstat(3, {st_mode=S_IFREG|0644, st_size=106075056, ...}) = 0
+mmap(NULL, 106075056, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7efd5af07000
+close(3)                                = 0
+fstat(1, {st_mode=S_IFREG|0644, st_size=0, ...}) = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7efd61a1d000
+write(1, &quot;hello\n&quot;, 6)                  = 6
+close(1)                                = 0
+munmap(0x7efd61a1d000, 4096)            = 0
+close(2)                                = 0
+exit_group(0)                           = ?
++++ exited with 0 +++
+</code></pre>
+<blockquote>
+<p>OPEN FILE TABLE：每个进程维护一个文件描述符数组，每个描述符引用系统范围内打开的文件表中的一个条目。该表中的每个条目跟踪描述符引用的基础文件、当前偏移量和其他相关细节，比如文件是可读还是可写。</p>
+</blockquote>
+<h4 id="reading-and-writing-but-not-sequentially">Reading And Writing, But Not Sequentially</h4>
+<ul>
+<li>目前讨论的读写都是顺序的，即必须从头到尾的读取或者写入文件。然后有的场景里，在指定偏移量上进行读写是很有必要的，例如索引查找，很可能是随机的。此时将使用到 <code>lseek</code>
+<ul>
+<li>参数一 fildes 文件描述符</li>
+<li>参数二 offset 在文件中的偏移量</li>
+<li>参数三 whence 决定 seek 如何进行
+<ul>
+<li>whence is SEEK_SET 参数 offset 即为新的读写位置</li>
+<li>whence is SEEK_CUR 以目前的读写位置往后增加 offset 个位移量</li>
+<li>whence is SEEK_END 将读写位置指向文件尾后再增加 offset 个位移量.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-C">off_t lseek(int fildes, off_t offset, int whence);
+</code></pre>
+<ul>
+<li>偏移量存储在进程对应的文件描述符的文件数据结构中：</li>
+</ul>
+<pre><code class="language-C">struct file {
+  int ref; // 引用计数
+  char readable; // 可读
+  char writable; // 可写
+  struct inode *ip; // inode pointer
+  uint off; // offset
+};
+</code></pre>
+<blockquote>
+<p>lseek vs seek：调用 lseek 操作不会执行磁盘的 seek 操作，<code>lseek()</code> 调用只是更改操作系统内存中的一个变量，该变量为特定进程跟踪下一个读或写偏移量的起始位置，磁盘的 seek 是当对磁盘发出的读或写不在与最近一次读或写在同一轨道上的时候。调用lseek()可能导致在即将进行的读或写中进行查找，但绝对不会导致任何磁盘I/O本身发生。</p>
+</blockquote>
+<ul>
+<li>这些数据结构合在一起有时候又被称作 open file table，xv6 内核会以数组的形式进行维护，并有锁来控制并发访问。</li>
+</ul>
+<pre><code class="language-C">struct {
+  struct spinlock lock;
+  struct file file[NFILE];
+} ftable;
+</code></pre>
+<ul>
+<li>
+<p>打开一个 300B 的文件，调用四次读操作，每次读 100B。不难发现 open 时，当前偏移量置为 0，每读一次后将移动指针到读取的字节大小处的偏移量，文件读取完毕之后，偏移量就不再移动了。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200721140600.png" alt="20200721140600" loading="lazy"></p>
+</li>
+<li>
+<p>一个进程打开相同的文件两次，并对每一个文件描述符发起读操作，两次 open 操作分别分配了 3 和 4 的文件描述符，对应了 Open File Table （OFT） 中两个不同的项，entry 10 和 11。不难发现，每一个 entry 的偏移量都是自己独立移动的，互不干扰。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200721140644.png" alt="20200721140644" loading="lazy"></p>
+</li>
+<li>
+<p>最后的例子中使用了 <code>lseek()</code> 在读操作之前来重新定位当前偏移量。<code>lseek()</code> 首先将偏移量设置为 200，然后读操作继续移动到 250。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200721140748.png" alt="20200721140748" loading="lazy"></p>
+</li>
+</ul>
+<h4 id="shared-file-table-entries-fork-and-dup">Shared File Table Entries: fork() And dup()</h4>
+<ul>
+<li>在许多情况下(如上面的示例所示)，文件描述符到打开的文件表中的一个条目的映射是一对一的映射，例如，当进程运行时，它可能决定打开一个文件，读取它，然后关闭它;在这个例子中，文件在打开的文件表中有一个唯一的条目。即使其他进程同时读取相同的文件，每个进程在打开的文件表中都有自己的条目。这样的逻辑下，每个读写操作都是完全独立的，都有自己的偏移量。</li>
+<li>但在某些情况下，Open FIle Table 中的数据信息是共享的。其中一种情况发生在父进程使用fork()创建子进程时，如下代码所示，父进程创建了子进程并等待他执行结束，然后子进程移动了偏移量之后退出，父进程等待完后直接输出当前偏移量。</li>
+</ul>
+<pre><code class="language-C">int main(int argc, char *argv[]) {
+  int fd = open(&quot;file.txt&quot;, O_RDONLY);
+  assert(fd &gt;= 0);
+  int rc = fork();
+  if (rc == 0) {
+    rc = lseek(fd, 10, SEEK_SET);
+    printf(&quot;child: offset %d\n&quot;, rc);
+  } else if (rc &gt; 0) {
+    (void) wait(NULL);
+    printf(&quot;parent: offset %d\n&quot;, (int) lseek(fd, 0, SEEK_CUR));
+  }
+  return 0;
+}
+</code></pre>
+<ul>
+<li>输出如下：</li>
+</ul>
+<pre><code class="language-shell">prompt&gt; ./fork-seek
+child: offset 10
+parent: offset 10
+prompt&gt;
+</code></pre>
+<ul>
+<li>如图所示了连接每个进程的私有描述符数组、共享打开的文件表条目以及它对底层文件系统inode的引用的关系。此时就使用到了引用计数，当一个文件表项被共享的时候，引用计数相应地就会增加，知道所有进程都关闭了文件之后，该表项才会从 Open File Table 中移除。</li>
+<li>在父级和子级之间共享打开的文件表条目有时是有用的。比如你创建了大量的进程来协同工作完成一个任务，不用额外的协同就可以写到同一个输出文件中。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200721142527.png" alt="20200721142527" loading="lazy"></li>
+<li>除了 <code>fork</code> 以外，还有 <code>dup()</code> (以及 <code>dup2()</code>, <code>dup3()</code>)。<code>dup</code>允许进程创建一个新的文件描述符，但与现有的文件描述符引用了相同的底层文件描述符。使用示例如下。<code>dup</code> 操作在一些输出重定向的操作中是十分有用的，比如把标准输入重定向到文件中。</li>
+</ul>
+<pre><code class="language-C">int main(int argc, char *argv[]) {
+  int fd = open(&quot;README&quot;, O_RDONLY);
+  assert(fd &gt;= 0);
+  int fd2 = dup(fd);
+  // now fd and fd2 can be used interchangeably
+  return 0;
+}
+</code></pre>
+<h4 id="writing-immediately-with-fsync">Writing Immediately With fsync()</h4>
+<ul>
+<li><code>write</code> 调用的实质是告诉文件系统，需要将某个数据在未来的某个时间点写入持久化存储中。文件系统出于性能的考虑会把写操作缓存在内存中一段时间，5s 或者 30s，之后才会把对应的写操作给实际写入到持久化设备中。从调用者的角度来看，写操作仿佛很快就完成了，但是如果机器在写操作完成，但未实际写入到磁盘的这一段时间内发生了故障，这段数据就将丢失。</li>
+<li>然而上层应用中会有一些如 DBMS 一样的对数据一致性要求极高的应用，DBMS 中的故障恢复协议就常常需要强制将写操作刷回到磁盘。因此大多数文件系统对此提供了额外的支持，UNIX 中即为 <code>fsync()</code>，强制将脏数据刷回磁盘，知道所有数据落盘之后才会返回具体的值。</li>
+<li>使用示例如下。但是这样的执行顺序也不能完全保证所有的操作如我们所期望的执行，在一些场景下，还需要 fsync 当前文件所在的目录，从而确保不仅该文件同步到了磁盘，文件所在的目录也同步到了磁盘，因为文件很多时候可能是新创建的，也是目录的一部分。</li>
+</ul>
+<pre><code class="language-C">int fd = open(&quot;foo&quot;, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR);
+assert(fd &gt; -1);
+int rc = write(fd, buffer, size);
+assert(rc == size);
+rc = fsync(fd);
+assert(rc == 0);
+</code></pre>
+<h4 id="renaming-files">Renaming Files</h4>
+<ul>
+<li>strace mv 我们不难发现该操作调用了 <code>rename(char*old, char *new)</code>，该系统调用是一个原子操作，因此，<code>rename()</code> 对于支持某些需要对文件状态进行原子更新的应用程序非常重要。</li>
+</ul>
+<pre><code class="language-shell">prompt&gt; mv foo bar
+</code></pre>
+<ul>
+<li>使用示例：该编辑器将数据写入到了一个临时文件中，并使用 <code>fsync</code> 强制同步，然后应用就能确保新的文件元数据和文件数据已经落盘，再把临时文件更名为原始的文件名，最后一步原子地将新文件交换到适当的位置，同时 <strong>删除文件的旧版本</strong>，从而实现原子文件更新。（<strong>注意这里写入的时新版本的文件数据，即读取了原有的数据并合并了相应的更新</strong>）</li>
+</ul>
+<pre><code class="language-C">int fd = open(&quot;foo.txt.tmp&quot;, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
+write(fd, buffer, size); // write out new version of file
+fsync(fd);
+close(fd);
+rename(&quot;foo.txt.tmp&quot;, &quot;foo.txt&quot;); // 会覆盖原有的 foo.txt
+</code></pre>
+<h4 id="getting-information-about-files">Getting Information About Files</h4>
+<ul>
+<li>除了文件访问之外，我们希望文件系统保存关于它所存储的每个文件的相当数量的信息，即我们常说的元数据 metadata。可以使用系统调用 <code>stat()</code> 或者 <code>fstat()</code>。</li>
+</ul>
+<pre><code class="language-C">struct stat {
+  dev_t st_dev; // ID of device containing file
+  ino_t st_ino; // inode number
+  mode_t st_mode; // protection
+  nlink_t st_nlink; // number of hard links
+  uid_t st_uid; // user ID of owner
+  gid_t st_gid; // group ID of owner
+  dev_t st_rdev; // device ID (if special file)
+  off_t st_size; // total size, in bytes
+  blksize_t st_blksize; // blocksize for filesystem I/O
+  blkcnt_t st_blocks; // number of blocks allocated
+  time_t st_atime; // time of last access
+  time_t st_mtime; // time of last modification
+  time_t st_ctime; // time of last status change
+};
+</code></pre>
+<ul>
+<li><code>state</code> 输出。每个文件系统通常将这种类型的信息保存在一个称为inode的结构中，inode看作由文件系统保存的持久数据结构，其中包含我们以下看到的信息，所有inode都驻留在磁盘上；活跃的文件的 inode 的副本通常缓存在内存中以加速访问。</li>
+</ul>
+<pre><code class="language-shell">prompt&gt; echo hello &gt; file
+prompt&gt; stat file
+File: ‘file’
+Size: 6 Blocks: 8 IO Block: 4096 regular file
+Device: 811h/2065d Inode: 67158084 Links: 1
+Access: (0640/-rw-r-----) Uid: (30686/remzi)
+Gid: (30686/remzi)
+Access: 2011-05-03 15:50:20.157594748 -0500
+Modify: 2011-05-03 15:50:20.157594748 -0500
+Change: 2011-05-03 15:50:20.157594748 -0500
+</code></pre>
+<h4 id="removing-files">Removing Files</h4>
+<ul>
+<li><code>unlink()</code> 只接受要删除的文件名称作为参数，删除成功后返回 0。</li>
+</ul>
+<pre><code class="language-shell">prompt&gt; strace rm foo
+...
+unlink(&quot;foo&quot;) = 0
+...
+</code></pre>
+<h4 id="making-directories">Making Directories</h4>
+<ul>
+<li>目录也允许做上述的大量操作，但是不能直接递对目录进行操作，因为目录本质是文件系统的元数据，由文件系统完全负责。</li>
+<li>如下所示创建了一个空目录，但是对应了两条数据，一条指向他自己 <code>.</code>，一条指向它的父目录 <code>..</code></li>
+</ul>
+<pre><code class="language-shell">prompt&gt; strace mkdir foo
+...
+mkdir(&quot;foo&quot;, 0777) = 0
+...
+prompt&gt;
+
+prompt&gt; ls -a
+./ ../
+prompt&gt; ls -al
+total 8
+drwxr-x--- 2 remzi remzi 6 Apr 30 16:17 ./
+drwxr-x--- 26 remzi remzi 4096 Apr 30 16:17 ../
+</code></pre>
+<h4 id="reading-directories">Reading Directories</h4>
+<ul>
+<li><code>opendir()</code>, <code>readdir()</code>, <code>closedir()</code> 使用示例：</li>
+</ul>
+<pre><code class="language-C">int main(int argc, char *argv[]) {
+  DIR *dp = opendir(&quot;.&quot;);
+  assert(dp != NULL);
+  struct dirent *d;
+  while ((d = readdir(dp)) != NULL) {
+    printf(&quot;%lu %s\n&quot;, (unsigned long) d-&gt;d_ino, d-&gt;d_name);
+  }
+  closedir(dp);
+  return 0;
+}
+</code></pre>
+<ul>
+<li>每一个目录对应的数据结构信息：目录提供的信息很少(基本上，只是将名称映射到inode号，以及一些其他细节)</li>
+</ul>
+<pre><code class="language-C">struct dirent {
+  char d_name[256]; // filename
+  ino_t d_ino; // inode number
+  off_t d_off; // offset to the next dirent
+  unsigned short d_reclen; // length of this record
+  unsigned char d_type; // type of file
+};
+</code></pre>
+<h4 id="deleting-directories">Deleting Directories</h4>
+<ul>
+<li><code>rmdir()</code> 要求目录为空。</li>
+</ul>
+<h4 id="hard-links">Hard Links</h4>
+<ul>
+<li><code>link()</code> 系统调用使用两个参数，一个老的路径名和一个新的，当使用 link 时就是创建了一个引用了同一个文件的指针，命令 <code>ln</code> 就是做这样的操作</li>
+</ul>
+<pre><code class="language-shell">prompt&gt; echo hello &gt; file
+prompt&gt; cat file
+hello
+prompt&gt; ln file file2
+prompt&gt; cat file2
+hello
+</code></pre>
+<ul>
+<li><code>link()</code> 的工作方式是在创建链接的目录中创建另一个名称，并将其引用到相同的 inode 编号的原始文件，没有发生任何的数据拷贝，只是给原始文件多取了一个名字，inode 号完全相同。</li>
+</ul>
+<pre><code class="language-shell">prompt&gt; ls -i file file2
+67158084 file
+67158084 file2
+prompt&gt;
+</code></pre>
+<ul>
+<li>所以在创建文件时，相当于做了两件事情。
+<ul>
+<li>首先，创建了一个 inode，包含了对应的文件信息；</li>
+<li>然后，把一个命名给链接到了这个 inode，并把这个链接放在了一个目录下。</li>
+</ul>
+</li>
+<li>如果使用 unlink 删除上述例子中的任何一个文件名，对于另一个文件名的访问仍然不受任何影响。因为在 unlink 的时候，文件系统会检查对应 inode number 的引用计数，来看有多少个文件引用了当前 inode，使用 <code>unlink</code> 则相应地删除该 inode 上对应的一个链接，并对引用计数减一，只有当引用计数为 0 的时候，文件系统才会释放这个 inode 和相应的数据块信息，从而实现真正地删除文件。</li>
+</ul>
+<pre><code class="language-Shell">prompt&gt; rm file
+removed ‘file’
+prompt&gt; cat file2
+hello
+
+
+prompt&gt; echo hello &gt; file
+prompt&gt; stat file
+... Inode: 67158084 Links: 1 ...
+prompt&gt; ln file file2
+prompt&gt; stat file
+... Inode: 67158084 Links: 2 ...
+prompt&gt; stat file2
+... Inode: 67158084 Links: 2 ...
+prompt&gt; ln file2 file3
+prompt&gt; stat file
+... Inode: 67158084 Links: 3 ...
+prompt&gt; rm file
+prompt&gt; stat file2
+... Inode: 67158084 Links: 2 ...
+prompt&gt; rm file2
+prompt&gt; stat file3
+... Inode: 6715808
+</code></pre>
+<h4 id="symbolic-links-soft-links">Symbolic Links (Soft Links)</h4>
+<ul>
+<li>硬链接是有一定的限制的，因此产生了软连接（符号链接）
+<ul>
+<li>即你不能创建对目录的硬链接，因为这样做可能会造成一个环</li>
+<li>不能创建不同磁盘分区之间硬链接，因为 inode 只针对于某一个特定的文件系统，无法跨文件系统</li>
+</ul>
+</li>
+<li><code>ln -s</code> 示例：</li>
+</ul>
+<pre><code class="language-shell">prompt&gt; echo hello &gt; file
+prompt&gt; ln -s file file2
+prompt&gt; cat file2
+hello
+</code></pre>
+<ul>
+<li>
+<p>软链接表面看着与硬链接相似，实际完全不同。</p>
+<ul>
+<li>第一个区别是符号链接实际上是不同类型的文件本身。常规文件、目录和符号链接是文件系统知道的三种类型.
+<ul>
+<li>file2 为 4 字节的原因是符号链接的形成方式是将链接到的文件的路径名作为链接文件的数据。如果文件名更长，相应的链接大小就更大</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-shell">prompt&gt; stat file
+... regular file ...
+prompt&gt; stat file2
+... symbolic link ...
+
+prompt&gt; ls -al
+drwxr-x--- 2 remzi remzi 29 May 3 19:10 ./
+drwxr-x--- 27 remzi remzi 4096 May 3 15:14 ../
+-rw-r----- 1 remzi remzi 6 May 3 19:10 file
+lrwxrwxrwx 1 remzi remzi 4 May 3 19:10 file2 -&gt; file
+</code></pre>
+<ul>
+<li>因为软链接的形成方式，所以可能出现 dangling reference 虚引用的情况，即链接了个空气。</li>
+</ul>
+<pre><code class="language-shell">prompt&gt; echo hello &gt; file
+prompt&gt; ln -s file file2
+prompt&gt; cat file2
+hello
+prompt&gt; rm file
+prompt&gt; cat file2
+cat: file2: No such file or directory
+</code></pre>
+<ul>
+<li>软链接的本质就是我们常用的 win 系统中的 <strong>快捷方式</strong></li>
+</ul>
+</li>
+</ul>
+<h3 id="permission-bits-and-access-control-lists">Permission Bits And Access Control Lists</h3>
+<ul>
+<li>底层的操作系统使用各种技术在相互竞争的实体之间以安全的方式共享有限的物理资源，文件系统提供了存储资源的虚拟化，但和 CPU 以及内存的虚拟化的不同之处在于 <strong>文件很多时候在不同的用户或者进程之间是共享的，不总是私有的。</strong></li>
+</ul>
+<h5 id="permission-bits">Permission bits</h5>
+<ul>
+<li><strong>permission bits</strong>：<code>-rw-r--r--</code>. 第一个<code>-</code> 表示为一个常规文件， <code>d</code> 为目录，<code>l</code> 为软连接。所以 <code>rw-r--r--</code> 才是权限相关的位，表示对于每一个实体，谁能访问以及如何访问。由三组组成：
+<ul>
+<li>文件所有者可以对文件做什么 <code>rw-</code></li>
+<li>组中的其他人可以对文件做什么 <code>r--</code></li>
+<li>任何人(有时称为其他人)可以做什么 <code>r--</code></li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-shell">prompt&gt; ls -l foo.txt
+-rw-r--r-- 1 remzi wheel 0 Aug 24 16:29 foo.txt
+</code></pre>
+<ul>
+<li>文件的所有者可以使用 <code>chmod</code> 更改权限，比如：其中 6 = 可读（4）+ 可写（2），但是另外两个组都设置为 0，因此对应的权限即为 <code>rw-------</code>。7 = 可读（4）+ 可写（2）+ 执行（1）</li>
+</ul>
+<pre><code class="language-shell"># 移除所有人访问该文件的权限
+prompt&gt; chmod 600 foo.txt   
+# 给所有人添加所有权限
+prompt&gt; chmod 777 hello.sh
+</code></pre>
+<h5 id="acl">ACL</h5>
+<ul>
+<li>常用于分布式文件系统的访问控制，即 Access Control List。比如 AFS 中：</li>
+</ul>
+<pre><code class="language-shell">prompt&gt; fs listacl private
+Access list for private is
+  Normal rights:
+  system:administrators rlidwka
+  remzi rlidwka
+</code></pre>
+<h3 id="making-and-mounting-a-file-system">Making And Mounting A File System</h3>
+<ul>
+<li>如何从许多底层文件系统组装一个完整的目录树？ 格式化文件系统并挂载，从而提供访问入口。</li>
+<li><code>mkfs</code> 命令用于格式化指定的文件系统，需要指定对应的需要格式化的设备。</li>
+<li>格式化完成之后，需要借助<code>mount</code>命令将文件系统挂载某一个挂载点，从而对外提供该文件系统的目录树入口。如下例子中的 <code>/home/users</code> 即为新创建的文件系统的根目录</li>
+</ul>
+<pre><code>prompt&gt; mount -t ext3 /dev/sda1 /home/users
+prompt&gt; ls /home/users/
+a b
+</code></pre>
+<h3 id="homework">Homework</h3>
+<ul>
+<li>实现 <code>Stat</code>, <code>List Files</code>, <code>Tail</code>, <code>Recusive Search</code></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/basic-of-persistence-four/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-07-22">2020-07-22</time>
+                  <h4 class="title white no-margin">Series Four of Basic of Persistence -  File System Implementation</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/basic-of-persistence-two/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-07-20">2020-07-20</time>
+                  <h4 class="title white no-margin">Series Two of Basic of Persistence - Hard Disk Drives And RAID</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

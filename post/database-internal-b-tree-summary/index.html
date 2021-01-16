@@ -1,0 +1,1293 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Database Internal - B-tree Summary | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+The B-tree basic in database system.
+Here is the basic of B-tree, including the knowledge of data structure and some o..." />
+    <meta name="keywords" content="存储,数据库" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-06-14"><i class="fa fa-calendar"></i><span class="lately">7 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/database-internal-b-tree-summary/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/database-internal-b-tree-summary/"> </span>
+              </a>
+              <span id="/database-internal-b-tree-summary/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-1 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Database Internal - B-tree Summary</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>The B-tree basic in database system.</li>
+<li>Here is the basic of B-tree, including the knowledge of data structure and some optimization.</li>
+<li>The content is based on the book <em><strong>Database Internal</strong></em> and <a href="https://www.cs.usfca.edu/~galles/visualization/Search.html">Algorithms Visualization</a>.I will present my understanding.</li>
+<li>Only summary, not details.</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="before-b-tree">Before B-Tree</h2>
+<p>The B-tree is usually used for index of data. I want to introduce a simple data structure which is used in simple query operation.</p>
+<ul>
+<li><strong>Sorted List</strong>: If data is sorted, we can look up the data quickly. Two major methods: (Eg. Look up 12)
+<ul>
+<li>Linear Search: From the start/end of the list, compare the data with target data 12 one by one.
+<ul>
+<li>Time complexity: <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>O</mi><mo>(</mo><mi>N</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">O(N)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="mclose">)</span></span></span></span></li>
+</ul>
+</li>
+<li>Binray Search: Get the max, min, and middle data of this sorted list by reading the data with given index (0, list.length and list.length / 2). Compare these data with target data to find the target data located area. In small area, recurse until find the target data or mark it not found.
+<ul>
+<li>Time complexity: <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>O</mi><mo>(</mo><msub><mi>log</mi><mo>⁡</mo><mn>2</mn></msub><mrow><mi>N</mi><mi>x</mi></mrow><mo>)</mo></mrow><annotation encoding="application/x-tex">O(\log_2{Nx })</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mop"><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.20696799999999996em;"><span style="top:-2.4558600000000004em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.24414em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="mord mathdefault">x</span></span><span class="mclose">)</span></span></span></span></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="b-tree">B-Tree</h2>
+<ul>
+<li>B-Tree was introduced by Rudolph Bayer and Edward M. McCreight back in 1971.</li>
+</ul>
+<h3 id="binary-search-tree-bst">Binary Search Tree (BST)</h3>
+<ul>
+<li><strong>Sorted</strong>, <strong>In-Memory</strong> data structure.</li>
+<li>Used for efficient key-value <strong>lookups</strong>.</li>
+<li>Represented by a key, a value associated with this key.</li>
+<li>Each node splits the search space into left and right subtrees, as figure shows: a node key is greater than any key stored in its left subtree and less than any key stored in its right subtree.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614211816.png" alt="20200614211816" loading="lazy"></li>
+<li>Look up from root node, if greater than root node, try to look up in the right child tree. If less, continue to look up in left child tree. <strong>Recurse</strong> until find it or compared all leaf nodes.</li>
+</ul>
+<h3 id="tree-balancing">Tree Balancing</h3>
+<h4 id="why-need-balancing">Why need balancing ?</h4>
+<ul>
+<li>Insert operations do not follow any specific pattern, and element insertion might lead to the situation where the tree is unbalanced (i.e., one of its branches is longer than the other one).</li>
+<li>The worst-case scenario is shown in Figure (b), where we end up with a pathological tree, which looks more like a linked list, and instead of desired logarithmic complexity, we get linear, as illustrated in Figure (a).<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png" alt="20200614213040" loading="lazy"></li>
+<li>In the balanced tree, following the left or right node pointer reduces the search space in half on average, so lookup complexity is logarithmic: <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>O</mi><mo>(</mo><msub><mi>log</mi><mo>⁡</mo><mn>2</mn></msub><mi>N</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">O(\log_2{N})</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mop"><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.20696799999999996em;"><span style="top:-2.4558600000000004em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.24414em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.10903em;">N</span></span><span class="mclose">)</span></span></span></span>. If the tree is not balanced, worst-case complexity goes up to <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>O</mi><mo>(</mo><mi>N</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">O(N)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="mclose">)</span></span></span></span>, since we might end up in the situation where all elements end up on one side of the tree.</li>
+</ul>
+<h4 id="how-to-balance">How to balance?</h4>
+<ul>
+<li><strong>Balance Status</strong>: Balancing is done by reorganizing nodes in a way that minimizes tree height and keeps the number of nodes on each side within bounds.</li>
+<li>One of the ways to keep the tree balanced is to perform a rotation step after nodes are added or removed. If the insert operation leaves a branch unbalanced (two consecutive nodes in the branch have only one child), we can rotate nodes around the middle one.</li>
+<li>In the example shown in Figure 2-4, during rotation the middle node (3), known as a rotation pivot, is promoted one level higher, and its parent becomes its right child.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614215657.png" alt="20200614215657" loading="lazy"></li>
+</ul>
+<h3 id="trees-for-disk-based-storage">Trees for Disk-Based Storage</h3>
+<ul>
+<li>As previously mentioned, unbalanced trees have a worst-case complexity of <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>O</mi><mo>(</mo><mi>N</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">O(N)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="mclose">)</span></span></span></span>. Balanced trees give us an average <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>O</mi><mo>(</mo><msub><mi>log</mi><mo>⁡</mo><mn>2</mn></msub><mi>N</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">O(\log_2{N})</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mop"><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.20696799999999996em;"><span style="top:-2.4558600000000004em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.24414em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.10903em;">N</span></span><span class="mclose">)</span></span></span></span>.</li>
+<li>At the same time, due to low fanout (fanout is the maximum allowed number of children per node), we have to perform balancing, relocate nodes, and update pointers rather frequently. <strong>Increased maintenance costs make BSTs impractical as on-disk data structures.</strong></li>
+</ul>
+<h4 id="problems">Problems</h4>
+<ul>
+<li><strong>Locality</strong>: since elements are added in random order, there’s no guarantee that a newly created node is written close to its parent, which means that node child pointers may span across several disk pages.
+<ul>
+<li>We can improve the situation to a certain extent by modifying the tree layout and using <strong>paged binary trees</strong>.</li>
+</ul>
+</li>
+<li><strong>Tree height</strong>: Since binary trees have a fanout of just two, height is a binary logarithm of the number of the elements in the tree, and we have to perform <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>O</mi><mo>(</mo><msub><mi>log</mi><mo>⁡</mo><mn>2</mn></msub><mi>N</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">O(\log_2{N})</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mop"><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.20696799999999996em;"><span style="top:-2.4558600000000004em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.24414em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.10903em;">N</span></span><span class="mclose">)</span></span></span></span> seeks to locate the searched element and, subsequently, <strong>perform the same number of disk transfers</strong>.
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/2%E2%80%933_tree">2-3 Trees</a> and other low-fanout trees have a similar limitation: while they are useful as in-memory data structures, small node size makes them impractical for external storage.</li>
+<li>A naive on-disk BST implementation would require as many disk seeks as comparisons, since there’s no built-in concept of locality. This sets us on a course to look for a data structure that would exhibit this property.</li>
+</ul>
+</li>
+</ul>
+<h4 id="requirements">Requirements</h4>
+<ul>
+<li><strong>High fanout</strong> to improve locality of the neighboring keys.</li>
+<li><strong>Low height</strong> to reduce the number of seeks during traversal.</li>
+<li><strong>Fanout and height are inversely correlated</strong>.</li>
+</ul>
+<h3 id="disk-based-structures">Disk-Based Structures</h3>
+<ul>
+<li>On-disk data structures are often used when the amounts of data are so large that keeping an entire dataset in memory is impossible or not feasible. Only a fraction of the data can be cached in memory at any time, and the rest has to be stored on disk in a manner that allows efficiently accessing it.</li>
+</ul>
+<h4 id="hard-disk-drives">Hard Disk Drives</h4>
+<ul>
+<li>On spinning disks, seeks increase costs of random reads because they require disk rotation and mechanical head movements to position the read/write head to the desired location. However, once the expensive part is done, reading or writing contiguous bytes (i.e., sequential operations) is relatively cheap.</li>
+<li>The smallest transfer unit of a spinning drive is a sector, so when some operation is performed, at least an entire sector can be read or written. Sector sizes typically range from 512 bytes to 4 Kb.</li>
+<li>Head positioning is the most expensive part of an operation on the HDD. This is one of the reasons we often hear about the positive effects of sequential I/O: reading and writing contiguous memory segments from disk.</li>
+<li><strong>Benefit a lot from the performance gap between sequential I/O and random I/O.</strong></li>
+</ul>
+<h4 id="solid-state-drives">Solid State Drives</h4>
+<ul>
+<li>A typical SSD is built of memory cells, connected into strings (typically 32 to 64 cells per string), strings are combined into arrays, arrays are combined into pages, and pages are combined into blocks.</li>
+<li>Depending on the exact technology used, a cell can hold one or multiple bits of data. Pages vary in size between devices, but typically their sizes range from 2 to 16 Kb. Blocks typically contain 64 to 512 pages. Blocks are organized into planes and, finally, planes are placed on a die. SSDs can have one or more dies. You can view the details of SSD structure from this post <a href="../posts/flashblox-achieving-both-performance-isolation-and-uniform-lifetime-for-virtualized-ssds">Virtual SSD</a><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614225627.png" alt="20200614225627" loading="lazy"></li>
+<li>Since in both device types (HDDs and SSDs) we are addressing chunks of memory rather than individual bytes (i.e., accessing data block-wise), most operating systems have a block device abstraction. It hides an internal disk structure and buffers I/O operations internally, so <strong>when we’re reading a single word from a block device, the whole block containing it is read</strong>. This is a constraint we cannot ignore and should always take into account when working with disk-resident data structures.</li>
+<li>In SSDs, we don’t have a strong emphasis on random versus sequential I/O, as in HDDs, because the difference in latencies between random and sequential reads is not as large. There is still some difference caused by prefetching, reading contiguous pages, and internal parallelism.</li>
+<li>Even though garbage collection is usually a background operation, its effects may negatively impact write performance, especially in cases of random and unaligned write workloads.</li>
+<li><strong>Writing only full blocks, and combining subsequent writes to the same block, can help to reduce the number of required I/O operations.</strong></li>
+</ul>
+<h4 id="on-disk-structures">On-Disk Structures</h4>
+<h5 id="limitations">Limitations</h5>
+<ul>
+<li>The cost of disk access itself.</li>
+<li><strong>Major: The smallest unit of disk operation is a block</strong>.</li>
+</ul>
+<h5 id="ideas">Ideas</h5>
+<ul>
+<li>On-disk structures are designed with their target storage specifics in mind and generally optimize for fewer disk accesses. We can do this by <strong>improving locality, optimizing the internal representation of the structure, and reducing the number of out-of-page pointers</strong>.</li>
+<li>From above chapters, we came to the conclusion that <strong>high fanout and low height are desired properties for an optimal on-disk data structure</strong>. We’ve also just discussed <strong>additional space overhead coming from pointers, and maintenance overhead from remapping these pointers as a result of balancing</strong>.</li>
+<li>B-Trees combine these ideas:
+<ul>
+<li>increase node fanout</li>
+<li>reduce tree height</li>
+<li>the number of node pointers</li>
+<li>the frequency of balancing operations.</li>
+</ul>
+</li>
+</ul>
+<h3 id="paged-binary-trees">Paged Binary Trees</h3>
+<p>Laying out a binary tree by grouping nodes into pages<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200615111505.png" alt="20200615111505" loading="lazy"></p>
+<ul>
+<li>Improves the situation with locality. To find the next node, it’s only necessary to follow a pointer in an already fetched page.</li>
+<li>However, there’s still some overhead incurred by the nodes and pointers between them. Laying the structure out on disk and its further maintenance are nontrivial endeavors, especially <strong>if keys and values are not presorted and added in random order. Balancing requires page reorganization, which in turn causes pointer updates</strong>.</li>
+</ul>
+<h3 id="ubiquitous-b-trees">Ubiquitous B-Trees</h3>
+<ul>
+<li><strong>B-Tree is not Binary Tree. It means Balanced Tree.</strong></li>
+<li>B-Tree builds a hierarchy that helps to navigate and locate the searched items quickly.</li>
+<li>B-Trees build upon the foundation of balanced search trees and are different in that they have higher fanout (have more child nodes) and smaller height.</li>
+<li><strong>Differences with binary trees</strong>:
+<ul>
+<li>binary tree nodes are drawn as circles. Since each node is responsible just for one key and splits the range into two parts</li>
+<li>B-Tree nodes are often drawn as rectangles, and pointer blocks are also shown explicitly to highlight the relationship between child nodes and separator keys.</li>
+</ul>
+</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200615112451.png" alt="20200615112451" loading="lazy"></figure>
+<ul>
+<li>If we use same way to depicte binary tree, and it will look like as follows:<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200615172951.png" alt="20200615172951" loading="lazy"></li>
+<li><strong>B-Trees are sorted</strong>:  keys inside the B-Tree nodes are stored in order.
+<ul>
+<li>Because of that, to locate a searched key, we can use an algorithm like binary search. This also implies that lookups in B-Trees have logarithmic complexity.</li>
+<li>Since B-Tree nodes store dozens or even hundreds of items, we only have to make one disk seek per level jump.</li>
+</ul>
+</li>
+<li>Using B-Trees, we can efficiently execute both <strong>point and range queries</strong>.</li>
+</ul>
+<h4 id="b-tree-hierarchy">B-Tree Hierarchy</h4>
+<h5 id="components">Components</h5>
+<ul>
+<li>B-Trees consist of multiple nodes.
+<ul>
+<li>Each node holds up to N keys and N + 1 pointers to the child nodes.</li>
+</ul>
+</li>
+<li>These nodes are logically grouped into three groups:
+<ul>
+<li>Root node</li>
+<li>Leaf nodes</li>
+<li>Internal nodes</li>
+</ul>
+</li>
+</ul>
+<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200615174606.png" alt="20200615174606" loading="lazy"></figure>
+<h5 id="concepts">Concepts</h5>
+<ul>
+<li>Since B-Trees are a page organization technique (i.e., they are used to organize and navigate fixed-size pages), we often use terms node and page interchangeably.</li>
+<li>The relation between the node capacity and the number of keys it actually holds is called <strong>occupancy</strong>.</li>
+<li><strong>fanout</strong>: the number of keys stored in each node.
+<ul>
+<li>Higher fanout helps to amortize the cost of structural changes required to keep the tree balanced and to reduce the number of seeks by storing keys and pointers to child nodes in a single block or multiple consecutive blocks.</li>
+</ul>
+</li>
+<li>Balancing operations (namely, splits and merges) are triggered when the nodes are full or nearly empty.</li>
+</ul>
+<h4 id="b-trees">B+ Trees</h4>
+<ul>
+<li>B-Trees allow storing values on any level: in root, internal, and leaf nodes. B+-Trees store values only in leaf nodes.</li>
+<li>Internal nodes store only separator keys used to guide the search algorithm to the associated value stored on the leaf level.</li>
+<li>Since values in B+-Trees are stored only on the leaf level, all operations (inserting, updating, removing, and retrieving data records) affect only leaf nodes and propagate to higher levels only during splits and merges.</li>
+<li><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mi>B</mi><mo>+</mo></msup></mrow><annotation encoding="application/x-tex">B^+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.771331em;vertical-align:0em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.05017em;">B</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.771331em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mbin mtight">+</span></span></span></span></span></span></span></span></span></span></span> Tree is used in MySQL index. You can view the details about differences between B+ tree and B-tree by clicking <a href="https://www.cnblogs.com/liqiangchn/p/9060521.html">https://www.cnblogs.com/liqiangchn/p/9060521.html</a>.</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200615213214.png" alt="20200615213214" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200615213239.png" alt="20200615213239" loading="lazy"></p>
+<h4 id="separator-keys">Separator Keys</h4>
+<ul>
+<li>Keys stored in B-Tree nodes are called index entries, separator keys, or divider cells. They split the tree into subtrees (also called branches or subranges), holding corresponding key ranges. Keys are stored in sorted order to allow binary search. A subtree is found by locating a key and following a corresponding pointer from the higher to the lower level.</li>
+</ul>
+<figure data-type="image" tabindex="3"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200615213815.png" alt="20200615213815" loading="lazy"></figure>
+<ul>
+<li><strong>Some B-Tree variants also have sibling node pointers, most often on the leaf level, to simplify range scans。(Such as B+ tree)</strong>
+<ul>
+<li>These pointers help avoid going back to the parent to find the next sibling.</li>
+<li>Some implementations have pointers in both directions, forming a double-linked list on the leaf level, which makes the reverse iteration possible.</li>
+</ul>
+</li>
+<li><strong>Storage Utilization</strong>: Since B-Trees reserve extra space inside nodes for future insertions and updates, tree storage utilization can get as low as 50%, but is usually considerably higher. Higher occupancy does not influence B-Tree performance negatively.</li>
+</ul>
+<h5 id="how-to-build-b-tree">How to build B-Tree?</h5>
+<ul>
+<li>What sets B-Trees apart is that, rather than being built from top to bottom (as binary search trees), they’re constructed the other way around—from bottom to top. The number of leaf nodes grows, which increases the number of internal nodes and tree height.</li>
+</ul>
+<h4 id="b-tree-lookup-complexity">B-Tree Lookup Complexity</h4>
+<ul>
+<li>2 standpoints:
+<ul>
+<li>the number of block transfers</li>
+<li>the number of comparisons done during the lookup</li>
+</ul>
+</li>
+</ul>
+<h5 id="block-transfers">Block transfers</h5>
+<ul>
+<li>Assume number of keys per node is <strong>N</strong>; <strong>K</strong> times more nodes on each new level; <strong>M</strong> is a total number of items in the B-Tree.</li>
+<li>To find a searched key, at most <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>log</mi><mo>⁡</mo><mi>K</mi></msub><mi>M</mi></mrow><annotation encoding="application/x-tex">\log_K{M}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.93858em;vertical-align:-0.24414em;"></span><span class="mop"><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.23419099999999995em;"><span style="top:-2.4558600000000004em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.07153em;">K</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.24414em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.10903em;">M</span></span></span></span></span> pages are addressed.</li>
+</ul>
+<h5 id="comparisons-done-during-the-lookup">Comparisons done during the lookup</h5>
+<ul>
+<li>From the perspective of number of comparisons, the logarithm base is 2, since searching a key inside each node is done using <strong>binary search</strong>. Every comparison halves the search space, so complexity is <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>log</mi><mo>⁡</mo><mn>2</mn></msub><mi>M</mi></mrow><annotation encoding="application/x-tex">\log_2 M</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.93858em;vertical-align:-0.24414em;"></span><span class="mop"><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.20696799999999996em;"><span style="top:-2.4558600000000004em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.24414em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault" style="margin-right:0.10903em;">M</span></span></span></span>.</li>
+</ul>
+<h4 id="b-tree-lookup-algorithm">B-Tree Lookup Algorithm</h4>
+<ul>
+<li>To find an item in a B-Tree, we have to perform a single traversal from root to leaf. The objective of this search is to find a <strong>searched key</strong> or <strong>its predecessor</strong>.
+<ul>
+<li>Finding an exact match is used for point queries, updates, and deletions</li>
+<li>Finding its predecessor is useful for range scans and inserts.</li>
+</ul>
+</li>
+<li>The algorithm starts from the root and performs a binary search, comparing the searched key with the keys stored in the root node until it finds the first separator key that is greater than the searched value. This locates a searched subtree.</li>
+<li>As soon as we find the subtree, we follow the pointer that corresponds to it and continue the same search process (locate the separator key, follow the pointer) until we reach a target leaf node, where we either find the searched key or conclude it is not present by locating its predecessor.
+<ul>
+<li>During the point query, the search is done after finding or failing to find the searched key.</li>
+<li>During the range scan, iteration starts from the closest found key-value pair and continues by following sibling pointers until the end of the range is reached or the range predicate is exhausted.</li>
+</ul>
+</li>
+</ul>
+<h4 id="couting-keys">Couting Keys</h4>
+<h4 id="b-tree-node-splits">B-Tree Node Splits</h4>
+<ul>
+<li>
+<p>To insert the value into a B-Tree, we first have to locate the target leaf and find the insertion point. For that, we use the algorithm described in the previous section. After the leaf is located, the key and value are appended to it.</p>
+</li>
+<li>
+<p>Updates in B-Trees work by locating a target leaf node using a lookup algorithm and associating a new value with an existing key.</p>
+</li>
+<li>
+<p>If the target node doesn’t have enough room available, we say that the node has overflowed and has to be split in two to fit the new data. <strong>Split conditions:</strong></p>
+<ul>
+<li>For leaf nodes: if the node can hold up to N key-value pairs, and inserting one more key-value pair brings it over its maximum capacity N.</li>
+<li>For nonleaf nodes: if the node can hold up to N + 1 pointers, and inserting one more pointer brings it over its maximum capacity N + 1.</li>
+</ul>
+</li>
+<li>
+<p>Splits are done by allocating the new node, transferring half the elements from the splitting node to it, and adding its first key and pointer to the parent node. In this case, we say that the key is <strong>promoted</strong>.  The index at which the split is performed is called the <strong>split point</strong> (also called the midpoint).</p>
+<ul>
+<li>All elements after the split point (including split point in the case of nonleaf node split) are transferred to the newly created sibling node.</li>
+<li>The rest of the elements remain in the splitting node.</li>
+<li>If the parent node is full and does not have space available for the promoted key and pointer to the newly created node, it has to be split as well. This operation might propagate recursively all the way to the root.
+<ul>
+<li>As soon as the tree reaches its capacity (i.e., split propagates all the way up to the root), we have to split the root node.</li>
+<li>When the root node is split, a new root, holding a split point key, is allocated. The old root (now holding only half the entries) is demoted to the next level along with its newly created sibling, <strong>increasing the tree height by one</strong>.</li>
+</ul>
+</li>
+<li>The tree height change conditions:
+<ul>
+<li>the root node is split and the new root is allocated</li>
+<li>two nodes are merged to form a new root</li>
+</ul>
+</li>
+<li>On the leaf and internal node levels, the tree only grows <strong>horizontally</strong>.</li>
+</ul>
+</li>
+<li>
+<p>i.e. Leaf node split during the insertion of 11. New element and promoted key are shown in gray.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200617103830.png" alt="20200617103830" loading="lazy"></p>
+</li>
+<li>
+<p>i.e. Nonleaf node split during the insertion of 11. New element and promoted key are shown in gray.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200617104006.png" alt="20200617104006" loading="lazy"></p>
+</li>
+</ul>
+<h5 id="steps">Steps</h5>
+<ol>
+<li>Allocate a new node.</li>
+<li>Copy half the elements from the splitting node to the new one.</li>
+<li>Place the new element into the corresponding node.</li>
+<li>At the parent of the split node, add a separator key and a pointer to the new node.</li>
+</ol>
+<h4 id="b-tree-node-merges">B-Tree Node Merges</h4>
+<p>If neighboring nodes have too few values (i.e., their <strong>occupancy</strong> falls under a threshold), the sibling nodes are merged. This situation is called <strong>underflow</strong>.</p>
+<ul>
+<li>It may need to merge nodes when <strong>delete</strong> elements.</li>
+</ul>
+<h5 id="merge-conditions">Merge Conditions</h5>
+<ul>
+<li>For leaf nodes: if a node can hold up to N key-value pairs, and a combined number of key-value pairs in two neighboring nodes is less than or equal to N.</li>
+<li>For nonleaf nodes: if a node can hold up to N + 1 pointers, and a combined number of pointers in two neighboring nodes is less than or equal to N + 1.</li>
+</ul>
+<h6 id="how-to-merge-nodes">How to merge nodes</h6>
+<ul>
+<li>i.e. DELETE 16 - Leaf node merge: Generally, elements from the right sibling are moved to the left one, but it can be done the other way around as long as the key order is preserved.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200617105003.png" alt="20200617105003" loading="lazy"></li>
+<li>i.e. DELETE 10 - Nonleaf node merge: During the merge of nonleaf nodes, we have to pull the corresponding separator key from the parent (i.e., demote it). The number of pointers is reduced by one because the merge is a result of the propagation of the pointer deletion from the lower level, caused by the page removal. Just as with splits, merges can propagate all the way to the root level.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200617114522.png" alt="20200617114522" loading="lazy"></li>
+</ul>
+<h5 id="steps-2">Steps</h5>
+<ol>
+<li>Copy all elements from the right node to the left one.</li>
+<li>Remove the right node pointer from the parent (or demote it in the case of a nonleaf merge).</li>
+<li>Remove the right node.</li>
+</ol>
+<h3 id="summary">Summary</h3>
+<ul>
+<li>Binary search trees might have similar complexity characteristics, but still fall short of being suitable for disk because of low fanout and a large number of relocations and pointer updates caused by balancing.</li>
+<li>B-Trees solve both problems by increasing the number of items stored in each node (high fanout) and less frequent balancing operations.</li>
+<li>We can use this knowledge to create in-memory B-Trees. To create a disk-based implementation, we need to go into details of how to lay out B-Tree nodes on disk and compose on-disk layout using data-encoding formats.</li>
+</ul>
+<h2 id="file-formats">File Formats</h2>
+<p>Explore how exactly B-Trees and other structures are implemented on disk.</p>
+<ul>
+<li>We access the disk in a way that is different from how we access main memory.
+<ul>
+<li>From an application developer’s perspective, memory accesses are mostly transparent. Because we do not have to manage virtual memory offsets manually.</li>
+<li>Disks are accessed using system calls. We usually have to specify the offset inside the target file, and then interpret on-disk representation into a form suitable for main memory.</li>
+</ul>
+</li>
+<li>The semantics of pointer management in on-disk structures are somewhat different from in-memory ones. It is useful to think of on-disk B-Trees as a page management mechanism: <strong>algorithms have to compose and navigate pages</strong>. Pages and pointers to them have to be calculated and placed accordingly.</li>
+</ul>
+<h3 id="motivation">Motivation</h3>
+<ul>
+<li>The differences between memory and disks when we program with:
+<ul>
+<li>Memory: <strong>Unmanaged memory model</strong>.
+<ul>
+<li>We allocate a block of data and slice it any way we like, using fixed-size primitives and structures. If we want to reference a larger chunk of memory or a structure with variable size, we use pointers.</li>
+<li>We can allocate more memory any time we need (within reasonable bounds) without us having to think or worry about whether or not there’s a contiguous memory segment available, whether or not it is fragmented, or what happens after we free it.</li>
+</ul>
+</li>
+<li>Disk: We have to take care of <strong>garbage collection and fragmentation</strong> ourselves.
+<ul>
+<li>For a disk-resident data structure to be efficient, we need to lay out data on disk in ways that allow quick access to it, and consider the specifics of a persistent storage medium, come up with binary data formats, and find a means to serialize and deserialize data efficiently.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Even though the operating system and filesystem take over some of the responsibilities, implementing on-disk structures requires attention to more details and has more pitfalls.</li>
+</ul>
+<h3 id="binary-encoding">Binary Encoding</h3>
+<ul>
+<li>To store data on disk efficiently, it needs to be encoded using a format that is compact and easy to serialize and deserialize.</li>
+<li>Since we do not have primitives such as <strong>malloc</strong> and <strong>free</strong>, but only <strong>read</strong> and <strong>write</strong>, we have to think of accesses differently and prepare data accordingly.</li>
+<li>Before we can organize records into pages, we need to understand how to represent keys and data records in binary form, how to combine multiple values into more complex structures, and how to implement variable-size types and arrays</li>
+</ul>
+<h4 id="primitive-types">Primitive Types</h4>
+<ul>
+<li>Most numeric data types are represented as fixed-size values. When working with multibyte numeric values, it is important to use the same byte-order (endianness) for both encoding and decoding. Endianness determines the sequential order of bytes:
+<ul>
+<li><strong>Big-endian</strong>: The order starts from the most-significant byte (MSB), followed by the bytes in decreasing significance order. In other words, MSB has the lowest address.</li>
+<li><strong>Little-endian</strong>: The order starts from the least-significant byte (LSB), followed by the bytes in increasing significance order.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200618222921.png" alt="20200618222921" loading="lazy"></li>
+</ul>
+</li>
+<li>Records consist of primitives like numbers, strings, booleans, and their combinations. However, when transferring data over the network or storing it on disk, we can only use <strong>byte sequences</strong>.
+<ul>
+<li>In order to send or write the record, we have to <strong>serialize</strong> it (convert it to an interpretable sequence of bytes)</li>
+<li>Before we can use it after receiving or reading, we have to <strong>deserialize</strong> it (translate the sequence of bytes back to the original record).</li>
+</ul>
+</li>
+</ul>
+<h5 id="number">Number</h5>
+<ul>
+<li>Different numeric types may vary in size.
+<ul>
+<li><strong>byte</strong> value is 8 bits</li>
+<li><strong>short</strong> is 2 bytes (16 bits)</li>
+<li><strong>int</strong> is 4 bytes (32 bits)</li>
+<li><strong>long</strong> is 8 bytes (64 bits)</li>
+</ul>
+</li>
+<li>Floating-point numbers (such as float and double) are represented by their <strong>sign</strong>, <strong>fraction</strong>, and <strong>exponent</strong>.
+<ul>
+<li>IEEE 754 Standard: A 32-bit float represents a single-precision value.</li>
+<li>For example, a floating-point number 0.15652 has a binary representation, as shown in Figure 3-2. <a href="https://blog.csdn.net/weixin_42562514/article/details/85264421">计算机基础——IEEE754标准的浮点数的转化</a>
+<ul>
+<li>The first 23 bits represent a fraction</li>
+<li>The following 8 bits represent an exponent</li>
+<li>1 bit represents a sign (whether or not the number is negative).<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200618223858.png" alt="20200618223858" loading="lazy"></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>The double represents a double-precision floating-point value.</li>
+</ul>
+<h5 id="strings-and-variable-size-data">Strings and Variable-Size Data</h5>
+<ul>
+<li>Composing more complex values together is much like <strong>struct</strong><br>
+in C. You can combine primitive values into structures and use fixed-size arrays or pointers to other memory regions.</li>
+<li>Strings and other variable-size data types (such as arrays of fixed-size data) can be serialized as a number, representing the length of the array or string, followed by size bytes: the actual data.</li>
+<li>For strings, this representation is often called UCSD String or Pascal String, named after the popular implementation of the Pascal programming language.</li>
+</ul>
+<pre><code class="language-Pascal">String 
+{
+  size   uint_16; 
+  data   byte[size];
+}
+</code></pre>
+<h5 id="bit-packed-data-booleans-enums-and-flags">Bit-Packed Data: Booleans, Enums, and Flags</h5>
+<ul>
+<li>Booleans can be represented either by using a single byte, or encoding true and false as 1 and 0 values.</li>
+<li>Enums, short for enumerated types, can be represented as integers and are often used in binary formats and communication protocols. Enums are used to represent oftenrepeated low-cardinality values.</li>
+</ul>
+<pre><code class="language-C">enum NodeType { 
+  ROOT,     // 0x00h
+  INTERNAL, // 0x01h 
+  LEAF      // 0x02h 
+};
+</code></pre>
+<ul>
+<li>Flags, kind of a combination of packed booleans and enums. Flags can represent nonmutually exclusive named boolean parameters.</li>
+</ul>
+<pre><code class="language-C++">int IS_LEAF_MASK = 0x01h; // bit #1
+int VARIABLE_SIZE_VALUES = 0x02h; // bit #2 
+int HAS_OVERFLOW_PAGES = 0x04h; // bit #3
+</code></pre>
+<ul>
+<li>Just like packed booleans, flag values can be read and written from the packed value using bitmasks and bitwise operators.</li>
+</ul>
+<pre><code class="language-C++">// Set the bit
+flags |= HAS_OVERFLOW_PAGES; 
+flags |= (1 &lt;&lt; 2);
+
+// Unset the bit
+flags &amp;= ~HAS_OVERFLOW_PAGES; 
+flags &amp;= ~(1 &lt;&lt; 2);
+
+// Test whether or not the bit 
+is set is_set = (flags &amp; HAS_OVERFLOW_PAGES) != 0; 
+is_set = (flags &amp; (1 &lt;&lt; 2)) != 0;
+</code></pre>
+<h4 id="general-principles">General Principles</h4>
+<ul>
+<li>How the addressing is going to be done
+<ul>
+<li>Whether the file is going to be split into same-sized pages, which are represented by a single block or multiple contiguous blocks.</li>
+<li>Most in-place update storage structures use pages of the same size, since it significantly simplifies read and write access.</li>
+<li>Append-only storage structures often write data page-wise, too: records are appended one after the other and, as soon as the page fills up in memory, it is flushed on disk.</li>
+</ul>
+</li>
+<li>The file usually starts with a fixed-size header and may end with a fixed-size trailer, which hold auxiliary information that should be accessed quickly or is required for decoding the rest of the file.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200623224339.png" alt="20200623224339" loading="lazy"></li>
+<li>Many data stores have a <strong>fixed schema</strong>, specifying the number, order, and type of fields the table can hold. Having a fixed schema helps to reduce the amount of data stored on disk: instead of repeatedly writing field names, we can use their positional identifiers. <strong>It is similar to relation database.</strong>
+<ul>
+<li>ex. Company Employee.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200623224650.png" alt="20200623224650" loading="lazy"></li>
+<li>Now, to access first_name, we can slice first_name_length bytes after the fixed-size area. To access last_name, we can locate its starting position by checking the sizes of the variable-size fields that precede it.</li>
+<li>To avoid calculations involving multiple fields, we can encode both offset and length to the fixed-size area. In this case, we can locate any variable-size field separately.</li>
+</ul>
+</li>
+<li><strong>Database files often consist of multiple parts, with a lookup table aiding navigation and pointing to the start offsets of these parts written either in the file header, trailer, or in the separate file.</strong></li>
+</ul>
+<h4 id="page-structure">Page Structure</h4>
+<ul>
+<li>Database systems store data records in data and index files. These files are partitioned into fixed-size units called <strong>pages</strong>, which often have a size of multiple filesystem blocks. <strong>Page sizes usually range from 4 to 16 Kb</strong>.</li>
+<li>The original B-Tree paper [BAYER72] describes a simple page organization for fixedsize data records, where each page is just a concatenation of triplets, as shown in Figure 3-4: keys are denoted by k, associated values are denoted by v, and pointers to child pages are denoted by p.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200623225406.png" alt="20200623225406" loading="lazy"></li>
+<li>Some downsides:
+<ul>
+<li>Appending a key anywhere but the right side requires relocating elements</li>
+<li>It doesn’t allow managing or accessing variable-size records efficiently and works only for fixed-size data.</li>
+</ul>
+</li>
+</ul>
+<h4 id="slotted-pages">Slotted Pages</h4>
+<ul>
+<li>When storing variable-size records, the main problem is <strong>free space management: reclaiming the space occupied by removed records</strong>.\</li>
+<li>To simplify space management for variable-size records, we can split the page into fixed-size segments. However, we end up wasting space if we do that, too.
+<ul>
+<li>For example, if we use a segment size of 64 bytes, unless the record size is a multiple of 64, we waste 64 - (n modulo 64) bytes, where n is the size of the inserted record. In other words, unless the record is a multiple of 64, one of the blocks will be only partially filled.</li>
+</ul>
+</li>
+<li>Space reclamation can be done by simply rewriting the page and moving the records around, but we need to preserve record offsets, since out-of-page pointers might be using these offsets.</li>
+</ul>
+<h5 id="goal">Goal</h5>
+<ul>
+<li>Store variable-size records with a minimal overhead.</li>
+<li>Reclaim space occupied by the removed records.</li>
+<li>Reference records in the page without regard to their exact locations.</li>
+</ul>
+<h5 id="slotted-page">Slotted Page</h5>
+<ul>
+<li>To efficiently store variable-size records such as strings, binary large objects (BLOBs), etc., we can use an organization technique called slotted page. Used in PostgreSQL.</li>
+<li>We organize the page into a collection of slots or cells and split out pointers and cells in two independent memory regions residing on different sides of the page.</li>
+<li>A slotted page has a fixed-size <strong>header</strong> that holds important information about the page and cells. <strong>Cells</strong> may differ in size and can hold arbitrary data: keys, pointers, data records, etc. Figure 3-5 shows a slotted page organization, where every page has a maintenance <strong>region (header), cells, and pointers to them</strong>.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200623230257.png" alt="20200623230257" loading="lazy"></li>
+<li><strong>How to achieve the goal?</strong>
+<ul>
+<li>Minimal overhead: the only overhead incurred by slotted pages is a pointer array holding offsets to the exact positions where the records are stored.</li>
+<li>Space reclamation: space can be reclaimed by defragmenting and rewriting the page.</li>
+<li>Dynamic layout: from outside the page, slots are referenced only by their IDs, so the exact location is internal to the page.</li>
+</ul>
+</li>
+</ul>
+<h4 id="cell-layout">Cell Layout</h4>
+<ul>
+<li>On a cell level, we have a distinction between key and key-value cells.
+<ul>
+<li>Key cells hold a separator key and a pointer to the page between two neighboring pointers.</li>
+<li>Key-value cells hold keys and data records associated with them.</li>
+</ul>
+</li>
+<li>We assume that all cells within the page are uniform (for example, all cells can hold either just keys or both keys and values; similarly, all cells hold either fixed-size or variable-size data, but not a mix of both). This means we can store metadata describing cells once on the page level, instead of duplicating it in every cell.</li>
+</ul>
+<h5 id="key-cell">Key Cell</h5>
+<ul>
+<li>To compose a key cell, we need to know:
+<ul>
+<li>Cell type (<strong>can be inferred from the page metadata</strong>)</li>
+<li>Key size</li>
+<li>ID of the child page this cell is pointing to</li>
+<li>Key bytes</li>
+</ul>
+</li>
+<li>A variable-size key cell layout might look something like this (a fixed-size one would have no size specifier on the cell level:</li>
+</ul>
+<figure data-type="image" tabindex="4"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200627224035.png" alt="20200627224035" loading="lazy"></figure>
+<ul>
+<li>We have grouped fixed-size data fields together, followed by key_size bytes. With <strong>Fixed Size</strong> key, the offset is easy to be calculated by using static and precomputed offsets. For <strong>Variable size</strong> key, we need to use the <strong>key_size</strong> for every key offset calculation.</li>
+</ul>
+<h6 id="key-value-cells">Key-Value Cells</h6>
+<ul>
+<li>The key-value cells hold data records instead of the child page IDs.
+<ul>
+<li>Cell type (can be inferred from page metadata)</li>
+<li>Key size</li>
+<li>Value size</li>
+<li>Key bytes</li>
+<li>Data record bytes *</li>
+</ul>
+</li>
+</ul>
+<figure data-type="image" tabindex="5"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200627224742.png" alt="20200627224742" loading="lazy"></figure>
+<h4 id="combining-cells-into-slotted-pages">Combining Cells into Slotted Pages</h4>
+<ul>
+<li>We append cells to the right side of the page (toward<br>
+its end) and keep cell offsets/pointers in the left side of the page, as shown in Figure 3-6.</li>
+</ul>
+<figure data-type="image" tabindex="6"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200630103809.png" alt="20200630103809" loading="lazy"></figure>
+<ul>
+<li>Keys can be inserted out of order and their logical sorted order is kept by sorting cell offset pointers in key order.  This design allows appending cells to the page with minimal effort, since cells don’t have to be relocated during insert, update, or delete operations.
+<ul>
+<li>ex. Two names are added to thepage, and their insertion order is: Tom and Leslie. As you can see in Figure 3-7, their logical order (in this case, alphabetical), does not match insertion order (order in which they were appended to the page). Cells are laid out in insertion order, but offsets are re-sorted to allow using binary search.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200630104929.png" alt="20200630104929" loading="lazy"></li>
+<li>Now, we’d like to add one more name to this page: Ron. New data is appended at the upper boundary of the free space of the page, but cell offsets have to preserve the lexi‐cographical key order: Leslie, Ron, Tom. To do that, we have to reorder cell offsets: pointers after the insertion point are shifted to the right to make space for the new pointer to the Ron cell, as you can see in Figure 3-8.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200630113910.png" alt="20200630113910" loading="lazy"></li>
+</ul>
+</li>
+</ul>
+<h4 id="managing-variable-size-data">Managing Variable-Size Data</h4>
+<ul>
+<li>Removing an item from the page does not have to remove the actual cell and shift other cells to reoccupy the freed space. Instead
+<ul>
+<li>the cell can be marked as deleted</li>
+<li>an in-memory availability list can be updated with the amount of freed memory and a pointer to the freed value.</li>
+<li>The availability list stores offsets of freed segments and their sizes. When inserting a new cell, we first check the availability list to find if there’s a segment where it may fit.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200630114257.png" alt="20200630114257" loading="lazy"></li>
+</ul>
+</li>
+<li>Some database(Ex.SQLite) may store the the first available segments and total  number of available bytes within the page to quickly check whether or not we can fit a new element into the page after defragmenting it.</li>
+</ul>
+<h5 id="strategy-to-calculate-fit">Strategy to calculate fit</h5>
+<ul>
+<li>First Fit: This might cause a larger overhead, since the space remaining after reusing the first suitable segment might be too small to fit any other cell, so it will be effectively wasted.</li>
+<li>Best Fit: For best fit, we try to find a segment for which insertion leaves the smallest remainder.</li>
+</ul>
+<h5 id="others">Others</h5>
+<ul>
+<li>If we cannot find enough consecutive bytes to fit the new cell but there are enough fragmented bytes available, live cells are read and rewritten, defragmenting the page and reclaiming space for new writes. If there’s not enough free space even after defragmentation, we have to create an overflow page.</li>
+<li>To improve locality (especially when keys are small in size), some implementations store keys and values separately on the leaf level.Keeping keys together can improve the locality during the search. After the searched key is located, its value can be found in a value cell with a corresponding index. (<strong>Sorted</strong>) With variable-size keys, this requires us to calculate and store an additional value cell pointer</li>
+</ul>
+<h5 id="summary-2">Summary</h5>
+<ul>
+<li>In summary, to simplify B-Tree layout, we assume that each node occupies a single page. And a page consists of
+<ul>
+<li>fixed-size header</li>
+<li>cell pointer block</li>
+<li>cells
+<ul>
+<li>Cells hold keys and pointers to the pages representing child nodes or associated data records.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>BTrees use simple pointer hierarchies: page identifiers to locate the child nodes in the tree file, and cell offsets to locate cells within the page.</li>
+</ul>
+<h3 id="versioning">Versioning</h3>
+<p>The binary file format can change. Most of the time, any storage engine version has to support more than one serialization format.  (e.g., current and one or more legacy formats for backward compatibility). To support that, we have to be able to find out which version of the file we’re up against.</p>
+<ul>
+<li>Apache Cassandra is using version prefixes in filenames. This way, you can tell which version the file has without even opening it. As of version 4.0, a data file name has the <code>na</code> prefix, such as <code>na-1-bigData.db</code>. Older files have different prefixes: files written in version 3.0 have the <code>ma</code> prefix.</li>
+<li>Alternatively, the version can be stored in a separate file. For example, PostgreSQL stores the version in the <strong>PG_VERSION</strong> file.</li>
+<li>The version can also be stored directly in the index file header. In this case, a part of the header (or an entire header) has to be encoded in a format that does not change between versions. After finding out which version the file is encoded with, we can create a version-specific reader to interpret the contents.</li>
+</ul>
+<h3 id="checksumming">Checksumming</h3>
+<p>Files on disk may get damaged or corrupted by software bugs and hardware failures. To identify these problems preemptively and avoid propagating corrupt data to other subsystems or even nodes, we can use checksums and cyclic redundancy checks (CRCs).</p>
+<ul>
+<li>Checksums provide the weakest form of guarantee and aren’t able to detect corruption in multiple bits. They’re usually computed by using XOR with parity checks or summation.</li>
+<li>CRCs can help detect burst errors (e.g., when multiple consecutive bits got corrupted) and their implementations usually use lookup tables and polynomial division. Multibit errors are crucial to detect, since a significant percentage of failures in communication networks and storage devices manifest this way.</li>
+</ul>
+<blockquote>
+<p>Noncryptographic hashes and CRCs should not be used to verify whether or not the data has been tampered with. For this, you should always use strong cryptographic hashes designed for security. The main goal of CRC is to make sure that there were no unintended and accidental changes in data. These algorithms are not designed to resist attacks and intentional changes in data</p>
+</blockquote>
+<ul>
+<li>Since computing a checksum over the whole file is often impractical and it is unlikely<br>
+we’re going to read the entire content every time we access it, page checksums are<br>
+usually computed on pages and placed in the page header. This way, checksums can<br>
+be more robust (since they are performed on a small subset of the data), and the<br>
+whole file doesn’t have to be discarded if corruption is contained in a single page</li>
+</ul>
+<h2 id="implementing-b-trees">Implementing B-Trees</h2>
+<h3 id="page-header">Page Header</h3>
+<ul>
+<li>The page header holds information about the page that can be used for navigation, maintenance, and optimizations.
+<ul>
+<li>Flags that describe page contents and layout.</li>
+<li>Number of cells in the page.</li>
+<li>Lower and upper offsets marking the empty space (used to append cell offsets and data)</li>
+<li>Other useful metadata</li>
+</ul>
+</li>
+<li>PostgreSQL stores the page size and layout version in the header.</li>
+<li>MySQL InnoDB, page header holds the number of heap records, level, and some other implementation-specific values.</li>
+<li>In SQLite, page header stores the number of cells and a rightmost pointer.</li>
+</ul>
+<h4 id="magic-numbers">Magic Numbers</h4>
+<p>One of the values often placed in the file or page header is a magic number. Usually, it’s a multibyte block, containing a constant value that can be used to signal that the block represents a page, specify its kind, or identify its version.</p>
+<ul>
+<li>Magic numbers are often used for validation and sanity checks. It’s<br>
+very improbable that the byte sequence at a random offset would exactly match the magic number. If it did match, there’s a good chance the offset is correct.
+<ul>
+<li>Ex. during write we can place the magic number 50 41 47 45 (hex for PAGE) into the header. During the read, we validate the page by comparing the four bytes from the read header with the expected byte sequence.</li>
+</ul>
+</li>
+</ul>
+<h4 id="sibling-links">Sibling Links</h4>
+<p>Some implementations store forward and backward links, pointing to the left and right sibling pages. These links help to locate neighboring nodes without having to ascend back to the parent. (<strong>One of differences between B-tree and B+Tree</strong>).</p>
+<ul>
+<li>Benefits: Range Query Performance</li>
+<li>Loss: Add complexity to split and merge operations as may need to update sibling offsets.</li>
+</ul>
+<figure data-type="image" tabindex="7"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200703170759.png" alt="20200703170759" loading="lazy"></figure>
+<h4 id="rightmost-pointers">Rightmost Pointers</h4>
+<p>B-Tree separator keys have strict invariants: they’re used to split the tree into subtrees and navigate them, so there is always one more pointer to child pages than there are keys.</p>
+<ul>
+<li>In many implementations, nodes look more like the ones displayed in Figure 4-2: each separator key has a child pointer, while the last pointer is stored separately, since it’s not paired with any key. SQLite stored the extra pointer in the header.</li>
+</ul>
+<figure data-type="image" tabindex="8"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200703171221.png" alt="20200703171221" loading="lazy"></figure>
+<ul>
+<li>If the rightmost child is split and the new cell is appended to its parent, the rightmost child pointer has to be reassigned. After the split, the cell appended to the parent (shown in gray) holds the promoted key and points to the split node. The pointer to the new node is assigned instead of the previous rightmost pointer.</li>
+</ul>
+<figure data-type="image" tabindex="9"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200705104822.png" alt="20200705104822" loading="lazy"></figure>
+<h4 id="node-high-keys">Node High Keys</h4>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/微信截图_20200709152604.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/database-internal-lsm-tree-summary/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-07-05">2020-07-05</time>
+                  <h4 class="title white no-margin">Database Internal - LSM-tree Summary</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200612193331.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/amplification-and-rum/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-06-13">2020-06-13</time>
+                  <h4 class="title white no-margin">Amplification and RUM</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

@@ -1,0 +1,938 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>分布式系统基本概念 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+介绍总结一些基本的分布式系统中的概念
+简要介绍分布式系统中常见的问题和解决方案
+后续会针对部分分布式常用组件进一步介绍
+
+
+
+分布式系统理论
+CAP定理
+
+在理论计算机科学中，CAP定理（CAP theorem），又被称作布鲁尔定理（B..." />
+    <meta name="keywords" content="分布式" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://blog.shunzi.tech/post-images/basic-concept-of-distributed-system.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2019-08-23"><i class="fa fa-calendar"></i><span class="lately">1 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/basic-concept-of-distributed-system/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/basic-concept-of-distributed-system/"> </span>
+              </a>
+              <span id="/basic-concept-of-distributed-system/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-0 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">分布式系统基本概念</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>介绍总结一些基本的分布式系统中的概念</li>
+<li>简要介绍分布式系统中常见的问题和解决方案</li>
+<li>后续会针对部分分布式常用组件进一步介绍</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="分布式系统理论">分布式系统理论</h2>
+<h3 id="cap定理">CAP定理</h3>
+<ul>
+<li>在理论计算机科学中，CAP定理（CAP theorem），又被称作布鲁尔定理（Brewer's theorem），它指出对于一个分布式计算系统来说，不可能同时满足以下三点: 一致性，可用性，分区容错性。</li>
+</ul>
+<h4 id="一致性consistency">一致性（Consistency）</h4>
+<ul>
+<li>在分布式系统中的所有数据备份，在同一时刻是否有同样的值。等同于所有节点访问同一份最新的数据副本</li>
+</ul>
+<h5 id="操作原子性">操作原子性</h5>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/35298019">知乎：范斌 - 漫话分布式系统共识协议: 2PC/3PC篇</a></li>
+</ul>
+<h6 id="2pctwo-phase-commit-阻塞-数据不一致问题-单点问题">2PC（Two-Phase Commit）- 阻塞、数据不一致问题、单点问题</h6>
+<ul>
+<li>在事务处理、关系型数据库和计算机网络中，2阶段提交协议是一种典型的原子提交协议，它是一种由协调器来处理分布式原子参与者是提交或者回滚事务的分布式算法。</li>
+</ul>
+<h6 id="3pc-thress-phase-commit-解决2pc的阻塞但还是可能造成数据不一致">3PC (Thress-Phase Commit) - 解决2PC的阻塞，但还是可能造成数据不一致</h6>
+<ul>
+<li>为了避免在通知所有参与者提交事务时，其中一个参与者crash不一致时，就出现了三阶段提交的方式。三阶段提交在两阶段提交的基础上增加了一个preCommit的过程，当所有参与者收到preCommit后，并不执行动作，直到收到commit或超过一定时间后才完成操作。<br>
+<img src="https://blog.shunzi.tech/post-images/1566545883516.png" alt="" loading="lazy"></li>
+</ul>
+<h5 id="副本一致性">副本一致性</h5>
+<ul>
+<li>副本一致性常常是指在分布式系统中为了保证服务的高可用，往往会提供副本来进行备份。但引入副本的同时，则意味着需要带来额外的读写维护的开销。对外提供服务的往往又只有主从备份中的主节点，根据对一致性的不同要求选择不同的数据同步方式。</li>
+<li>大体可以分类为：强一致性，弱一致性，最终一致性。</li>
+</ul>
+<h5 id="consensus-algorithm-协同算法">Consensus Algorithm 协同算法</h5>
+<h6 id="paxos算法解决单点问题">Paxos算法（解决单点问题）</h6>
+<ul>
+<li>Paxos 协议是一个解决分布式系统中，多个节点之间就某个值（提案）达到一致（决议）的通信协议，它能够处理在少数节点离弦的情况下，剩余的多数节点仍然能够达成一致。</li>
+</ul>
+<h6 id="raft-一致性算法解决paxos的实现难度">Raft 一致性算法（解决Paxos的实现难度）</h6>
+<ul>
+<li><strong>选举</strong>（Leader Election）</li>
+<li><strong>日志复制</strong>（Log Replication）</li>
+<li><strong>安全性</strong>（Safety）</li>
+</ul>
+<h5 id="lease机制">Lease机制</h5>
+<ul>
+<li>Lease 中文叫租约，是一种广泛应用于分布式系统领域的协议，它是一种维护分布式系统一致性的有效工具。常用于分布式缓存的更新和管理。</li>
+</ul>
+<h5 id="quorum-nwr">Quorum NWR</h5>
+<ul>
+<li>NWR 时分布式系统中一种用于控制一致性级别的策略。反别对应的含义为： N - 同一份数据的拷贝份数， W - 是更新一个数据对象的时候需要确保成功更新的份数， R - 读取一个数据需要读取的拷贝份数。</li>
+<li><code>W + R &gt; N</code> 保证了每次读写的数据都是最新的，从而保证了强一致性</li>
+<li><code>W &gt; N / 2</code> 保证了两个事务不能并发写一个数据</li>
+</ul>
+<h5 id="多版本并发控制-mvcc">多版本并发控制 MVCC</h5>
+<ul>
+<li>在数据库中常常使用两种机制来提高事物的并发。一种是基于锁（如行级锁）的并发控制机制，称为悲观并发控制机制；一种是基于乐观锁的乐观并发控制机制，但乐观锁不是一种真正的锁，只是一种并发控制的思想；一种是多版本控制机制 MVCC。</li>
+<li>以Mysql InnoDB为例，MVCC的实现主要是借助每张表增加两个字段create version、delete version，在执行对应的CUD操作时对应的更新两个字段，在执行查询操作需要隐式地增加相应的版本条件来查询最终的结果。</li>
+</ul>
+<h5 id="gossip">Gossip</h5>
+<ul>
+<li>Gossip是一种去中心化思路的分布式协议，解决状态在集群中的传播和状态一致性的保证的问题，是一种实现简单、具备较高容错性和性能的应用广泛的状态同步协议。</li>
+<li>状态的传播类似于图计算中以边的形式将各个服务节点联系起来进行通信，对于状态的一致性使用相应的版本号进行保证，状态信息的传播时间收敛在 O(log(N)) 内，其中 N 为服务节点的数量。</li>
+</ul>
+<h4 id="可用性availability">可用性（Availability）</h4>
+<ul>
+<li>在集群中一部分节点故障后，集群整体是否还能响应客户端的读写请求。每次请求都能获取到非错的响应——但是不保证获取的数据为最新数据</li>
+</ul>
+<h5 id="可用性-vs-可靠性">可用性 VS 可靠性</h5>
+<ul>
+<li>可靠性（reliability）：在规格时间间隔内和规定条件下，系统或部件执行所要求功能的能力。例如：在客户端与服务器端通信时，如果网络故障，系统不能出现故障。</li>
+<li>可用性（availability）：软件系统在投入使用时可操作和可访问的程度，或能实现其指定系统功能的概率。例如：系统的可用性要达到98%。</li>
+<li>通俗的例子解释：可靠性是一个持续性的状态，更多地强调系统自身；而可用性是一个短暂的状态，更多地强调外部的触发。就好比一个人，你找他的时候能不能找到，这是可用性；而他干活靠不靠谱，则是可靠性。一个人如果随叫随到，但是时不时偷懒，就是高可用、低可靠；而如果他经常找不到人，但干活很负责，就是低可用、高可靠。</li>
+</ul>
+<h4 id="分区容错性partition-tolerance">分区容错性（Partition tolerance）</h4>
+<ul>
+<li>以实际效果而言，分区相当于对通信的时限要求。系统如果不能在时限内达成数据一致性，就意味着发生了分区的情况，必须就当前操作在C和A之间做出选择。</li>
+</ul>
+<h4 id="ca">CA</h4>
+<ul>
+<li>放弃分区容错性，CA系统更多的是指y允许分区后各个子系统依然保持CA。典型例子 关系型数据库、LDAP(轻量目录访问协议数据库)</li>
+</ul>
+<h4 id="cp">CP</h4>
+<ul>
+<li>不要求可用性，相当于每个请求都需要在 Server 之间强一致，而 P 分区会导致同步时间无限延长。典型例子传统的数据库分布式事务以及分布式锁。</li>
+</ul>
+<h4 id="ap">AP</h4>
+<ul>
+<li>放弃一致性，一旦分区发生，节点之间可能失去联系，为了保证高可用，每个节点只能用本地数据提供服务，而这样会导致全局数据的不一致性。典型例子 NoSQL 以及DNS Web缓存等</li>
+</ul>
+<h3 id="base理论">BASE理论</h3>
+<ul>
+<li>BASE理论是由eBay架构师提出的。BASE是对CAP中一致性和可用性权衡的结果，其来源于对大规模互联网分布式系统实践的总结，是基于CAP定律逐步演化而来。其核心思想是即使无法做到强一致性，但每个应用都可以根据自身业务特点，才用适当的方式来使系统打到最终一致性。</li>
+</ul>
+<h4 id="基本可用basically-available">基本可用（Basically Available）</h4>
+<ul>
+<li>什么是基本可用呢？假设系统，出现了不可预知的故障，但还是能用，相比较正常的系统而言：</li>
+</ul>
+<ol>
+<li>
+<p>响应时间上的损失：正常情况下的搜索引擎0.5秒即返回给用户结果，而基本可用的搜索引擎可以在2秒作用返回结果。</p>
+</li>
+<li>
+<p>功能上的损失：在一个电商网站上，正常情况下，用户可以顺利完成每一笔订单。但是到了大促期间，为了保护购物系统的稳定性，部分消费者可能会被引导到一个降级页面。</p>
+</li>
+</ol>
+<h4 id="软状态soft-state">软状态（Soft State）</h4>
+<ul>
+<li>
+<p>什么是软状态呢？相对于原子性而言，要求多个节点的数据副本都是一致的，这是一种“硬状态”。</p>
+</li>
+<li>
+<p>软状态指的是：允许系统中的数据存在中间状态，并认为该状态不影响系统的整体可用性，即允许系统在多个不同节点的数据副本存在数据延时。</p>
+</li>
+</ul>
+<h4 id="最终一致性eventually-consistent">最终一致性（Eventually Consistent）</h4>
+<ul>
+<li>上面说软状态，然后不可能一直是软状态，必须有个时间期限。在期限过后，应当保证所有副本保持数据一致性，从而达到数据的最终一致性。这个时间期限取决于网络延时、系统负载、数据复制方案设计等等因素。</li>
+</ul>
+<h3 id="参考链接">参考链接</h3>
+<ul>
+<li><a href="http://thesecretlivesofdata.com/raft/">[1] Raft 一致性算法动画演示</a></li>
+<li><a href="https://raft.github.io/">[2] Raft Github Page</a></li>
+<li><a href="https://www.cnblogs.com/zhang-qc/p/8688258.html">[3] 博客园：分布式一致性协议介绍（Paxos、Raft）</a></li>
+<li><a href="https://segmentfault.com/a/1190000004474543#articleHeader1">[4] 2PC到3PC到Paxos到Raft到ISR</a></li>
+<li><a href="https://blog.csdn.net/u012428012/article/details/80572071">[5] 分布式系统原理 之3 Lease机制</a></li>
+<li><a href="https://blog.csdn.net/zgl_dm/article/details/6291664">[6] Quorum NWR</a></li>
+<li><a href="https://www.cnblogs.com/hugb/p/8955505.html">[7] 博客园：图解分布式一致性协议Paxos</a></li>
+<li><a href="https://draveness.me/database-concurrency-control">[8] 浅谈数据库并发控制 - 锁和 MVCC<br>
+</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/41228196">[9] P2P 网络核心技术：Gossip 协议</a></li>
+<li><a href="http://blog.kongfy.com/2016/08/%E8%A2%AB%E8%AF%AF%E7%94%A8%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7/">[10] 被误用的“一致性”</a></li>
+<li><a href="https://juejin.im/post/5b26634b6fb9a00e765e75d1">[11] 掘金：分布式理论-CAP理论</a></li>
+</ul>
+<h3 id="其他概念">其他概念</h3>
+<h4 id="状态特性">状态特性</h4>
+<ul>
+<li>在大部分应用中都提倡无服务状态，分布式环境中的任何节点（Node）也是无状态的。无状态是指不保存存储状态，则可以随意重启和替代，便于做扩展。</li>
+</ul>
+<h4 id="系统重发与幂等性">系统重发与幂等性</h4>
+<ul>
+<li>针对分布式服务中的远程过程调用，往往会使用到诸如HttpClient一样的客户端向服务端发起相应的请求，在请求过程中可能会存在一些链路上的故障，此时将利用客户端对应提供的重试的机制重新发起请求。</li>
+<li><strong>幂等性</strong>：就是调用一次和调用N次应该返回同样的结果。针对系统重发操作，往往都有幂等性的要求。</li>
+</ul>
+<h2 id="分布式系统常见设计策略">分布式系统常见设计策略</h2>
+<h3 id="心跳检测">心跳检测</h3>
+<ul>
+<li>心跳检测主要用于“判定某节点是否正常工作”。</li>
+<li><strong>注意</strong>：心跳检测机制如果运行正常，即能准确地接收到相关心跳信息，则可以确定该节点正常运行，但若无法接收心跳，无法直接判定该节点已经宕机（可能该节点处于繁忙状态，导致检测调用超时）。</li>
+</ul>
+<h4 id="周期检测心跳机制和累计失效检测机制">周期检测心跳机制和累计失效检测机制</h4>
+<ul>
+<li>每间隔 t 时间向节点集群发起检测请求，设定超时时间，如果超过超时时间，对应地判定为死亡。（但容易产生误判）</li>
+<li>可以进一步统计实际检测节点的返回时间，包括得到一定周期内的最长时间，并根据现有未成功返回的时间在历史统计里的分布来计算得到节点死亡概率。</li>
+<li>对于宣告濒临死亡的节点可以发起有限次数的重试。</li>
+</ul>
+<h3 id="高可用设计">高可用设计</h3>
+<h4 id="主备-master-salve">主备 （Master-Salve）</h4>
+<ul>
+<li>当主机宕机时，备机接管主机的一切工作，将主机恢复正常后，按使用者设定以自动（热备）或手动（冷备）方式将服务切换到主机上运行。常用于数据库的高可用方案。</li>
+</ul>
+<h4 id="互备-双活active-active">互备-双活（Active-Active）</h4>
+<ul>
+<li>两台主机同时运行各自的服务工作且相互监测情况。</li>
+<li>在数据库的高可用MM（Master-Master）模式中，即一个系统中有两个主节点每个主节点都具有相应的读写能力，但需要根据时间戳或者业务版本号对应地合并相应的数据版本。分布式版本控制管理系统Git就是一种常见的MM模式的代表，具备最终一致性。</li>
+</ul>
+<h4 id="集群cluster">集群（Cluster）</h4>
+<ul>
+<li>多个节点在运行，通过主控节点对应地将请求按照一定的规则进行分发，例如Zookeeper。但对于主控节点的高可用性，需要提供相应的保证。可以对主控节点使用相应的主备机制来保证对应的高可用。</li>
+</ul>
+<h4 id="容错性">容错性</h4>
+<ul>
+<li>保证分布式环境下相应系统的高可用或者健壮性。</li>
+<li>以缓存雪崩的解决方案为例，可以通过设置默认值的方式来针对某些无效的数据查询操作进行优化，减少数据库的查询操作，使用缓存直接返回无效查询的结果，避免缓存击穿。</li>
+</ul>
+<h3 id="负载均衡">负载均衡</h3>
+<ul>
+<li>针对集群中的多个正常运行的节点，可以设置一个调度器，并采用一定的负载均衡策略将相关计算任务的压力对应的分摊到各个服务节点上，从而提高整个系统的负载能力。负载均衡有对应的硬件和软件的解决方案。</li>
+<li>硬件解决方案有 F5 ，智能交换机，可以做4-7层负载均衡，具有负载均衡、应用交换、会话交换、状态监控、智能网络地址转换、通用持续性、响应错误处理、IPv6网关、高级路由、智能端口镜像、SSL加速、智能HTTP压缩、TCP优化、第7层速率整形、内容缓冲、内容转换、连接加速、高速缓存、Cookie加密、选择性内容加密、应用攻击过滤、拒绝服务(DoS)攻击和SYN Flood保护、防火墙—包过滤、包消毒等功能。</li>
+<li>软件解决方案：LVS(四层， IP+Port)、HAProxy、Nginx</li>
+</ul>
+<h3 id="参考链接-2">参考链接</h3>
+<ul>
+<li><a href="http://www.ha97.com/5646.html">[1] （总结）Nginx/LVS/HAProxy负载均衡软件的优缺点详解</a></li>
+<li><a href="https://www.cnblogs.com/gaoxu387/p/7941381.html">[2] LVS三种模式的区别及负载均衡算法</a></li>
+</ul>
+<h2 id="分布式系统设计实践">分布式系统设计实践</h2>
+<h3 id="全局id生成">全局ID生成</h3>
+<h4 id="uuid">UUID</h4>
+<ul>
+<li>日期或时间</li>
+<li>时钟序列</li>
+<li>全局唯一的IEEE机器识别号（MAC地址）</li>
+</ul>
+<h4 id="id生成表模式">ID生成表模式</h4>
+<ul>
+<li>使用MySql自增ID作为全局唯一ID。首先创建单独的数据库，并创建一个表。</li>
+</ul>
+<pre><code class="language-SQL">CREATE TABLE `Ticket64` (
+    `id` bigint(20) unsigned NOT NULL auto_increment,
+    `stub` char(1) NOT NULL default '',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `stub` (`stub`)
+)ENGINE=MyISAM
+</code></pre>
+<ul>
+<li>然后在需要全局唯一ID的应用端的事务会话里添加以下语句从而获得最新的自增ID</li>
+</ul>
+<pre><code class="language-SQL">REPLACE INTO Ticket64(stub) VALUES ('a');
+SELECT LAST_INSERT_ID();
+</code></pre>
+<ul>
+<li>但此时只是单机基础上的唯一ID，为了解决高可用问题，可以启用多台数据库服务器来生成ID，每一个服务器自增ID设置不同的步长和起始值来进行区分。例如Flicker中使用了两台数据库服务器分别生成奇数和偶数的自增ID。</li>
+</ul>
+<h4 id="snowflake-雪花算法">Snowflake 雪花算法</h4>
+<ul>
+<li>组成
+<ul>
+<li>41位的时间序列（精确到毫秒，长度可以用到69年）</li>
+<li>10位的机器标识（10位可以支持部署1024个节点）</li>
+<li>12位的计数顺序号（12位的计数序号支持每个节点没毫秒产生4096个ID序号）</li>
+</ul>
+</li>
+<li>优点：高性能、低延迟、独立的应用、按时间有序</li>
+<li>缺点：需要独立的开发部署</li>
+</ul>
+<h4 id="id生成表缓存">ID生成表+缓存</h4>
+<ul>
+<li>通过使用ID生成表成批获取ID，譬如1000，放到缓存中，可以减少数据库交互次数，从而提高性能。</li>
+<li>优点：高性能、低延迟</li>
+<li>缺点：ID不连贯</li>
+</ul>
+<h3 id="哈希取模">哈希取模</h3>
+<ul>
+<li>哈希方式是最常见的数据分布方式，实现方式是通过可以描述记录的业务的id或key，通过hash函数求余。余数作为处理该数据的服务器索引编号处理。</li>
+<li><strong>存在的问题</strong>：hash函数的不同可能导致数据产生严重倾斜，在扩容等操作时，数据迁移比较繁琐，之前的映射关系可能存在不匹配的情况。</li>
+<li><strong>解决办法</strong>：在逻辑上先预设足够大数目的数据库，随着物理负载的增加，把对应逻辑的数据库迁移到新增的物理库上即可，对于应用透明，只需要维护逻辑库和物理库之间的映射关系。</li>
+</ul>
+<h3 id="一致性hash">一致性hash</h3>
+<ul>
+<li>一种分布式哈希（DHT）算法，主要解决单调性和分散性的问题。单调性是指哈希的结果应该能够保证原有已分配的内容可以映射到原有的缓冲中去，避免在节点增减过程中出现不能命中的情况。</li>
+<li>实现方式：构建一个Hash环，将对应的key哈希到0~2^32-1的数字空间中，将这些数字头尾相连。</li>
+<li>优点：可以任意动态添加删除节点，删除节点只会影响一致性Hash环上相邻的节点。</li>
+<li>为了尽可能均匀地分布节点和数据，引入虚节点，增强平衡性。</li>
+</ul>
+<h3 id="路由表">路由表</h3>
+<ul>
+<li>针对某些需要全局计算的场景。</li>
+<li>路由表信息集中管理，可能存在单点故障，需要解决对应的高可用问题。</li>
+</ul>
+<h3 id="数据拆分">数据拆分</h3>
+<ul>
+<li>以阿里巴巴开源的分布式数据库中间件Cobar为例，可以在分布式的环境下将数据表放入不同的数据库中来实现，并且支持一张数据的水平拆分成多份放入不同的库中。</li>
+</ul>
+<h3 id="参考链接-3">参考链接</h3>
+<ul>
+<li><a href="https://www.jianshu.com/p/e968c081f563">[1] 深入浅出一致性Hash原理</a></li>
+<li><a href="http://www.liuliya.com/archive/643.html">[2] cobar的读写分离及高可用</a></li>
+</ul>
+<h2 id="分布式系统中常见的问题">分布式系统中常见的问题</h2>
+<h3 id="脑裂问题">脑裂问题</h3>
+<ul>
+<li>问题描述：主备是实现高可用的有效方式，但存在一个脑裂问题。该问题是指在一个高可用系统之中，当联系着的两个节点断开联系时，本来作为一个整体的系统，分裂为两个独立的节点，这时两个节点开始竞争共享资源，结果导致系统紊乱。</li>
+<li>根本原因：心跳检测机制存在不确定性。当因为某种原因判死的Master服务器仍然在运行，即出现假死现象，此时系统中将会有两个Master节点进行资源的竞争。</li>
+<li>解决办法：设置第三方检测服务器来进行仲裁，当Slave即将接管Master时，第三方服务器Monitor尝试ping一下maste。若无通讯，判定死亡。在Master运行时，间隔一段时间由Master服务器尝试ping slave和Monitor，如果都出现异常，则暂停业务操作，进行重试，重试一定次数之后退出或执行对应的故障处理程序。</li>
+<li>存在问题：Monitor节点的高可用无法保障，会出现双主脑裂问题。可以通过引入Lease机制来解决。</li>
+</ul>
+<h2 id="rpc-remote-procedure-call">RPC (Remote Procedure Call)</h2>
+<ul>
+<li>远程过程调用（英语：Remote Procedure Call，缩写为 RPC）是一个计算机通信协议。该协议允许运行于一台计算机的程序调用另一台计算机的子程序，而程序员无需额外地为这个交互作用编程。其调用协议通常包含 <strong>传输协议</strong> 和 <strong>序列化协议</strong>。RPC过程往往不在一个进程（或线程）内，所以需要其他协议来辅助完成进程（或线程）间的通信。</li>
+<li>以RESTFul为代表的HTTP服务本质上是RPC利用了HTTP协议的实现。</li>
+<li>基于其他非HTTP协议实现的RPC，主要是为了提高相应的传输性能，相比之下，HTTP协议在高性能的要求下的性能表现不尽人意。</li>
+</ul>
+<h3 id="rpc-架构">RPC 架构</h3>
+<ul>
+<li>客户端 (Client)</li>
+<li>服务端 (Server)</li>
+<li>客户端存根 (Client  Stub)，存放服务端的地址消息，再将客户端的请求参数打包成网络消息，然后通过网络远程发送给服务方。</li>
+<li>服务端存根 (Server Stub)，接收客户端发送过来的消息，将消息解包，并调用本地的方法。</li>
+</ul>
+<h3 id="rpc框架">RPC框架</h3>
+<ul>
+<li>
+<p><strong>gRPC</strong>: 是Google最近公布的开源软件，基于最新的HTTP2.0协议，并支持常见的众多编程语言。 我们知道HTTP2.0是基于二进制的HTTP协议升级版本，目前各大浏览器都在快马加鞭的加以支持。这个RPC框架是基于HTTP协议实现的，底层使用到了Netty框架的支持。</p>
+<ul>
+<li>使用了 <a href="https://developers.google.com/protocol-buffers/docs/overview"><strong>Protocol Buffers</strong></a> 的序列化协议。二进制流进行传输，消耗更小。</li>
+<li>为了取得更好的支持和兼容性，建议使用 <a href="https://developers.google.com/protocol-buffers/docs/proto3">Proto3</a></li>
+</ul>
+</li>
+<li>
+<p><strong>Thrift</strong>: Facebook的一个开源项目，主要是一个跨语言的服务开发框架。它有一个代码生成器来对它所定义的IDL定义文件自动生成服务代码框架。用户只要在其之前进行二次开发就行，对于底层的RPC通讯等都是透明的。不过这个对于用户来说的话需要学习特定领域语言这个特性，还是有一定成本的。</p>
+</li>
+<li>
+<p><strong>Dubbo</strong>: 阿里集团开源的一个极为出名的RPC框架，在很多互联网公司和企业应用中广泛使用。协议和序列化框架都可以插拔是及其鲜明的特色。同样 的远程接口是基于Java Interface，并且依托于spring框架方便开发。可以方便的打包成单一文件，独立进程运行，和现在的微服务概念一致。</p>
+</li>
+</ul>
+<h3 id="参考链接-4">参考链接</h3>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/45700301">[1] 知乎：【RPC】HTTP服务和RPC服务，如何选择？<br>
+</a></li>
+<li><a href="http://doc.oschina.net/grpc?t=58008">[2] gRPC 官方手册中文版</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/tutorial.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/tutorial/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-09-02">2019-09-02</time>
+                  <h4 class="title white no-margin">编程语言-教程和案例汇总</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/c-header.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/c-header/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-08-21">2019-08-21</time>
+                  <h4 class="title white no-margin">常见的C语言库函数</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

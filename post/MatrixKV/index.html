@@ -1,0 +1,974 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MatrixKV: Reducing Write Stalls and Write Amplification in LSM-tree Based KV Stores with Matrix Container in NVM | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+该篇文章来自于 ATC2020 上非易失主题下的论文 MatrixKV: Reducing Write Stalls and Write Amplification in LSM-tree Based KV Stores with Ma..." />
+    <meta name="keywords" content="Paper,存储,LSM" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200729103236.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-07-29"><i class="fa fa-calendar"></i><span class="lately">6 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/MatrixKV/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/MatrixKV/"> </span>
+              </a>
+              <span id="/MatrixKV/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-0 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-1 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-2 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">MatrixKV: Reducing Write Stalls and Write Amplification in LSM-tree Based KV Stores with Matrix Container in NVM</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>该篇文章来自于 ATC2020 上非易失主题下的论文 MatrixKV: Reducing Write Stalls and Write Amplification in LSM-tree Based KV Stores with Matrix Container in NVM</li>
+<li>由于很久没看论文了，前段时间也看了论文作者的一些分享，特别优秀的学姐，恰好对相关方向比较感兴趣，好像还和 PingCAP 合作。故拜读了这篇 Paper</li>
+<li>本文主要结合了 NVM，然后针对 LSM 优化领域中少有的对写停顿的优化进行了分析与设计，基于 RocksDB 进行了实现，且已开源，使用了最新的器件 Optane 进行了测试。</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li>现有的基于 LSM-tree 的 KV 存储性能表现欠佳，且性能常常无法预测，主要原因就是其严峻的写放大和写停顿的问题（Write Stalls）。实验结果表明：
+<ul>
+<li>写停顿主要源于 L0-L1 层之间的大量数据的压缩过程</li>
+<li>写放大会随着 LSM-trees 的深度增加而不断增大</li>
+</ul>
+</li>
+<li>利用 NVM 基于 LSM-trees 提出了一种 KV 存储的设计 MatrixKV（包含了多级存储：DRAM-NVM-SSD），设计原则表现为：
+<ul>
+<li>让 L0-L1 层之间的压缩开销更小从而减少写停顿</li>
+<li>减小 LSM-tree 的深度来减小写放大</li>
+</ul>
+</li>
+<li>核心思想主要表现为以下四点：
+<ul>
+<li>利用自己提出的 matrix container 在 NVM 上管理 L0 层</li>
+<li>设计了新的 column compaction 引用到了 L0-L1 的压缩中来减少压缩数据的量</li>
+<li>增加每一层的宽度来减少 LSM-tree 的深度</li>
+<li>引入了 cross-row hint search 来改善读性能</li>
+</ul>
+</li>
+<li>和 RocksDB 以及 KVS NoveLSM 对比， 99th 尾延迟降低了 5x 和 1.9x，随机写吞吐量提升了 3.6x 和 2.6x</li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<ul>
+<li><strong>为什么引入 NVM？</strong>：考虑到随机写操作在流行的 OLTP 工作负载中很常见，不管是突发的还是持续的随机写都是用户很关注的问题，DRAM-SSD 这种存储结构形式就是想利用快速的 DRAM 和持久的 SSD 来提供高性能的数据库访问操作，但是如 cell size、功耗、成本以及 DIMM 槽数量的限制使得不能只通过提升 DRAM 大小来提升性能。因此，在混合存储系统中使用 NVM 成为了现代存储系统的一个新方向。</li>
+<li><strong>原有的 LSM-tree 存在的问题</strong>：在 DRAM-SSD 的存储结构的基础上使用 RocksDB 进行测试，观察实验结果并分析原因：
+<ul>
+<li>写入停顿会导致应用程序吞吐量周期性地降至几乎为零，从而导致性能的剧烈波动和长尾延迟。写停顿的主要原因是每次 L0-L1 压缩处理的数据量大，合并时会合并 L0 和 L1 的所有数据，但是 L0 无序，合并过程占用较多的 CPU 资源和 SSD 带宽，从而导致写停顿和较高的尾延迟。</li>
+<li>写入放大(WA) 降低了系统性能和存储设备的耐久性。</li>
+</ul>
+</li>
+</ul>
+<h3 id="关键技术">关键技术</h3>
+<ul>
+<li>Matrix container：Matrix Container 通过在 NVM 上使用一个 receiver 和一个 compactor 来管理无序的 L0。Receiver 维护来自 DRAM 刷回的 MemTable，一行一个 MemTable。Compactor 选择并合并 L0 中的数据子集合到 L1。（选择具有相同键范围的数据），每次压缩一列。</li>
+<li>Column compaction：列压缩是 L0 和 L1 之间的细粒度压缩，每次压缩一个小的键范围，因为处理的数据量有限，并迅速释放 NVM 中存放的列从而继续接受来自 DRAM 刷回的数据，从而减小写停顿。</li>
+<li>Reducing LSM-tree depth：增大每一层 LSM-tree 的容量来减少层数</li>
+<li>Cross-row hint search：为每个键提供一个指针，用于对 Matrix Containier 中的所有键进行逻辑排序，从而加速搜索过程</li>
+</ul>
+<h2 id="background-and-motivation">Background and Motivation</h2>
+<h3 id="background">Background</h3>
+<ul>
+<li><strong>NVM 的出现</strong>：存储介质的发展，PCM、memristors、3D Xpoint、STT-MRAM 等存储介质的发展使得 NVM 成为新的选择。字节寻址、持久化、快速，接近 DRAM 的性能，类似于磁盘的持久性，比 DRAM 更低成本获得更大的容量，比 SSD 更低的读写延迟以及更高的带宽。研究表明 NVM 作为存储设备，使用 PCIe 总线时，只实现了边际的性能改进，浪费了 NVM 的介质带来的高性能，所以很多都将 NVM 作为单级内存使用。最常用的是 DRAM-NVM-SSD 三级存储：
+<ul>
+<li>NVM 有望在未来几年与大容量 SSD 共存</li>
+<li>与 DRAM 相比，NVM 仍然有 5 倍的低带宽和 3 倍的高读取延迟</li>
+<li>混合系统平衡了 TCO（the total cost of ownership） 和系统性能。</li>
+</ul>
+</li>
+<li><strong>现有 LSM-trees 机制</strong>：
+<ul>
+<li>几个关键点：L0 层无序是为了保证刷回操作的快速执行，磁盘组件上需要进行压缩来减小读操作和扫描的开销。</li>
+<li>压缩过程大致如下：
+<ul>
+<li><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">L_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31166399999999994em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 层的一个 SSTable 和 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">L_{i+1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.891661em;vertical-align:-0.208331em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.311664em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.208331em;"><span></span></span></span></span></span></span></span></span></span> 层的多个 SSTables （具有重叠键范围的）被选作需要压缩的数据</li>
+<li><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">L_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31166399999999994em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 中也在该键范围内的 SSTable 会被反选</li>
+<li>前面两步选择的 SSTable 将被加载到内存进行归并排序</li>
+<li>新生成的 SSTables 被写回到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">L_{i+1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.891661em;vertical-align:-0.208331em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.311664em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.208331em;"><span></span></span></span></span></span></span></span></span></span> 层</li>
+</ul>
+</li>
+<li>因为 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 层无序，每一个 SSTable 都有比较宽的键范围，就会来回执行上述步骤中的前两步，就很有可能导致两层中的所有的 SSTable 都被选中用于压缩，导致一个 all-to-all 压缩。</li>
+<li>读请求的处理，首先查询内存组件中的 MemTable，继续查询磁盘组件的各个层次，但是因为 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 层无序，即键的范围是重叠的，所以可能该层数据检索时遍历了所有 SSTables<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200728211222.png" alt="20200728211222" loading="lazy"></li>
+</ul>
+</li>
+<li><strong>现有的 LSM-trees 优化方案</strong>：减小写放大、提升内存管理、支持自动调优、使用混合存储结构优化 LSM-tree.其中随机写是最受关注的，因为受压缩的影响较大。对比对象 PebblesDB，SILK，NoveLSM
+<ul>
+<li>减小写放大：PebblesDB，Lwc-tree，WiscKey，LSM-trie，VTtree，TRIAD。然而，几乎所有这些工作都忽略了性能差异和写停顿。</li>
+<li>减少写停顿：SILK 引入了一个I/O调度器，通过将刷新和压缩延迟到低负载时期、对刷新和较低级别的压缩进行优先级排序以及抢占压缩，可以减轻写暂停对客户端写的影响。Blsm 提出了一个新的合并调度程序，称为“spring and gear”，以协调多级别的压缩。但该方案只是限制了最大写处理延迟，忽略了排队延迟。KVell 使磁盘上的 KV 无序，以减少 CPU 计算成本，从而减轻基于 NVMe SSD 的 KV 存储的写停顿，这不适用于具有一般 SSD 的系统。</li>
+<li>引入 NVM 到 LSM 中：SLM-DB，MyNVM，NoveLSM，NVMRocks。</li>
+</ul>
+</li>
+</ul>
+<h3 id="challenges-and-motivations">Challenges and Motivations</h3>
+<ul>
+<li>主要表现为两方面：写停顿和写放大。</li>
+<li>测试结果表明：系统性能经历高峰和低谷，而吞吐量的低谷表现为写停顿。显著的波动表明性能不可预测和不稳定<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200728173136.png" alt="20200728173136" loading="lazy"></li>
+</ul>
+<h4 id="write-stalls">Write Stalls</h4>
+<ul>
+<li>RocksDB 中主要有三种可能的停顿：
+<ul>
+<li>Insert stall：在完成后台刷回之前，如果 Memtable 被填满，所有的插入操作将停顿。</li>
+<li>Flush stall：<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 层有太多的 SSTables 并达到了大小限制，从内存刷回到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 的操作将停顿</li>
+<li>Compaction stalls：前面操作有太多待定的压缩数据块</li>
+</ul>
+</li>
+<li>所有这些停顿都会对写性能产生级联影响，并导致写停顿。</li>
+<li>通过记录不同 level 的 flush 和 compaction 周期来测试这三种类型的停顿。<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>-<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 压缩的周期与观察到的写停顿近似匹配，如图 2 所示，图中的每一个短红线表示一次 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>-<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 压缩，红线的长度表示压缩的延迟，纵轴对应此次压缩过程中处理的数量。压缩的数据量平均大小为 3.10 GB，大量压缩数据会导致大量的读合并写，占用 CPU 周期和 SSD 带宽，从而阻塞前台请求，使L0-L1压缩成为写停顿的主要原因。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200728220734.png" alt="20200728220734" loading="lazy"></li>
+<li>写停顿不仅导致系统吞吐量低，而且还导致了高写延迟，从而导致长尾延迟问题。CDF 累积分布函数如图所示，76% 的写请求延迟低于 48 微秒，但是尾延迟达到了 1ms，高延迟会显著降低用户体验的质量，特别是对于延迟关键型应用程序<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200728220948.png" alt="20200728220948" loading="lazy"></li>
+</ul>
+<h4 id="write-amplification">Write Amplification</h4>
+<ul>
+<li>系统吞吐量随着数据集大小的增加而降低。写放大(WA)定义为写入存储设备的数据量与用户写入的数据量之间的比率。由于相邻 Level 的大小从低到高以放大倍数(AF = 10)呈指数增长，所以从 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">L_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31166399999999994em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">L_{i+1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.891661em;vertical-align:-0.208331em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.311664em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.208331em;"><span></span></span></span></span></span></span></span></span></span> 的压缩可能会导致平均 AF 倍的写放大，数据集的增长会增加 LSM 树的深度，也会增加总体 WA。增加的 WA 消耗更多的存储带宽，与刷新操作竞争，并最终降低应用程序吞吐量。因此，系统吞吐量随着 LSM 树深度的增加而降低。</li>
+</ul>
+<h4 id="novelsm">NoveLSM</h4>
+<ul>
+<li>设计思想主要表现为：
+<ul>
+<li>采用 NVM 替代 DRAM，从而增加可以存储的 Memtable 和 Immutable Memtable 的容量</li>
+<li>允许 NVM 上的 Memtable 被直接更新从而减少压缩</li>
+</ul>
+</li>
+<li>然而，这些设计选择只是推迟了写停顿，当数据集大小达到了 NVM Memtable 的容量，还是会产生 flush stall，（<strong>这里有个疑问，为啥是 flush stall，不应该是 insert stall 吗?</strong>）NVM 中扩大的 memtable 被刷新到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>，并显著增加了 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> - <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 压缩中的数据量，导致更严重的写停顿。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200728221723.png" alt="20200728221723" loading="lazy"></li>
+<li>使用 8GB 的 NVM 和 80GB 的数据集测试了 NoveLSM，测试结果如图所示：相比于 RocksDB 整体 load 时间下降了 1.7 倍，但是写停顿的周期变得更长，主要是因为 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> - <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 压缩中的数据量较大，如图所示超过了 15GB，和图二中 RocksDB 的数据量对比 4.86x。当 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> - <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 压缩开始就会产生写停顿，在压缩开始之前可能还要等待更高级别或者更高优先级的压缩完成，如图中的灰色短线所示，压缩完成后性能再次提升。显然，NoveLSM 加剧了写停顿。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200729101711.png" alt="20200729101711" loading="lazy"></li>
+</ul>
+<h4 id="summary">Summary</h4>
+<ul>
+<li>从上述分析中我们不难看出造成写停顿的主要原因是 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> - <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 压缩过程中的数据量太大，造成写放大系数较大的原因是 LSM-trees 的深度较大。正是两者的共同作用使得系统吞吐量较低并增大了尾延迟。</li>
+<li>NoveLSM 试图解决这些问题时却加剧了写停顿，基于以上挑战，我们提出了 MatrixKV，致力于通过巧妙地使用 NVM 来提供一个稳定的低延迟的 KV 存储。</li>
+</ul>
+<h2 id="matrixkv-design">MatrixKV Design</h2>
+<ul>
+<li>四个关键技术：
+<ul>
+<li>the matrix container in NVMs to manage the L0 of LSM-trees</li>
+<li>column compactions for L0 and L1</li>
+<li>reducing LSM-tree levels</li>
+<li>the cross-row hint search<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200729103236.png" alt="20200729103236" loading="lazy"></li>
+</ul>
+</li>
+</ul>
+<h3 id="matrix-container">Matrix Container</h3>
+<ul>
+<li>NoverLSM 使用 NVM 来增大 MemTable 的大小，但是因为有了更大的 L0 层加剧了写停顿，并未解决瓶颈。因此为了减少写停顿，需要遵循的基本原则就是减少 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> - <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 单次压缩过程中的数据量或粒度。基于这样的原则，MatrixKV 从 SSD 上将 L0 层提升到了 NVM，并重新组织 L0 到 matrix container 中，想要充分利用 NVM 的字节寻址和快速的随机访问。matrix container 是在 NVM 上的 L0 的数据管理结构，如图所示，主要由 Receiver 和 Compactor 组成。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200729104017.png" alt="20200729104017" loading="lazy"></li>
+</ul>
+<h4 id="receiver">Receiver</h4>
+<ul>
+<li><strong>Receiver</strong> 接收从 DRAM 刷回的 MemTables，每一个 Memtable 被序列化成 Receiver 中一个单独的行，称为 RowTable。在 Matrix Container 中 RowTable 按行排列，有对应的序列编号，从 0 到 n，Receiver 初始容量为一个 RowTable，当 Receiver 的大小达到阈值时，比如 Matrix Container 的百分之六十，并且 Compactor 为空的时候，Receiver 将停止接受 flush 的 MemTables 并转变为 Compactor。与此同时，会创建一个新的 Receiver 用于接受 Flushed Memtables，在整个逻辑转换过程中不会发生任何数据迁移。</li>
+<li><strong>RowTable</strong>：由数据和元数据组成，为了构造 RowTable，我们必须首先序列化来自 Immutable Memtable 的 KV 对并进行排序，然后存储到到对应的数据区。然后使用一个有序的数组为所有 KV 对构建元数据，包含对应的页号，在页内的偏移，一个前置指针 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>p</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">p_n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.19444em;"></span><span class="mord"><span class="mord mathdefault">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.151392em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>。
+<ul>
+<li>在 RowTable 中查找 KV，首先进行二分查找找到对应的目标 Key 和对应的页号、偏移量。</li>
+<li>每个元素的 forward pointer 是用于 cross-row hint 搜索的，从而提升读性能。后面章节会讨论。</li>
+<li>和传统的 LSM-trees 中的 SSTable 进行对比，SSTable 是以块为单位进行组织的，RowTable 是以 NVM 页为单位进行组织的，除此以外就是元数据的组织方式上略有不同，因此构建 SSTable 和 RowTable 的开销时接近的。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200729105502.png" alt="20200729105502" loading="lazy"></li>
+</ul>
+</li>
+<li><strong>Compactor</strong>：用于以较细的粒度选择和合并 SSD 中从 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 的数据。利用 NVM 字节寻址的特性以及我们设计的 RowTable 可以实现开销更小的压缩。合并特定的键范围从 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 上的 SSTables 子集，而不需要合并所有 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 和所有 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>。我们称之为 <strong>Column Compaction</strong>。
+<ul>
+<li>在 Compactor 中，KV 对由逻辑上的列来组织管理，一列就是一个具有一定数量的 Key 的子集，也就是 Column Compaction 的基本单元。具体而言，来自不同 RowTables 的 KV 键值对在一个列对应的键范围内形成了一个逻辑上的列。</li>
+<li>这些位于一列里的 KV 对的数量即为一个列的大小，因此一个列的大小不是固定的，但是会有一个由 Column Compaction 控制的阈值大小。</li>
+</ul>
+</li>
+<li><strong>Space Management</strong>：在一个列的数据被压缩之后，对应的占据的 NVM 的空间将会被释放。我们使用了页算法来管理这些空闲的空间。由于列压缩会旋转键范围，因此每个行表最多只分段一个页面。列压缩后完全释放的 NVM 页面将作为一组页面大小的单元添加到空闲列表中。为了在 Receiver 中存储传入的 RowTable，我们应用空闲列表中的空闲页面。
+<ul>
+<li>8GB 的 matrix container 包含 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mn>11</mn></msup></mrow><annotation encoding="application/x-tex">2^{11}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141079999999999em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span></span></span></span> 个 4K 大小的页，每一个页由页号（无符号整数）标识，为每个列表元素添加 8 字节的指针，每个页面的元数据大小即为 12 字节。因此 NVM 上空闲列表最多占据 24KB。</li>
+</ul>
+</li>
+</ul>
+<h3 id="column-compaction">Column Compaction</h3>
+<ul>
+<li>该压缩过程是指  <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 的一种细粒度压缩方式。因此减少了 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 压缩过程中的数据量，从而减少写停顿。该压缩过程大致如下：
+<ul>
+<li>MatrixKV 将 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 的键空间分隔为多个连续的键范围：因为 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 的 SSTables 有序，每一个 SSTable 都有对应的最小和最大键，所有的 SSTables 的最小键和最大键形成一个有序的键列表，每两个相邻的键代表一个键范围，就能得到多个连续的键范围。</li>
+<li>Column Compaction 从上述步骤的第一个键范围开始，即选择一个 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 中的键范围作为要压缩的键范围。</li>
+<li>在 Compactor 中，对应压缩键范围的 KV 对被并发地从多个 Rows 中选出来。假设由 N 个 RowTables，K 个线程用于并行地取对应范围的键，那么每个线程负责 N/K 个RowTables，我们为了保证足够的并发访问，用 8 个线程去 NVM 上操作。</li>
+<li>如果取到的数据个数没有达到压缩的阈值下界，那么将会加入第二个键范围，对应的 K 个线程将继续在 N 个 Row 中寻找对应的 KV 对，直到取到的键值对数目位于压缩的阈值下界和上届之间时 （即 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mfrac><mn>1</mn><mn>2</mn></mfrac><mi>A</mi><mi>F</mi><mo>∗</mo><msub><mi>S</mi><mrow><mi>s</mi><mi>s</mi><mi>t</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\frac{1}{2} AF*S_{sst}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.190108em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.845108em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord mathdefault">A</span><span class="mord mathdefault" style="margin-right:0.13889em;">F</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2805559999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.05764em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">s</span><span class="mord mathdefault mtight">s</span><span class="mord mathdefault mtight">t</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>A</mi><mi>F</mi><mo>∗</mo><msub><mi>S</mi><mrow><mi>s</mi><mi>s</mi><mi>t</mi></mrow></msub></mrow><annotation encoding="application/x-tex">AF*S_{sst}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathdefault">A</span><span class="mord mathdefault" style="margin-right:0.13889em;">F</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2805559999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.05764em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">s</span><span class="mord mathdefault mtight">s</span><span class="mord mathdefault mtight">t</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 之间）。这两个边界值保证了 Column Compaction 合理的开销</li>
+<li>上述步骤选择出的 KV 对在 Compactor 中形成一个逻辑的列</li>
+<li>列中的数据和对应的具有重叠键范围的 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 层的 SSTables 在内存中进行合并</li>
+<li>最终，合并后的 SSTables 被写回 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 层</li>
+<li>Column Compaction 继续执行，选择下一个键范围，下一列。Column Compaction 选择键范围将形成一个环，旋转一直执行，从而保证平衡。</li>
+</ul>
+</li>
+<li>如图所示：首先选择了 0-3 的 SSTable 范围，然后搜索 RowTable 元数据找到对应的键，个数低于下界，即不足以执行一次压缩，那么继续选择一个键范围，比如 3-5，那么合并之后就是 0-5，如果还是未到下界，继续扩大，再选择 5-8，此时达到阈值 10，最终选择 0-8。此时就形成了逻辑上的一列。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200729113636.png" alt="20200729113636" loading="lazy"></li>
+</ul>
+<h3 id="reducing-lsm-tree-depth">Reducing LSM-tree Depth</h3>
+<ul>
+<li>传统的 LSM-trees 对应的 AF 一般为 10，其深度会随着数据量的增长而不断增大，写放大系数对应的可以表示为 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>W</mi><mi>A</mi><mo>=</mo><mi>N</mi><mo>∗</mo><mi>A</mi><mi>F</mi></mrow><annotation encoding="application/x-tex">WA=N*AF</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathdefault" style="margin-right:0.13889em;">W</span><span class="mord mathdefault">A</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathdefault">A</span><span class="mord mathdefault" style="margin-right:0.13889em;">F</span></span></span></span>，其中 N 为 LSM-trees 的层级数。因此 Matrix 的另一个设计思路就是通过减小 LSM-tree 的深度来减小写放大。MatrixKV 通过固定比例增加每一层的大小限制，使相邻层的 AF 保持不变来减少 LSM-tree 的层数。</li>
+<li>但是这样单层扩大带来了两个负面影响：
+<ul>
+<li>扩大后的 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 与 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 有更多的重叠键范围，那么压缩过程中的数据量将增大，不会增加压缩的开销但是会延长写停顿的时间。</li>
+<li>遍历更大的 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 会降低查询操作的效率。</li>
+</ul>
+</li>
+<li>通过使用 Column Compaction 能够较好地解决第一个负面影响，因为该压缩方式不会受到每一层的数据容量的影响</li>
+<li>Matrix 提出了 cross-row hint search 来改善增大单层容量操作带来的查询开销</li>
+</ul>
+<h3 id="cross-row-hint-search">Cross-row Hint Search</h3>
+<ul>
+<li>在 MatrixKV 的 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>，每一个 RowTable 是有序的，不同的 RowTables 的键范围可能重叠。为每一个 table 构建布隆过滤器是减小查询开销的一个可能的方案，然而会引入构建布隆过滤器的开销而且不支持 range scan。为了提供更好的读和 scan 性能，我们构建了 cross-row hint searches</li>
+<li><strong>Constructing cross-row hints</strong>：在 RowTable 的结构中我们为每一个元数据元素添加了前置指针。RowTable i 中的 key x，对应的前置指针指向了 RowTable i-1 的 key y，y 是第一个不小于 x 的 key。这些前向指针提供了在不同行中对所有键进行逻辑排序的提示，类似于分层级联。因为每个前置指针只记录上一个行表的数组索引，所以只占据 4bytes，因此开销很低。（<strong>疑问：存储开销是很低，但是具体为每一个元素维护指针不是应该还挺耗时的吗？</strong>）</li>
+<li><strong>Search process in the matrix container</strong>：一个查询操作从最近最新的 RowTable i 开始，如果目标 key 不在对应的键范围内，则相应地去检索 RowTable i-1。在 RowTable 内部执行二分查找。使用前向指针，我们可以缩小在前面的 RowTables 中的搜索范围。因此查询和 scan 操作将无须遍历所有的 tables。该方式通过显著减少查询操作对应的 table 和元素的数量来提升了整体的读效率。</li>
+<li>如图所示，假设我们检索 k=12 的 key，首先二分查找 RowTable 3，得到一个范围 10-23，然后根据前置指针 hint 找到 RowTable 2 中的 13-30，因为不包含 12，此时需要把 13 之前的 8 给纳入进来，变成 8-13-30。再进行二分查找，没找到对应的 key，8-13, 移动到 RowTable 1, 9-10-13，二分查找 10-13，无对应的 key，继续看 RowTable 0，11-12-14，二分查找找到了 12.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200729143209.png" alt="20200729143209" loading="lazy"></li>
+</ul>
+<h2 id="implementation">Implementation</h2>
+<ul>
+<li>MatrixKV 通过使用 PMDK 库来访问 NVMs，使用 POSIX API 来访问 SSDs。</li>
+<li><strong>Write</strong>：
+<ul>
+<li>来自用户的写请求首先插入了一个 WAL 日志到 NVMs 以保证崩溃一致性</li>
+<li>数据在 DRAM 中被批量处理，形成 MemTable 和 Immutable Memtable</li>
+<li>（<strong>Change</strong>）Immutable Memtable 被刷入到 NVM 并以 RowTable 的形式保存在 matrix container 的 receiver 中</li>
+<li>（<strong>Change</strong>）当 RowTables 的数量到达了大小限制，例如 matrix container 的百分之六十，且 compactor 为空，receiver 将变成 compactor</li>
+<li>（<strong>Change</strong>）Compactor 中的数据将和 SSTable 数据以 Column Compaction 的形式进行压缩，同时新的 receiver 将继续接受刷回的 Memtables</li>
+<li>SSDs 上的压缩还是和原有的 RocksDB 保持一致</li>
+</ul>
+</li>
+<li><strong>Read</strong>：同 RocksDB 的读操作处理方式大致相同，顺序变为 DRAM &gt; NVM &gt; SSD。在 NVMs 中，cross-row hint 搜索有助于更快地在 L0 的不同 RowTables 之间进行搜索。通过在不同的存储设备中并发地搜索，可以进一步提高读取性能。</li>
+<li><strong>Consistency</strong>：NVM 中的数据结构必须避免由系统故障引起的不一致性。在 MatrixKV 中，对 NVM 的写或更新操作只发生在两个阶段，flush 和 column compaction。
+<ul>
+<li>对于 flush 操作，如果在写 RowTable 的过程中发生了错误，MatrixKV 可以重新处理被记录在 WAL 中的事务</li>
+<li>对于 Column Compaction 操作，为了实现一致性和可靠性的低开销，Matrix 采用了 RocksDB 的版本机制，使用一个 mainfest 文件记录数据库的状态，compaction 的操作会被持久化到 mainfest 文件中，作为一个版本的变化。如果系统发生了故障，则使用版本号恢复到最近的一个一致的状态。MatrixKV 会添加 RowTables 的状态到 mainfest 文件中，例如第一个 key 对应的偏移，key 的数量，文件的大小，元数据的大小等。MatrixKV 使用延迟删除来保证在一个一致的新版本完成之前，由于列压缩而失效的陈旧列不会被删除。</li>
+</ul>
+</li>
+</ul>
+<h2 id="evaluation">Evaluation</h2>
+<h3 id="测试环境">测试环境</h3>
+<ul>
+<li>硬件：
+<ul>
+<li>2 Genuine Intel(R) 2.20GHz 24-core processors</li>
+<li>32 GB of memory</li>
+<li>800 GB Intel SSDSC2BB800G7 SSD</li>
+<li>256 GB NVMs of two 128 GB Intel Optane DC PMM</li>
+</ul>
+</li>
+<li>软件：
+<ul>
+<li>The kernel version is 64-bit Linux 4.13.9</li>
+<li>OS：Fedora 27</li>
+</ul>
+</li>
+</ul>
+<h3 id="对照组">对照组</h3>
+<ul>
+<li>RocksDB (including RocksDB-SSD and RocksDB-L0-NVM(8G) )</li>
+<li>NoveLSM 8GB NVM</li>
+<li>MatrixKV 8 GB L0, SSD L1 8GB</li>
+<li>PebblesDB DRAM-NVM</li>
+<li>SILK DRAM-NVM</li>
+</ul>
+<h3 id="其他配置">其他配置</h3>
+<ul>
+<li>RocksDB：64 MB MemTables/SSTables, 256 MB L1 size, and AF of 10. The default key-value sizes are 16 bytes and 4 KB</li>
+</ul>
+<h3 id="负载">负载</h3>
+<ul>
+<li>db_bench: the micro-benchmark released with RocksDB.</li>
+<li>YCSB macro-benchmarks</li>
+</ul>
+<h3 id="测试结果">测试结果</h3>
+<h4 id="db_bench-写性能">db_bench 写性能</h4>
+<h5 id="随机写">随机写</h5>
+<ul>
+<li>RocksDB-SSD 和 RocksDB-L0-NVM 之间的对比表明：通过将 L0 放置在 NVM 上带来了大约 65% 的提升</li>
+<li>Matrix 相比 RocksDB-L0-NVM 和 NoveLSM 吞吐量在所有的 value 大小都有提升，相比于 RocksDB-L0-NVM 提升了大约 1.86x 到 3.61x，相比于 NoveLSM 提升了 1.72x 到 2.61x</li>
+</ul>
+<h5 id="顺序写">顺序写</h5>
+<ul>
+<li>因为顺序写不会导致压缩，所以四种存储的顺序写吞吐量都要比随机写的吞吐量要高。</li>
+<li>RocksDB-SSD 性能更好是因为其他三种存储引擎都使用了 NVM，就多了一次 NVM 到 SSD 上的数据迁移开销</li>
+<li>MatrixKV 优于 NoveLSM 是因为 缩小的 RowTable 的开销比在 NoveLSM 上的大的跳表更新的开销小。</li>
+</ul>
+<h4 id="db_bench-读性能">db_bench 读性能</h4>
+<ul>
+<li>因为 NVM 中只保存了数据量百分之十的数据，所以化石 SSD 的读性能占据了更大的比重。四种方案总体表现接近，MatrixKV 优化之后并没有造成读性能降级甚至在顺序读上有一定的提升：因为 cross-row hint 搜索减少了大 L0 的检索开销，还拥有更小的层数，进一步使得查询的开销变小。</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200729152527.png" alt="20200729152527" loading="lazy"></figure>
+<h4 id="ycsb">YCSB</h4>
+<ul>
+<li>MatrixKV 在写密集的负载下提升效果明显</li>
+<li>MatrixKV 在读密集的负载下保持了平均水平</li>
+<li>MatrixKV 和 NoveLSM 在负载 D 下表现得最好是因为 latest 的分布，使得在 NVM 中就能命中很多数据<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200729160723.png" alt="20200729160723" loading="lazy"></li>
+</ul>
+<h4 id="tail-latency">Tail latency</h4>
+<ul>
+<li>通过减少写停顿和写放大，MatrixKV 极大降低了尾延迟并提升了用户服务质量。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200729161421.png" alt="20200729161421" loading="lazy"></li>
+</ul>
+<h3 id="性能分析">性能分析</h3>
+<h4 id="写停顿">写停顿</h4>
+<ul>
+<li>MatrixKV 使用了更少的时间处理对应的负载，因为随机写吞吐量更高</li>
+<li>RocksDB 和 NoveLSM 都有严重的由于 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 之间的压缩造成的写停顿问题</li>
+<li>MatrixKV 相比之下实现了最稳定的性能<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200729161643.png" alt="20200729161643" loading="lazy"></li>
+</ul>
+<h4 id="写放大">写放大</h4>
+<ul>
+<li>MatrixKV 的写放大系数更小<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200729162000.png" alt="20200729162000" loading="lazy"></li>
+</ul>
+<h4 id="matrixkv-enabling-techniques">MatrixKV Enabling Techniques</h4>
+<ul>
+<li>
+<p><strong>Column compaction</strong> 的效率对比<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200729162104.png" alt="20200729162104" loading="lazy"></p>
+</li>
+<li>
+<p><strong>Overall compaction efficiency</strong>：</p>
+<ul>
+<li>MatrixKV 压缩次数最少，因为树的层级降低</li>
+<li>MatrixKV 中的所有压缩处理的数据量相近，因为我们减少了 L0-L1 上的压缩数据量，而没有增加其他级别上的压缩数据量。</li>
+<li>NoveLSM and RocksDB-L0-NVM 比 RocksDB-SSD 压缩次数少的原因是
+<ul>
+<li>NoveLSM 使用了比较大的 Memtable 来处理写请求，吸收了一部分的 update 请求</li>
+<li>RocksDB-L0-NVM 在 NVM 上存放了 8GB L0 数据，存储了更多的数据</li>
+</ul>
+</li>
+<li>NoveLSM 和 RocksDB 大量的压缩数据来自于 L0-L1 压缩。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200729162249.png" alt="20200729162249" loading="lazy"></li>
+</ul>
+</li>
+<li>
+<p><strong>Reducing LSM-tree depth</strong>：RocsksDB 和 MatrixKV 随着单层容量的增加都减小了写放大，但是对性能的影响有所不同，RocksDB 随着单层的增大性能反而降低，因为增大了 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 压缩的数据量。MatrixKV 使用了独立的压缩策略不受大小变化的影响才得以实现更高的性能。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200729162919.png" alt="20200729162919" loading="lazy"></p>
+</li>
+</ul>
+<h3 id="extended-comparisons-on-nvms">Extended Comparisons on NVMs</h3>
+<ul>
+<li>MatrixKV 不仅仅是因为 NVM 的引入使得性能变得很好，还有设计思路和方案的加持。故和其他使用了 NVM 的方案进行了对比：</li>
+<li>通过对比发现，MatrixKV 的方案是很适合 NVM 的，相比于其他如 PebblesDB 把 NVM 作为块设备的方案。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200729163601.png" alt="20200729163601" loading="lazy"></li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<ul>
+<li>提出了基于 LSM-trees 的稳定的、低延迟的 KV 存储方案
+<ul>
+<li>使用了多级存储结构 DRAM-NVM-SSD</li>
+<li>在 NVM 上设计实现了 matrix container 来管理 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">L_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 层，并采用适当的粒度进行 Column Compaction 来减小写停顿</li>
+<li>通过增大每一层的容量来减小树的高度，从而减小写放大</li>
+<li>使用 cross-hint search 来保证原有的读性能</li>
+</ul>
+</li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/the-log-structured-merge-tree-lsm-tree.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/tiny-kv-tutorial/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-07-30">2020-07-30</time>
+                  <h4 class="title white no-margin">TinyKV 学习笔记</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/basic-of-persistence-six/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-07-27">2020-07-27</time>
+                  <h4 class="title white no-margin">Series Six of Basic of Persistence -  Log-structured File System</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

@@ -1,0 +1,1236 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>tinySpring学习笔记（二）-实现AOP | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+tinySpring学习笔记系列之二
+主要介绍AOP实现过程
+并介绍不同的动态代理方式
+
+
+ 
+AOP及其实现
+
+AOP分为配置(Pointcut，Advice)，织入(Weave)两部分工作，当然还有一部分是将AOP整合到整个容器的生..." />
+    <meta name="keywords" content="Spring" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('\media\images\custom-featureImage.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2018-04-10"><i class="fa fa-calendar"></i><span class="lately">3 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/tinyspring-learnTwo-AOP/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/tinyspring-learnTwo-AOP/"> </span>
+              </a>
+              <span id="/tinyspring-learnTwo-AOP/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-0 ctag-spring" aria-label="">Spring</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">tinySpring学习笔记（二）-实现AOP</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>tinySpring学习笔记系列之二</li>
+<li>主要介绍AOP实现过程</li>
+<li>并介绍不同的动态代理方式</li>
+</ul>
+</blockquote>
+<!-- more --> 
+<h2 id="aop及其实现">AOP及其实现</h2>
+<blockquote>
+<p>AOP分为配置(Pointcut，Advice)，织入(Weave)两部分工作，当然还有一部分是将AOP整合到整个容器的生命周期中。</p>
+</blockquote>
+<h3 id="step1-使用jdk动态代理实现aop织入">step1-使用JDK动态代理实现AOP织入</h3>
+<blockquote>
+<p>git checkout step-7-method-interceptor-by-jdk-dynamic-proxy</p>
+</blockquote>
+<!-- more -->
+<ul>
+<li>织入（weave）相对简单，我们先从它开始。Spring AOP的织入点是AopProxy，它包含一个方法Object getProxy()来获取代理后的对象。</li>
+</ul>
+<pre><code class="language-java">public interface AopProxy {
+    Object getProxy();
+}
+</code></pre>
+<h4 id="aop-中两个重要角色methodinterceptor和methodinvocation">AOP 中两个重要角色：MethodInterceptor和MethodInvocation</h4>
+<ul>
+<li>这两个角色都是AOP联盟的标准，它们分别对应AOP中两个基本角色：<code>Advice</code>和<code>Joinpoint</code>。<code>Advice</code>定义了在切点指定的逻辑，而<code>Joinpoint</code>则代表切点。</li>
+</ul>
+<pre><code class="language-java">public interface MethodInterceptor extends Interceptor {
+    Object invoke(MethodInvocation invocation) throws Throwable;
+}
+</code></pre>
+<ul>
+<li>
+<p>Spring的AOP只支持方法级别的调用，所以其实在AopProxy里，我们只需要将MethodInterceptor放入对象的方法调用即可。</p>
+</li>
+<li>
+<p>我们称被代理对象为<code>TargetSource</code>，而<code>AdvisedSupport</code>就是保存<code>TargetSource</code>和<code>MethodInterceptor</code>的元数据对象。这一步我们先实现一个基于<code>JDK</code>动态代理的<code>JdkDynamicAopProxy</code>，它可以对接口进行代理。于是我们就有了基本的织入功能。</p>
+</li>
+</ul>
+<pre><code class="language-java">public class JdkDynamicAopProxy implements AopProxy, InvocationHandler {
+
+    /**
+     * AdvisedSupport
+     * Fields: TargetSource targetSource
+     *         [Object target,Class targetClass];//target 代理对象,targetClass 继承的接口
+     *         
+     *         MethodInterceptor methodInterceptor;//Advice切面逻辑
+     * Methods：对应属性的getter、setter
+     */
+	private AdvisedSupport advised;
+
+	public JdkDynamicAopProxy(AdvisedSupport advised) {
+		this.advised = advised;
+	}
+
+    //为要代理的对象的的类对应的创建动态代理
+    @Override
+	public Object getProxy() {
+	
+	    /**
+	     * public static Object newProxyInstance(ClassLoader loader,
+         *                                       Class&lt;?&gt;[] interfaces,
+         *                                       InvocationHandler h)
+         * @param loader the class loader to define the proxy class
+         * @param interfaces the list of interfaces for the proxy class to implement
+	     * @param h the invocation handler to dispatch method invocations to
+	     */
+		return Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] { advised.getTargetSource()
+				.getTargetClass() }, this);
+	}
+
+    /**
+     * 重写 InvocationHandler 对应的 invoke() 方法
+     * 调用拦截器对应的方法
+     * （通过反射获取对应的切点，再根据切点指定的逻辑进行执行）
+     * @Param Object proxy 代理
+     * @Param Method method 对应的要调用方法
+     * @Param Object[] args 方法需要的参数
+     */
+	@Override
+	public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+		MethodInterceptor methodInterceptor = advised.getMethodInterceptor();
+		
+		/**
+		 * 其中 class MethodInterceptor extends Interceptor {
+		 *           Object invoke(MethodInvocation invocation) throws Throwable;
+		 *      }
+		 *      class ReflectiveMethodInvocation implements MethodInvocation
+		 * 故可通过继承 MethodInterceptor 重写相关 invoke() 方法实现 Advice 逻辑
+		 */
+		return methodInterceptor.invoke(new ReflectiveMethodInvocation(advised.getTargetSource().getTarget(), method,
+				args));
+	}
+}
+</code></pre>
+<ul>
+<li>ReflectiveMethodInvocation.java</li>
+</ul>
+<pre><code class="language-java">public class ReflectiveMethodInvocation implements MethodInvocation {
+
+	private Object target;
+
+	private Method method;
+
+	private Object[] args;
+
+	public ReflectiveMethodInvocation(Object target, Method method, Object[] args) {
+		this.target = target;
+		this.method = method;
+		this.args = args;
+	}
+
+	@Override
+	public Method getMethod() {
+		return method;
+	}
+
+	@Override
+	public Object[] getArguments() {
+		return args;
+	}
+
+    // 反射，相当于 target.method(args);即调用代理对象对应的方法
+	@Override
+	public Object proceed() throws Throwable {
+		return method.invoke(target, args);
+	}
+
+	@Override
+	public Object getThis() {
+		return target;
+	}
+
+	@Override
+	public AccessibleObject getStaticPart() {
+		return method;
+	}
+}
+</code></pre>
+<h4 id="实现步骤">实现步骤：</h4>
+<ul>
+<li>1、设置被代理对象，指定切点（JoinPoint）</li>
+</ul>
+<pre><code class="language-java">// 创建AdvisedSupport对象,设置 Joinpoint
+AdvisedSupport advisedSupport = new AdvisedSupport();
+TargetSource targetSource = new TargetSource(helloWorldService, HelloWorldService.class);
+advisedSupport.setTargetSource(targetSource);
+</code></pre>
+<ul>
+<li>2、设置拦截器（Advice）</li>
+</ul>
+<pre><code class="language-java">/**
+ * // Advice 逻辑实现
+ * public class TimerInterceptor implements MethodInterceptor {
+ *	@Override
+ *	public Object invoke(MethodInvocation invocation) throws Throwable {
+ *		long time = System.nanoTime();
+ *		System.out.println(&quot;Invocation of Method &quot; + invocation.getMethod().getName() + &quot; start!&quot;);
+ *		Object proceed = invocation.proceed();
+ *		System.out.println(&quot;Invocation of Method &quot; + invocation.getMethod().getName() + &quot; end! takes &quot; + (System.nanoTime() - time) + &quot; nanoseconds.&quot;);
+ *		return proceed;
+ *	 }
+ * }
+ */
+TimerInterceptor timerInterceptor = new TimerInterceptor();
+// 设置Advice
+advisedSupport.setMethodInterceptor(timerInterceptor);
+</code></pre>
+<ul>
+<li>3、创建代理（Proxy）</li>
+</ul>
+<pre><code class="language-java">JdkDynamicAopProxy jdkDynamicAopProxy = new JdkDynamicAopProxy(advisedSupport);
+HelloWorldService helloWorldServiceProxy = (HelloWorldService) jdkDynamicAopProxy.getProxy();
+</code></pre>
+<ul>
+<li>4、基于AOP的调用</li>
+</ul>
+<pre><code class="language-java">helloWorldServiceProxy.helloWorld();
+</code></pre>
+<h3 id="step2-使用aspectj管理切面">step2-使用AspectJ管理切面</h3>
+<blockquote>
+<p>git checkout step-8-invite-pointcut-and-aspectj</p>
+</blockquote>
+<ul>
+<li>完成了织入之后，我们要考虑另外一个问题：对什么类以及什么方法进行<code>AOP</code>？对于“在哪切”这一问题的定义，我们又叫做“<code>Pointcut</code>”。<code>Spring</code>中关于<code>Pointcut</code>包含两个角色：<code>ClassFilter</code>和<code>MethodMatcher</code>，分别是对类和方法做匹配。<code>Pointcut</code>有很多种定义方法，例如类名匹配、正则匹配等，但是应用比较广泛的应该是和<code>AspectJ</code>表达式的方式。</li>
+</ul>
+<pre><code class="language-java">public interface Pointcut {
+
+    ClassFilter getClassFilter();
+
+    MethodMatcher getMethodMatcher();
+
+}
+
+
+public interface ClassFilter {
+
+    boolean matches(Class targetClass);
+}
+
+public interface MethodMatcher {
+
+    boolean matches(Method method, Class targetClass);
+}
+</code></pre>
+<ul>
+<li><code>AspectJ</code>是一个“对<code>Java</code>的<code>AOP</code>增强”。它最早是其实是一门语言，我们跟写<code>Java</code>代码一样写它，然后静态编译之后，就有了<code>AOP</code>的功能。下面是一段<code>AspectJ</code>代码：</li>
+</ul>
+<pre><code class="language-java">aspect PointObserving {
+    private Vector Point.observers = new Vector();
+    public static void addObserver(Point p, Screen s) {
+        p.observers.add(s);
+    }
+    public static void removeObserver(Point p, Screen s) {
+        p.observers.remove(s);
+    }
+    ...
+}
+</code></pre>
+<ul>
+<li>这种方式无疑太重了，为了AOP，还要适应一种语言？所以现在使用也不多，但是它的Pointcut表达式被Spring借鉴了过来。于是我们实现了一个AspectJExpressionPointcut：</li>
+</ul>
+<pre><code class="language-java">public class AspectJExpressionPointcut implements Pointcut, ClassFilter, MethodMatcher {
+
+    // 对用户自定义的相关关键字子集合，可进行切点表达式PointcutExpression的构造
+	private PointcutParser pointcutParser;
+
+    // 表达式字符串
+	private String expression;
+
+    // 要构造的切点表达式
+	private PointcutExpression pointcutExpression;
+
+    // 存储表达式相关关键字
+	private static final Set&lt;PointcutPrimitive&gt; DEFAULT_SUPPORTED_PRIMITIVES = new HashSet&lt;PointcutPrimitive&gt;();
+
+	static {
+		DEFAULT_SUPPORTED_PRIMITIVES.add(PointcutPrimitive.EXECUTION);
+		DEFAULT_SUPPORTED_PRIMITIVES.add(PointcutPrimitive.ARGS);
+		DEFAULT_SUPPORTED_PRIMITIVES.add(PointcutPrimitive.REFERENCE);
+		DEFAULT_SUPPORTED_PRIMITIVES.add(PointcutPrimitive.THIS);
+		DEFAULT_SUPPORTED_PRIMITIVES.add(PointcutPrimitive.TARGET);
+		DEFAULT_SUPPORTED_PRIMITIVES.add(PointcutPrimitive.WITHIN);
+		DEFAULT_SUPPORTED_PRIMITIVES.add(PointcutPrimitive.AT_ANNOTATION);
+		DEFAULT_SUPPORTED_PRIMITIVES.add(PointcutPrimitive.AT_WITHIN);
+		DEFAULT_SUPPORTED_PRIMITIVES.add(PointcutPrimitive.AT_ARGS);
+		DEFAULT_SUPPORTED_PRIMITIVES.add(PointcutPrimitive.AT_TARGET);
+	}
+    
+    // 进行关键字集合初始化
+	public AspectJExpressionPointcut() {
+		this(DEFAULT_SUPPORTED_PRIMITIVES);
+	}
+
+    // 初始化表达式构造器
+	public AspectJExpressionPointcut(Set&lt;PointcutPrimitive&gt; supportedPrimitives) {
+		pointcutParser = PointcutParser
+				.getPointcutParserSupportingSpecifiedPrimitivesAndUsingContextClassloaderForResolution(supportedPrimitives);
+	}
+
+	protected void checkReadyToMatch() {
+		if (pointcutExpression == null) {
+			pointcutExpression = buildPointcutExpression();
+		}
+	}
+
+    // 字符串转换为切点表达式
+	private PointcutExpression buildPointcutExpression() {
+		return pointcutParser.parsePointcutExpression(expression);
+	}
+
+	public void setExpression(String expression) {
+		this.expression = expression;
+	}
+
+    // 对类做匹配
+	@Override
+	public ClassFilter getClassFilter() {
+		return this;
+	}
+
+    // 对方法做匹配
+	@Override
+	public MethodMatcher getMethodMatcher() {
+		return this;
+	}
+
+    // 将表达式和类做匹配，返回匹配结果
+	@Override
+	public boolean matches(Class targetClass) {
+		checkReadyToMatch();
+		return pointcutExpression.couldMatchJoinPointsInType(targetClass);
+	}
+
+    // 将表达式和方法做匹配，返回匹配结果
+	@Override
+	public boolean matches(Method method, Class targetClass) {
+		checkReadyToMatch();
+		ShadowMatch shadowMatch = pointcutExpression.matchesMethodExecution(method);
+		if (shadowMatch.alwaysMatches()) {
+			return true;
+		} else if (shadowMatch.neverMatches()) {
+			return false;
+		}
+		// TODO:其他情况不判断了！见org.springframework.aop.aspectj.RuntimeTestWalker
+		return false;
+	}
+}
+</code></pre>
+<h4 id="实现测试">实现测试：</h4>
+<pre><code class="language-java">// 对类做匹配 返回匹配结果
+@Test
+public void testClassFilter() throws Exception {
+    String expression = &quot;execution(* us.codecraft.tinyioc.*.*(..))&quot;;
+    AspectJExpressionPointcut aspectJExpressionPointcut = new AspectJExpressionPointcut();
+    aspectJExpressionPointcut.setExpression(expression);
+    boolean matches = aspectJExpressionPointcut.getClassFilter().matches(HelloWorldService.class);
+    Assert.assertTrue(matches);
+}
+
+// 对方法做匹配 返回匹配结果
+@Test
+public void testMethodInterceptor() throws Exception {
+    String expression = &quot;execution(* us.codecraft.tinyioc.*.*(..))&quot;;
+    AspectJExpressionPointcut aspectJExpressionPointcut = new AspectJExpressionPointcut();
+    aspectJExpressionPointcut.setExpression(expression);
+    boolean matches = aspectJExpressionPointcut.getMethodMatcher().matches(HelloWorldServiceImpl.class.getDeclaredMethod(&quot;helloWorld&quot;),HelloWorldServiceImpl.class);
+    Assert.assertTrue(matches);
+}
+</code></pre>
+<h3 id="step3-将aop融入bean的创建过程中">step3-将AOP融入Bean的创建过程中</h3>
+<blockquote>
+<p>git checkout step-9-auto-create-aop-proxy</p>
+</blockquote>
+<ul>
+<li>在step1 中已经能够进行 weave 织入，step2 中实现了 Pointcut 的匹配。现在需要在 Spring 中整合这两者。Spring给了一个巧妙的答案：使用 <code>BeanPostProcessor</code>。</li>
+<li><code>BeanPostProcessor</code>是<code>BeanFactory</code>提供的，在<code>Bean</code>初始化过程中进行扩展的接口。只要你的<code>Bean</code>实现了<code>BeanPostProcessor</code>接口，那么Spring在初始化时，会优先找到它们，并且在<code>Bean</code>的初始化过程中，调用这个接口，从而实现对<code>BeanFactory</code>核心无侵入的扩展。</li>
+<li><code>AOP</code>的xml配置</li>
+</ul>
+<pre><code class="language-xml">&lt;aop:aspectj-autoproxy/&gt;
+
+&lt;!-- 等价 --&gt;
+&lt;bean id=&quot;autoProxyCreator&quot; class=&quot;org.springframework.aop.aspectj.autoproxy.AspectJAwareAdvisorAutoProxyCreator&quot;&gt;&lt;/bean&gt;
+</code></pre>
+<ul>
+<li><code>AspectJAwareAdvisorAutoProxyCreator</code>就是<code>AspectJ</code>方式实现织入的核心。它其实是一个<code>BeanPostProcessor</code>。在这里它会扫描所有<code>Pointcut</code>，并对<code>bean</code>做织入。</li>
+<li>BeanPostProcessor:</li>
+</ul>
+<pre><code class="language-java">public interface BeanPostProcessor {
+
+	Object postProcessBeforeInitialization(Object bean, String beanName) throws Exception;
+
+	Object postProcessAfterInitialization(Object bean, String beanName) throws Exception;
+
+}
+</code></pre>
+<ul>
+<li>AspectJAwareAdvisorAutoProxyCreator:</li>
+</ul>
+<pre><code class="language-Java">public class AspectJAwareAdvisorAutoProxyCreator implements BeanPostProcessor, BeanFactoryAware {
+
+	private AbstractBeanFactory beanFactory;
+
+	@Override
+	public Object postProcessBeforeInitialization(Object bean, String beanName) throws Exception {
+		return bean;
+	}
+
+	@Override
+	public Object postProcessAfterInitialization(Object bean, String beanName) throws Exception {
+		if (bean instanceof AspectJExpressionPointcutAdvisor) {
+			return bean;
+		}
+        if (bean instanceof MethodInterceptor) {
+            return bean;
+        }
+        
+        /**
+         * class AspectJExpressionPointcutAdvisor implements PointcutAdvisor
+         * Fields: AspectJExpressionPointcut pointcut
+         *         Advice advice
+         * Methods: Advice getter/setter
+         *          Pointcut getter
+         *          void setExpression(String expression) {this.pointcut.setExpression(expression);}
+         * 
+         */
+        // 根据 Type 获取所有的 PointCut 和 Advice 组成的 bean
+		List&lt;AspectJExpressionPointcutAdvisor&gt; advisors = beanFactory
+				.getBeansForType(AspectJExpressionPointcutAdvisor.class);
+		for (AspectJExpressionPointcutAdvisor advisor : advisors) {
+		    
+		    // 判断是否是要拦截的类
+			if (advisor.getPointcut().getClassFilter().matches(bean.getClass())) {
+				
+				/**
+				 * Class AdvisedSupport
+				 * Fields: TargetSource targetSource;
+				 *         MethodInterceptor methodInterceptor;
+				 *         MethodMatcher methodMatcher;
+				 * Methods: getter/setter
+				 */
+				AdvisedSupport advisedSupport = new AdvisedSupport();
+				
+				// 从扫描出的 bean 中获取 Advice 逻辑并注入
+				// 设置 Advice
+				advisedSupport.setMethodInterceptor((MethodInterceptor) advisor.getAdvice());
+				
+				/**
+				 * MethodMatcher getMethodMatcher() {return this;}
+				 * AspectJExpressionPointcut 实现了 MethodMatcher 接口。
+				 */
+				// 设置切点 Pointcut,即哪些方法需要做拦截
+				advisedSupport.setMethodMatcher(advisor.getPointcut().getMethodMatcher());
+
+                // 设置要代理的对象
+				TargetSource targetSource = new TargetSource(bean, bean.getClass().getInterfaces());
+				advisedSupport.setTargetSource(targetSource);
+
+                // 创建动态代理
+				return new JdkDynamicAopProxy(advisedSupport).getProxy();
+			}
+		}
+		return bean;
+	}
+
+    // 获取容器的引用，进而获取容器中所有的切点对象
+	@Override
+	public void setBeanFactory(BeanFactory beanFactory) throws Exception {
+		this.beanFactory = (AbstractBeanFactory) beanFactory;
+	}
+}
+
+</code></pre>
+<ul>
+<li>此时的<code>JdkDynamicAopProxy</code></li>
+</ul>
+<pre><code class="language-java">public class JdkDynamicAopProxy implements AopProxy, InvocationHandler {
+
+	private AdvisedSupport advised;
+
+	public JdkDynamicAopProxy(AdvisedSupport advised) {
+		this.advised = advised;
+	}
+
+	@Override
+	public Object getProxy() {
+		return Proxy.newProxyInstance(getClass().getClassLoader(), advised.getTargetSource().getTargetClass(), this);
+	}
+
+	@Override
+	public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+		MethodInterceptor methodInterceptor = advised.getMethodInterceptor();
+	    
+	    // invoke 时判断是否为要拦截的方法，是则执行 Advice 逻辑
+		if (advised.getMethodMatcher() != null
+				&amp;&amp; advised.getMethodMatcher().matches(method, advised.getTargetSource().getTarget().getClass())) {
+			return methodInterceptor.invoke(new ReflectiveMethodInvocation(advised.getTargetSource().getTarget(),
+					method, args));
+		} else {
+			return method.invoke(advised.getTargetSource().getTarget(), args);
+		}
+	}
+}
+</code></pre>
+<ul>
+<li>为了简化<code>xml</code>配置，在tiny-spring中直接使用Bean的方式，而不是用aop前缀进行配置：</li>
+</ul>
+<pre><code class="language-xml">&lt;bean id=&quot;autoProxyCreator&quot; class=&quot;us.codecraft.tinyioc.aop.AspectJAwareAdvisorAutoProxyCreator&quot;&gt;&lt;/bean&gt;
+
+&lt;bean id=&quot;timeInterceptor&quot; class=&quot;us.codecraft.tinyioc.aop.TimerInterceptor&quot;&gt;&lt;/bean&gt;
+
+&lt;!-- Creator 将对 Advisor 类型的 bean 进行扫描和处理 --&gt;
+&lt;bean id=&quot;aspectjAspect&quot; class=&quot;us.codecraft.tinyioc.aop.AspectJExpressionPointcutAdvisor&quot;&gt;
+    &lt;!-- 调用对应的 setter 方法进行 Property 的注入 --&gt;
+    &lt;property name=&quot;advice&quot; ref=&quot;timeInterceptor&quot;&gt;&lt;/property&gt;
+    &lt;property name=&quot;expression&quot; value=&quot;execution(* us.codecraft.tinyioc.*.*(..))&quot;&gt;&lt;/property&gt;
+&lt;/bean&gt;
+</code></pre>
+<h5 id="动态代理的步骤">动态代理的步骤</h5>
+<ul>
+<li><code>AutoProxyCreator</code>（实现了 <code>BeanPostProcessor</code> 接口）在实例化所有的 <code>Bean</code> 前，最先被实例化。<code>postProcessBeforeInitialization</code></li>
+<li>其他普通 <code>Bean</code> 被实例化、初始化，在初始化的过程中，<code>AutoProxyCreator</code> 加载 <code>BeanFactory</code> 中所有的 <code>PointcutAdvisor</code>（这也保证了 <code>PointcutAdvisor</code> 的实例化顺序优于普通 <code>Bean</code>。），然后依次使用 <code>PointcutAdvisor</code> 内置的 <code>ClassFilter</code>，判断当前对象是不是要拦截的类。</li>
+<li>如果是，则生成一个 <code>TargetSource</code>（要拦截的对象和其类型），并取出 <code>AutoProxyCreator</code> 的 <code>MethodMatcher</code>（对哪些方法进行拦截）、<code>Advice</code>（拦截的具体操作），再交给 <code>AopProxy</code> 去生成代理对象。</li>
+<li><code>AopProxy</code> 生成一个 <code>InvocationHandler</code>，在它的 <code>invoke</code> 函数中，首先使用 <code>MethodMatcher</code> 判断是不是要拦截的方法，如果是则交给 <code>Advice</code> 来执行（<code>Advice</code> 由用户来编写，其中也要手动/自动调用原始对象的方法），如果不是，则直接交给 <code>TargetSource</code> 的原始对象来执行。</li>
+</ul>
+<h3 id="step4-使用cglib进行类的织入">step4-使用CGLib进行类的织入</h3>
+<blockquote>
+<p>git checkout step-10-invite-cglib-and-aopproxy-factory</p>
+</blockquote>
+<ul>
+<li>前面的<code>JDK</code>动态代理只能对接口进行代理，对于类则无能为力。这里我们需要一些字节码操作技术。这方面大概有几种选择：<code>ASM</code>，<code>CGLib</code>和<code>javassist</code>，后两者是对<code>ASM</code>的封装。<code>Spring</code>中使用了<code>CGLib</code>。</li>
+<li>在这一步，我们还要定义一个工厂类<code>ProxyFactory</code>，用于根据<code>TargetSource</code>类型自动创建代理，这样就需要在调用者代码中去进行判断。</li>
+<li>TargetSource:</li>
+</ul>
+<pre><code class="language-java">public class TargetSource {
+
+	private Class&lt;?&gt; targetClass;
+
+    private Class&lt;?&gt;[] interfaces;
+
+	private Object target;
+
+	public TargetSource(Object target, Class&lt;?&gt; targetClass,Class&lt;?&gt;... interfaces) {
+		this.target = target;
+		this.targetClass = targetClass;
+        this.interfaces = interfaces;
+	}
+
+	public Class&lt;?&gt; getTargetClass() {
+		return targetClass;
+	}
+
+	public Object getTarget() {
+		return target;
+	}
+
+    public Class&lt;?&gt;[] getInterfaces() {
+        return interfaces;
+    }
+}
+</code></pre>
+<ul>
+<li>ProxyFactory : 策略模式和工厂模式的结合使用</li>
+</ul>
+<pre><code class="language-java">public class ProxyFactory extends AdvisedSupport implements AopProxy {
+
+    // 在 creator 中，生成相应的动态代理的时候就可以使用工厂类的 getProxy()
+	@Override
+	public Object getProxy() {
+		return createAopProxy().getProxy();
+	}
+
+	protected final AopProxy createAopProxy() {
+		return new Cglib2AopProxy(this);
+	}
+	
+	//...可以根据 TargetSource 决定使用不同的动态代理
+	protected final AopProxy createAopProxy(TargetSource targetSource) {
+	    return new JdkDynamicAopProxy(this);
+	}
+}
+</code></pre>
+<ul>
+<li>Cglib2AopProxy</li>
+</ul>
+<pre><code class="language-Java">public class Cglib2AopProxy extends AbstractAopProxy {
+
+	public Cglib2AopProxy(AdvisedSupport advised) {
+		super(advised);
+	}
+
+	@Override
+	public Object getProxy() {
+		Enhancer enhancer = new Enhancer();
+		enhancer.setSuperclass(advised.getTargetSource().getTargetClass());
+		enhancer.setInterfaces(advised.getTargetSource().getInterfaces());
+		enhancer.setCallback(new DynamicAdvisedInterceptor(advised));
+		Object enhanced = enhancer.create();
+		return enhanced;
+	}
+
+	private static class DynamicAdvisedInterceptor implements MethodInterceptor {
+
+		private AdvisedSupport advised;
+
+		private org.aopalliance.intercept.MethodInterceptor delegateMethodInterceptor;
+
+		private DynamicAdvisedInterceptor(AdvisedSupport advised) {
+			this.advised = advised;
+			this.delegateMethodInterceptor = advised.getMethodInterceptor();
+		}
+
+		@Override
+		public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+			if (advised.getMethodMatcher() == null
+					|| advised.getMethodMatcher().matches(method, advised.getTargetSource().getTargetClass())) {
+				return delegateMethodInterceptor.invoke(new CglibMethodInvocation(advised.getTargetSource().getTarget(), method, args, proxy));
+			}
+			return new CglibMethodInvocation(advised.getTargetSource().getTarget(), method, args, proxy).proceed();
+		}
+	}
+
+	private static class CglibMethodInvocation extends ReflectiveMethodInvocation {
+
+		private final MethodProxy methodProxy;
+
+		public CglibMethodInvocation(Object target, Method method, Object[] args, MethodProxy methodProxy) {
+			super(target, method, args);
+			this.methodProxy = methodProxy;
+		}
+
+		@Override
+		public Object proceed() throws Throwable {
+			return this.methodProxy.invoke(this.target, this.arguments);
+		}
+	}
+
+}
+</code></pre>
+<ul>
+<li>代理模式相关参见 <a href="https://blog.csdn.net/carson_ho/article/details/54910472">代理模式（Proxy Pattern）- 最易懂的设计模式解析</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/media/images/spring.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/learn-spring-data-jpa/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2018-05-06">2018-05-06</time>
+                  <h4 class="title white no-margin">SpringData-JPA</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/media/images/spring.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/Head-Frist-Spring-Cloud/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2018-02-06">2018-02-06</time>
+                  <h4 class="title white no-margin">Head Frist Spring Cloud</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

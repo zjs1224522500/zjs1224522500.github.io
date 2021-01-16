@@ -1,0 +1,916 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GEM5 &amp; NVMain | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+该篇主要记录 gem5 的安装和简单使用过程
+计算机系统设计课程实验环境需要，部分论文的实验仿真环境为 gem5
+结合部分 Paper，简要介绍 gem5 主要模拟的场景和测试方法
+
+
+
+gem5
+What is gem5?
+
+A mo..." />
+    <meta name="keywords" content="仿真,系统结构" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://blog.shunzi.tech/post-images/gem5-and-nvmain.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2019-12-11"><i class="fa fa-calendar"></i><span class="lately">1 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/gem5-and-nvmain/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/gem5-and-nvmain/"> </span>
+              </a>
+              <span id="/gem5-and-nvmain/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-0 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-1 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">GEM5 &amp; NVMain</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>该篇主要记录 gem5 的安装和简单使用过程</li>
+<li>计算机系统设计课程实验环境需要，部分论文的实验仿真环境为 gem5</li>
+<li>结合部分 Paper，简要介绍 gem5 主要模拟的场景和测试方法</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="gem5">gem5</h2>
+<h3 id="what-is-gem5">What is gem5?</h3>
+<ul>
+<li>A modular platform for computer-system architecture research</li>
+</ul>
+<h4 id="about">About</h4>
+<ul>
+<li>The gem5 simulator is a modular platform for computer-system architecture research, encompassing system-level architecture as well as processor microarchitecture.</li>
+</ul>
+<h3 id="install-and-test">Install And Test</h3>
+<h4 id="install-dependencies-firstly">Install dependencies firstly</h4>
+<ul>
+<li><code>sudo apt-get install mercurial scons swig gcc m4 python python-dev libgoogle-perftools-dev g++ libprotobuf-dev</code></li>
+<li><code>sudo apt-get install build-essential</code></li>
+<li><strong>Notice</strong>：<strong><code>apt get</code></strong> is for <strong>Ubuntu</strong></li>
+</ul>
+<h4 id="download-the-source-code">Download the source code</h4>
+<ul>
+<li><code>hg clone http://repo.gem5.org/gem5</code></li>
+<li><code>git clone https://gem5.googlesource.com/public/gem5</code></li>
+<li><code>git clone git@github.com:gem5/gem5.git</code></li>
+<li><a href="https://github.com/gem5/gem5">github repo(read only)</a></li>
+</ul>
+<h4 id="build-the-source-code">Build the source code</h4>
+<ul>
+<li><code>cd {gem5-source-code-dir}</code></li>
+<li><code>scons build/X86/gem5.opt</code></li>
+</ul>
+<h4 id="simple-test">Simple Test</h4>
+<ul>
+<li><code>cd {gem5-source-code-dir}</code></li>
+<li>Check and edit the hello.c：<code>vim tests/test-progs/hello/src/hello.c</code></li>
+<li>Run the hello.c：<code>build/X86/gem5.opt configs/example/se.py -c tests/test-progs/hello/bin/x86/linux/hello</code></li>
+<li>Check the result if contains &quot;<strong>Hello world!</strong>&quot;</li>
+</ul>
+<h4 id="check-the-output">Check the output</h4>
+<ul>
+<li><code>cd m5out/</code></li>
+<li><code>ls</code></li>
+<li><code>config.ini</code> and <code>config.json</code> describe the configuration info of the simulator.</li>
+<li><code>stats.txt</code> describes the info of this test.</li>
+<li><strong>Notice</strong>：This is in <strong>SE - System-call Emulation</strong> mode (which is designed for running the test program separately). The other mode <strong>FS - Full System</strong> mode is designed for running the whole linux os.</li>
+</ul>
+<h3 id="use">Use</h3>
+<ul>
+<li><strong>Run</strong>：<code>&lt;gem5 binary&gt; [gem5 options] &lt;simulation script&gt; [script options]</code></li>
+</ul>
+<h4 id="se-mode">SE mode</h4>
+<h5 id="prepare">Prepare</h5>
+<ul>
+<li>Edit the source code and save： <code>vim Test.c</code></li>
+</ul>
+<pre><code class="language-C">#include&lt;stdio.h&gt;
+int main()
+{
+    printf(&quot;Hello Test!\n&quot;);
+    return 0;
+}
+</code></pre>
+<ul>
+<li>Build：<code>gcc -o {Output-File-Name} {Source-File-Name} -static</code></li>
+<li>Test：<code>./{Output-File-Name}</code></li>
+<li><code>gcc -o Test Test.c -static</code></li>
+<li><code>./Test</code></li>
+<li><strong>Notice</strong>：If gcc return error info : /usr/bin/ld: cannot find -lc, try to install <code>sudo yum install glibc-static</code></li>
+</ul>
+<h5 id="build-and-run">Build and Run</h5>
+<ul>
+<li>Enter gem5 directory</li>
+<li>Build the arch if never build ：<code>scons build/X86/gem5.opt</code></li>
+<li>Run the code：<code>build/X86/gem5.opt configs/example/se.py -c {Output-File-Name}</code></li>
+<li><code>build/X86/gem5.opt configs/example/se.py -c /shunzi-test/Test</code></li>
+<li>Check the result if contains &quot;Hello Test!&quot;.</li>
+</ul>
+<h5 id="notice">Notice</h5>
+<ul>
+<li>In order to pass command line arguments to a binary you can use <code>--options=&quot;arg1 arg2 ...&quot;</code> to specify them as a script option in your simulation command.</li>
+<li><strong>SE</strong> mode : Static Compile &amp; Single Thread</li>
+</ul>
+<h4 id="fs-mode">FS mode</h4>
+<ul>
+<li>Use x86 Arch as an example.</li>
+</ul>
+<h5 id="prepare-2">Prepare</h5>
+<ul>
+<li>Download and install the full-system binary and disk image files.</li>
+<li>For Alpha full system files：<code>wget http://www.m5sim.org/dist/current/m5_system_2.0b3.tar.bz2</code>. (We will use one file in this tar in next step.)</li>
+<li>For x86 full system files：<code>wget http://www.m5sim.org/dist/current/x86/x86-system.tar.bz2</code></li>
+<li>Create fs-image directory and unzip the x86 system files to here：<code>tar -xjf /shunzi-test/m5/system/x86-system.tar.bz2</code></li>
+<li>Create new directory such as <code>alpha</code> to store the data unziped from Alpha full system files：<code>tar -xjf /shunzi-test/m5/system/m5_system_2.0b3.tar.bz2</code></li>
+<li>Copy the file <code>linux-bigswap2.img</code> in Alpha full system files to <code>../fs-image/disk</code> directory： <code>cp linux-bigswap2.img /shunzi-test/gem5-master/fs-image/</code></li>
+<li>Change the environment varibles in file <code>.bashrc</code>.And add path <code>export M5_PATH=$M5_PATH:/shunzi-test/gem5-master/fs-image/</code>. Make the change work：<code>source .bashrc</code>.</li>
+</ul>
+<h5 id="run">Run</h5>
+<ul>
+<li>In gem5 directory, run the py program：<code>build/X86/gem5.opt configs/example/fs.py</code>. And it may throw exceptions and errors.You can viee details in <strong>Notice</strong> part as first two tips.</li>
+<li>Rerun with command given kernel and disk image as params：<code>build/X86/gem5.opt configs/example/fs.py --kernel=x86_64-vmlinux-2.6.22.9 --disk-image=linux-x86.img</code>.And check the output if contains following msgs:</li>
+</ul>
+<pre><code class="language-Shell">gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled Nov 11 2019 18:23:53
+gem5 started Nov 14 2019 15:31:57
+gem5 executing on ceph-node1.localdomain, pid 729112
+command line: build/X86/gem5.opt configs/example/fs.py --kernel=x86_64-vmlinux-2.6.22.9 --disk-image=linux-x86.img
+
+Global frequency set at 1000000000000 ticks per second
+warn: DRAM device capacity (8192 Mbytes) does not match the address range assigned (512 Mbytes)
+info: kernel located at: /shunzi-test/gem5-master/fs-image/binaries/x86_64-vmlinux-2.6.22.9
+system.pc.com_1.device: Listening for connections on port 3456
+      0: system.pc.south_bridge.cmos.rtc: Real-time clock set to Sun Jan  1 00:00:00 2012
+0: system.remote_gdb: listening for remote gdb on port 7000
+warn: Reading current count from inactive timer.
+**** REAL SIMULATION ****
+info: Entering event queue @ 0.  Starting simulation...
+warn: Don't know what interrupt to clear for console.
+warn: x86 cpuid: unknown family 0x8086
+</code></pre>
+<ul>
+<li>Mount the image file to /mnt：<code>mount -o,loop,offset=32256 /shunzi-test/m5/system/linux-x86.img /mnt</code></li>
+<li>Mount the example code：<code>cp tests/test-progs/hello/bin/x86/linux/hello /mnt</code>or mount code wrote by yourself. <code>cp Test /mnt</code></li>
+<li>Umount the mnt：<code>umount /mnt</code></li>
+<li>Rerun the gem5 with FS mode：<code>build/X86/gem5.opt configs/example/fs.py --kernel=x86_64-vmlinux-2.6.22.9 --disk-image=linux-x86.img</code></li>
+<li>In another session, run the /util/term/m5term：<code>m5term 127.0.0.1 3456</code></li>
+</ul>
+<h5 id="notice-2">Notice</h5>
+<ul>
+<li>Change path in SysPaths.py ：<code>vim ./configs/common/SysPaths.py</code>. And adjust the code.</li>
+</ul>
+<pre><code class="language-Python">// Old Version
+except KeyError:
+    path = [ '/dist/m5/system', '/n/poolfs/z/dist/m5/system' ]
+
+// New Version
+except KeyError:
+    path = [ '/dist/m5/system', '/shunzi-test/gem5-master/fs-image' ]
+</code></pre>
+<ul>
+<li>Change the x86 image name in Benchmarks.py：<code>vim configs/common/Benchmarks.py</code></li>
+</ul>
+<pre><code class="language-Python">// Old Version
+elif buildEnv['TARGET_ISA'] == 'x86':
+    return env.get('LINUX_IMAGE', disk('x86root.img'))
+
+// New Version
+elif buildEnv['TARGET_ISA'] == 'x86':
+    return env.get('LINUX_IMAGE', disk('linux-x86.img'))
+</code></pre>
+<ul>
+<li>If you run the code written by yourself, please confirm the version of gcc between the image and the compiled version. Otherwise, you will have to face the problem of too old kenerl version.</li>
+</ul>
+<h2 id="nvmain">NVMain</h2>
+<h3 id="install-and-build">Install And Build</h3>
+<h4 id="download-source">Download Source</h4>
+<ul>
+<li><code>hg clone https://bitbucket.org/mrp5060/nvmain</code></li>
+<li>or <code>wget https://bitbucket.org/mrp5060/nvmain/get/9c0e87b164bc.zip</code></li>
+<li>or download to local system and upload (recommand)</li>
+<li>or download from github https://github.com/cyjseagull/gem5-nvmain-hybrid-simulator.</li>
+</ul>
+<h4 id="build">Build</h4>
+<ul>
+<li><code>scons –build-type=fast</code> may throw error messages.</li>
+<li>If success, the file <code>nvmain.fast</code> will be generated in the nvmain directory.</li>
+</ul>
+<h3 id="use-2">Use</h3>
+<h4 id="test">Test</h4>
+<ul>
+<li>Use inner test program and test data to test：<code>./nvmain.fast Config/PCM_ISSCC_2012_4GB.config Tests/Traces/hello_world.nvt 10000000</code></li>
+</ul>
+<h4 id="datatype-check">DataType Check</h4>
+<h5 id="define-4-types">Define 4 types</h5>
+<ul>
+<li>write-unit 8 bytes：00000000，0000XXXX，00XX00XX，OtherType</li>
+</ul>
+<h5 id="implementation">Implementation</h5>
+<ul>
+<li>Define four counter in nvmain.h.</li>
+</ul>
+<pre><code class="language-C++">    ncounter_t total00000000;
+    ncounter_t total0000xxxx;
+    ncounter_t total00xx00xx;
+    ncounter_t totalOtherType;
+</code></pre>
+<ul>
+<li>Init the counter in constructor.</li>
+</ul>
+<pre><code class="language-C++">    total00000000 = 0;
+    total0000xxxx = 0;
+    total00xx00xx = 0;
+    totalOtherType = 0;
+</code></pre>
+<ul>
+<li>Count the amount of different data type.</li>
+</ul>
+<pre><code class="language-C++">{
+     totalWriteRequests++;
+     NVMDataBlock recvData;
+     recvData = request-&gt;data;
+     recvData.SetSize(64);
+     int index = 0;
+     uint8_t newByte;
+     for (index = 0; index &lt; 64; index+=8) {
+         //uint8_t byteOne, byteTwo, byteThree, byteFour, byteFive, byteSix, byteEight;
+         uint8_t byteData[8] = {1,1,1,1,1,1,1,1};
+         for (int i = 0; i &lt; 8; i++) {
+             newByte = recvData.GetByte(index + i);
+             if (!(newByte &amp; 0xff)) {
+                 byteData[i] = 0;
+             }
+         }
+         if (!(byteData[0] | byteData[1] | byteData[2] | byteData[3] | byteData[4]
+               | byteData[5] | byteData[6] | byteData[7])) {
+             total00000000++;
+         } else if (!(byteData[0] | byteData[1] | byteData[2] | byteData[3])) {
+             total0000xxxx++;
+         } else if (!(byteData[0] | byteData[1] | byteData[4] | byteData[5])) {
+             total00xx00xx++;
+         } else {
+             totalOtherType++;
+         }
+     }
+}
+</code></pre>
+<ul>
+<li>Print the result</li>
+</ul>
+<pre><code class="language-C++">void NVMain::RegisterStats( )
+{
+    AddStat(totalReadRequests);
+    AddStat(totalWriteRequests);
+    AddStat(successfulPrefetches);
+    AddStat(unsuccessfulPrefetches);
+
+    AddStat(total00000000);
+    AddStat(total0000xxxx);
+    AddStat(total00xx00xx);
+    AddStat(totalOtherType);
+    AddStat(totalWriteBytes);
+    AddStat(totalCompressWriteBytes);
+}
+
+</code></pre>
+<h2 id="gem5-nvmain">Gem5 &amp; NVMain</h2>
+<h3 id="build-2">Build</h3>
+<ul>
+<li>Build Alpha Arch：<code>scons EXTRAS=/shunzi-test/nvmain/gem5-nvmain-hybrid-simulator/nvmain-gem5/nvmain ./build/ALPHA/gem5.opt -j8</code></li>
+</ul>
+<h3 id="test-2">Test</h3>
+<ul>
+<li>Run hello-world：<code>./build/ALPHA/gem5.opt configs/example/se.py -c tests/test-progs/hello/bin/alpha/linux/hello --cpu-type=detailed --caches --l2cache --mem-type=NVMainMemory --nvmain-config=../nvmain/Config/PCM_ISSCC_2012_4GB.config</code></li>
+</ul>
+<h3 id="parsec21">Parsec2.1</h3>
+<h4 id="download-neccessary-dependencies">Download neccessary dependencies</h4>
+<ul>
+<li><code>wget http://www.cs.utexas.edu/~parsec_m5/vmlinux_2.6.27-gcc_4.3.4</code></li>
+<li><code>wget http://www.cs.utexas.edu/~parsec_m5/tsb_osfpal</code></li>
+<li><code>wget http://www.cs.utexas.edu/~parsec_m5/linux-parsec-2-1-m5-with-test-inputs.img.bz2</code></li>
+<li><code>wget http://www.cs.utexas.edu/~parsec_m5/linux-parsec-2-1-m5-with-test-inputs.img.bz2</code></li>
+</ul>
+<h4 id="use-parsec21">Use Parsec2.1</h4>
+<ul>
+<li>Use util to generate shell：<code>./writescripts.pl blackscholes 4</code></li>
+<li>Rebuild the gem5：<code>scons build/ALPHA/gem5.opt -j8</code></li>
+<li>Run with blackscholes_4c_simmedium.rcS Script without nvmain：<code>./build/ALPHA/gem5.opt ./configs/example/fs.py -n 2 --script=/shunzi-test/nvmain/gem5-nvmain-hybrid-simulator/nvmain-gem5/gem5/TR-09-32-parsec-2.1-alpha-files/blackscholes_4c_simmedium.rcS -F 5000000000</code></li>
+<li>Run with nvmain：<code>./build/ALPHA/gem5.opt ./configs/example/fs.py -n 2 --script=/shunzi-test/nvmain/gem5-nvmain-hybrid-simulator/nvmain-gem5/gem5/TR-09-32-parsec-2.1-alpha-files/blackscholes_4c_simsmall.rcS --mem-type=NVMainMemory --nvmain-config=../nvmain/Config/PCM_ISSCC_2012_4GB.config -F 500000000</code></li>
+</ul>
+<h2 id="references">References</h2>
+<ul>
+<li><a href="http://www.m5sim.org/Main_Page">[1] gem5 official page</a></li>
+<li><a href="https://blog.csdn.net/u012822903/article/details/62227021">[2] CSDN：Gem5的FS（全系统）模拟</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/rbc-based-on-rdma.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/rbc-based-on-rdma/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-12-11">2019-12-11</time>
+                  <h4 class="title white no-margin">基于RDMA的RPC实现</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/project/Tier-Arch.png?raw=true');"></div>
+                 <a href="https://blog.shunzi.tech/post/ceph-tiring-cache-optimization/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-12-05">2019-12-05</time>
+                  <h4 class="title white no-margin">Ceph Tiring Cache 调优</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

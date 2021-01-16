@@ -1,0 +1,1129 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>tinySpring学习笔记（一）-实现IOC容器 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+tinySpring 是一个模仿Spring框架的迷你项目。
+通过理解和实现相关代码，掌握Spring的核心思想。
+后续会对Spring本身的一些实现再做深入探讨。
+
+
+
+
+为了更好的理解Spring的核心思想（IOC和AOP），开始阅..." />
+    <meta name="keywords" content="Spring" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('\media\images\custom-featureImage.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2017-11-18"><i class="fa fa-calendar"></i><span class="lately">3 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/tinySpring-learnOne-IOC/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/tinySpring-learnOne-IOC/"> </span>
+              </a>
+              <span id="/tinySpring-learnOne-IOC/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-0 ctag-spring" aria-label="">Spring</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">tinySpring学习笔记（一）-实现IOC容器</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>tinySpring 是一个模仿Spring框架的迷你项目。</li>
+<li>通过理解和实现相关代码，掌握Spring的核心思想。</li>
+<li>后续会对Spring本身的一些实现再做深入探讨。</li>
+</ul>
+</blockquote>
+<!-- more -->
+<blockquote>
+<p>为了更好的理解Spring的核心思想（IOC和AOP），开始阅读并总结体会 <a href="https://github.com/code4craft">code4craft</a> 的 <a href="https://github.com/code4craft/tiny-spring">tinySpring</a>模仿Spring的微型项目，并做一些笔记记录。</p>
+</blockquote>
+<!-- more -->
+<h3 id="step1-最基本的容器">step1-最基本的容器</h3>
+<blockquote>
+<p>git checkout step-1-container-register-and-get</p>
+</blockquote>
+<h4 id="ioc最基本的组成beanfactory-和-bean容器和实体">IOC最基本的组成：BeanFactory 和 Bean（容器和实体）</h4>
+<h4 id="实现步骤">实现步骤：</h4>
+<ul>
+<li>1、初始化beanFactory（容器）</li>
+</ul>
+<pre><code class="language-java">/** 
+ * BeanFactory 主要包含一个存储 Bean 的 ConcurrentHashMap 对象，以及对应的注入 Bean 和获取 Bean 的方法
+ * Fields:  private Map&lt;String, BeanDefinition&gt; beanDefinitionMap = new ConcurrentHashMap&lt;String, BeanDefinition&gt;();
+ * Methods: public Object getBean(String name)
+ *          public void registerBeanDefinition(String name, BeanDefinition beanDefinition)
+ */
+BeanFactory beanFactory = new BeanFactory();
+</code></pre>
+<ul>
+<li>2、向容器中注入Bean（实体）</li>
+</ul>
+<pre><code class="language-java">/**
+ * 为了保存一些额外的元信息，使用 BeanDefinition 来包装对应的 Bean 
+ * Fields： private Object bean;
+ *          Extra info（Class，ClassName）
+ * Method:  public BeanDefinition(Object bean);
+ *          属性对应的 set 和 get方法
+ */
+BeanDefinition beanDefinition = new BeanDefinition(new HelloWorldService());
+//注入时，则是利用 HashMap 存放相应的键值对 
+beanFactory.registerBeanDefinition(&quot;helloWorldService&quot;, beanDefinition);
+</code></pre>
+<ul>
+<li>3、获取对应的Bean实例</li>
+</ul>
+<pre><code class="language-java">// 获取 Bean 时对应的利用 HashMap 从中取出一开始注入的 Bean
+HelloWorldService helloWorldService = (HelloWorldService) beanFactory.getBean(&quot;helloWorldService&quot;);
+helloWorldService.helloWorld();
+</code></pre>
+<h3 id="step2-将bean创建放入工厂">step2-将Bean创建放入工厂</h3>
+<blockquote>
+<p>git checkout step-2-abstract-beanfactory-and-do-bean-initilizing-in-it</p>
+</blockquote>
+<ul>
+<li>
+<p>实际中需要使用容器来对所有的<code>Bean</code>进行统一的管理，自然对于<code>Bean</code>的整个生命周期都需要容器进行相应的干预。所以对于<code>Bean</code>的创建和初始化需要放入容器中进行处理，同时考虑到<strong>程序的扩展性</strong>，需要使用<code>Extra Interface</code>将<code>BeanFactory</code>更改为接口并提供相应的实现。</p>
+</li>
+<li>
+<p>对于 BeanFactory 的继承关系</p>
+</li>
+</ul>
+<pre><code class="language-java">/**
+ * Interface BeanFactory -&gt;
+ * Abstract class AbstractBeanFactory -&gt;
+ * class AutowireCapableBeanFactory
+ */
+public interface BeanFactory {
+    Object getBean(String name);
+    void registerBeanDefinition(String name, BeanDefinition beanDefinition);
+}
+
+public abstract class AbstractBeanFactory implements BeanFactory {
+	private Map&lt;String, BeanDefinition&gt; beanDefinitionMap = new ConcurrentHashMap&lt;String, BeanDefinition&gt;();
+	@Override
+    public Object getBean(String name) {
+        //  先获取对应的包装对象，再获取对应的实体
+		return beanDefinitionMap.get(name).getBean();
+	}
+	@Override
+    public void registerBeanDefinition(String name, BeanDefinition beanDefinition) {
+        // 注入Bean之前先创建对应Bean
+        Object bean = doCreateBean(beanDefinition);
+        // 创建Bean之后并进行相应的包装
+        beanDefinition.setBean(bean);
+        // 注入包装后的Bean对象
+        beanDefinitionMap.put(name, beanDefinition);
+	}
+    /**
+     * 初始化bean （仅提供抽象方法声明，不提供具体实现）
+     * @param beanDefinition
+     * @return
+     */
+    protected abstract Object doCreateBean(BeanDefinition beanDefinition);
+
+}
+
+public class AutowireCapableBeanFactory extends AbstractBeanFactory {
+    @Override
+    protected Object doCreateBean(BeanDefinition beanDefinition) {
+        try {
+            // 利用包装类对应的 class 对象，再利用 反射 创建对象
+            Object bean = beanDefinition.getBeanClass().newInstance();
+            return bean;
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+}
+
+</code></pre>
+<h4 id="实现步骤相比step1区别仅在于-初始化beanfactory和注入bean">实现步骤：（相比step1区别仅在于 <mark>初始化BeanFactory和注入Bean</mark>）</h4>
+<ul>
+<li>1、初始化BeanFactory</li>
+</ul>
+<pre><code class="language-java">// 创建能够 使用容器创建Bean实例 的容器对象
+BeanFactory beanFactory = new AutowireCapableBeanFactory();
+</code></pre>
+<ul>
+<li>2、注入Bean</li>
+</ul>
+<pre><code class="language-java">/**
+ * BeanDefinition:
+ * Fields: Object bean;
+ *         String beanClassName;
+ *         Class beanclass;
+ * 其中在 beanClassName 的 set 方法进行注入时，
+ * 利用反射和全类名创建出对应的 Class 对象并赋予给 beanClass属性
+ * public void setBeanClassName(String beanClassName) {
+ *		this.beanClassName = beanClassName;
+ *		try {
+ *			this.beanClass = Class.forName(beanClassName);
+ *		} catch (ClassNotFoundException e) {
+ *			e.printStackTrace();
+ *		}
+ *	}
+ */
+BeanDefinition beanDefinition = new BeanDefinition();
+// 通过使用 包装类BeanDefinition的全类名className 为容器使用反射创建对象做准备
+beanDefinition.setBeanClassName(&quot;us.codecraft.tinyioc.HelloWorldService&quot;);
+// 利用反射进行对象的创建并注入
+beanFactory.registerBeanDefinition(&quot;helloWorldService&quot;, beanDefinition);
+</code></pre>
+<h3 id="step3-为bean注入属性">step3-为Bean注入属性</h3>
+<blockquote>
+<p>git checkout step-3-inject-bean-with-property</p>
+</blockquote>
+<ul>
+<li>将属性注入信息保存成<code>PropertyValue</code>对象，并且保存到<code>BeanDefination</code>，初始化<code>Bean</code>的时候，可以根据<code>PropertyValue</code>来进行<code>Bean</code>属性的注入，<code>Spring</code>本身是用了<code>setter</code>来注入，该<code>demo</code>使用<code>Field</code>注入。</li>
+</ul>
+<h4 id="实现步骤-2">实现步骤：</h4>
+<ul>
+<li>1、初始化Factory</li>
+</ul>
+<pre><code class="language-java">BeanFactory beanFactory = new AutowireCapableBeanFactory();
+</code></pre>
+<ul>
+<li>2、Bean定义</li>
+</ul>
+<pre><code class="language-java">// BeanDefinition 定义中添加对应的 PropertyValues 属性
+BeanDefinition beanDefinition = new BeanDefinition();
+// 注入全类名便于之后利用反射创建相应的对象
+beanDefinition.setBeanClassName(&quot;us.codecraft.tinyioc.HelloWorldService&quot;);
+</code></pre>
+<ul>
+<li>3、设置属性</li>
+</ul>
+<pre><code class="language-java">/**
+ * PropertyValue: 属性(键值对)
+ * Fields： final String name;
+ *          final Object value;
+ *  
+ * PropertyValues：保存对象的全部属性
+ * Fields： final List&lt;PropertyValue&gt; propertyValueList;
+ * Methods: void addPropertyValue(PropertyValue p);
+ */
+PropertyValues propertyValues = new PropertyValues();
+propertyValues.addPropertyValue(new PropertyValue(&quot;text&quot;, &quot;Hello World!&quot;));
+beanDefinition.setPropertyValues(propertyValues);
+</code></pre>
+<ul>
+<li>4、生成Bean</li>
+</ul>
+<pre><code class="language-java">/**
+ * 1、利用反射创建相应的Bean对象
+ * 2、向创建的对象中注入对应的属性（PropertyValues）
+ * protected void applyPropertyValues(Object bean, BeanDefinition mbd) throws Exception {
+ *      // 遍历 PropertyValues中对应的属性
+ *		for (PropertyValue propertyValue : mbd.getPropertyValues().getPropertyValues()) {
+ *		    // 获取对象中指定属性名（ PropertyValue 的 key）对应的属性
+ *			Field declaredField = bean.getClass().getDeclaredField(propertyValue.getName());
+ *			// 设置Access使得私有属性能够通过反射访问
+ *			declaredField.setAccessible(true);
+ *			// 向实体对象对应的属性字段注入属性值（value） 类似于setter
+ *			declaredField.set(bean, propertyValue.getValue());
+ *		}
+ *	}
+ */
+beanFactory.registerBeanDefinition(&quot;helloWorldService&quot;, beanDefinition);
+</code></pre>
+<ul>
+<li>5、获取 Bean</li>
+</ul>
+<pre><code class="language-java">HelloWorldService helloWorldService = (HelloWorldService) beanFactory.getBean(&quot;helloWorldService&quot;);
+helloWorldService.helloWorld();
+</code></pre>
+<h3 id="step4-读取xml配置来初始化bean">step4-读取xml配置来初始化bean</h3>
+<blockquote>
+<p>git checkout step-4-config-beanfactory-with-xml</p>
+</blockquote>
+<ul>
+<li>定义<code>BeanDefinitionReader</code>接口，提供<code>void loadBeanDefinitions(String location)</code>方法从指定位置获取相应的配置来进行初始化，定义抽象类<code>AbstractBeanDefinitionReader</code>,其中一个实现是<code>XmlBeanDefinitionReader</code></li>
+</ul>
+<pre><code class="language-java">/**
+ * interface BeanDefinitionReader -&gt;
+ * abstract class AbstractBeanDefinitionReader -&gt;
+ * class XmlBeanDefinitionReader
+ */
+public interface BeanDefinitionReader {
+    void loadBeanDefinitions(String location) throws Exception;
+}
+
+public abstract class AbstractBeanDefinitionReader implements BeanDefinitionReader {
+    // 保存从配置文件中加载的所有的 beanDefinition 对象
+    private Map&lt;String,BeanDefinition&gt; registry;
+    /**
+     * 依赖 ResourceLoader，该类又依赖 UrlResource 
+     * UrlResource 继承自 Spring 自带的 Resource 内部资源定位接口
+     * Resource	接口，标识一个外部资源。通过 getInputStream() 方法 获取资源的输入流 。
+     * UrlResource 实现 Resource 接口的资源类，通过 URL 获取资源。
+     * ResourceLoader 资源加载类。通过 getResource(String) 方法获取一个 Resource 对象，是获取 Resource 的主要途径.
+     */
+    private ResourceLoader resourceLoader;
+    protected AbstractBeanDefinitionReader(ResourceLoader resourceLoader){
+        this.registry = new HashMap&lt;String, BeanDefinition&gt;();
+        this.resourceLoader = resourceLoader;
+    }
+    public Map&lt;String, BeanDefinition&gt; getRegistry() {
+        return registry;
+    }
+    public ResourceLoader getResourceLoader() {
+        return resourceLoader;
+    }
+}
+
+public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader{
+	public XmlBeanDefinitionReader(ResourceLoader resourceLoader) {
+		super(resourceLoader);
+	}
+    // 从配置文件中加载 Bean 的相关信息
+	@Override
+	public void loadBeanDefinitions(String location) throws Exception {
+		// 利用文件路径创建相应的输入流
+		InputStream inputStream = getResourceLoader().getResource(location).getInputStream();
+		doLoadBeanDefinitions(inputStream);
+	}
+	protected void doLoadBeanDefinitions(InputStream inputStream) throws Exception {
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder docBuilder = factory.newDocumentBuilder();
+		// 输入流转换成对应的 Document 对象便于获取对应的元素
+		Document doc = docBuilder.parse(inputStream);
+		// 解析bean
+		registerBeanDefinitions(doc);
+		inputStream.close();
+	}
+	public void registerBeanDefinitions(Document doc) {
+	    // 获取文件中包含的元素 &lt;beans&gt;&lt;/beans&gt;
+		Element root = doc.getDocumentElement();
+		parseBeanDefinitions(root);
+	}
+	protected void parseBeanDefinitions(Element root) {
+	    // 获取元素包含的子节点链 &lt;bean&gt;&lt;/bean&gt; 链
+		NodeList nl = root.getChildNodes();
+		for (int i = 0; i &lt; nl.getLength(); i++) {
+		    // 获取子节点链上对应的子节点 单个&lt;bean&gt;&lt;/bean&gt;
+			Node node = nl.item(i);
+			if (node instanceof Element) {
+				Element ele = (Element) node;
+				// 将节点强转为 Element 对象并进行解析
+				processBeanDefinition(ele);
+			}
+		}
+	}
+	protected void processBeanDefinition(Element ele) {
+	    // 获取子节点对应的属性（name，class）来对应 Bean
+	    // &lt;bean name=&quot;&quot; class=&quot;&quot;&gt;&lt;/bean&gt;
+		String name = ele.getAttribute(&quot;name&quot;);
+		String className = ele.getAttribute(&quot;class&quot;);
+		// 创建与之对应的 BeanDefinition ，并设置相应的属性
+        BeanDefinition beanDefinition = new BeanDefinition();
+        // 将节点包含的 Bean相关的属性信息注入创建的 BeanDefinition 中。
+        processProperty(ele,beanDefinition);
+        beanDefinition.setBeanClassName(className);
+        // 统一管理（HashMap）通过配置文件加载的 beanDefinition 对象
+		getRegistry().put(name, beanDefinition);
+	}
+    private void processProperty(Element ele,BeanDefinition beanDefinition) {
+        // 获取元素对应的 Property 节点
+        // &lt;bean&gt;&lt;property name=&quot;&quot; value=&quot;&quot;&gt;&lt;/property&gt;&lt;/bean&gt;
+        NodeList propertyNode = ele.getElementsByTagName(&quot;property&quot;);
+        for (int i = 0; i &lt; propertyNode.getLength(); i++) {
+            // 遍历节点并取出节点对应的 key-value，添加到 BeanDefinition 对应的属性中
+            Node node = propertyNode.item(i);
+            if (node instanceof Element) {
+                Element propertyEle = (Element) node;
+                String name = propertyEle.getAttribute(&quot;name&quot;);
+                String value = propertyEle.getAttribute(&quot;value&quot;);
+                beanDefinition.getPropertyValues().addPropertyValue(new PropertyValue(name,value));
+            }
+        }
+    }
+}
+
+</code></pre>
+<h4 id="实现步骤-3">实现步骤：</h4>
+<ul>
+<li>1、读取配置</li>
+</ul>
+<pre><code class="language-java">XmlBeanDefinitionReader xmlBeanDefinitionReader = new XmlBeanDefinitionReader(new ResourceLoader());
+xmlBeanDefinitionReader.loadBeanDefinitions(&quot;tinyioc.xml&quot;);
+</code></pre>
+<ul>
+<li>2、初始化BeanFactory并注册bean</li>
+</ul>
+<pre><code class="language-java">BeanFactory beanFactory = new AutowireCapableBeanFactory();
+// 通过Map自带的Entry实体属性遍历Map中存放的实体集合
+for (Map.Entry&lt;String, BeanDefinition&gt; beanDefinitionEntry : xmlBeanDefinitionReader.getRegistry().entrySet()) {
+        beanFactory.registerBeanDefinition(beanDefinitionEntry.getKey(), beanDefinitionEntry.getValue());
+}
+</code></pre>
+<ul>
+<li>3、获取bean</li>
+</ul>
+<pre><code class="language-java">HelloWorldService helloWorldService = (HelloWorldService) beanFactory.getBean(&quot;helloWorldService&quot;);
+helloWorldService.helloWorld();
+</code></pre>
+<h3 id="step5-为bean注入bean处理bean之间的依赖">step5-为bean注入bean（处理Bean之间的依赖）</h3>
+<blockquote>
+<p>git checkout step-5-inject-bean-to-bean</p>
+</blockquote>
+<ul>
+<li>通过定义一个BeanReference，表示这个属性是对另一个Bean的引用，在读取xml配置文件的时候进行初始化，并在初始化bean的时候，进行解析和真实bean的注入。</li>
+</ul>
+<pre><code class="language-java">class AutowireCapableBeanFactory 中：
+
+protected void applyPropertyValues(Object bean, BeanDefinition mbd) throws Exception {
+		for (PropertyValue propertyValue : mbd.getPropertyValues().getPropertyValues()) {
+		    // 获取对象中指定属性名（ PropertyValue 的 key）对应的属性
+			Field declaredField = bean.getClass().getDeclaredField(propertyValue.getName());
+			declaredField.setAccessible(true);
+			Object value = propertyValue.getValue();
+			// 若该属性的值对应的是一个Bean，是Bean对Bean的引用
+			if (value instanceof BeanReference) {
+			    // 原类型为 Object，需要强转为 BeanReference
+				BeanReference beanReference = (BeanReference) value;
+				// 再利用BeanReference存储的name属性获取到对应的bean（包装类 -&gt; 实体类）
+				value = getBean(beanReference.getName());
+			}
+			declaredField.set(bean, value);
+		}
+	}
+	
+
+    /**
+     * 对于 getBean(),采用&quot;lazy-init&quot;的方式（延迟加载）。
+     * 避免两个循环依赖的Bean在创建时陷入死锁。
+     * 在注入Bean的时候，先尝试获取，获取不到再创建，故总是先创建后注入。
+     */
+    public Object getBean(String name) throws Exception {
+		BeanDefinition beanDefinition = beanDefinitionMap.get(name);
+		if (beanDefinition == null) {
+			throw new IllegalArgumentException(&quot;No bean named &quot; + name + &quot; is defined&quot;);
+		}
+		Object bean = beanDefinition.getBean();
+		if (bean == null) {
+			bean = doCreateBean(beanDefinition);
+		}
+		return bean;
+	}
+
+</code></pre>
+<h4 id="实现步骤-4">实现步骤：</h4>
+<ul>
+<li>1、读取配置</li>
+</ul>
+<pre><code class="language-java">XmlBeanDefinitionReader xmlBeanDefinitionReader = new XmlBeanDefinitionReader(new ResourceLoader());
+xmlBeanDefinitionReader.loadBeanDefinitions(&quot;tinyioc.xml&quot;);
+</code></pre>
+<ul>
+<li>2、初始化BeanFactory并注册Bean</li>
+</ul>
+<pre><code class="language-java">AbstractBeanFactory beanFactory = new AutowireCapableBeanFactory();
+for (Map.Entry&lt;String, BeanDefinition&gt; beanDefinitionEntry : xmlBeanDefinitionReader.getRegistry().entrySet()) {
+    beanFactory.registerBeanDefinition(beanDefinitionEntry.getKey(), beanDefinitionEntry.getValue());
+}
+</code></pre>
+<ul>
+<li>3、初始化Bean</li>
+</ul>
+<pre><code class="language-java">/**
+ * class AbstractBeanFactory: 
+ * Fileds: + final List&lt;String&gt; beanDefinitionNames 属性
+ * Methods：在registerBeanDefinition中对应的添加 beanDefinitionNames.add(name);
+ * 
+ * public void preInstantiateSingletons() throws Exception {
+ *      // 使用迭代器依次创建初始化对应 Bean
+ *		for (Iterator it = this.beanDefinitionNames.iterator(); it.hasNext();) {
+ *			String beanName = (String) it.next();
+ *			getBean(beanName);
+ *		}
+ *	}
+ *
+ * 确保所有没有设置lazy-init的单例被实例化
+ */
+beanFactory.preInstantiateSingletons();
+</code></pre>
+<ul>
+<li>4、获取Bean</li>
+</ul>
+<pre><code class="language-java">HelloWorldService helloWorldService = (HelloWorldService) beanFactory.getBean(&quot;helloWorldService&quot;);
+helloWorldService.helloWorld();
+</code></pre>
+<h3 id="step6-applicationcontext">step6-ApplicationContext</h3>
+<blockquote>
+<p>git checkout step-6-invite-application-context</p>
+</blockquote>
+<ul>
+<li>为了便于使用<code>BeanFactory</code>，引入<code>ApplicationContext</code>接口，并在<code>AbstractApplicationContext</code>的<code>refresh()</code>方法中进行<code>bean</code>的初始化工作。</li>
+</ul>
+<pre><code class="language-java">/**
+ * class BeanFactory -&gt; extends
+ * interface ApplicationContext -&gt; implements
+ * abstract class AbstractApplicationContext -&gt; extends
+ * class ClassPathXmlApplicationContext
+ */
+public interface ApplicationContext extends BeanFactory {
+}
+
+public abstract class AbstractApplicationContext implements ApplicationContext {
+    // 依赖抽象容器
+    protected AbstractBeanFactory beanFactory;
+    public AbstractApplicationContext(AbstractBeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
+    }
+    //声明方法 初始化所有的 Bean
+    public void refresh() throws Exception{
+    }
+    // 调用容器的获取Bean方法
+    @Override
+    public Object getBean(String name) throws Exception {
+        return beanFactory.getBean(name);
+    }
+}
+
+public class ClassPathXmlApplicationContext extends AbstractApplicationContext {
+	private String configLocation;
+	// 默认使用自动装配容器
+	public ClassPathXmlApplicationContext(String configLocation) throws Exception {
+		this(configLocation, new AutowireCapableBeanFactory());
+	}
+	// 根据 配置文件路径 容器类型 构造对应的 ApplicationContext
+	public ClassPathXmlApplicationContext(String configLocation, AbstractBeanFactory beanFactory) throws Exception {
+		super(beanFactory);
+		this.configLocation = configLocation;
+		refresh();
+	}
+	
+	// 将读取配置文件以及将读取到的属性值注入Bean的方法进行封装
+	@Override
+	public void refresh() throws Exception {
+
+		// 读取配置文件 封装原来的实现步骤一
+		XmlBeanDefinitionReader xmlBeanDefinitionReader = new XmlBeanDefinitionReader(new ResourceLoader());
+		xmlBeanDefinitionReader.loadBeanDefinitions(configLocation);
+		
+		// 将获得的信息注入Bean 封装原来的实现步骤二
+		for (Map.Entry&lt;String, BeanDefinition&gt; beanDefinitionEntry : xmlBeanDefinitionReader.getRegistry().entrySet()) {
+			beanFactory.registerBeanDefinition(beanDefinitionEntry.getKey(), beanDefinitionEntry.getValue());
+		}
+	}
+}
+</code></pre>
+<h4 id="实现步骤-5">实现步骤：</h4>
+<ul>
+<li>1、初始化ApplicationContext（加载配置文件并初始化 Bean）</li>
+</ul>
+<pre><code class="language-java">ApplicationContext applicationContext = new ClassPathXmlApplicationContext(&quot;tinyioc.xml&quot;);
+</code></pre>
+<ul>
+<li>2、获取对应的 Bean 并执行相关方法</li>
+</ul>
+<pre><code class="language-java">HelloWorldService helloWorldService = (HelloWorldService) applicationContext.getBean(&quot;helloWorldService&quot;);
+helloWorldService.helloWorld();
+</code></pre>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/media/images/redis.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/redis-start-one/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2017-12-07">2017-12-07</time>
+                  <h4 class="title white no-margin">Redis安装与配置</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/media/images/javaweb.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/Servlet-apply-two/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2017-11-02">2017-11-02</time>
+                  <h4 class="title white no-margin">Servlet常用用法（二）-文件上传下载</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

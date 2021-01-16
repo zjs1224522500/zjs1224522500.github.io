@@ -1,0 +1,1583 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>C++基础快速入门 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+项目开发需要使用 C++，曾经学过相关课程，但很久没与使用，有些遗忘。
+此处将和自己比较擅长的 Java 语言其中的概念进行类比，加深理解。
+记录重要笔记，主要是C++ 一些独有的概念和一些基础知识
+前半部分是 C 和 C++ 共通的部..." />
+    <meta name="keywords" content="编程语言" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://blog.shunzi.tech/post-images/cpp-basic.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-04-06"><i class="fa fa-calendar"></i><span class="lately">9 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/cpp-basic/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/cpp-basic/"> </span>
+              </a>
+              <span id="/cpp-basic/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-0 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">C++基础快速入门</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>项目开发需要使用 C++，曾经学过相关课程，但很久没与使用，有些遗忘。</li>
+<li>此处将和自己比较擅长的 Java 语言其中的概念进行类比，加深理解。</li>
+<li>记录重要笔记，主要是C++ 一些独有的概念和一些基础知识</li>
+<li>前半部分是 C 和 C++ 共通的部分，后半部分为面向对象的相关特性。</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="参考链接">参考链接</h2>
+<ul>
+<li>https://www.runoob.com/cplusplus/cpp-tutorial.html</li>
+</ul>
+<h2 id="基本概念">基本概念</h2>
+<h3 id="标准库组成">标准库组成</h3>
+<ul>
+<li>核心语言，提供了所有构件块，包括变量、数据类型和常量，等等。</li>
+<li>C++ 标准库，提供了大量的函数，用于操作文件、字符串等。</li>
+<li>标准模板库（STL），提供了大量的方法，用于操作数据结构等。</li>
+</ul>
+<h3 id="环境搭建">环境搭建</h3>
+<ul>
+<li>参考百度/Google</li>
+</ul>
+<h3 id="基本语法">基本语法</h3>
+<ul>
+<li>面向对象编程语言的基本概念。类、对象、方法（函数）</li>
+<li>命名空间 namespace</li>
+</ul>
+<h3 id="数据类型">数据类型</h3>
+<ul>
+<li>bool</li>
+<li>char   = '\0'</li>
+<li>int    = 0</li>
+<li>float  = 0</li>
+<li>double = 0</li>
+<li>void</li>
+<li>wchar_t 宽字符型 typedef short int wchar_t;</li>
+<li><strong>枚举、指针、数组、引用、数据结构、类</strong></li>
+<li>pointer = NULL</li>
+</ul>
+<h4 id="基本数据类型修饰符">基本数据类型修饰符</h4>
+<ul>
+<li>signed</li>
+<li>unsigned</li>
+<li>short</li>
+<li>long</li>
+</ul>
+<h5 id="类型限定符">类型限定符</h5>
+<ul>
+<li>const  类型的对象在程序执行期间不能被修改改变。</li>
+<li>volatile  修饰符 volatile 告诉编译器不需要优化volatile声明的变量，让程序可以直接从内存中读取变量。对于一般的变量编译器会对变量进行优化，将内存中的变量值放在寄存器中以加快读写效率。</li>
+<li>restrict  由 restrict 修饰的指针是唯一一种访问它所指向的对象的方式。只有 C99 增加了新的类型限定符 restrict。</li>
+</ul>
+<h4 id="typedef">typedef</h4>
+<ul>
+<li>为一个已有的类型取一个新的名字:</li>
+</ul>
+<pre><code>typedef int feet;
+feet distance;
+</code></pre>
+<h4 id="枚举类型">枚举类型</h4>
+<ul>
+<li>默认枚举对应数值 0，1，2；也可以指定</li>
+</ul>
+<pre><code>enum color { red, green, blue } c;
+c = blue;
+
+enum color { red, green=5, blue };
+</code></pre>
+<h3 id="变量">变量</h3>
+<ul>
+<li>extern 外部引用关键字</li>
+</ul>
+<pre><code>extern int d = 3, f = 5;    // d 和 f 的声明，引入其他文件中定义的变量
+int d = 3, f = 5;           // 定义并初始化 d 和 f
+byte z = 22;                // 定义并初始化 z
+char x = 'x';               // 变量 x 的值为 'x'
+</code></pre>
+<h4 id="声明">声明</h4>
+<pre><code class="language-C++">#include &lt;iostream&gt;
+using namespace std;
+ 
+// 变量声明
+extern int a, b;
+extern int c;
+extern float f;
+
+// 函数声明
+int func();
+  
+int main ()
+{
+  // 变量定义
+  int a, b;
+  int c;
+  float f;
+ 
+  // 实际初始化
+  a = 10;
+  b = 20;
+  c = a + b;
+ 
+  cout &lt;&lt; c &lt;&lt; endl ;
+ 
+  f = 70.0/3.0;
+  cout &lt;&lt; f &lt;&lt; endl ;
+  
+  // 函数调用
+    int i = func();
+ 
+  return 0;
+}
+
+// 函数定义
+int func()
+{
+    return 0;
+}
+</code></pre>
+<h4 id="作用域">作用域</h4>
+<ul>
+<li>在函数或一个代码块内部声明的变量，称为局部变量。</li>
+<li>在函数参数的定义中声明的变量，称为形式参数。</li>
+<li>在所有函数外部声明的变量，称为全局变量。</li>
+</ul>
+<pre><code>#include &lt;iostream&gt;
+using namespace std;
+ 
+// 全局变量声明
+int g;
+
+int main ()
+{
+  // 局部变量声明
+  int a, b;
+  int c;
+ 
+  // 实际初始化
+  a = 10;
+  b = 20;
+  c = a + b;
+  g = a + b;
+ 
+  cout &lt;&lt; c;
+  
+  cout &lt;&lt; g;
+ 
+  return 0;
+}
+</code></pre>
+<ul>
+<li>在程序中，局部变量和全局变量的名称可以相同，但是在函数内，局部变量的值会覆盖全局变量的值</li>
+</ul>
+<h3 id="常量">常量</h3>
+<h4 id="定义常量">定义常量</h4>
+<ul>
+<li>#define 域处理器</li>
+</ul>
+<pre><code class="language-C++">#include &lt;iostream&gt;
+using namespace std;
+ 
+#define LENGTH 10   
+#define WIDTH  5
+#define NEWLINE '\n'
+ 
+int main()
+{
+ 
+   int area;  
+   
+   area = LENGTH * WIDTH;
+   cout &lt;&lt; area;
+   cout &lt;&lt; NEWLINE;
+   return 0;
+}
+</code></pre>
+<ul>
+<li>const 关键字</li>
+</ul>
+<pre><code class="language-C++">#include &lt;iostream&gt;
+using namespace std;
+ 
+int main()
+{
+   const int  LENGTH = 10;
+   const int  WIDTH  = 5;
+   const char NEWLINE = '\n';
+   int area;  
+   
+   area = LENGTH * WIDTH;
+   cout &lt;&lt; area;
+   cout &lt;&lt; NEWLINE;
+   return 0;
+}
+</code></pre>
+<h3 id="存储类">存储类</h3>
+<h4 id="auto-c17-弃用">auto （C++17 弃用）</h4>
+<ul>
+<li>声明变量时根据初始化表达式自动推断该变量的类型、声明函数时函数返回值的占位符。</li>
+</ul>
+<pre><code>auto f=3.14;      //double
+auto s(&quot;hello&quot;);  //const char*
+auto z = new auto(9); // int*
+auto x1 = 5, x2 = 5.0, x3='r';//错误，必须是初始化为同一类型
+</code></pre>
+<h4 id="register-c17-弃用">register （C++17 弃用）</h4>
+<ul>
+<li>用于定义存储在寄存器中而不是 RAM 中的局部变量。这意味着变量的最大尺寸等于寄存器的大小（通常是一个字），且不能对它应用一元的 '&amp;' 运算符（因为它没有内存位置）。</li>
+</ul>
+<h4 id="static">static</h4>
+<ul>
+<li>指示编译器在程序的生命周期内保持局部变量的存在，而不需要在每次它进入和离开作用域时进行创建和销毁。因此，使用 static 修饰局部变量可以在函数调用之间保持局部变量的值。也可以应用于全局变量。当 static 修饰全局变量时，会使变量的作用域限制在声明它的文件内。</li>
+</ul>
+<pre><code>#include &lt;iostream&gt;
+ 
+// 函数声明 
+void func(void);
+ 
+static int count = 10; /* 全局变量 */
+ 
+int main()
+{
+    while(count--)
+    {
+       func();
+    }
+    return 0;
+}
+// 函数定义
+void func( void )
+{
+    static int i = 5; // 局部静态变量
+    i++;
+    std::cout &lt;&lt; &quot;变量 i 为 &quot; &lt;&lt; i ;
+    std::cout &lt;&lt; &quot; , 变量 count 为 &quot; &lt;&lt; count &lt;&lt; std::endl;
+}
+</code></pre>
+<pre><code>变量 i 为 6 , 变量 count 为 9
+变量 i 为 7 , 变量 count 为 8
+变量 i 为 8 , 变量 count 为 7
+变量 i 为 9 , 变量 count 为 6
+变量 i 为 10 , 变量 count 为 5
+变量 i 为 11 , 变量 count 为 4
+变量 i 为 12 , 变量 count 为 3
+变量 i 为 13 , 变量 count 为 2
+变量 i 为 14 , 变量 count 为 1
+变量 i 为 15 , 变量 count 为 0
+</code></pre>
+<h4 id="extern">extern</h4>
+<ul>
+<li>用于提供一个全局变量的引用，全局变量对所有的程序文件都是可见的。当您使用 'extern' 时，对于无法初始化的变量，会把变量名指向一个之前定义过的存储位置。extern 是用来在另一个文件中声明一个全局变量或函数。</li>
+</ul>
+<pre><code class="language-C++">// main.cpp
+#include &lt;iostream&gt;
+ 
+int count ;
+extern void write_extern();
+ 
+int main()
+{
+   count = 5;
+   write_extern();
+}
+
+// suport.cpp
+#include &lt;iostream&gt;
+ 
+extern int count;
+ 
+void write_extern(void)
+{
+   std::cout &lt;&lt; &quot;Count is &quot; &lt;&lt; count &lt;&lt; std::endl;
+}
+</code></pre>
+<ul>
+<li>在这里，第二个文件中的 extern 关键字用于声明已经在第一个文件 main.cpp 中定义的 count。</li>
+<li>现在 ，编译这两个文件，如下所示：</li>
+</ul>
+<pre><code>$ g++ main.cpp support.cpp -o write
+</code></pre>
+<h4 id="mutable">mutable</h4>
+<ul>
+<li>说明符仅适用于类的对象。它允许对象的成员替代常量。也就是说，mutable 成员可以通过 const 成员函数修改。</li>
+</ul>
+<h4 id="thread_local-c11">thread_local (C++11)</h4>
+<ul>
+<li>使用 thread_local 说明符声明的变量仅可在它在其上创建的线程上访问。 变量在创建线程时创建，并在销毁线程时销毁。 每个线程都有其自己的变量副本。</li>
+<li>thread_local 说明符可以与 static 或 extern 合并。</li>
+<li>可以将 thread_local 仅应用于数据声明和定义，thread_local 不能用于函数声明或定义。</li>
+</ul>
+<pre><code>thread_local int x;  // 命名空间下的全局变量
+class X
+{
+    static thread_local std::string s; // 类的static成员变量
+};
+static thread_local std::string X::s;  // X::s 是需要定义的
+ 
+void foo()
+{
+    thread_local std::vector&lt;int&gt; v;  // 本地变量
+}
+</code></pre>
+<h3 id="运算符-和-语句">运算符 和 语句</h3>
+<ul>
+<li>此处不表，只是需要注意指针的相关运算符，-&gt;, *, &amp;</li>
+<li>循环语句、条件语句同理</li>
+</ul>
+<h3 id="函数">函数</h3>
+<ul>
+<li>函数定义/声明/调用 此处不表</li>
+</ul>
+<h4 id="函数参数">函数参数</h4>
+<ul>
+<li>传值/指针/引用 与 Java 区分 （<strong>Java 只有值传递和引用传递</strong>）</li>
+<li>传值：该方法把参数的实际值赋值给函数的形式参数。在这种情况下，修改函数内的形式参数对实际参数没有影响。</li>
+<li>指针：该方法把参数的地址赋值给形式参数。在函数内，该地址用于访问调用中要用到的实际参数。这意味着，修改形式参数会影响实际参数。</li>
+<li>引用：该方法把参数的引用赋值给形式参数。在函数内，该引用用于访问调用中要用到的实际参数。这意味着，修改形式参数会影响实际参数。</li>
+</ul>
+<h5 id="函数参数默认值">函数参数默认值</h5>
+<ul>
+<li>定义一个函数，您可以为参数列表中后边的每一个参数指定默认值。当调用函数时，如果实际参数的值留空，则使用这个默认值。</li>
+</ul>
+<pre><code>int sum(int a, int b=20)
+</code></pre>
+<h4 id="lamda">lamda</h4>
+<ul>
+<li>C++11 提供了对匿名函数的支持,称为 Lambda 函数(也叫 Lambda 表达式)。</li>
+<li>Lambda 表达式把函数看作对象。Lambda 表达式可以像对象一样使用，比如可以将它们赋给变量和作为参数传递，还可以像函数一样对其求值。</li>
+<li>Lambda 表达式本质上与函数声明非常类似。</li>
+</ul>
+<pre><code>// [capture](parameters)-&gt;return-type{body}
+[](int x, int y){ return x &lt; y ; }
+
+// [capture](parameters){body}
+[]{ ++global_x; }
+
+[](int x, int y) -&gt; int { int z = x + y; return z + x; }
+[]      // 沒有定义任何变量。使用未定义变量会引发错误。
+[x, &amp;y] // x以传值方式传入（默认），y以引用方式传入。
+[&amp;]     // 任何被使用到的外部变量都隐式地以引用方式加以引用。
+[=]     // 任何被使用到的外部变量都隐式地以传值方式加以引用。
+[&amp;, x]  // x显式地以传值方式加以引用。其余变量以引用方式加以引用。
+[=, &amp;z] // z显式地以引用方式加以引用。其余变量以传值方式加以引用。
+</code></pre>
+<ul>
+<li>另外有一点需要注意。对于[=]或[&amp;]的形式，lambda 表达式可以直接使用 this 指针。但是，对于[]的形式，如果要使用 this 指针，必须显式传入：</li>
+</ul>
+<pre><code>[this]() { this-&gt;someFunc(); }();
+</code></pre>
+<h3 id="数字">数字</h3>
+<h4 id="cmath"><cmath></h4>
+<pre><code>double cos(double);
+double sin(double);
+double tan(double);
+double log(double); // 自然对数
+double pow(double, double);
+double hypot(double, double); // 两个参数的平方总和的平方根
+double sqrt(double);
+int abs(int);
+double fabs(double);
+double floor(double); // 向下取整
+</code></pre>
+<h4 id="随机数">随机数</h4>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;ctime&gt;
+#include &lt;cstdlib&gt;
+ 
+using namespace std;
+ 
+int main ()
+{
+   int i,j;
+ 
+   // 设置种子
+   srand( (unsigned)time( NULL ) );
+ 
+   /* 生成 10 个随机数 */
+   for( i = 0; i &lt; 10; i++ )
+   {
+      // 生成实际的随机数
+      j= rand(); // 伪随机
+      cout &lt;&lt;&quot;随机数： &quot; &lt;&lt; j &lt;&lt; endl;
+   }
+ 
+   return 0;
+}
+</code></pre>
+<h3 id="数组">数组</h3>
+<ul>
+<li>此处不表，注意在 C/C++ 中和 指针的联系</li>
+</ul>
+<h3 id="字符串">字符串</h3>
+<h4 id="c-风格">C 风格</h4>
+<ul>
+<li><code>char greeting[6] = {'H', 'e', 'l', 'l', 'o', '\0'};</code></li>
+<li>`char greeting[] = &quot;Hello&quot;;</li>
+</ul>
+<h5 id="cstring">cstring</h5>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;cstring&gt;
+ 
+using namespace std;
+ 
+int main ()
+{
+   char str1[11] = &quot;Hello&quot;;
+   char str2[11] = &quot;World&quot;;
+   char str3[11];
+   int  len ;
+ 
+   // 复制 str1 到 str3
+   strcpy( str3, str1);
+   cout &lt;&lt; &quot;strcpy( str3, str1) : &quot; &lt;&lt; str3 &lt;&lt; endl;
+ 
+   // 连接 str1 和 str2
+   strcat( str1, str2);
+   cout &lt;&lt; &quot;strcat( str1, str2): &quot; &lt;&lt; str1 &lt;&lt; endl;
+ 
+   // 连接后，str1 的总长度
+   len = strlen(str1);
+   cout &lt;&lt; &quot;strlen(str1) : &quot; &lt;&lt; len &lt;&lt; endl;
+ 
+   return 0;
+}
+</code></pre>
+<h4 id="c">C++</h4>
+<h5 id="string">string</h5>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;string&gt;
+ 
+using namespace std;
+ 
+int main ()
+{
+   string str1 = &quot;Hello&quot;;
+   string str2 = &quot;World&quot;;
+   string str3;
+   int  len ;
+ 
+   // 复制 str1 到 str3
+   str3 = str1;
+   cout &lt;&lt; &quot;str3 : &quot; &lt;&lt; str3 &lt;&lt; endl;
+ 
+   // 连接 str1 和 str2
+   str3 = str1 + str2;
+   cout &lt;&lt; &quot;str1 + str2 : &quot; &lt;&lt; str3 &lt;&lt; endl;
+ 
+   // 连接后，str3 的总长度
+   len = str3.size();
+   cout &lt;&lt; &quot;str3.size() :  &quot; &lt;&lt; len &lt;&lt; endl;
+ 
+   return 0;
+}
+</code></pre>
+<h3 id="指针和引用">指针和引用</h3>
+<ul>
+<li>此处不表</li>
+</ul>
+<h3 id="日期时间">日期/时间</h3>
+<ul>
+<li>C++ 标准库没有提供所谓的日期类型。C++ 继承了 C 语言用于日期和时间操作的结构和函数。为了使用日期和时间相关的函数和结构，需要在 C++ 程序中引用 <ctime> 头文件。</li>
+<li>有四个与时间相关的类型：clock_t、time_t、size_t 和 tm。类型 clock_t、size_t 和 time_t 能够把系统时间和日期表示为某种整数。</li>
+</ul>
+<pre><code>struct tm {
+  int tm_sec;   // 秒，正常范围从 0 到 59，但允许至 61
+  int tm_min;   // 分，范围从 0 到 59
+  int tm_hour;  // 小时，范围从 0 到 23
+  int tm_mday;  // 一月中的第几天，范围从 1 到 31
+  int tm_mon;   // 月，范围从 0 到 11
+  int tm_year;  // 自 1900 年起的年数
+  int tm_wday;  // 一周中的第几天，范围从 0 到 6，从星期日算起
+  int tm_yday;  // 一年中的第几天，范围从 0 到 365，从 1 月 1 日算起
+  int tm_isdst; // 夏令时
+}
+</code></pre>
+<h4 id="实例">实例</h4>
+<ul>
+<li>获取当前时间</li>
+</ul>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;ctime&gt;
+ 
+using namespace std;
+ 
+int main( )
+{
+   // 基于当前系统的当前日期/时间
+   time_t now = time(0);
+   
+   // 把 now 转换为字符串形式
+   char* dt = ctime(&amp;now);
+ 
+   cout &lt;&lt; &quot;本地日期和时间：&quot; &lt;&lt; dt &lt;&lt; endl;
+ 
+   // 把 now 转换为 tm 结构
+   tm *gmtm = gmtime(&amp;now);
+   dt = asctime(gmtm);
+   cout &lt;&lt; &quot;UTC 日期和时间：&quot;&lt;&lt; dt &lt;&lt; endl;
+}
+</code></pre>
+<ul>
+<li>格式化时间</li>
+</ul>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;ctime&gt;
+ 
+using namespace std;
+ 
+int main( )
+{
+   // 基于当前系统的当前日期/时间
+   time_t now = time(0);
+ 
+   cout &lt;&lt; &quot;1970 到目前经过秒数:&quot; &lt;&lt; now &lt;&lt; endl;
+ 
+   tm *ltm = localtime(&amp;now);
+ 
+   // 输出 tm 结构的各个组成部分
+   cout &lt;&lt; &quot;年: &quot;&lt;&lt; 1900 + ltm-&gt;tm_year &lt;&lt; endl;
+   cout &lt;&lt; &quot;月: &quot;&lt;&lt; 1 + ltm-&gt;tm_mon&lt;&lt; endl;
+   cout &lt;&lt; &quot;日: &quot;&lt;&lt;  ltm-&gt;tm_mday &lt;&lt; endl;
+   cout &lt;&lt; &quot;时间: &quot;&lt;&lt; ltm-&gt;tm_hour &lt;&lt; &quot;:&quot;;
+   cout &lt;&lt; ltm-&gt;tm_min &lt;&lt; &quot;:&quot;;
+   cout &lt;&lt; ltm-&gt;tm_sec &lt;&lt; endl;
+}
+</code></pre>
+<h3 id="输入输出">输入/输出</h3>
+<ul>
+<li><iostream> ： 该文件定义了 cin、cout、cerr 和 clog 对象，分别对应于标准输入流、标准输出流、非缓冲标准错误流和缓冲标准错误流。</li>
+<li><iomanip> ： 该文件通过所谓的参数化的流操纵器（比如 setw 和 setprecision），来声明对执行标准化 I/O 有用的服务。</li>
+<li><fstream> ： 该文件为用户控制的文件处理声明服务。我们将在文件和流的相关章节讨论它的细节。</li>
+</ul>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;iomanip&gt;
+using namespace std;
+int main()
+{
+    cout&lt;&lt;setiosflags(ios::left|ios::showpoint);  // 设左对齐，以一般实数方式显示
+    cout.precision(5);       // 设置除小数点外有五位有效数字 
+    cout&lt;&lt;123.456789&lt;&lt;endl;
+    cout.width(10);          // 设置显示域宽10 
+    cout.fill('*');          // 在显示区域空白处用*填充
+    cout&lt;&lt;resetiosflags(ios::left);  // 清除状态左对齐
+    cout&lt;&lt;setiosflags(ios::right);   // 设置右对齐
+    cout&lt;&lt;123.456789&lt;&lt;endl;
+    cout&lt;&lt;setiosflags(ios::left|ios::fixed);    // 设左对齐，以固定小数位显示
+    cout.precision(3);    // 设置实数显示三位小数
+    cout&lt;&lt;999.123456&lt;&lt;endl; 
+    cout&lt;&lt;resetiosflags(ios::left|ios::fixed);  //清除状态左对齐和定点格式
+    cout&lt;&lt;setiosflags(ios::left|ios::scientific);    //设置左对齐，以科学技术法显示 
+    cout.precision(3);   //设置保留三位小数
+    cout&lt;&lt;123.45678&lt;&lt;endl;
+    return 0; 
+}
+</code></pre>
+<h3 id="结构体">结构体</h3>
+<ul>
+<li>直接看实例</li>
+</ul>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;cstring&gt;
+ 
+using namespace std;
+ 
+// 声明一个结构体类型 Books 
+#include &lt;iostream&gt;
+#include &lt;cstring&gt;
+ 
+using namespace std;
+void printBook( struct Books *book );
+ 
+struct Books
+{
+   char  title[50];
+   char  author[50];
+   char  subject[100];
+   int   book_id;
+};
+ 
+int main( )
+{
+   Books Book1;        // 定义结构体类型 Books 的变量 Book1
+   Books Book2;        // 定义结构体类型 Books 的变量 Book2
+ 
+    // Book1 详述
+   strcpy( Book1.title, &quot;C++ 教程&quot;);
+   strcpy( Book1.author, &quot;Runoob&quot;); 
+   strcpy( Book1.subject, &quot;编程语言&quot;);
+   Book1.book_id = 12345;
+ 
+   // Book2 详述
+   strcpy( Book2.title, &quot;CSS 教程&quot;);
+   strcpy( Book2.author, &quot;Runoob&quot;);
+   strcpy( Book2.subject, &quot;前端技术&quot;);
+   Book2.book_id = 12346;
+ 
+   // 通过传 Book1 的地址来输出 Book1 信息
+   printBook( &amp;Book1 );
+ 
+   // 通过传 Book2 的地址来输出 Book2 信息
+   printBook( &amp;Book2 );
+ 
+   return 0;
+}
+// 该函数以结构指针作为参数
+void printBook( struct Books *book )
+{
+   cout &lt;&lt; &quot;书标题  : &quot; &lt;&lt; book-&gt;title &lt;&lt;endl;
+   cout &lt;&lt; &quot;书作者 : &quot; &lt;&lt; book-&gt;author &lt;&lt;endl;
+   cout &lt;&lt; &quot;书类目 : &quot; &lt;&lt; book-&gt;subject &lt;&lt;endl;
+   cout &lt;&lt; &quot;书 ID : &quot; &lt;&lt; book-&gt;book_id &lt;&lt;endl;
+}
+</code></pre>
+<h2 id="面向对象">面向对象</h2>
+<h3 id="类和对象">类和对象</h3>
+<ul>
+<li>基础实例</li>
+</ul>
+<pre><code>#include &lt;iostream&gt;
+ 
+using namespace std;
+ 
+class Line
+{
+   public:
+      int getLength( void );
+      Line( int len );             // 简单的构造函数
+      Line( const Line &amp;obj);      // 拷贝构造函数
+      ~Line();                     // 析构函数
+ 
+   private:
+      int *ptr;
+};
+ 
+// 成员函数定义，包括构造函数
+Line::Line(int len)
+{
+    cout &lt;&lt; &quot;调用构造函数&quot; &lt;&lt; endl;
+    // 为指针分配内存
+    ptr = new int;
+    *ptr = len;
+}
+ 
+Line::Line(const Line &amp;obj)
+{
+    cout &lt;&lt; &quot;调用拷贝构造函数并为指针 ptr 分配内存&quot; &lt;&lt; endl;
+    ptr = new int;
+    *ptr = *obj.ptr; // 拷贝值
+}
+ 
+Line::~Line(void)
+{
+    cout &lt;&lt; &quot;释放内存&quot; &lt;&lt; endl;
+    delete ptr;
+}
+int Line::getLength( void )
+{
+    return *ptr;
+}
+ 
+void display(Line obj)
+{
+   cout &lt;&lt; &quot;line 大小 : &quot; &lt;&lt; obj.getLength() &lt;&lt;endl;
+}
+ 
+// 程序的主函数
+int main( )
+{
+   Line line1(10);
+ 
+   Line line2 = line1; // 这里也调用了拷贝构造函数
+ 
+   display(line1);
+   display(line2);
+ 
+   return 0;
+}
+</code></pre>
+<h4 id="友元函数">友元函数</h4>
+<ul>
+<li>类的友元函数是定义在类外部，但有权访问类的所有私有（private）成员和保护（protected）成员。尽管友元函数的原型有在类的定义中出现过，但是友元函数并不是成员函数。</li>
+<li>友元可以是一个函数，该函数被称为友元函数；友元也可以是一个类，该类被称为友元类，在这种情况下，整个类及其所有成员都是友元。</li>
+<li>如果要声明函数为一个类的友元，需要在类定义中该函数原型前使用关键字 friend</li>
+</ul>
+<pre><code>#include &lt;iostream&gt;
+
+using namespace std;
+
+class Box
+{
+    double width;
+public:
+    friend void printWidth(Box box);
+    friend class BigBox;
+    void setWidth(double wid);
+};
+
+class BigBox
+{
+public :
+    void Print(int width, Box &amp;box)
+    {
+        // BigBox是Box的友元类，它可以直接访问Box类的任何成员
+        box.setWidth(width);
+        cout &lt;&lt; &quot;Width of box : &quot; &lt;&lt; box.width &lt;&lt; endl;
+    }
+};
+
+// 成员函数定义
+void Box::setWidth(double wid)
+{
+    width = wid;
+}
+
+// 请注意：printWidth() 不是任何类的成员函数
+void printWidth(Box box)
+{
+    /* 因为 printWidth() 是 Box 的友元，它可以直接访问该类的任何成员 */
+    cout &lt;&lt; &quot;Width of box : &quot; &lt;&lt; box.width &lt;&lt; endl;
+}
+
+// 程序的主函数
+int main()
+{
+    Box box;
+    BigBox big;
+
+    // 使用成员函数设置宽度
+    box.setWidth(10.0);
+
+    // 使用友元函数输出宽度
+    printWidth(box);
+
+    // 使用友元类中的方法设置宽度
+    big.Print(20, box);
+
+    getchar();
+    return 0;
+}
+</code></pre>
+<h4 id="内联函数">内联函数</h4>
+<ul>
+<li>C++ 内联函数是通常与类一起使用。如果一个函数是内联的，那么在编译时，编译器会把该函数的代码副本放置在每个调用该函数的地方。</li>
+<li>对内联函数进行任何修改，都需要重新编译函数的所有客户端，因为编译器需要重新更换一次所有的代码，否则将会继续使用旧的函数。</li>
+<li>如果想把一个函数定义为内联函数，则需要在函数名前面放置关键字 inline，在调用函数之前需要对函数进行定义。如果已定义的函数多于一行，编译器会忽略 inline 限定符。</li>
+<li>在类定义中的定义的函数都是内联函数，即使没有使用 <strong>inline</strong> 说明符。</li>
+</ul>
+<h5 id="作用">作用</h5>
+<ul>
+<li>引入内联函数的目的是为了解决程序中函数调用的效率问题，这么说吧，程序在编译器编译的时候，编译器将程序中出现的内联函数的调用表达式用内联函数的函数体进行替换，而对于其他的函数，都是在运行时候才被替代。这其实就是个空间代价换时间的i节省。所以内联函数一般都是1-5行的小函数。在使用内联函数时要留神：
+<ul>
+<li>1.在内联函数内不允许使用循环语句和开关语句；</li>
+<li>2.内联函数的定义必须出现在内联函数第一次调用之前；</li>
+<li>3.类结构中所在的类说明内部定义的函数是内联函数。</li>
+</ul>
+</li>
+</ul>
+<h4 id="类中的静态成员">类中的静态成员</h4>
+<ul>
+<li>使用 static 关键字来把类成员定义为静态的。当我们声明类的成员为静态时，这意味着无论创建多少个类的对象，静态成员都只有一个副本。</li>
+<li>静态成员在类的所有对象中是共享的。如果不存在其他的初始化语句，在创建第一个对象时，所有的静态数据都会被初始化为零。我们不能把静态成员的初始化放置在类的定义中，但是可以在类的外部通过使用范围解析运算符 :: 来重新声明静态变量从而对它进行初始化。</li>
+</ul>
+<pre><code>#include &lt;iostream&gt;
+ 
+using namespace std;
+ 
+class Box
+{
+   public:
+      static int objectCount;
+      // 构造函数定义
+      Box(double l=2.0, double b=2.0, double h=2.0)
+      {
+         cout &lt;&lt;&quot;Constructor called.&quot; &lt;&lt; endl;
+         length = l;
+         breadth = b;
+         height = h;
+         // 每次创建对象时增加 1
+         objectCount++;
+      }
+      double Volume()
+      {
+         return length * breadth * height;
+      }
+      static int getCount()
+      {
+         return objectCount;
+      }
+   private:
+      double length;     // 长度
+      double breadth;    // 宽度
+      double height;     // 高度
+};
+ 
+// 初始化类 Box 的静态成员
+int Box::objectCount = 0;
+ 
+int main(void)
+{
+  
+   // 在创建对象之前输出对象的总数
+   cout &lt;&lt; &quot;Inital Stage Count: &quot; &lt;&lt; Box::getCount() &lt;&lt; endl;
+ 
+   Box Box1(3.3, 1.2, 1.5);    // 声明 box1
+   Box Box2(8.5, 6.0, 2.0);    // 声明 box2
+ 
+   // 在创建对象之后输出对象的总数
+   cout &lt;&lt; &quot;Final Stage Count: &quot; &lt;&lt; Box::getCount() &lt;&lt; endl;
+ 
+   return 0;
+}
+</code></pre>
+<h3 id="继承">继承</h3>
+<pre><code>#include &lt;iostream&gt;
+ 
+using namespace std;
+ 
+// 基类 Shape
+class Shape 
+{
+   public:
+      void setWidth(int w)
+      {
+         width = w;
+      }
+      void setHeight(int h)
+      {
+         height = h;
+      }
+   protected:
+      int width;
+      int height;
+};
+ 
+// 基类 PaintCost
+class PaintCost 
+{
+   public:
+      int getCost(int area)
+      {
+         return area * 70;
+      }
+};
+ 
+// 派生类
+class Rectangle: public Shape, public PaintCost
+{
+   public:
+      int getArea()
+      { 
+         return (width * height); 
+      }
+};
+ 
+int main(void)
+{
+   Rectangle Rect;
+   int area;
+ 
+   Rect.setWidth(5);
+   Rect.setHeight(7);
+ 
+   area = Rect.getArea();
+   
+   // 输出对象的面积
+   cout &lt;&lt; &quot;Total area: &quot; &lt;&lt; Rect.getArea() &lt;&lt; endl;
+ 
+   // 输出总花费
+   cout &lt;&lt; &quot;Total paint cost: $&quot; &lt;&lt; Rect.getCost(area) &lt;&lt; endl;
+ 
+   return 0;
+}
+</code></pre>
+<h3 id="重载-多态-抽象-封装">重载 多态 抽象 封装</h3>
+<ul>
+<li>此处不表。注意<strong>虚函数</strong>的概念</li>
+<li>虚函数 是在基类中使用关键字 virtual 声明的函数。在派生类中重新定义基类中定义的虚函数时，会告诉编译器不要静态链接到该函数。</li>
+<li>我们想要的是在程序中任意点可以根据所调用的对象类型来选择调用的函数，这种操作被称为动态链接，或后期绑定。</li>
+</ul>
+<pre><code>class Shape {
+   protected:
+      int width, height;
+   public:
+      Shape( int a=0, int b=0)
+      {
+         width = a;
+         height = b;
+      }
+      // pure virtual function
+      virtual int area() = 0;
+};
+</code></pre>
+<ul>
+<li>抽象类：等同于 Java 的接口</li>
+</ul>
+<pre><code>#include &lt;iostream&gt;
+ 
+using namespace std;
+ 
+// 基类
+class Shape 
+{
+public:
+   // 提供接口框架的纯虚函数
+   virtual int getArea() = 0;
+   void setWidth(int w)
+   {
+      width = w;
+   }
+   void setHeight(int h)
+   {
+      height = h;
+   }
+protected:
+   int width;
+   int height;
+};
+ 
+// 派生类
+class Rectangle: public Shape
+{
+public:
+   int getArea()
+   { 
+      return (width * height); 
+   }
+};
+class Triangle: public Shape
+{
+public:
+   int getArea()
+   { 
+      return (width * height)/2; 
+   }
+};
+ 
+int main(void)
+{
+   Rectangle Rect;
+   Triangle  Tri;
+ 
+   Rect.setWidth(5);
+   Rect.setHeight(7);
+   // 输出对象的面积
+   cout &lt;&lt; &quot;Total Rectangle area: &quot; &lt;&lt; Rect.getArea() &lt;&lt; endl;
+ 
+   Tri.setWidth(5);
+   Tri.setHeight(7);
+   // 输出对象的面积
+   cout &lt;&lt; &quot;Total Triangle area: &quot; &lt;&lt; Tri.getArea() &lt;&lt; endl; 
+ 
+   return 0;
+}
+</code></pre>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/tcmu-runner-iscsi.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/tcmu-runner-iscsi/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-04-20">2020-04-20</time>
+                  <h4 class="title white no-margin">tcmu-runner/iscsi</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/minio.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/minio/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-03-28">2020-03-28</time>
+                  <h4 class="title white no-margin">Minio</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

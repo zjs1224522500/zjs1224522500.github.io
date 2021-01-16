@@ -1,0 +1,754 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ceph中的数据一致性 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+Ceph 作为分布式存储系统，在可用性和一致性方面有极高的要求。
+Ceph 区别于其他分布式数据库等产品，更多的是作为云计算基础设施提供服务。
+本文主要介绍 Ceph 中的数据一致性的实现方案，以多副本为例，后续介绍纠删码。
+
+
+
+Ce..." />
+    <meta name="keywords" content="存储,Ceph,分布式" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://blog.shunzi.tech/post-images/ceph-consistency.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2019-10-11"><i class="fa fa-calendar"></i><span class="lately">1 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/ceph-consistency/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/ceph-consistency/"> </span>
+              </a>
+              <span id="/ceph-consistency/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-1 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-2 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Ceph中的数据一致性</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>Ceph 作为分布式存储系统，在可用性和一致性方面有极高的要求。</li>
+<li>Ceph 区别于其他分布式数据库等产品，更多的是作为云计算基础设施提供服务。</li>
+<li>本文主要介绍 Ceph 中的数据一致性的实现方案，以多副本为例，后续介绍纠删码。</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="ceph-io">Ceph IO</h2>
+<h3 id="rbd-io">RBD IO</h3>
+<ul>
+<li>首先以 RBD 为例，回顾一下 Ceph RBD 的整个 IO 过程。<br>
+<img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/RBD-IO-Frame.png?raw=true" alt="image" loading="lazy"></li>
+</ul>
+<ol>
+<li>客户端创建对应的存储池 Pool，指定相应的 PG 个数以及 PGP 个数（用于 PG 中的数据均衡）</li>
+<li>创建 pool/image rbd设备进行挂载</li>
+<li>用户写入的数据进行切块，每个块有默认大小，并且每个块都有一个 Key，Key 就是 object+序号</li>
+<li>将每个 object 通过 pg 进行副本位置的分配</li>
+<li>PG 根据 cursh 算法会寻找指定个数的 osd（主从个数），把这个 object 分别保存在这些 osd 上</li>
+<li>osd 上实际是把底层的 disk 进行了格式化操作，一般部署工具会将它格式化为 xfs 文件系统</li>
+<li>object 的存储就变成了存储一个文件 rbd0.object1.file</li>
+</ol>
+<h2 id="一致性实现方式">一致性实现方式</h2>
+<ul>
+<li>Ceph 中的数据一致性实现主要依赖底层对象存储系统中的数据一致性保证。在 Ceph 中对应的则是 RADOS 在一致性上的实现，RADOS 作为 Ceph 存储的核心，主要提供了多副本和纠删码的方式来保证一致性，</li>
+</ul>
+<h3 id="主要分类">主要分类</h3>
+<ul>
+<li>多副本一致性协议（以 PG 为逻辑存储单元的 OSD 多副本）</li>
+<li>EC 纠删码一致性协议</li>
+</ul>
+<h3 id="多副本一致性协议">多副本一致性协议</h3>
+<ul>
+<li>RADOS 提供的数据复制策略：主拷贝、链式复制、Splay树复制<br>
+<img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/rados-figure2-replstrategies.png?raw=true" alt="image" loading="lazy"></li>
+<li>其中在 Ceph 中主要采用的为 主拷贝 方式。</li>
+</ul>
+<h4 id="主要流程">主要流程</h4>
+<figure data-type="image" tabindex="1"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/rados-master-slave-sync.png?raw=true" alt="image" loading="lazy"></figure>
+<ol>
+<li>librados 向主 OSD 写入分好块的二进制数据块 (先建立TCP/IP连接，然后发送消息给 OSD，OSD 接收后写入其磁盘)</li>
+<li>主 OSD 负责同时向一个或者多个次 OSD 写入副本。注意这里是写到日志（Journal）就返回，因此，使用SSD作为Journal的话，可以提高响应速度，做到服务器端对客户端的快速同步返回写结果（ack）</li>
+<li>当主次OSD都写入完成后，主 OSD 向客户端返回写入成功。</li>
+<li>当一段时间（也许得几秒钟）后Journal 中的数据向磁盘写入成功后，Ceph通过事件通知客户端数据写入磁盘成功（commit），此时，客户端可以将写缓存中的数据彻底清除掉了。</li>
+<li>默认地，Ceph 客户端会缓存写入的数据直到收到集群的commit通知。如果此阶段内（在写方法返回到收到commit通知之间）OSD 出故障导致数据写入文件系统失败，Ceph 将会允许客户端重做尚未提交的操作（replay）</li>
+</ol>
+<h4 id="实现方式">实现方式</h4>
+<ul>
+<li>Ceph 使用 PGLog 来保证多副本之间的一致性。PGLog是由PG来维护，记录了该PG的所有操作，其作用类似于数据库里的undo log。PGLog通常只保存近千条的操作记录（默认是3000条），但是当PG处于降级状态时，就会保存更多的日志（默认是10000条），这样就可以在故障的PG重现上线后用来恢复PG的数据。</li>
+</ul>
+<h5 id="数据结构">数据结构</h5>
+<ul>
+<li>pglog的示意图如下：pglog主要是用来记录做了什么操作，比如修改，删除等，而每一条记录里包含了对象信息，还有版本。</li>
+<li>ceph使用版本控制的方式来标记一个PG内的每一次更新，每个版本包括一个(epoch，version)来组成：其中epoch是osdmap的版本，每当有OSD状态变化如增加删除等时，epoch就递增；version是PG内每次更新操作的版本号，递增的，由PG内的Primary<br>
+<img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/pglog.png?raw=true" alt="image" loading="lazy"></li>
+<li>属性：
+<ul>
+<li>last_complete：在该指针之前的版本都已经在所有的OSD上完成更新（只表示内存更新完成）；</li>
+<li>last_update：PG内最近一次更新的对象的版本，还没有在所有OSD上完成更新，在last_update与last_complete之间的操作表示该操作已在部分OSD上完成但是还没有全部完成；</li>
+<li>log_tail：指向pg log最老的那条记录；</li>
+<li>head：最新的pg log记录；</li>
+<li>tail：指向最老的pg log记录的前一个；</li>
+<li>log：存放实际的pglog记录的list；</li>
+</ul>
+</li>
+</ul>
+<h5 id="存储方式">存储方式</h5>
+<ul>
+<li>在ceph的实现里，对于写I/O的处理，都是先封装成一个transaction，然后将这个transaction写到journal里，在journal写完成后，触发回调流程，经过多个线程及回调的处理后再进行写数据到buffer cache的操作，从而完成整个写journal和写本地缓存的流程。</li>
+<li>总体来说，PGLog也是封装到transaction中，在写journal的时候一起写到日志盘上，最后在写本地缓存的时候遍历transaction里的内容，将PGLog相关的东西写到Leveldb里，从而完成该OSD上PGLog的更新操作。<br>
+<img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/trans.png?raw=true" alt="image" loading="lazy"></li>
+<li>写I/O和PGLog都会序列化到transaction里的bufferlist里，这里就对这个bufferlist里的主要内容以图的形式展示出来。transaction的bufflist里就是按照操作类型op来序列化不同的内容，如OP_WRITE表示写I/O，而OP_OMAPSETKEYS就表示设置对象的omap，其中的attrset就是一个kv的map。 注意这里面的oid，对于pglog来说，每个pg在创建的时候就会生成一个logoid，会加上pglog构造的一个对象，对于pginfo来说，是pginfo_构造的一个对象，而对于真正的数据对象来说，attrset就是其属性。</li>
+</ul>
+<h5 id="流程细化">流程细化</h5>
+<ul>
+<li>
+<p><strong>写流程</strong>：以 FileStore 后端存储为例</p>
+<ul>
+<li>1）client把写请求发到Primary OSD上，Primary OSD上将写请求序列化到一个事务中（在内存里），然后构造一条pglog记录，也序列化到这个事务中，然后将这个事务以directIO的方式异步写入journal，同时Primary OSD把写请求和pglog(pglog_entry是由primary生成)发送到Replicas上；</li>
+<li>2）在Primary OSD将事务写到journal上后，会通过一系列的线程和回调处理，然后将这个事务里的数据写入filesystem（只是写到文件系统的缓存里，会有线程定期刷数据），这个事务里的pglog记录（也包括pginfo的last_complete和last_update）会写到leveldb，还有一些扩展属性相关的也在这个事务里，在遍历这个事务时也会写到leveldb；</li>
+<li>3）在Replicas上，也是进行类似于Primary的动作，先写journal，写成功会给Primary发送一个committed ack，然后将这个事务里的数据写到filesystem，pglog与pginfo写到leveldb里，写完后会给Primary发送另外一个applied ack；</li>
+<li>4）Primary在自己完成journal的写入时，以及在收到Replica的committed ack时都会检查是否多个副本都写入journal成功了，如果是则向client端发送ack通知写完成；Primary在自己完成事务写到文件系统和leveldb后，以及在收到replica的applied ack时都会检查是否多个副本都写文件系统成功，如果是则向client端发送ack通知数据可读；</li>
+</ul>
+</li>
+<li>
+<p><strong>读流程</strong>：由于实现了强一致性，主节点和从节点的数据基本完全一致，故在读取时采用了随机的方式进行OSD的选取，然后读取对应的数据。</p>
+</li>
+<li>
+<p>PGLog封装到transaction里面和journal一起写到盘上的好处：如果osd异常崩溃时，journal写完成了，但是数据有可能没有写到磁盘上，相应的pg log也没有写到leveldb里，这样在osd再启动起来时，就会进行journal replay，这样从journal里就能读出完整的transaction，然后再进行事务的处理，也就是将数据写到盘上，pglog写到leveldb里。</p>
+</li>
+</ul>
+<h4 id="故障恢复">故障恢复</h4>
+<ul>
+<li>基于pglog的一致性协议包含两种恢复过程，一个是Primary挂掉后又起来的恢复，一种是Replica挂掉后又起来的恢复。</li>
+</ul>
+<h5 id="primary-故障恢复">Primary 故障恢复</h5>
+<figure data-type="image" tabindex="2"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/recover-primary.png?raw=true" alt="image" loading="lazy"></figure>
+<ul>
+<li>1）正常情况下，都是由Primary处理client端的I/O请求，这时，Primary和Replicas上的 <code>last_update</code> 和 <code>last_complete</code> 都会指向pglog最新记录；</li>
+<li>2）当Primary挂掉后，会选出一个Replica作为“临时主”，这个“临时主”负责处理新的读写请求，并且这个时候“临时主”和剩下的Replicas上的 <code>last_complete</code> 和 <code>last_update</code> 都更新到该副本上的pglog的最新记录；</li>
+<li>3）当原来的Primary又重启时，会从本地读出pginfo和pglog，当发现 <code>last_complete</code> &lt; <code>last_update</code> 时，<code>last_complete</code> 和 <code>last_update</code> 之间就可能存在丢失的对象，遍历 <code>last_complete</code> 到 <code>last_update</code> 之间的pglog记录，对于每一条记录，从本地读出该记录里对象的属性（包含本地持久化过的版本），对比pglog记录里的对象版本与读出来的版本，如果读出来的对象版本小于pglog记录里的版本，说明该对象不是最新的，需要进行恢复，因此将该对象加到missing列表里；</li>
+<li>4）Primary发起peering过程，即“抢回原来的主”，选出权威日志，一般就是“临时主”的pglog，将该权威日志获取过来，与自己的pglog进行 <code>merge_log</code> 的步骤，构建出missing列表，并且更新自己的 <code>last_update</code> 为最新的pglog记录（与各个副本一致），这个时候 <code>last_complete</code> 与 <code>last_update</code> 之间的就会加到missing列表，并且peering完成后会持久化 <code>last_complete</code> 和 <code>last_update</code>；</li>
+<li>5）当有新的写入时，仍然是由Primary负责处理，会更新 <code>last_update</code>，副本上会同时更新 <code>last_complete</code>，与此同时，Primary会进行恢复，就是从其他副本上拉取对象数据到自己这里进行恢复，每当恢复完一个时，就会更新自己的 <code>last_complete</code>（会持久化的），当所有对象都恢复完成后，<code>last_complete</code> 就会追上 <code>last_update</code> 了。</li>
+<li>6）当恢复过程中，Primary又挂了再起来恢复时，先读出本地pglog时就会根据自己的 <code>last_complete</code> 和 <code>last_update</code> 构建出missing列表，而在peering的时候对比权威日志和本地的pglog发现权威与自己的 <code>last_update</code> 都一样，peering的过程中就没有新的对象加到missing列表里，总的来说，missing列表就是由两个地方进行构建的：一个是osd启动的时候 <code>read_log</code> 里构建的，另一个是peering的时候对比权威日志构建的；</li>
+</ul>
+<h5 id="replica-故障恢复">Replica 故障恢复</h5>
+<figure data-type="image" tabindex="3"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/recover-replica.png?raw=true" alt="image" loading="lazy"></figure>
+<ul>
+<li>与Primary的恢复类似，peering都是由Primary发起的，Replica起来后也会根据pglog的 <code>last_complete</code> 和 <code>last_update</code> 构建出replica自己的missing，然后Primary进行peering的时候对比权威日志（即自身）与故障replica的日志，结合replica的missing，构建出 <code>peer_missing</code>，然后就遍历 <code>peer_missing</code> 来恢复对象。然后新的写入时会在各个副本上更新 <code>last_complete</code>和 <code>last_update</code>，其中故障replica上只更新 <code>last_update</code>，恢复过程中，每恢复完一个对象，故障replica会更新 <code>last_complete</code>，这样所有对象都恢复完成后，replica的 <code>last_complete</code> 就会追上 <code>last_update</code>。<br>
+如果恢复过程中，故障replica又挂掉，然后重启后进行恢复的时候，也是先读出本地log，对比 <code>last_complete</code> 与 <code>last_update</code>之间的pglog记录里的对象版本与本地读出来的该对象版本，如果本地不是最新的，就会加到missing列表里，然后Primary发起peering的时候发现replica的 <code>last_update</code> 是最新的，peering过程就没有新的对象加到 <code>peer_missing</code> 列表里，<code>peer_missing</code> 里就是replica自己的missing里的对象。</li>
+</ul>
+<h3 id="参考文献">参考文献</h3>
+<ul>
+<li><a href="https://www.sysnote.org/2015/12/18/ceph-pglog/">[1] System Notes：ceph解读之PGLog</a></li>
+<li><a href="https://www.sysnote.org/2016/02/15/ceph-consistency/">[2] System Notes：ceph基于pglog的一致性协议<br>
+</a></li>
+<li><a href="https://docs.ceph.com/docs/mimic/dev/osd_internals/log_based_pg/">[3] Ceph IO：LOG BASED PG</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/docker-k8s.png?raw=true');"></div>
+                 <a href="https://blog.shunzi.tech/post/Docker-Notes/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-10-16">2019-10-16</time>
+                  <h4 class="title white no-margin">重拾Docker</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/tail-latency.jpeg');"></div>
+                 <a href="https://blog.shunzi.tech/post/tail-latency/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-10-11">2019-10-11</time>
+                  <h4 class="title white no-margin">Tail Latency</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

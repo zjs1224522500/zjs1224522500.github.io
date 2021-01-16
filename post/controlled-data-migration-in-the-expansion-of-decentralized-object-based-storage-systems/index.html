@@ -1,0 +1,862 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Controlled Data Migration in the Expansion of Decentralized Object-Based Storage Systems | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+FAST 2020 Controlled Data Migration in the Expansion of Decentralized Object-Based Storage Systems
+主要针对集群扩容/缩容场景的数据迁移过..." />
+    <meta name="keywords" content="Ceph" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://blog.shunzi.tech/post-images/controlled-data-migration-in-the-expansion-of-decentralized-object-based-storage-systems.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-03-06"><i class="fa fa-calendar"></i><span class="lately">10 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/controlled-data-migration-in-the-expansion-of-decentralized-object-based-storage-systems/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/controlled-data-migration-in-the-expansion-of-decentralized-object-based-storage-systems/"> </span>
+              </a>
+              <span id="/controlled-data-migration-in-the-expansion-of-decentralized-object-based-storage-systems/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-0 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Controlled Data Migration in the Expansion of Decentralized Object-Based Storage Systems</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>FAST 2020 Controlled Data Migration in the Expansion of Decentralized Object-Based Storage Systems</li>
+<li>主要针对集群扩容/缩容场景的数据迁移过程进行优化</li>
+<li>基于Ceph CRUSH进行了修改，减少了增扩容过程中的数据迁移。</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li>数据布局策略对于去中心化的对象存储系统的可扩展性的保证是至关重要的。CRUSH 作为最先进的数据布局算法，不依赖中心化的目录来将对象副本放置在对应的存储设备中。在受益于去中心化带来的扩展性和健壮性的好处时，CRUSH 算法在集群扩容时容易产生不受控制的数据迁移，特别是集群扩容较大规模的时候，系统性能降级现象将尤为严重。</li>
+<li>该方案提出了 MAPX，基于CRUSH算法的一个扩展实现，<strong>使用了一个额外的时间维度的映射策略（对象创建时间到集群扩容时间）来保证集群扩容过程中的数据迁移可控</strong>。每一次扩容被看成 CRUSH MAP 中新的一层，被表示成为 CRUSH 根节点下的一个虚拟节点，MAPX  通过<strong>操纵 PGs 的时间戳来控制对象到层级 layer 的映射</strong>。MAPX 适用于各种各样的基于对象的存储场景，可以将对象的时间戳维护成更高级别的元数据。例如，我们将 MAPX 用于 Ceph-RBD，通过扩展 RBD 元数据来维护和检索在扩展层粒度上的对象创建时间。实验结果表明基于 MAPX 的无迁移系统比基于 CRUSH 的系统（扩展之后忙于数据迁移操作）的尾延迟降低了 4.25 倍。</li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<ul>
+<li>对象存储系统应用广泛，分布式文件存储，远程块存储，小对象（图片）存储、二进制大对象（视频）存储等，相比于传统文件系统，对象存储系统通过简化了数据布局策略，直接通过唯一标识符暴露对象的读写接口，同时也减小了后端管理的复杂度。</li>
+<li>以 CRUSH 为代表的去中心化数据放置策略，通常比中心化的方法要好是因为客户端可以直接通过计算找到需要放置该数据的 OSD 节点。CRUSH 是一种先进的放置算法，它允许从对象到层次集群映射的结构化，层次集群由表示osd、机器、机架等的节点组成。CRUSH 被广泛采用，如 Ceph, Ursa。但 CRUSH 算法最大的问题在于集群扩容或者添加中间 PGs 时会造成不受控制的数据迁移，虽然迁移可以在扩展之后立即重新平衡整个系统的负载，但是在扩展规模较大时会导致显著的性能下降。（如以机架的规模进行扩容）</li>
+<li>实际部署中都尽可能地在扩容后避免数据迁移，即便是会以暂时的负载不均衡为代价。Ceph 为了减小 CRUSH 的影响，在实现上进行了优化，将迁移的比例尽可能限制到较小，如果被写的对象正在等待迁移的话，写操作将在原来的 OSD 上执行，但是所有对象的副本最终都将迁移到经过 CRUSH 计算的目标节点上去，就会造成长时间的性能降级。</li>
+<li>相反，传统的中心化的布局方法就能较好地控制集群扩容过程中的数据迁移。Haystack 和 HDFS 都使用了<strong>中心化的目录</strong>来记录对象的位置，来保证现有对象在扩容过程中不受影响，<strong>只把新的对象数据放置在新添加的 OSD 节点上</strong>。</li>
+<li>该论文提出的 MAPX 适用于各种各样的基于对象存储的存储场景，无论是块设备（类似于Ceph-RBD）还是文件系统（CephFS），该方案将对象创建时间戳维护到上层的元数据中。RBD 中利用 rbd_header 的元数据数据结构来在扩展层的粒度上维护检索对象创建时间；CephFS 则是扩展了 inode 元数据结构，来将文件的创建时间作为文件对象的创建时间。更复杂的应用则可以基于 RBD 和 CephFS 进行构建。</li>
+</ul>
+<h2 id="background">Background</h2>
+<h3 id="crush">CRUSH</h3>
+<ul>
+<li>CRUSH 逻辑上使用了一个 ClusterMap 的结构来抽象表示集群的分层信息。集群信息如图所示有三种结构，root 节点代表一整个集群，集群由多个 cabinets 组成，也就是所谓的机架 rack，而 cabinets 又由 shelves 组成，即所谓的物理机。每一个物理机又安装了许多 OSD 节点，对应磁盘。该层次中的内部节点 root/cabinets/shelves 统称为 bucket。</li>
+<li>每个OSD都有一个由管理员分配的权重，用于控制OSD的相对存储数据量，所以每一个 OSD 的负载是按照权重来进行分配的，而 bucket 的权重则是该节点对应的子节点的权重之和。如图所示，节点中数字表示节点对应的权重。<br>
+<img src="https://blog.shunzi.tech/post-images/1583495459342.png" alt="" loading="lazy"></li>
+</ul>
+<h4 id="crush-steps">CRUSH Steps</h4>
+<ul>
+<li><strong>Step 1.</strong> 通过计算对象名称哈希的模，将对象分为若干个 PGs（类似于简单的 HASH 操作）</li>
+</ul>
+<pre><code class="language-C++">pgid = HASH(name) % PG_NUM
+</code></pre>
+<ul>
+<li><strong>Step 2.</strong> 单个 PG 的对象根据 CRUSH 算法映射到一组 OSDs（根据副本数量）</li>
+</ul>
+<h4 id="pg-osds">PG -&gt; OSDs</h4>
+<ul>
+<li>CRUSH 算法支持灵活的配置，可以把故障域的信息编码到 ClusterMap 中，也可以定制 Placement Rule 来明确如何通过递归选择bucket项来放置副本。通常的 Placement Rule 又大致分为四步：<br>
+<img src="https://blog.shunzi.tech/post-images/1583495459342.png" alt="" loading="lazy"></li>
+</ul>
+<h5 id="1-takeroot">1. take(root)</h5>
+<ul>
+<li>选择存储层级结构的根节点，由于是唯一入口，可以保证操作顺序执行。</li>
+</ul>
+<h5 id="2-select3-cabinet">2. select(3, cabinet)</h5>
+<ul>
+<li>找到三个满足故障域的 rack，3 为副本数量。</li>
+<li>重复计算如下等式，根据图中的例子，则是从 四个机架中选出三个。i 指定对应四个节点中的哪一个节点，其中 pgid 为 PG 的编号，r 为argmax 计算的参数，HASH 是有三个输入参数的 HASH 函数，ID(i) 和 W(i) 则是节点 i 对应的 ID 和权重。</li>
+<li>为了选择 x 个节点出来，通常该等式的执行次数大于 x 次，因为可能存在计算出来的节点已经被选择过了或者计算出的节点已经失效了。<br>
+<img src="https://blog.shunzi.tech/post-images/1583498198821.png" alt="" loading="lazy"></li>
+</ul>
+<h5 id="3-select1-shelf">3. select(1, shelf)</h5>
+<ul>
+<li>从 cabinet 中找到一个 shelf。机架中选择一个 物理机</li>
+<li>同样执行步骤二中的等式，只是 x = 1，后续步骤一致。</li>
+</ul>
+<h5 id="4-select1-osd">4. select(1, osd)</h5>
+<ul>
+<li>从 shelf 中找到一个 osd。从物理机中选择一个 osd。</li>
+<li>如上图所示，一个物理机对应了四个 OSD，每个 OSD 代入自己的 id 和 pgid，<code>crush_hash(osd id, pgid)</code> 计算出一个随机值 r（其中crush_hash可以简单地看成是一个伪随机的hash函数：返回一个固定范围内的随机值。同样的输入下其返回值是确定的，但是任何一个参数的改变都会导致其返回值发生变化），每一个 osd 对应一个 r 值。用公式 <code>ri * wi</code> 计算得到 osd 的 straw 值，然后选取 straw 值最大的 osd 放置 PG。</li>
+<li><a href="https://zhuanlan.zhihu.com/p/59317425">参考链接：知乎 - CRUSH算法的原理与实现</a></li>
+</ul>
+<h3 id="crush-缺点">CRUSH 缺点</h3>
+<ul>
+<li>CRUSH 实现了不依赖中心化目录的统计意义上的负载均衡，并且可以在存储集群发生变化的时候自动调整对应的负载。但是扩容过程中可能导致不受控制的的数据迁移。如图所示，在机架4上新加一个物理机 4-3，同样带四个 OSD 节点，此时将影响对应的父节点的权重，直到根节点为止，所以将可能导致该机架上的其他物理机的数据迁移到 4-3 上，同时也可能导致其他机架的数据迁移到机架 4 上，h * ▲w/W。h 为改分层结构的层数， ▲w 为扩容造成的权重的变化，W 为所有OSD节点的权重和。<br>
+<img src="https://blog.shunzi.tech/post-images/1583495459342.png" alt="" loading="lazy"></li>
+<li>实验测试，两个 Ceph 集群，均为三层结构，三副本，一个机架作为故障域，一个机架由八个 host 组成，每一个 host 十个 OSD 节点。集群 1 对应 3 个机架，24 个物理机，240 个 OSDs，24000 PGs，集群 2 有 125 个机架，1000 个物理机，10000 个 OSDs，100w PGs。两个集群都执行扩容操作，粒度分别为 一个 OSD，一个物理机，一个机架。结果如图所。如果扩容规模较大时，可能会有接近 60% 的 PG 将会被影响，在整个迁移期间不可避免地会导致性能降级。<br>
+<img src="https://blog.shunzi.tech/post-images/1583501509197.png" alt="" loading="lazy"></li>
+</ul>
+<h2 id="mapx">MAPX</h2>
+<ul>
+<li>之所以 CRUSH 算法扩容过程中会导致大量的数据迁移，是因为该算法<strong>破坏了 新旧对象/OSD 之间的差异</strong>。为了解决这个问题，MAPX 延伸了通用的 CRUSH 实现，引入了额外的时间映射机制。</li>
+</ul>
+<h3 id="可控数据迁移的扩容">可控数据迁移的扩容</h3>
+<ul>
+<li>以 Haystack and HDFS 为代表的中心化目录管理的存储系统为了避免数据的迁移，往往不惜以短暂的负载不均衡为代价。随着新对象存储到新的 OSD 中，可用的容量对应随着时间下降，因此整个系统将渐渐实现负载均衡。数据迁移可以根据需求来决定何时执行。</li>
+<li>受中心化数据布局策略的启发，致力于实现扩容过程中数据迁移的可控，所以基于 CRUSH 设计实现了 MAPX，<strong>核心思想就是引入时间维度的映射机制来区分 新老 对象/OSD</strong> ，同时保留 CRUSH 算法随机和均匀的优点。</li>
+</ul>
+<h4 id="核心思想">核心思想</h4>
+<h5 id="集群变化">集群变化</h5>
+<ul>
+<li>如图 a 描述了两种扩容情况，第一种红色框表示的给每一个机架添加一个物理机，第二种蓝色框表示的给集群添加 m 个机架。此时不再像通用的 CRUSH 那样单独更新 ClusterMap，MAPX 将每一次扩容和原本的集群当作一个单独的层，其中不仅包含新的叶子osd，而且包含从叶子osd到根的所有内部 bucket。<br>
+<img src="https://blog.shunzi.tech/post-images/1584325906402.png" alt="" loading="lazy"></li>
+</ul>
+<h5 id="实现思路">实现思路</h5>
+<ul>
+<li>为了尽可能少地修改原有的 CRUSH 算法，在原本的 CRUSH 根节点下插入一个虚拟层，如图 b 所示，每一个虚拟节点代表一次扩容。虚拟层对应的通过使用 MAPX 实现可控数据迁移，通过在执行原本的 CRUSH 算法之前将新的对象映射到新的 layer，因为新的 layer 不会影响原有 layer 的权重，原有对象的放置还是和以前一样，不会发生改变。<br>
+<img src="https://blog.shunzi.tech/post-images/1584325944117.png" alt="" loading="lazy"></li>
+</ul>
+<h4 id="算法流程">算法流程</h4>
+<ul>
+<li>
+<ol>
+<li>Mapping objects to PGs</li>
+</ol>
+</li>
+<li>
+<ol start="2">
+<li>Mapping PGs to OSDs</li>
+</ol>
+</li>
+</ul>
+<h5 id="mapping-objects-to-pgs">Mapping objects to PGs</h5>
+<ul>
+<li>每一次扩容，新的 layer 将被分配指定数量的新创建的 PGs，且每一个 PGs 会带上一个时间戳信息 t_pg，该时间戳信息等于该新 layer 的产生时间，也就是扩容时间 t_layer。</li>
+<li>当读/写一个对象 O 的时候，该对象携带创建时间信息 t0，先计算该对象对应的 pgid。其中
+<ul>
+<li>name 为 object name</li>
+<li>INIT PG NUM[i] 是第 i layer的初始 PG 数量</li>
+<li>第 j layer 有最近的时间戳 tl &lt; t0，即最新的 layer</li>
+<li>尽管 PG 可能会因为负载均衡被映射到其他 layer，但 INIT PG NUM 是常量，因此从对象到 PGs 的映射是不会变化的。所以每个对象在创建时 都会被映射到一个确定的 PG，该 PG 会有所有 PGs 中距离 t0 最近的时间戳 t_pg &lt; t0。</li>
+</ul>
+</li>
+<li><strong>算法简单描述</strong>：新的对对象的 IO 请求，会被简单 HASH 到新建的 layer 对应的 PG 上。（该 PG 的计算则是通过 HASH 值对该层 PG 数量的简单取模 + 前面所有 layer 对应的 PGs 总数偏移）<br>
+<img src="https://blog.shunzi.tech/post-images/1583503618692.png" alt="" loading="lazy"></li>
+<li>如图所示，假设有三个 RBD，分别在layer0，layer1，layer2的扩容后创建，RBD1，RBD2，RBD3 将使用三层的 INIT PG NUM 分别计算他们在 layer0，layer1，layer2 的 PGs。<br>
+<img src="https://blog.shunzi.tech/post-images/1584325944117.png" alt="" loading="lazy"></li>
+</ul>
+<h5 id="mapping-pgs-to-osds">Mapping PGs to OSDs</h5>
+<ul>
+<li>MAPX 类似于 CRUSH，会把 PG 映射到一组 OSDs，该过程按照用户定义的 Placement Rule 中定义的顺序去执行，如图所示，MAPX 暗中增加了一个操作 select(1, layer)，是为了实现时间维度的从 PGs 到 layers 的映射，而不需要管理节点的参与。<br>
+<img src="https://blog.shunzi.tech/post-images/1584325944117.png" alt="" loading="lazy"></li>
+<li>MAPX 延伸了 CRUSH 算法中 select 操作的实现，以支持 layer 类型的 select 操作。算法如下所示，<strong>如果不是 layer 类型，仍按照 CRUSH 处理</strong>，否则将初始化一个 layer 数组用于存储所有位于正在处理的 bucket （通常为 root）下的 layers，并按照 layer 的时间戳排序。同时也会初始化 layer_num 来表示 layers 的数量以及 pg 和 output list （<strong>select 出来的结果</strong>）。循环则是将 layers 中指定个数的 layers 添加到输出列表中。大多数场景下，number  均为 1，即只需要选出一个 layer 即可，但也不排除需要更多的 layers 的场景，例如需要选两个 layers，其中一个作为另一个的镜像。<br>
+<img src="https://blog.shunzi.tech/post-images/1583506053417.png" alt="" loading="lazy"></li>
+<li>需要注意的是，对象的副本没必要放在最新的 layer 上。例如，假设新建的 layer2 新增了两个机架，但是后一步的操作需要选出三个机架，根据 CRUSH 回溯的机制，将造成 (select(1, layer)) 被调用两次才能满足规则：当一个 select 操作在 layer 之下不能选出足够的节点，MAPX 将保留已经选中的节点，然后回溯到根节点，再去前一个 layer 中选择缺少的节点，从而避免回溯造成的一个 layer 被多次选中。双重保证使得在这类情况也能得到处理，前面提到的例子中则将先返回 layer2 再返回 layer1。</li>
+</ul>
+<h3 id="数据迁移控制管理">数据迁移控制管理</h3>
+<ul>
+<li>MAPX 能保证每一层的负载均衡，主要是因为通用 CRUSH 算法的随机性和均匀性，随着时间的迁移，新的 layer 中的数据增多到和前一个 layer 时则实现了 layers 层面的负载均衡。但是一个 layer 的负载可能会因为 对象的删除、OSD 的宕机发生一些不可预测的负载变化。如图所示，当 layer1 中的负载跟原始集群 layer0 的负载一样高时，则可能会执行一次扩容产生 layer2，假设 layer1 中执行了大量的对象删除操作，则会造成不同 layers 之间的负载不均衡。<br>
+<img src="https://blog.shunzi.tech/post-images/1584325944117.png" alt="" loading="lazy"></li>
+<li>为了解决这个问题，MAPX 设计了三种灵活的策略来动态管理 MAPX 中的负载：
+<ul>
+<li><strong>PG 重映射</strong>：可以控制 PGs 到 Layer 的映射，来保证 layers 负载均衡</li>
+<li><strong>集群缩容</strong>：缩容时需要进行 PG 重映射调整负载，但也要保留部分元数据来保证映射关系不变</li>
+<li><strong>layers 合并</strong>：使用时间戳来保证物理层的变化在逻辑层 layer 上保持相同以实现负载均衡</li>
+</ul>
+</li>
+</ul>
+<h4 id="pg-remapping">PG remapping</h4>
+<ul>
+<li>每一个 PG 有两个时间戳，一个静态的时间戳 t_pgs，等于创建该 PG时对应 layer 的初始化的时间戳；一个动态的时间戳 t_pgd，可以被设置为任意 layer 的扩容时间。</li>
+<li>对象到 PG 的映射使用了静态的时间戳，PGs 到 layers 的映射通过比较 PGs 的动态时间戳和 layers 的时间戳来执行。</li>
+<li>所以通过修改动态时间戳对应的数值则可以实现将 PG 映射到指定 layer，同时也会通过内部 map 信息增量更新的方式通知所有的 OSD 节点。而对于时间戳的存储开销其实是较小的，每一个 PG 的时间戳可以使用 one byte 的索引来指向对应 layer 的初始化时间，故可以支持 2^8 = 256 个 layers，假设一个机器有 20 个 OSDs 对应 200 个 PGs，那么1000台机器组成的集群的时间戳开销则为 1000 x 20 x 200 x 2 x 1B = 8MB。</li>
+</ul>
+<h4 id="cluster-shrinking">Cluster Shrinking</h4>
+<ul>
+<li>当一个 layer 负载低于一个设定的阈值之后，MAPX 将移除该 layer 中多余的机器或者 OSD 从集群中，相当于扩容的反向操作。</li>
+<li>假定 layer a 将要从集群中被移除，首先会将 layer a 对应的所有 PG 分配给余下的其他 layer，并按照其他 layer 的权重进行分配（此处为了简化重分配的过程没有考虑 layer 实际的负载情况），然后使用上一节提到的重新映射来进行数据的迁移。</li>
+<li>在移除 layer a 之后，即执行了缩容操作之后，<strong>layer a 的逻辑意义不会发生改变，特别是  INIT PG NUM（仍然保留），但是不会保留任何物理设备，逻辑意义不改变是为了保证对象到 PG 的映射的关系保持不变</strong>。</li>
+</ul>
+<h4 id="layer-merging">Layer merging</h4>
+<ul>
+<li>层级之间的合并可以巧妙利用前文提到的 PGs 到 OSDs 的映射机制，假设要合并 layer a 和 b，可以<strong>直接将 a 的扩容时间 t_layer 直接设置为 b 的扩容时间</strong>，此时在逻辑意义上 a 和 b 就是同一 layer 了。</li>
+</ul>
+<h3 id="在-ceph-中实现-mapx">在 CEPH 中实现 MAPX</h3>
+<ul>
+<li>从上图中我们可以发现内部的 bucket 在 MAPX 中可能会同时属于多个 layers（譬如只进行了 OSD 层面的扩容），因此我们将内部设备分配到一个特定的 layer，例如在一个特定虚拟节点之下，使用虚拟设备 ID 将物理设备 ID 和 layer 时间戳连接在一起，使用虚拟节点的权重对应的属性记录 layers 的时间戳，将在选择 layer 的过程中和 PG 的动态时间戳进行对比。</li>
+<li>MAPX 不能为每一个对象都维护一个时间戳信息，因为这样的开销和中心化目录的开销就大致相同了，所以 MAPX 不适用于那种最底层最用的对象存储系统，而是适用于那些可以使用上层一点的元数据管理的对象存储系统。</li>
+</ul>
+<h4 id="ceph-rbd">Ceph RBD</h4>
+<ul>
+<li>MAPX 使用了 rbd_header （RBD本身的元数据管理数据结构）来管理时间戳信息，当一个客户端使用 rbd_open 来挂载 RBD 时将检索 rbd_header。因为RBD的对象可以在任何扩展之后创建，所以我们继承当前 layer 的时间戳（创建该 layer 的时间）作为对象的时间戳，因此我们在 rbd_header 中为每一个对象添加了 object_timestamp 属性，该属性对应指向 layer 的创建时间戳。假设每一个对象对应的索引属性的大小为 one byte，每个对象的大小是 4MB，那么对于一个 4TB 大小的 RBD object_timestamp 数组的开销为 1MB。</li>
+</ul>
+<h4 id="cephfs">CephFS</h4>
+<ul>
+<li>CephFS 的元数据对应存储在 inode 节点中，客户端打开一个文件会去获取对应的创建时间，此时对应地会访问 inode 数据，现在我们让一个文件对应的所有对象都继承该文件创建的时间戳，这样就能控制一个文件对应对象的时间维度的映射。假设一个文件的大小达到了阈值 T，假定 T = 100MB，我们会将其分为多个小于 100 MB 的子文件，文件的元数据中会维护源文件到子文件的映射信息以及每一个子文件的创建时间，所以同样可以控制子文件对应的时间维度的映射。</li>
+</ul>
+<h2 id="测试">测试</h2>
+<ul>
+<li>比较对象：MAPX 和 传统 CRUSH</li>
+<li>硬件环境：3台主机，每台主机对应：
+<ul>
+<li>20 核 Xeon E5-2630 2.20GHz CPU</li>
+<li>128G RAM</li>
+<li>10GbE NIC</li>
+<li>5.5 TB HDDs</li>
+</ul>
+</li>
+<li>软件环境：
+<ul>
+<li>OS：CentOS 7.0</li>
+<li>Ceph：12.2 Luminous，BlueStore，Monitor co-located with one of the storage servers</li>
+<li>Client：fio benchmark</li>
+</ul>
+</li>
+</ul>
+<h3 id="扩容过程中的-io-性能">扩容过程中的 IO 性能</h3>
+<ul>
+<li>参数使用 Ceph 默认参数，除开 OSD_max_back_fills 前面中提到过 Ceph 自身对 CRUSH 造成的数据迁移的优化是通过设置 OSD_max_back_fills &gt;= 1 来对性能降级过程的严重程度和持续时间来做权衡。该参数默认值为 1，将使得迁移的优先级最低，所以在迁移操作完成之前 PGs 中的对象的数据迁移速度将很慢，相应地将严重延长数据迁移的时间，同时增加节点对应的写负载：因为对 等待迁移的 PGs 的写操作，需要首先在原始 OSD 上执行，然后再异步地迁移到目标 OSD，该方式性能降级现象表现得较为轻微，但会持续很长一段时间。我们将 OSD_max_back_fills 设为 10，该参数在此次实验中更为合理，因为这样迁移操作才会有更高的优先级来显示 MAPX 和 CRUSH 之间的区别。</li>
+<li>Ceph 初始集群，三台存储机，每台机器两个 OSDs，三副本，128 个 PGs，对应每个 OSD 会负责 64 PGs。创建 40*20GB 的块设备，我们会给每个机器添加一到两个 OSDs，然后测试 MAPX 和 CRUSH 下对应的性能表现（I/O 延迟和 IOPS），I/O 大小为 4KB，FIO 的 iodepth 分别为 1 和 128，对应延迟和 IOPS 测试</li>
+<li>延迟测试实验结果如图所示，初始集群大小为 6 个 OSDs，然后分别扩容到 9 个和 12 个。云存储通常只关心尾延迟 99th，99.9th or 99.99th，因为尾延迟对于服务等级影响相比于其他比例的延迟最大。MAPX 相比于 CRUSH 降低了 4.25x 的延迟，主要是以内 CRUSH 中的数据迁移将和普通的 IO 请求发生严重的资源竞争。<br>
+<img src="https://blog.shunzi.tech/post-images/1583547595947.png" alt="" loading="lazy"></li>
+<li>下图显示了 IOPS 测试结果，每个结果都 run 了 20 次，忽略了部分误差，因为占比较小。结果显示 MAPX IOPS 优于 CRUSH 约 74.3%<br>
+<img src="https://blog.shunzi.tech/post-images/1583548212987.png" alt="" loading="lazy"></li>
+</ul>
+<h3 id="计算开销">计算开销</h3>
+<ul>
+<li>模拟大约有 600-19200 个 OSDs 的集群来比较 MAPX 和 CRUSH 的计算开销，CRUSH 和 MAPX 均可以在 10us 内完成对象到 OSD 的映射，MAPX 相比于 CRUSH 略高因为需要时间维度上的映射计算。<br>
+<img src="https://blog.shunzi.tech/post-images/1583548600751.png" alt="" loading="lazy"></li>
+</ul>
+<h3 id="缩容过程中的-io-性能">缩容过程中的 IO 性能</h3>
+<ul>
+<li>三台机器，每个机器三个 OSDs，先给每一台机器加一个 OSD，然后每一个机器减去一个 OSD，为了控制迁移的速度，将并发迁移PG的数量设置为 8</li>
+<li>图示均显示了 99th 的尾延迟。图示结果并不一定表明缩容过程中 MAPX 的延迟比 CRUSH 低，因为采用了不同的调节机制，因为移除一个 OSD 对于 CRUSH 而言造成的是权重降低然后导致不必要的数据迁移，但对于 MAPX 而言因为根本没有造成之前节点的权重变化，缩容只是 layer 层面上的，根本不会发生数据的迁移。<br>
+<img src="https://blog.shunzi.tech/post-images/1583548924896.png" alt="" loading="lazy"></li>
+</ul>
+<h3 id="层级之间的合并">层级之间的合并</h3>
+<ul>
+<li>使用了 CrushTool 来模拟 MAPX 中的层级合并。三副本策略，一个集群对应五个机架，一个机架对应20台物理机，一个机器对应20个OSDs，即100台机器，2000个OSDs，20w PGs，扩容四次，每次加一个新机架，20台物理机，400个OSDs，4w PGs，MAPX将所有新加入的 PGs 映射到 OSDs 上因此没有迁移发生，四次扩容后将第一次扩容和第二次扩容总计 40 台机器的进行了合并，然后测量受影响的 PG 数量。</li>
+<li>结果表明对应合并的 8w 个 OSDs，其中受影响的 OSDs 约为 70910，由于 CRUSH 没有合并操作，就只是只能对扩容操作影像的 PG 数量进行了了测量。<br>
+<img src="https://blog.shunzi.tech/post-images/1583550250423.png" alt="" loading="lazy"></li>
+</ul>
+<h2 id="related-word">Related Word</h2>
+<h3 id="ceph-crush">Ceph CRUSH</h3>
+<ul>
+<li>Ceph CRUSH 原理中 Object 到 PG 的双重映射</li>
+<li>CRUSH 抽签算法的演变 Straw2</li>
+</ul>
+<h3 id="负载均衡-迁移开销">负载均衡 &amp; 迁移开销</h3>
+<ul>
+<li>Ceph 通过降低迁移的优先级来避免扩容造成的突发的数据迁移，但是由于 CRUSH 算法的特性，迁移不可避免，只是时间早晚的问题，保守的迁移控制只会延长迁移的时间，但这又导致了等待迁移的 PGs 的数据写入的复杂性，不可避免低会增加负载。</li>
+<li>其他的一些去中心化的分布式存储系统使用了分布式哈希表的一致性哈希算法来实现数据路由。相比于CRUSH，DHT不能表示集群的层级结构，需要额外的机制来进行建模，相比于 CRUSH 不够灵活。</li>
+</ul>
+<h3 id="存储系统">存储系统</h3>
+<ul>
+<li>去中心化对象存储系统：Ambry，F4。</li>
+<li>中心化对象存储系统：Haystack，Lustre，HDFS</li>
+<li>块存储系统：Ursa，Salus，Blizzard，PARIX</li>
+<li>文件存储系统：GFS，Zebra，BPFS，OptFS</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<ul>
+<li>在大规模存储系统领域关于中心化和去中心化的争论已久，去中心化的 CRUSH 表现出了高可扩展、健壮性和性能上较好，但在扩容过程中会造成不受控制的数据迁移，MAPX引入了额外的时间粒度映射机制，同时继承了 CRUSH 算法的随机性和均匀性。未来将致力于减少对象时间戳存储的开销，以便于将 MAPX 应用于更广泛的基于对象存储的存储系统。</li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/flashblox-achieving-both-performance-isolation-and-uniform-lifetime-for-virtualized-ssds.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/flashblox-achieving-both-performance-isolation-and-uniform-lifetime-for-virtualized-ssds/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-03-20">2020-03-20</time>
+                  <h4 class="title white no-margin">FlashBlox: Achieving Both Performance Isolation and Uniform Lifetime for Virtualized SSDs</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/ceph-objectstore.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/ceph-objectstore/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-02-25">2020-02-25</time>
+                  <h4 class="title white no-margin">Ceph ObjectStore</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

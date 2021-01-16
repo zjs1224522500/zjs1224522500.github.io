@@ -1,0 +1,1244 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CMake入门 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+构建工具 CMake 介绍
+官方入门教程翻译
+后续增加部分高级功能实现
+
+
+ 
+CMake
+背景
+
+你或许听过好几种 Make 工具，例如 GNU Make ，QT 的 qmake ，微软的 MS nmake，BSD Make（pmak..." />
+    <meta name="keywords" content="C语言,工具" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://cmake.org/wp-content/uploads/2018/11/cmake_logo_slider.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2019-07-22"><i class="fa fa-calendar"></i><span class="lately">1 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/cmake/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/cmake/"> </span>
+              </a>
+              <span id="/cmake/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-0 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-1 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">CMake入门</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>构建工具 CMake 介绍</li>
+<li>官方入门教程翻译</li>
+<li>后续增加部分高级功能实现</li>
+</ul>
+</blockquote>
+<!-- more --> 
+<h2 id="cmake">CMake</h2>
+<h3 id="背景">背景</h3>
+<ul>
+<li>你或许听过好几种 Make 工具，例如 GNU Make ，QT 的 qmake ，微软的 MS nmake，BSD Make（pmake），Makepp，等等。这些 Make 工具遵循着不同的规范和标准，所执行的 Makefile 格式也千差万别。这样就带来了一个严峻的问题：如果软件想跨平台，必须要保证能够在不同平台编译。而如果使用上面的 Make 工具，就得为每一种标准写一次 Makefile ，这将是一件让人抓狂的工作。</li>
+<li>CMake 就是针对上面问题所设计的工具：它首先允许开发者编写一种平台无关的 CMakeLists.txt 文件来定制整个编译流程，然后再根据目标用户的平台进一步生成所需的本地化 Makefile 和工程文件，如 Unix 的 Makefile 或 Windows 的 Visual Studio 工程。从而做到“Write once, run everywhere”。显然，CMake 是一个比上述几种 make 更高级的编译配置工具。一些使用 CMake 作为项目架构系统的知名开源项目有 VTK、ITK、KDE、OpenCV、OSG 等 [1]。</li>
+</ul>
+<h3 id="流程">流程</h3>
+<ul>
+<li>编写 CMake 配置文件 CMakeLists.txt 。</li>
+<li>执行命令 cmake PATH 或者 ccmake PATH 生成 Makefile 。其中， PATH 是 CMakeLists.txt 所在的目录。</li>
+<li>使用 make 命令进行编译。</li>
+</ul>
+<h3 id="实例">实例</h3>
+<h4 id="step-1-基本的cmakeliststxt">Step 1. 基本的CMakeLists.txt</h4>
+<ul>
+<li>最基本的 <code>CMakeLists.txt</code></li>
+</ul>
+<pre><code class="language-CMake">cmake_minimum_required (VERSION 2.6)
+project (Tutorial)
+add_executable(Tutorial tutorial.cxx)
+</code></pre>
+<ul>
+<li><strong>tutorial.cxx</strong></li>
+</ul>
+<pre><code class="language-C">// A simple program that computes the square root of a number
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;math.h&gt;
+int main (int argc, char *argv[])
+{
+  if (argc &lt; 2)
+    {
+    fprintf(stdout,&quot;Usage: %s number\n&quot;,argv[0]);
+    return 1;
+    }
+  double inputValue = atof(argv[1]);
+  double outputValue = sqrt(inputValue);
+  fprintf(stdout,&quot;The square root of %g is %g\n&quot;,
+          inputValue, outputValue);
+  return 0;
+}
+</code></pre>
+<ul>
+<li>添加版本号，配置头文件 <strong>CMakeLists.txt</strong></li>
+</ul>
+<pre><code class="language-CMake"># Basic two lines.(cmake version &amp; project name)
+cmake_minimum_required (VERSION 2.6)
+project (Tutorial)
+
+# Add the version number.
+set (Tutorial_VERSION_MAJOR 1)
+set (Tutorial_VERSION_MINOR 0)
+ 
+# Configure a header file to pass some of the CMake settings to the source code
+configure_file (
+  &quot;${PROJECT_SOURCE_DIR}/TutorialConfig.h.in&quot;
+  &quot;${PROJECT_BINARY_DIR}/TutorialConfig.h&quot;
+  )
+ 
+# Add the binary tree to the search path for include files
+# so that we will find TutorialConfig.h
+include_directories(&quot;${PROJECT_BINARY_DIR}&quot;)
+ 
+# add the executable
+add_executable(Tutorial tutorial.cxx)
+</code></pre>
+<ul>
+<li>因为配置文件会被写入到生成路径（binary tree） 中，所以我们必须将该文件夹添加到头文件搜索路径中。接下来我们在源码中创建一个包含以下内容的 <strong>TutorialConfig.h.in</strong> 文件</li>
+</ul>
+<pre><code class="language-C">// Define the configured options and settings for Tutorial
+#define Tutorial_VERSION_MAJOR @Tutorial_VERSION_MAJOR@
+#define Tutorial_VERSION_MINOR @Tutorial_VERSION_MINOR@
+</code></pre>
+<ul>
+<li>当 CMake 配置这个头文件的时候，<code>@Tutorial_VERSION_MAJOR@</code> 和 <code>@Tutorial_VERSION_MINOR@</code> 就会用 <strong>CMakeLists.txt</strong> 文件中对应的值替换。接下来我们修改 <strong>tutorial.cxx</strong> 源码包含配置头文件并使用版本号，修改后的源码如下：</li>
+</ul>
+<pre><code class="language-C">// A simple program that computes the square root of a number
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;math.h&gt;
+#include &quot;TutorialConfig.h&quot;
+ 
+int main (int argc, char *argv[])
+{
+    // Print the version info stored in configuration file.
+    if (argc &lt; 2)
+    {
+        fprintf(stdout,&quot;%s Version %d.%d\n&quot;,
+            argv[0],
+            Tutorial_VERSION_MAJOR,
+            Tutorial_VERSION_MINOR);
+        fprintf(stdout,&quot;Usage: %s number\n&quot;,argv[0]);
+        return 1;
+    }
+    double inputValue = atof(argv[1]);
+    double outputValue = sqrt(inputValue);
+    fprintf(stdout,&quot;The square root of %g is %g\n&quot;,
+            inputValue, outputValue);
+    return 0;
+}
+</code></pre>
+<h4 id="step-2-导入库文件">Step 2. 导入库文件</h4>
+<ul>
+<li>现在我们将会给我们的项目添加一个库文件。这个库文件包含了我们自己实现的开方运算。可执行文件使用这个库替代编译器提供的标准开方运算。本教程中我们将其放到 <strong>MathFunctions</strong> 文件夹下，该文件夹下还有一个包含下面一行代码的 <strong>CMakeLists.txt</strong> 文件。</li>
+</ul>
+<pre><code class="language-CMake">add_library(MathFunctions mysqrt.cxx)
+</code></pre>
+<ul>
+<li><strong>mysqrt.cxx</strong> 文件只有一个名为 mysqrt 的函数，其提供了和标准库 sqrt 相同的功能。内容如下</li>
+</ul>
+<pre><code class="language-C">#include &quot;MathFunctions.h&quot;
+#include &lt;stdio.h&gt;
+
+// a hack square root calculation using simple operations
+double mysqrt(double x)
+{
+    if (x &lt;= 0) 
+    {
+        return 0;
+    }
+
+    double result;
+    double delta;
+    result = x;
+
+    // do ten iterations
+    int i;
+    for (i = 0; i &lt; 10; ++i) 
+    {
+        if (result &lt;= 0) 
+        {
+            result = 0.1;
+        }
+        delta = x - (result * result);
+        result = result + 0.5 * delta / result;
+        fprintf(stdout, &quot;Computing sqrt of %g to be %g\n&quot;, x, result);
+    }
+    return result;
+}
+</code></pre>
+<ul>
+<li>对应的头文件为 MathFunction.h，其内容如下：</li>
+</ul>
+<pre><code class="language-C">double mysqrt(double x);
+</code></pre>
+<ul>
+<li>为了构建并使用新的库文件，我们需要在顶层 <strong>CMakeList.txt</strong> 文件添加 <code>add_subdirectory</code> 语句。我们需要添加额外的头文件包含路径，以便将包含函数原型的 <strong>MathFunctions/MathFunctions.h</strong> 头文件包含进来。最后我们还需要给可执行文件添加库。最终顶层 <strong>CMakeList.txt</strong> 文件的最后几行如下所示：</li>
+</ul>
+<pre><code class="language-CMake">include_directories (&quot;${PROJECT_SOURCE_DIR}/MathFunctions&quot;)
+add_subdirectory (MathFunctions) 
+ 
+# add the executable
+add_executable (Tutorial tutorial.cxx)
+target_link_libraries (Tutorial MathFunctions)
+</code></pre>
+<ul>
+<li>现在我们考虑将 <code>MathFunctions</code> 库作为一个可选项。虽然在这里并没有什么必要，但是如果库文件很大或者库文件依赖第三方库你可能就希望这么做了。首先先在顶层 <strong>CMakeLists.txt</strong> 文件添加一个选项：</li>
+</ul>
+<pre><code># should we use our own math functions?
+option (USE_MYMATH &quot;Use tutorial provided math implementation&quot; ON) 
+</code></pre>
+<ul>
+<li>这个选项会在 CMake GUI 中显示并会将默认值设置为 ON，用户可以根据需求修改该值。这个设置会本保存下来，所以用户无需在每次运行 <code>CMake</code> 时都去设置。接下来就是将构建和连接 <code>MathFunctions</code> 设置为可选项。修改顶层的 <strong>CMakeLists.txt</strong> 文件如下所示：</li>
+</ul>
+<pre><code># add the MathFunctions library?
+if (USE_MYMATH)
+  include_directories (&quot;${PROJECT_SOURCE_DIR}/MathFunctions&quot;)
+  add_subdirectory (MathFunctions)
+  set (EXTRA_LIBS ${EXTRA_LIBS} MathFunctions)
+endif (USE_MYMATH)
+ 
+# add the executable
+add_executable (Tutorial tutorial.cxx)
+target_link_libraries (Tutorial  ${EXTRA_LIBS})
+</code></pre>
+<ul>
+<li>这里使用 <code>USE_MYMATH</code> 来决定是否编译并使用 <code>MathFunctions</code> 。注意收集可执行文件的可选连接库所使用的变量（这里为 <code>EXTRA_LIBS</code>）的使用方法。这种方法在保持有许多可选组件的大型项目整洁时经常使用。对应的我们修改源码如下：</li>
+</ul>
+<pre><code class="language-C">// A simple program that computes the square root of a number
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;math.h&gt;
+#include &quot;TutorialConfig.h&quot;
+#ifdef USE_MYMATH
+#include &quot;MathFunctions.h&quot;
+#endif
+ 
+int main (int argc, char *argv[])
+{
+    if (argc &lt; 2)
+    {
+        fprintf(stdout,&quot;%s Version %d.%d\n&quot;, argv[0], Tutorial_VERSION_MAJOR, Tutorial_VERSION_MINOR);
+        fprintf(stdout,&quot;Usage: %s number\n&quot;,argv[0]);
+        return 1;
+    }
+ 
+    double inputValue = atof(argv[1]);
+ 
+#ifdef USE_MYMATH
+    double outputValue = mysqrt(inputValue);
+#else
+    double outputValue = sqrt(inputValue);
+#endif
+ 
+    fprintf(stdout,&quot;The square root of %g is %g\n&quot;, inputValue, outputValue);
+    return 0;
+}
+</code></pre>
+<ul>
+<li>在源码中我们同样使用了 USE_MYMATH 宏。这个宏由 CMake 通过在配置文件 TutorialConfig.h 添加以下代码传递给源码：</li>
+</ul>
+<pre><code class="language-CMake">#cmakedefine USE_MYMATH
+</code></pre>
+<h4 id="step-3-安装和测试">Step 3. 安装和测试</h4>
+<ul>
+<li>下一步我们将给我们的项目添加安装规则和测试。安装规则简单明了。对于 <code>MathFunctions</code> 库的安装，我们通过在 <code>MathFunction</code> 的 <strong>CMakeLists.txt</strong> 文件中添加以下两行来设置其库和头文件的安装。</li>
+</ul>
+<pre><code class="language-CMake">install (TARGETS MathFunctions DESTINATION bin)
+install (FILES MathFunctions.h DESTINATION include)
+</code></pre>
+<ul>
+<li>对于本文这个应用通过在顶层 CMakeLists.txt 添加以下内容来安装可执行文件和配置的头文件：</li>
+</ul>
+<pre><code># add the install targets
+install (TARGETS Tutorial DESTINATION bin)
+install (FILES &quot;${PROJECT_BINARY_DIR}/TutorialConfig.h&quot; DESTINATION include)
+</code></pre>
+<ul>
+<li>以上就是安装的全部步骤。现在你应该可以编译本教程了。输入 <code>make install</code>（或在 IDE 中编译 install 项目），对应的头文件、库文件和可执行文件就会被安装。<code>CMake</code> 的 <code>CMAKE_INSTALL_PREFIX</code> 参数可以指定安装文件的根目录（之前还可以加上 <code>-D</code> 参数，具体意义可以参考 <code>what does the parameter &quot;-D&quot; mean</code>）。添加测试过程同样简单明了。在顶层 <strong>CMakeLists.txt</strong> 文件的最后我们可以添加一个基础测试数据来验证该应用程序是否正常运行。</li>
+</ul>
+<pre><code class="language-CMake">include(CTest)
+# does the application run
+add_test (TutorialRuns Tutorial 25)
+# does it sqrt of 25
+add_test (TutorialComp25 Tutorial 25)
+set_tests_properties (TutorialComp25 PROPERTIES PASS_REGULAR_EXPRESSION &quot;25 is 5&quot;)
+# does it handle negative numbers
+add_test (TutorialNegative Tutorial -25)
+set_tests_properties (TutorialNegative PROPERTIES PASS_REGULAR_EXPRESSION &quot;-25 is 0&quot;)
+# does it handle small numbers
+add_test (TutorialSmall Tutorial 0.0001)
+set_tests_properties (TutorialSmall PROPERTIES PASS_REGULAR_EXPRESSION &quot;0.0001 is 0.01&quot;)
+# does the usage message work?
+add_test (TutorialUsage Tutorial)
+set_tests_properties (TutorialUsage PROPERTIES PASS_REGULAR_EXPRESSION &quot;Usage:.*number&quot;)
+</code></pre>
+<ul>
+<li>在编译完成之后，我们可以运行 <code>ctest</code> 命令行工具来执行测试。第一个测试简单的验证了程序是否工作，是否有严重错误并且返回0.这是 Ctest 测试的基础。接下来的一些测试都使用了 <code>PASS_REGULAR_EXPRESSION</code> 测试属性（正则表达式）来验证输出中是否包含了特定的字符串。这里验证开方是否正确并且在计算错误时输出输出对应信息。如果你希望添加很多的测试来测试不同的输入值，你可以考虑定义一个像下面这样的宏：</li>
+</ul>
+<pre><code class="language-CMake">#define a macro to simplify adding tests, then use it
+macro (do_test arg result)
+add_test (TutorialComp${arg} Tutorial ${arg})
+set_tests_properties (TutorialComp${arg}
+PROPERTIES PASS_REGULAR_EXPRESSION ${result})
+endmacro (do_test)
+ 
+# do a bunch of result based tests
+do_test (25 &quot;25 is 5&quot;)
+do_test (-25 &quot;-25 is 0&quot;)
+</code></pre>
+<h4 id="step-4-添加系统自检">Step 4. 添加系统自检</h4>
+<ul>
+<li>接下来我们考虑给我们的项目添加一些取决于目标平台是否有一些特性的代码。这里我们将添加一些取决于目标平台是否有 <code>log</code> 和 <code>exp</code> 函数的代码。当然对于大多数平台都会有这些函数，但这里我们认为这并不常见。如果平台有 <code>log</code> 函数我们将在 <code>mysqrt</code> 函数中使用它计算平方根。我们首先在顶层 <strong>CMakeLists.txt</strong> 文件中使用 <code>CheckFunctionExists</code> 宏测试这些函数是否可用，代码如下：</li>
+</ul>
+<pre><code class="language-CMake"># does this system provide the log and exp functions?
+include (${CMAKE_ROOT}/Modules/CheckFunctionExists.cmake)
+check_function_exists (log HAVE_LOG)
+check_function_exists (exp HAVE_EXP)
+</code></pre>
+<ul>
+<li>接下来我们修改 <strong>TutorialConfig.h.in</strong> 文件定义一些宏以表示 <code>CMake</code> 是否在平台上找到这些函数：</li>
+</ul>
+<pre><code class="language-CMake">// does the platform provide exp and log functions?
+#cmakedefine HAVE_LOG
+#cmakedefine HAVE_EXP
+</code></pre>
+<ul>
+<li>一定要在使用 <code>configure_file</code> 生成 <strong>TutorialConfig.h</strong> 之前测试 <code>log</code> 和 <code>exp</code>。因为 <code>configure_file</code> 命令会立刻使用当前 CMake 的设置配置文件。最后根据 <code>log</code> 和 <code>exp</code> 是否在我们的平台上可用我们给 mysqrt 函数提供一个可选的实现，代码如下:</li>
+</ul>
+<pre><code class="language-C">// if we have both log and exp then use them
+#if defined (HAVE_LOG) &amp;&amp; defined (HAVE_EXP)
+  result = exp(log(x)*0.5);
+#else // otherwise use an iterative approach
+  . . .
+</code></pre>
+<h4 id="step-5-添加一个生成的文件和生成器">Step 5. 添加一个生成的文件和生成器</h4>
+<ul>
+<li>在这一章节我们将会展示如何在构建一个应用的过程中添加一个生成的源文件。在本例中我们将创建一个预先计算的平方根表作为构建过程的一部分，然后将其编译到我们的应用中。为了做到这一点我们首先需要一个能产生这张表的程序。在 <code>MathFunctions</code> 文件夹下创建一个新的名为 <strong>MakeTable.cxx</strong> 的文件，内容如下：</li>
+</ul>
+<pre><code class="language-CPP">// A simple program that builds a sqrt table 
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;math.h&gt;
+ 
+int main (int argc, char *argv[])
+{
+    int i;
+    double result;
+ 
+    // make sure we have enough arguments
+    if (argc &lt; 2)
+    {
+        return 1;
+    }
+  
+    // open the output file
+    FILE *fout = fopen(argv[1],&quot;w&quot;);
+    if (!fout)
+    {
+        return 1;
+    }
+  
+    // create a source file with a table of square roots
+    fprintf(fout,&quot;double sqrtTable[] = {\n&quot;);
+    for (i = 0; i &lt; 10; ++i)
+    {
+        result = sqrt(static_cast&lt;double&gt;(i));
+        fprintf(fout,&quot;%g,\n&quot;,result);
+    }
+ 
+    // close the table with a zero
+    fprintf(fout,&quot;0};\n&quot;);
+    fclose(fout);
+    return 0;
+}
+</code></pre>
+<ul>
+<li>注意到这张表使用 C++ 代码生成且文件的名字通过输入参数指定。下一步通过在 <code>MathFunctions</code> 的 <strong>CMakeLists.txt</strong> 中添加合适的代码来构建 <code>MakeTable</code> 可执行文件，并将它作为构建的一部分运行。只需要一点代码就能实现这个功能：</li>
+</ul>
+<pre><code class="language-CMake"># first we add the executable that generates the table
+add_executable(MakeTable MakeTable.cxx)
+ 
+# add the command to generate the source code
+add_custom_command (
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Table.h
+  COMMAND MakeTable ${CMAKE_CURRENT_BINARY_DIR}/Table.h
+  DEPENDS MakeTable
+  )
+ 
+# add the binary tree directory to the search path for 
+# include files
+include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
+ 
+# add the main library
+add_library(MathFunctions mysqrt.cxx ${CMAKE_CURRENT_BINARY_DIR}/Table.h  )
+</code></pre>
+<ul>
+<li>首先添加的 <code>MakeTable</code> 可执行文件和其它可执行文件相同。接下来我们添加一个自定义的命令来指定如何通过运行 <code>MakeTable</code> 生成 <strong>Table.h</strong> 文件。接下来我们必须让 <code>CMake</code> 知道 <strong>mysqrt.cxx</strong> 依赖于生成的 <strong>Table.h</strong> 文件。这一点通过将生成的 <strong>Table.h</strong> 文件添加到 <code>MathFunctions</code> 库的源文件列表实现。我们同样必须将当前二进制文件路径添加到包含路径中，以保证 <strong>Table.h</strong> 文件被找到并被 <strong>mysqrt.cxx</strong> 包含。该项目在构建时会首先构建 <code>MakeTable</code> 可执行文件。接下来会运行该可执行文件并生成 <strong>Table.h</strong> 文件。最后它将会编译包含 <strong>Table.h</strong> 的 <strong>mysqrt.cxx</strong> 文件并生成 <code>MathFunctions</code> 库。此时包含了所有我们添加的特性的顶层 <strong>CMakeLists.txt</strong> 文件应该像下面这样：</li>
+</ul>
+<pre><code>cmake_minimum_required (VERSION 2.6)
+project (Tutorial)
+include(CTest)
+ 
+# The version number.
+set (Tutorial_VERSION_MAJOR 1)
+set (Tutorial_VERSION_MINOR 0)
+ 
+# does this system provide the log and exp functions?
+include (${CMAKE_ROOT}/Modules/CheckFunctionExists.cmake)
+
+# check the function exists? return bool value named HAVE_LOG/HAVE_EXP
+check_function_exists (log HAVE_LOG)
+check_function_exists (exp HAVE_EXP)
+ 
+# should we use our own math functions
+option(USE_MYMATH &quot;Use tutorial provided math implementation&quot; ON)
+ 
+# configure a header file to pass some of the CMake settings
+# to the source code
+configure_file (
+  &quot;${PROJECT_SOURCE_DIR}/TutorialConfig.h.in&quot;
+  &quot;${PROJECT_BINARY_DIR}/TutorialConfig.h&quot;
+  )
+ 
+# add the binary tree to the search path for include files
+# so that we will find TutorialConfig.h
+include_directories (&quot;${PROJECT_BINARY_DIR}&quot;)
+ 
+# add the MathFunctions library?
+if (USE_MYMATH)
+  include_directories (&quot;${PROJECT_SOURCE_DIR}/MathFunctions&quot;)
+  add_subdirectory (MathFunctions)
+  set (EXTRA_LIBS ${EXTRA_LIBS} MathFunctions)
+endif (USE_MYMATH)
+ 
+# add the executable
+add_executable (Tutorial tutorial.cxx)
+target_link_libraries (Tutorial  ${EXTRA_LIBS})
+ 
+# add the install targets
+install (TARGETS Tutorial DESTINATION bin)
+install (FILES &quot;${PROJECT_BINARY_DIR}/TutorialConfig.h&quot;        
+         DESTINATION include)
+ 
+# does the application run
+add_test (TutorialRuns Tutorial 25)
+ 
+# does the usage message work?
+add_test (TutorialUsage Tutorial)
+set_tests_properties (TutorialUsage
+  PROPERTIES 
+  PASS_REGULAR_EXPRESSION &quot;Usage:.*number&quot;
+  )
+ 
+ 
+#define a macro to simplify adding tests
+macro (do_test arg result)
+  add_test (TutorialComp${arg} Tutorial ${arg})
+  set_tests_properties (TutorialComp${arg}
+    PROPERTIES PASS_REGULAR_EXPRESSION ${result}
+    )
+endmacro (do_test)
+ 
+# do a bunch of result based tests
+do_test (4 &quot;4 is 2&quot;)
+do_test (9 &quot;9 is 3&quot;)
+do_test (5 &quot;5 is 2.236&quot;)
+do_test (7 &quot;7 is 2.645&quot;)
+do_test (25 &quot;25 is 5&quot;)
+do_test (-25 &quot;-25 is 0&quot;)
+do_test (0.0001 &quot;0.0001 is 0.01&quot;)
+</code></pre>
+<ul>
+<li><strong>TutorialConfig.h</strong> 文件如下：</li>
+</ul>
+<pre><code class="language-C">// the configured options and settings for Tutorial
+#define Tutorial_VERSION_MAJOR @Tutorial_VERSION_MAJOR@
+#define Tutorial_VERSION_MINOR @Tutorial_VERSION_MINOR@
+#cmakedefine USE_MYMATH
+ 
+// does the platform provide exp and log functions?
+#cmakedefine HAVE_LOG
+#cmakedefine HAVE_EXP
+</code></pre>
+<ul>
+<li>最后 <code>MathFunctions</code> 的 <strong>CMakeLists.txt</strong> 文件如下：</li>
+</ul>
+<pre><code class="language-CMake"># first we add the executable that generates the table
+add_executable(MakeTable MakeTable.cxx)
+# add the command to generate the source code
+add_custom_command (
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Table.h
+  DEPENDS MakeTable
+  COMMAND MakeTable ${CMAKE_CURRENT_BINARY_DIR}/Table.h
+  )
+# add the binary tree directory to the search path 
+# for include files
+include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
+ 
+# add the main library
+add_library(MathFunctions mysqrt.cxx ${CMAKE_CURRENT_BINARY_DIR}/Table.h)
+ 
+install (TARGETS MathFunctions DESTINATION bin)
+install (FILES MathFunctions.h DESTINATION include)
+</code></pre>
+<h3 id="step-6-构造一个-installer">Step 6. 构造一个 Installer</h3>
+<ul>
+<li>接下来假设我们想将我们的项目发布给其他人以便供他们使用。我们想提供在不同平台上的二进制文件和源码的发布版本。这一点和我们在之前安装和测试章节（步骤3）略有不同，步骤三安装的二进制文件是我们从源码构建的。这里我们将构建一个支持二进制文件安装的安装包和可以在 <code>cygwin</code>,<code>debian</code>,<code>RPMs</code> 等中被找到的安装管理特性。为了实现这一点我们将使用 <code>CPack</code> 来创建在 <code>Packaging with CPack</code> 章节中介绍过的平台特定安装器（platform specific installers）。我们需要在顶层 <strong>CMakeLists.txt</strong> 文件添加以下几行内容：</li>
+</ul>
+<pre><code class="language-CMake"># build a CPack driven installer package
+include (InstallRequiredSystemLibraries)
+set (CPACK_RESOURCE_FILE_LICENSE  
+     &quot;${CMAKE_CURRENT_SOURCE_DIR}/License.txt&quot;)
+set (CPACK_PACKAGE_VERSION_MAJOR &quot;${Tutorial_VERSION_MAJOR}&quot;)
+set (CPACK_PACKAGE_VERSION_MINOR &quot;${Tutorial_VERSION_MINOR}&quot;)
+include (CPack)
+</code></pre>
+<ul>
+<li>首先我们添加了 <code>InstallRequiredSystemLibraries</code>。该模块会包含我们项目在当前平台所需的所有运行时库（runtime libraries）。接下来我们设置了一些 <code>CPack</code> 变量来指定我们项目的许可文件和版本信息。版本信息使用我们在之前设置的内容。最后我们包含 <code>CPack</code> 模块，它会使用这些变量和其它你安装一个应用程序所需的系统属性。</li>
+<li>接下来就是正常编译你的项目然后使用 <code>CPack</code> 运行它，为了编译二进制发布版本你需要运行：</li>
+</ul>
+<pre><code class="language-Bash">cpack --config CPackConfig.cmake
+</code></pre>
+<ul>
+<li>创建一个源文件发布版本你应该使用下面命令：</li>
+</ul>
+<pre><code class="language-Bash">cpack --config CPackSourceConfig.cmake
+</code></pre>
+<h3 id="step-7-添加-dashboard-支持">Step 7. 添加 Dashboard 支持</h3>
+<ul>
+<li>添加将我们测试结果提交到仪表盘的功能非常简单。在本教程的之前步骤中我们已经给我们的项目定义了一些测试。我们只需要运行这些测试然后提交到仪表盘即可。为了支持仪表盘功能我们需要在顶层 <strong>CMakeLists.txt</strong> 文件中增加 <code>CTest</code> 模块。</li>
+</ul>
+<pre><code class="language-CMake"># enable dashboard scripting
+include (CTest)
+</code></pre>
+<ul>
+<li>我们同样可以创建一个 <code>CTestConfig.cmake</code> 文件来在表盘工具中指定本项目的名字。</li>
+</ul>
+<pre><code class="language-CMake">set (CTEST_PROJECT_NAME &quot;Tutorial&quot;)
+</code></pre>
+<ul>
+<li><code>CTest</code> 会在运行时读取该文件。你可以在你的项目上运行 <code>CMake</code> 来创建一个简单的仪表盘，切换目录到二进制文件夹下，然后运行 <code>ctest -DExperimental</code>。你仪表盘的运行结果会上传到 Kitware 的<a href="https://open.cdash.org/index.php?project=PublicDashboard">公共仪表盘</a>上。</li>
+</ul>
+<h2 id="实例-2">实例</h2>
+<h3 id="1编译生成可执行文件">1.编译生成可执行文件</h3>
+<ul>
+<li>源码：object_storage.cpp</li>
+</ul>
+<pre><code>cmake_minimum_required (VERSION 2.8)
+# 项目信息
+project (Demo)
+
+add_compile_options( -std=c++11 )
+include_directories(/c++/C-Example/linux/install/usr/local/include)
+link_directories(/c++/C-Example/linux/install/usr/local/lib64)
+
+# 指定生成目标
+add_executable(Demo object_storage.cpp)
+target_link_libraries(Demo -laws-cpp-sdk-core -laws-cpp-sdk-s3)
+</code></pre>
+<h3 id="2动态库静态库-编译">2.动态库/静态库 编译</h3>
+<ul>
+<li>编译静态库/动态库</li>
+<li>源码结构：</li>
+</ul>
+<pre><code>[root@ecs-sn3-medium-2-linux-20200222090658 s3util]# tree
+.
+├── CMakeLists.txt
+├── include
+│   ├── S3Util.h
+├── Makefile
+└── src
+    ├── CMakeLists.txt
+    └── S3Util.cpp
+</code></pre>
+<h4 id="项目根目录下的-cmakeliststxt">项目根目录下的 CMakeLists.txt</h4>
+<pre><code>#CMake最低版本号要求
+cmake_minimum_required(VERSION 2.8)
+
+#指定项目名称
+project(s3util)
+
+#指定版本信息
+set(CMAKE_SYSTEM_VERSION 1)
+
+#若是需要指定编译器路径
+#set(CROSS_TOOLCHAIN_PREFIX &quot;/path/arm-linux-&quot;)
+#指定编译器
+#set(CMAKE_C_COMPILER   &quot;${CROSS_TOOLCHAIN_PREFIX}gcc&quot;)
+#set(CMAKE_CXX_COMPILER &quot;${CROSS_TOOLCHAIN_PREFIX}g++&quot;)
+
+#使用默认路径的g++指定编译器  
+#set(CMAKE_CXX_COMPILER &quot;g++&quot;) 
+
+#指定编译选项
+set(CMAKE_BUILD_TYPE Debug )
+
+#指定编译目录
+set(PROJECT_BINARY_DIR ${PROJECT_SOURCE_DIR}/build)
+
+#添加子目录,这样进入源码文件src目录可以继续构建  
+add_subdirectory(${PROJECT_SOURCE_DIR}/src)
+</code></pre>
+<h4 id="src-目录下的-cmakeliststxt">src 目录下的 CMakeLists.txt</h4>
+<ul>
+<li>CMakeLists.txt</li>
+</ul>
+<pre><code>#查找当前目录下的所有源文件，
+#并将名称保存到DIR_LIB_SRCS目录
+#aux_source_directory(. DIR_LIB_SRCS)
+
+#指定头文件目录,PROJECT_SOURCE_DIR为工程的根目录  
+include_directories(${PROJECT_SOURCE_DIR}/include)
+
+add_compile_options( -std=c++11 )
+include_directories(/c++/C-Example/linux/install/usr/local/include)
+link_directories(/c++/C-Example/linux/install/usr/local/lib64)
+
+#指定可执行文件的输出目录，输出到bin下面  
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+
+#生成动态库    
+add_library(s3_shared_demo SHARED S3Util.cpp)
+#设置库输出名为 shared =&gt; libshared.so  
+set_target_properties(s3_shared_demo PROPERTIES OUTPUT_NAME &quot;s3shared&quot;)
+
+#生成静态库  
+add_library(s3_static_demo STATIC S3Util.cpp)
+#设置输库出名为 static =&gt; libstatic.a  
+set_target_properties(s3_static_demo PROPERTIES OUTPUT_NAME &quot;s3static&quot;)
+
+#指定库文件输出路径  
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+
+#在指定目录下查找库，并保存在LIBPATH变量中
+find_library(LIBPATHS  shared ${PROJECT_SOURCE_DIR}/lib)
+
+#指定生成目标
+#add_executable(main main.cpp)
+
+#链接共享库
+#target_link_libraries(main ${LIBPATHS})
+#target_link_libraries(s3util -laws-cpp-sdk-core -laws-cpp-sdk-s3)
+</code></pre>
+<h4 id="参考文献">参考文献</h4>
+<ul>
+<li><a href="https://www.hahack.com/codes/cmake/">[1] CMake 入门实战</a></li>
+<li><a href="https://cmake.org/cmake-tutorial/">[2] CMake 官方教程</a></li>
+<li><a href="https://www.jianshu.com/p/3078a4a195df">[3] 简书-刘亚彬_244c：CMake 使用教程</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/diary/23-00-HUST.jpg?raw=true');"></div>
+                 <a href="https://blog.shunzi.tech/post/heelo-diary/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-07-25">2019-07-25</time>
+                  <h4 class="title white no-margin">Hello Diary</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://pic.36krcnd.com/201804/20060915/yucn8kelclf6k0hj!1200');"></div>
+                 <a href="https://blog.shunzi.tech/post/storage-basic-concept/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-07-20">2019-07-20</time>
+                  <h4 class="title white no-margin">存储基本概念</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

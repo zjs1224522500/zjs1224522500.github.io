@@ -1,0 +1,3009 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ceph Cache Tiering | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+主要介绍 Ceph 中的缓存机制和缓存相关实现
+介绍 Tiring 的相关模式并结合部分代码
+调研业界对于 Ceph 缓存的性能评价和优化方案
+
+
+ 
+Cache Tiering
+Architecture
+
+Data Structure..." />
+    <meta name="keywords" content="缓存,Ceph" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/project/Tier-Arch.png?raw=true');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2019-11-11"><i class="fa fa-calendar"></i><span class="lately">1 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/ceph-cache-tiering/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/ceph-cache-tiering/"> </span>
+              </a>
+              <span id="/ceph-cache-tiering/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-0 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-1 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Ceph Cache Tiering</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>主要介绍 Ceph 中的缓存机制和缓存相关实现</li>
+<li>介绍 Tiring 的相关模式并结合部分代码</li>
+<li>调研业界对于 Ceph 缓存的性能评价和优化方案</li>
+</ul>
+</blockquote>
+<!--more--> 
+<h2 id="cache-tiering">Cache Tiering</h2>
+<h3 id="architecture">Architecture</h3>
+<figure data-type="image" tabindex="1"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/project/Tier-Arch.png?raw=true" alt="image" loading="lazy"></figure>
+<h3 id="data-structure">Data Structure</h3>
+<ul>
+<li>由于 Tier cache 在 Ceph 中的存在形式是存储池，所以首先了解存储池的相关属性。</li>
+<li><a href="https://github.com/zjs1224522500/ceph/blob/master/src/osd/osd_types.h#L1159-L1728">src/osd/osd_type.h/struct pg_pool_t</a></li>
+</ul>
+<pre><code class="language-C++">struct pg_pool_t {
+  ...
+  // cache_mode
+  typedef enum {
+    CACHEMODE_NONE = 0,                  ///&lt; no caching
+    CACHEMODE_WRITEBACK = 1,             ///&lt; write to cache, flush later
+    CACHEMODE_FORWARD = 2,               ///&lt; forward if not in cache
+    CACHEMODE_READONLY = 3,              ///&lt; handle reads, forward writes [not strongly consistent]
+    CACHEMODE_READFORWARD = 4,           ///&lt; forward reads, write to cache flush later
+    CACHEMODE_READPROXY = 5,             ///&lt; proxy reads, write to cache flush later
+    CACHEMODE_PROXY = 6,                 ///&lt; proxy if not in cache
+  } cache_mode_t;
+  ...
+  
+  // Tier cache : Base Storage = N : 1
+  // ceph osd tier add {data_pool} {cache pool}
+  std::set&lt;uint64_t&gt; tiers;      ///&lt; pools that are tiers of us
+  int64_t tier_of = -1;  /// pool for which we are a tier（-1为没有tier）
+  
+  // Note that write wins for read+write ops
+  // WriteBack mode, read_tier is same as write_tier. Both are cache pool.
+  // Diret mode. cache pool is read_tier, not write_tier. 
+  // ceph osd tier set-overlay {data_pool} {cache_pool}
+  int64_t read_tier = -1; /// pool/tier for objecter to direct reads（-1为没有tier）
+  int64_t write_tier = -1;      /// pool/tier for objecter to direct write（-1为没有tier）
+  
+  // Set cache mode
+  // ceph osd tier cache-mode {cache-pool} {cache-mode}
+  cache_mode_t cache_mode = CACHEMODE_NONE; /// cache pool mode
+  
+  // Cache pool max bytes and objects 
+  uint64_t target_max_bytes = 0;   ///&lt; tiering: target max pool size
+  uint64_t target_max_objects = 0; ///&lt; tiering: target max pool size
+
+  // 目标脏数据率：当脏数据比例达到这个值，后台 agent 开始 flush 数据
+  uint32_t cache_target_dirty_ratio_micro = 0; ///&lt; cache: fraction of target to leave dirty
+  // 高目标脏数据率：当脏数据比例达到这个值，后台 agent 开始高速 flush 数据
+  uint32_t cache_target_dirty_high_ratio_micro = 0; ///&lt; cache: fraction of  target to flush with high speed
+  // 数据满的比率：当数据达到这个比例时，认为数据已满，需要进行缓存淘汰
+  uint32_t cache_target_full_ratio_micro = 0;  ///&lt; cache: fraction of target to fill before we evict in earnest
+
+  // 对象在 cache 中被刷入到 storage 层的最小时间
+  uint32_t cache_min_flush_age = 0;  ///&lt; minimum age (seconds) before we can flush
+  // 对象在 cache 中被淘汰的最小时间
+  uint32_t cache_min_evict_age = 0;  ///&lt; minimum age (seconds) before we can evict
+  
+  // HitSet 相关参数
+  HitSet::Params hit_set_params; ///&lt; The HitSet params to use on this pool
+  // 每间隔 hit_set_period 一段时间，系统重新产生一个新的 hit_set 对象来记录对象的h缓存统计信息
+  uint32_t hit_set_period = 0;   ///&lt; periodicity of HitSet segments (seconds)
+  // 记录系统保存最近的多少个 hit_set 记录
+  uint32_t hit_set_count = 0;    ///&lt; number of periods to retain
+  // hitset archive 对象的命名规则 
+  bool use_gmt_hitset = true;	 ///&lt; use gmt to name the hitset archive object
+  uint32_t min_read_recency_for_promote = 0;   ///&lt; minimum number of HitSet to check before promote on read
+  uint32_t min_write_recency_for_promote = 0;  ///&lt; minimum number of HitSet to check before promote on write
+  uint32_t hit_set_grade_decay_rate = 0; ///&lt; current hit_set has highest priority on objects
+                                         ///&lt; temperature count,the follow hit_set's priority decay
+                                         ///&lt; by this params than pre hit_set
+  uint32_t hit_set_search_last_n = 0;    ///&lt; accumulate atmost N hit_sets for temperature
+
+  bool is_tier() const { return tier_of &gt;= 0; }
+  bool has_tiers() const { return !tiers.empty(); }
+  void clear_tier() {
+    tier_of = -1;
+    clear_read_tier();
+    clear_write_tier();
+    clear_tier_tunables();
+  }
+  bool has_read_tier() const { return read_tier &gt;= 0; }
+  void clear_read_tier() { read_tier = -1; }
+  bool has_write_tier() const { return write_tier &gt;= 0; }
+  void clear_write_tier() { write_tier = -1; }
+  void clear_tier_tunables() {
+    if (cache_mode != CACHEMODE_NONE)
+      flags |= FLAG_INCOMPLETE_CLONES;
+    cache_mode = CACHEMODE_NONE;
+    target_max_bytes = 0;
+    target_max_objects = 0;
+    cache_target_dirty_ratio_micro = 0;
+    cache_target_dirty_high_ratio_micro = 0;
+    cache_target_full_ratio_micro = 0;
+    hit_set_params = HitSet::Params();
+    hit_set_period = 0;
+    hit_set_count = 0;
+    hit_set_grade_decay_rate = 0;
+    hit_set_search_last_n = 0;
+    grade_table.resize(0);
+  }
+  ...
+}
+</code></pre>
+<h3 id="cache-mode">Cache Mode</h3>
+<h4 id="write-back">Write Back</h4>
+<ul>
+<li>Ceph客户端将数据写入缓存层并从缓存层接收ACK。随着时间的流逝，写入缓存层的数据将迁移到存储层，并从缓存层中清除。从概念上讲，缓存层覆盖在后备存储层的“前面”。当Ceph客户端需要驻留在存储层中的数据时，缓存分层代理在读取时将数据迁移到缓存层，然后将其发送到Ceph客户端。此后，Ceph客户端可以使用缓存层执行I / O，直到数据变为非活动状态为止。</li>
+<li>该模式适合于大量修改数据的应用场景（例如，照片/视频编辑，交易数据等）。</li>
+</ul>
+<h4 id="read-forward">Read Forward</h4>
+<ul>
+<li>client 发起读请求，对象不在 cache pool 中，出现 cache miss 状态，就返回 redirect 信息给客户端，客户端再根据返回的信息再次直接向 base pool 发起读请求。<br>
+<img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/project/read-forward.png?raw=true" alt="image" loading="lazy"></li>
+</ul>
+<h5 id="read-proxy">Read Proxy</h5>
+<ul>
+<li>此模式将使用缓存层中已经存在的任何对象，但是如果一个对象不在缓存中，则请求将代理到基层。这对于将writeback模式转换为禁用的缓存非常有用，因为它允许工作负载在缓存耗尽时正常工作，而不需要向缓存添加任何新对象。</li>
+</ul>
+<figure data-type="image" tabindex="2"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/project/read-proxy.png?raw=true" alt="image" loading="lazy"></figure>
+<h4 id="proxy">Proxy</h4>
+<ul>
+<li>针对读写请求都会执行proxy，也就是作为一个代理向后端存储池发起请求并返回给客户端，除非强制要求先进行promote操作。</li>
+</ul>
+<h4 id="forward">Forward</h4>
+<ul>
+<li>FORWARD模式表示所有到达cache tier存储池的请求都不会处理，直接将它的后端存储池的ID回复给请求方，并返回-ENOENT的错误号，具体实现比较简单。</li>
+<li>该模式的用途是在删除WRITEBACK模式的cache tier时，需将其cache mode先设置为FORWARD，并主动调用cache tier的flush和evict操作，确保cache tier存储池的对象全部evict和flush到后端存储池，保证这个过程中不会有新的数据写入。</li>
+</ul>
+<h4 id="read-only">Read Only</h4>
+<ul>
+<li>仅在读取操作时将对象提升到缓存中；写操作被转发到基本层。该种模式下，cache pool 设置成单副本，极大减少缓存空间的占用，当cache pool层失效时，也不会有数据丢失。</li>
+<li>此模式适用于不需要存储系统强制一致性的只读工作负载。适合一次写入多次读取的场景(警告:当基本层中的对象更新时，Ceph不会尝试将这些更新同步到缓存中的相应对象。因为这种模式被认为是实验性的，所以必须通过一个yes-i-really-mean-it的选项来启用它。)</li>
+</ul>
+<h3 id="hitset">HitSet</h3>
+<ul>
+<li>在 write back/read forward/read proxy 模式下需要 HitSet 来记录缓存命中。read only 不需要</li>
+<li>HitSet 用于跟踪和统计对象的访问行为，记录对象是否存在缓存中。定义了一个缓存查找到抽象接口，目前提供了三种实现方式：ExplicitHashHitSet，ExplicitObjectHitSet，BloomHitSet</li>
+<li><a href="https://github.com/zjs1224522500/ceph/blob/master/src/osd/HitSet.h">ceph/src/osd/HitSet.h</a> 定义了抽象接口，同时该头文件中包含了具体的 HitSet 实现</li>
+</ul>
+<pre><code class="language-C++">  ...
+  /// abstract interface for a HitSet implementation
+  class Impl {
+  public:
+    virtual impl_type_t get_type() const = 0;
+    virtual bool is_full() const = 0;
+    virtual void insert(const hobject_t&amp; o) = 0;
+    virtual bool contains(const hobject_t&amp; o) const = 0;
+    virtual unsigned insert_count() const = 0;
+    virtual unsigned approx_unique_insert_count() const = 0;
+    virtual void encode(ceph::buffer::list &amp;bl) const = 0;
+    virtual void decode(ceph::buffer::list::const_iterator&amp; p) = 0;
+    virtual void dump(ceph::Formatter *f) const = 0;
+    virtual Impl* clone() const = 0;
+    virtual void seal() {}
+    virtual ~Impl() {}
+  };
+  ...
+  
+</code></pre>
+<h4 id="explicithashhitset">ExplicitHashHitSet</h4>
+<ul>
+<li><a href="https://github.com/zjs1224522500/ceph/blob/master/src/osd/HitSet.h#L178-L247">ceph/src/osd/HitSet.h/class ExplicitHashHitSet</a></li>
+<li>基于对象的 32 位 HASH 值的 set 来记录对象的命中，每个对象占用 4 bytes 内存空间</li>
+<li>优点：空间占用相对较少，但需要根据 HASH 进行全局的扫描遍历比较</li>
+</ul>
+<pre><code class="language-C++">/**
+ * explicitly enumerate hash hits in the set
+ */
+class ExplicitHashHitSet : public HitSet::Impl {
+  uint64_t count;
+  
+  // Data Structure  
+  ceph::unordered_set&lt;uint32_t&gt; hits;
+
+public:
+  class Params : public HitSet::Params::Impl {
+  public:
+    HitSet::impl_type_t get_type() const override {
+      return HitSet::TYPE_EXPLICIT_HASH;
+    }
+    HitSet::Impl *get_new_impl() const override {
+      return new ExplicitHashHitSet;
+    }
+    static void generate_test_instances(std::list&lt;Params*&gt;&amp; o) {
+      o.push_back(new Params);
+    }
+  };
+
+  ExplicitHashHitSet() : count(0) {}
+  explicit ExplicitHashHitSet(const ExplicitHashHitSet::Params *p) : count(0) {}
+  ExplicitHashHitSet(const ExplicitHashHitSet &amp;o) : count(o.count),
+      hits(o.hits) {}
+
+  HitSet::Impl *clone() const override {
+    return new ExplicitHashHitSet(*this);
+  }
+
+  HitSet::impl_type_t get_type() const override {
+    return HitSet::TYPE_EXPLICIT_HASH;
+  }
+  bool is_full() const override {
+    return false;
+  }
+  void insert(const hobject_t&amp; o) override {
+    hits.insert(o.get_hash());
+    ++count;
+  }
+  bool contains(const hobject_t&amp; o) const override {
+    return hits.count(o.get_hash());
+  }
+  unsigned insert_count() const override {
+    return count;
+  }
+  unsigned approx_unique_insert_count() const override {
+    return hits.size();
+  }
+  void encode(ceph::buffer::list &amp;bl) const override {
+    ENCODE_START(1, 1, bl);
+    encode(count, bl);
+    encode(hits, bl);
+    ENCODE_FINISH(bl);
+  }
+  void decode(ceph::buffer::list::const_iterator &amp;bl) override {
+    DECODE_START(1, bl);
+    decode(count, bl);
+    decode(hits, bl);
+    DECODE_FINISH(bl);
+  }
+  void dump(ceph::Formatter *f) const override;
+  static void generate_test_instances(std::list&lt;ExplicitHashHitSet*&gt;&amp; o) {
+    o.push_back(new ExplicitHashHitSet);
+    o.push_back(new ExplicitHashHitSet);
+    o.back()-&gt;insert(hobject_t());
+    o.back()-&gt;insert(hobject_t(&quot;asdf&quot;, &quot;&quot;, CEPH_NOSNAP, 123, 1, &quot;&quot;));
+    o.back()-&gt;insert(hobject_t(&quot;qwer&quot;, &quot;&quot;, CEPH_NOSNAP, 456, 1, &quot;&quot;));
+  }
+};
+WRITE_CLASS_ENCODER(ExplicitHashHitSet)
+</code></pre>
+<h4 id="explicitobjecthitset">ExplicitObjectHitSet</h4>
+<ul>
+<li><a href="https://github.com/zjs1224522500/ceph/blob/master/src/osd/HitSet.h#L249-L318">ceph/src/osd/HitSet.h/class ExplicitObjectHitSet</a></li>
+<li>使用一个基于 <a href="https://github.com/zjs1224522500/ceph/blob/master/src/common/hobject.h">ceph/src/common/hobject</a> 的 set 来记录对象的命中，占用的内存取决于对象的关键信息的大小</li>
+</ul>
+<pre><code class="language-C++">struct hobject_t {
+...
+public:
+  object_t oid;
+  snapid_t snap;
+private:
+  uint32_t hash;
+  bool max;
+  uint32_t nibblewise_key_cache;
+  uint32_t hash_reverse_bits;
+public:
+  int64_t pool;
+  std::string nspace;
+
+private:
+  std::string key;
+
+  class hobject_t_max {};
+...
+</code></pre>
+<ul>
+<li>使用内存中缓存数据结构来进行判断带来的优点就是实现相对简单直观，但占用的内存空间相对较大。</li>
+</ul>
+<pre><code class="language-C++">/**
+ * explicitly enumerate objects in the set
+ */
+class ExplicitObjectHitSet : public HitSet::Impl {
+  uint64_t count;
+  
+  // Data Structure  
+  ceph::unordered_set&lt;hobject_t&gt; hits;
+
+public:
+  class Params : public HitSet::Params::Impl {
+  public:
+    HitSet::impl_type_t get_type() const override {
+      return HitSet::TYPE_EXPLICIT_OBJECT;
+    }
+    HitSet::Impl *get_new_impl() const override {
+      return new ExplicitObjectHitSet;
+    }
+    static void generate_test_instances(std::list&lt;Params*&gt;&amp; o) {
+      o.push_back(new Params);
+    }
+  };
+
+  ExplicitObjectHitSet() : count(0) {}
+  explicit ExplicitObjectHitSet(const ExplicitObjectHitSet::Params *p) : count(0) {}
+  ExplicitObjectHitSet(const ExplicitObjectHitSet &amp;o) : count(o.count),
+      hits(o.hits) {}
+
+  HitSet::Impl *clone() const override {
+    return new ExplicitObjectHitSet(*this);
+  }
+
+  HitSet::impl_type_t get_type() const override {
+    return HitSet::TYPE_EXPLICIT_OBJECT;
+  }
+  bool is_full() const override {
+    return false;
+  }
+  void insert(const hobject_t&amp; o) override {
+    hits.insert(o);
+    ++count;
+  }
+  bool contains(const hobject_t&amp; o) const override {
+    return hits.count(o);
+  }
+  unsigned insert_count() const override {
+    return count;
+  }
+  unsigned approx_unique_insert_count() const override {
+    return hits.size();
+  }
+  void encode(ceph::buffer::list &amp;bl) const override {
+    ENCODE_START(1, 1, bl);
+    encode(count, bl);
+    encode(hits, bl);
+    ENCODE_FINISH(bl);
+  }
+  void decode(ceph::buffer::list::const_iterator&amp; bl) override {
+    DECODE_START(1, bl);
+    decode(count, bl);
+    decode(hits, bl);
+    DECODE_FINISH(bl);
+  }
+  void dump(ceph::Formatter *f) const override;
+  static void generate_test_instances(std::list&lt;ExplicitObjectHitSet*&gt;&amp; o) {
+    o.push_back(new ExplicitObjectHitSet);
+    o.push_back(new ExplicitObjectHitSet);
+    o.back()-&gt;insert(hobject_t());
+    o.back()-&gt;insert(hobject_t(&quot;asdf&quot;, &quot;&quot;, CEPH_NOSNAP, 123, 1, &quot;&quot;));
+    o.back()-&gt;insert(hobject_t(&quot;qwer&quot;, &quot;&quot;, CEPH_NOSNAP, 456, 1, &quot;&quot;));
+  }
+};
+WRITE_CLASS_ENCODER(ExplicitObjectHitSet)
+</code></pre>
+<h4 id="bloomhitset">BloomHitSet</h4>
+<ul>
+<li><a href="https://github.com/zjs1224522500/ceph/blob/master/src/osd/HitSet.h#L320-L453">ceph/src/osd/HitSet.h/class BloomHitSet</a></li>
+<li>采用了压缩的 Bloom Filter 的方式来记录对象是否在缓存中，进一步减少了内存占用空间。</li>
+</ul>
+<pre><code class="language-C++">/**
+ * use a bloom_filter to track hits to the set
+ */
+class BloomHitSet : public HitSet::Impl {
+  compressible_bloom_filter bloom;
+
+public:
+  HitSet::impl_type_t get_type() const override {
+    return HitSet::TYPE_BLOOM;
+  }
+
+  class Params : public HitSet::Params::Impl {
+  public:
+    HitSet::impl_type_t get_type() const override {
+      return HitSet::TYPE_BLOOM;
+    }
+    HitSet::Impl *get_new_impl() const override {
+      return new BloomHitSet;
+    }
+
+    uint32_t fpp_micro;    ///&lt; false positive probability / 1M
+    uint64_t target_size;  ///&lt; number of unique insertions we expect to this HitSet
+    uint64_t seed;         ///&lt; seed to use when initializing the bloom filter
+
+    Params() : fpp_micro(0), target_size(0), seed(0) {}
+    Params(double fpp, uint64_t t, uint64_t s) : fpp_micro(fpp * 1000000.0), target_size(t), seed(s) {}
+    Params(const Params &amp;o) : fpp_micro(o.fpp_micro), target_size(o.target_size), seed(o.seed) {}
+    ~Params() override {}
+
+    double get_fpp() const {
+      return (double)fpp_micro / 1000000.0;
+    }
+    void set_fpp(double f) {
+      fpp_micro = (unsigned)(llrintl(f * 1000000.0));
+    }
+
+    void encode(ceph::buffer::list&amp; bl) const override {
+      ENCODE_START(1, 1, bl);
+      encode(fpp_micro, bl);
+      encode(target_size, bl);
+      encode(seed, bl);
+      ENCODE_FINISH(bl);
+    }
+    void decode(ceph::buffer::list::const_iterator&amp; bl) override {
+      DECODE_START(1, bl);
+      decode(fpp_micro, bl);
+      decode(target_size, bl);
+      decode(seed, bl);
+      DECODE_FINISH(bl);
+    }
+    void dump(ceph::Formatter *f) const override;
+    void dump_stream(std::ostream&amp; o) const override {
+      o &lt;&lt; &quot;false_positive_probability: &quot; &lt;&lt; get_fpp() &lt;&lt; &quot;, target_size: &quot; &lt;&lt; target_size &lt;&lt; &quot;, seed: &quot; &lt;&lt; seed;
+    }
+    static void generate_test_instances(std::list&lt;Params*&gt;&amp; o) {
+      o.push_back(new Params);
+      o.push_back(new Params);
+      (*o.rbegin())-&gt;fpp_micro = 123456;
+      (*o.rbegin())-&gt;target_size = 300;
+      (*o.rbegin())-&gt;seed = 99;
+    } 
+  };
+  BloomHitSet() {}
+  BloomHitSet(unsigned inserts, double fpp, int seed)
+    : bloom(inserts, fpp, seed)
+  {}
+  explicit BloomHitSet(const BloomHitSet::Params *p) : bloom(p-&gt;target_size,  p-&gt;get_fpp(), p-&gt;seed){}
+
+  BloomHitSet(const BloomHitSet &amp;o) {
+    // oh god
+    ceph::buffer::list bl;
+    o.encode(bl);
+    auto bli = std::cbegin(bl);
+    this-&gt;decode(bli);
+  }
+
+  HitSet::Impl *clone() const override {
+    return new BloomHitSet(*this);
+  }
+
+  bool is_full() const override {
+    return bloom.is_full();
+  }
+
+  void insert(const hobject_t&amp; o) override {
+    bloom.insert(o.get_hash());
+  }
+  bool contains(const hobject_t&amp; o) const override {
+    return bloom.contains(o.get_hash());
+  }
+  unsigned insert_count() const override {
+    return bloom.element_count();
+  }
+  unsigned approx_unique_insert_count() const override {
+    return bloom.approx_unique_element_count();
+  }
+  void seal() override {
+    // aim for a density of .5 (50% of bit set)
+    double pc = bloom.density() * 2.0;
+    if (pc &lt; 1.0)
+      bloom.compress(pc);
+  }
+
+  void encode(ceph::buffer::list &amp;bl) const override {
+    ENCODE_START(1, 1, bl);
+    encode(bloom, bl);
+    ENCODE_FINISH(bl);
+  }
+  void decode(ceph::buffer::list::const_iterator&amp; bl) override {
+    DECODE_START(1, bl);
+    decode(bloom, bl);
+    DECODE_FINISH(bl);
+  }
+  void dump(ceph::Formatter *f) const override;
+  static void generate_test_instances(std::list&lt;BloomHitSet*&gt;&amp; o) {
+    o.push_back(new BloomHitSet);
+    o.push_back(new BloomHitSet(10, .1, 1));
+    o.back()-&gt;insert(hobject_t());
+    o.back()-&gt;insert(hobject_t(&quot;asdf&quot;, &quot;&quot;, CEPH_NOSNAP, 123, 1, &quot;&quot;));
+    o.back()-&gt;insert(hobject_t(&quot;qwer&quot;, &quot;&quot;, CEPH_NOSNAP, 456, 1, &quot;&quot;));
+  }
+};
+WRITE_CLASS_ENCODER(BloomHitSet)
+</code></pre>
+<ul>
+<li><a href="https://github.com/zjs1224522500/ceph/blob/master/src/osd/HitSet.cc">ceph/src/osd/HitSet.cc</a></li>
+</ul>
+<pre><code class="language-C++">HitSet::HitSet(const HitSet::Params&amp; params)
+  : sealed(false)
+{
+  switch (params.get_type()) {
+  case TYPE_BLOOM:
+    {
+      BloomHitSet::Params *p =
+	static_cast&lt;BloomHitSet::Params*&gt;(params.impl.get());
+      impl.reset(new BloomHitSet(p));
+    }
+    break;
+
+  case TYPE_EXPLICIT_HASH:
+    impl.reset(new ExplicitHashHitSet(static_cast&lt;ExplicitHashHitSet::Params*&gt;(params.impl.get())));
+    break;
+
+  case TYPE_EXPLICIT_OBJECT:
+    impl.reset(new ExplicitObjectHitSet(static_cast&lt;ExplicitObjectHitSet::Params*&gt;(params.impl.get())));
+    break;
+
+  default:
+    assert (0 == &quot;unknown HitSet type&quot;);
+  }
+}
+</code></pre>
+<h3 id="io">IO</h3>
+<h4 id="add-cache">Add Cache</h4>
+<ul>
+<li>在 <a href="https://github.com/zjs1224522500/ceph/blob/master/src/mon/OSDMonitor.cc#L13015-L13110">ceph/src/mon/OSDMonitor.cc</a> 中实现了 add-cache 命令，从命令行中获取对应的参数并绑定 Tier 关系</li>
+</ul>
+<pre><code class="language-C++">  else if (prefix == &quot;osd tier add-cache&quot;) {
+    ...
+    // go
+    // 分别获取 base_pool 和 cache_pool 信息
+    pg_pool_t *np = pending_inc.get_new_pool(pool_id, p);
+    pg_pool_t *ntp = pending_inc.get_new_pool(tierpool_id, tp);
+    
+    // 检查 Pool 之间的 Tier 关系
+    if (np-&gt;tiers.count(tierpool_id) || ntp-&gt;is_tier()) {
+      wait_for_finished_proposal(op, new C_RetryMessage(this, op));
+      return true;
+    }
+    
+    // 将缓存 Pool 添加到 base_pool 的 tiers 中去
+    np-&gt;tiers.insert(tierpool_id);
+    
+    // 设置 read_tier/write_tier = cache_tire
+    np-&gt;read_tier = np-&gt;write_tier = tierpool_id;
+    np-&gt;set_snap_epoch(pending_inc.epoch); // tier will update to our snap info
+    np-&gt;set_last_force_op_resend(pending_inc.epoch);
+    ntp-&gt;set_last_force_op_resend(pending_inc.epoch);
+    ntp-&gt;tier_of = pool_id;
+    
+    // 设置缓存策略，默认 write-back
+    ntp-&gt;cache_mode = mode;
+    
+    // 设置 flush evict 相关参数
+    ntp-&gt;hit_set_count = g_conf().get_val&lt;uint64_t&gt;(&quot;osd_tier_default_cache_hit_set_count&quot;);
+    ntp-&gt;hit_set_period = g_conf().get_val&lt;uint64_t&gt;(&quot;osd_tier_default_cache_hit_set_period&quot;);
+    ntp-&gt;min_read_recency_for_promote = g_conf().get_val&lt;uint64_t&gt;(&quot;osd_tier_default_cache_min_read_recency_for_promote&quot;);
+    ntp-&gt;min_write_recency_for_promote = g_conf().get_val&lt;uint64_t&gt;(&quot;osd_tier_default_cache_min_write_recency_for_promote&quot;);
+    ntp-&gt;hit_set_grade_decay_rate = g_conf().get_val&lt;uint64_t&gt;(&quot;osd_tier_default_cache_hit_set_grade_decay_rate&quot;);
+    ntp-&gt;hit_set_search_last_n = g_conf().get_val&lt;uint64_t&gt;(&quot;osd_tier_default_cache_hit_set_search_last_n&quot;);
+    ntp-&gt;hit_set_params = hsp;
+    ntp-&gt;target_max_bytes = size;
+    ss &lt;&lt; &quot;pool '&quot; &lt;&lt; tierpoolstr &lt;&lt; &quot;' is now (or already was) a cache tier of '&quot; &lt;&lt; poolstr &lt;&lt; &quot;'&quot;;
+    wait_for_finished_proposal(op, new Monitor::C_Command(mon, op, 0, ss.str(), get_last_committed() + 1));
+    return true;
+  }
+</code></pre>
+<h4 id="选择-cache-pool">选择 Cache Pool</h4>
+<ul>
+<li>在 <a href="https://github.com/zjs1224522500/ceph/blob/master/src/osdc/Objecter.cc#L2817-L2830">ceph/src/osdc/Objecter.cc</a> 中指定目标存储池为 Cache Pool，设置之后由后续的代码在该 Pool 中执行 Crush 算法。</li>
+</ul>
+<pre><code class="language-C++">int Objecter::_calc_target(op_target_t *t, Connection *con, bool any_change)
+{
+  ...
+  // 根据读写操作，分别设置需要操作的 tier
+  // apply tiering
+  t-&gt;target_oid = t-&gt;base_oid;
+  t-&gt;target_oloc = t-&gt;base_oloc;
+  if ((t-&gt;flags &amp; CEPH_OSD_FLAG_IGNORE_OVERLAY) == 0) {
+    if (is_read &amp;&amp; pi-&gt;has_read_tier())
+      t-&gt;target_oloc.pool = pi-&gt;read_tier;
+    if (is_write &amp;&amp; pi-&gt;has_write_tier())
+      t-&gt;target_oloc.pool = pi-&gt;write_tier;
+    pi = osdmap-&gt;get_pg_pool(t-&gt;target_oloc.pool);
+    if (!pi) {
+      t-&gt;osd = -1;
+      return RECALC_OP_TARGET_POOL_DNE;
+    }
+  }
+    
+}
+</code></pre>
+<h4 id="cache-pool-请求处理">Cache Pool 请求处理</h4>
+<ul>
+<li>Cache 的相关请求处理可以通过主流程进行梳理。</li>
+<li>主流程中主要包含了 <code>agent_choose_mode</code> 和 <code>maybe_handle_cache_detail</code> 两个主要方法。</li>
+</ul>
+<h5 id="主流程">主流程</h5>
+<ul>
+<li><a href="https://github.com/zjs1224522500/ceph/blob/master/src/osd/PrimaryLogPG.cc#L2100-L2211">PrimaryLogPG.cc/do_op(OpRequestRef &amp;)</a></li>
+</ul>
+<pre><code class="language-C++">/** do_op - do an op
+ * pg lock will be held (if multithreaded)
+ * osd_lock NOT held.
+ */
+void PrimaryLogPG::do_op(OpRequestRef&amp; op)
+{
+  ...
+  // 预处理
+  ObjectContextRef obc;
+  bool can_create = op-&gt;may_write();
+  hobject_t missing_oid;
+
+  // kludge around the fact that LIST_SNAPS sets CEPH_SNAPDIR for LIST_SNAPS
+  const hobject_t&amp; oid = m-&gt;get_snapid() == CEPH_SNAPDIR ? head : m-&gt;get_hobj();
+  ...
+  // io blocked on obc?
+  if (!m-&gt;has_flag(CEPH_OSD_FLAG_FLUSH) &amp;&amp;
+      maybe_await_blocked_head(oid, op)) {
+    return;
+  }
+
+  // 获取上下文信息 obc 
+  int r = find_object_context(oid, &amp;obc, can_create, m-&gt;has_flag(CEPH_OSD_FLAG_MAP_SNAP_CLONE), &amp;missing_oid);
+  
+  // 
+  bool in_hit_set = false;
+  // 如果有 hit_set
+  if (hit_set) {
+    if (obc.get()) {
+      if (obc-&gt;obs.oi.soid != hobject_t() &amp;&amp; hit_set-&gt;contains(obc-&gt;obs.oi.soid))
+	    in_hit_set = true;
+    } else {
+      // 如果是读操作，且要读的object在当前的cachepool中不存在，但是在hit_set中记录了该object 刚被访问过。
+      if (missing_oid != hobject_t() &amp;&amp; hit_set-&gt;contains(missing_oid))
+        in_hit_set = true;
+    }
+    if (!op-&gt;hitset_inserted) {
+      // hitset 统计这次访问 object 的操作
+      hit_set-&gt;insert(oid);
+      op-&gt;hitset_inserted = true;
+      
+      // 如果这hit_set 满了，或者时间间隔到了，则需要持久化这个hit_set信息。
+      if (hit_set-&gt;is_full() || hit_set_start_stamp + pool.info.hit_set_period &lt;= m-&gt;get_recv_stamp()) {
+        // 持久化 hit_set
+        hit_set_persist();
+      }
+    }
+  }
+
+  // 如果这个pg存在agent_state
+  if (agent_state) {
+    // 对相应的 PG 设置 flush 模式和 evict 模式
+    if (agent_choose_mode(false, op))
+      return;
+  }
+
+  if (obc.get() &amp;&amp; obc-&gt;obs.exists &amp;&amp; obc-&gt;obs.oi.has_manifest()) {
+    if (maybe_handle_manifest(op,
+			       write_ordered,
+			       obc))
+    return;
+  }
+
+  // 如果maybe_handle_cache 处理成功了则直接return，否则继续进行后面的操作。
+  if (maybe_handle_cache(op, write_ordered, obc, r, missing_oid, false, in_hit_set))
+    return;
+    
+  ...
+  // 如果读的话，则直接读本osd，如果写的话，就分发到其他replicate osd上
+}
+</code></pre>
+<h5 id="agent_choose_modebool-restart-oprequestref-op">agent_choose_mode(bool restart, OpRequestRef op)</h5>
+<ul>
+<li><a href="https://github.com/zjs1224522500/ceph/blob/master/src/osd/PrimaryLogPG.cc#L14316-L14552">PrimaryLogPG.cc/agent_choose_mode</a></li>
+<li>该函数主要计算一个 PG 的 flush_mode 和 evic_mode 的参数值。</li>
+<li>返回值如果为 True，表明该请求 Op 被重新加入请求队列（由于 EvictMode 为 Full），其他情况返回 false。</li>
+</ul>
+<pre><code class="language-C++">bool PrimaryLogPG::agent_choose_mode(bool restart, OpRequestRef op)
+{
+  bool requeued = false;
+  // Let delay play out
+  if (agent_state-&gt;delaying) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; this &lt;&lt; &quot; delaying, ignored&quot; &lt;&lt; dendl;
+    return requeued;
+  }
+
+  TierAgentState::flush_mode_t flush_mode = TierAgentState::FLUSH_MODE_IDLE;
+  TierAgentState::evict_mode_t evict_mode = TierAgentState::EVICT_MODE_IDLE;
+  unsigned evict_effort = 0;
+
+  // 如果当前统计的信息无效，暂时跳过计算过程，暂时不计算 flush_mode 和 evic_mode 的值
+  if (info.stats.stats_invalid) {
+    // idle; stats can't be trusted until we scrub.
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; stats invalid (post-split), idle&quot; &lt;&lt; dendl;
+    goto skip_calc;
+  }
+
+  {
+  // 计算 divisor 的值， 也就是 cache_pool 中 PG 的数量
+  uint64_t divisor = pool.info.get_pg_num_divisor(info.pgid.pgid);
+  ceph_assert(divisor &gt; 0);
+
+  // 基于 HitSet 对象的数量计算 unflushable，不能刷回的对象
+  // adjust (effective) user objects down based on the number
+  // of HitSet objects, which should not count toward our total since
+  // they cannot be flushed.
+  uint64_t unflushable = info.stats.stats.sum.num_objects_hit_set_archive;
+
+  
+  // also exclude omap objects if ec backing pool
+  const pg_pool_t *base_pool = get_osdmap()-&gt;get_pg_pool(pool.info.tier_of);
+  ceph_assert(base_pool);
+  // 如果 base_pool 是 ec pool，不支持 omap，去掉所有需要 omap 支持的对象
+  if (!base_pool-&gt;supports_omap())
+    unflushable += info.stats.stats.sum.num_objects_omap;
+
+  // 计算 num_user_objects
+  uint64_t num_user_objects = info.stats.stats.sum.num_objects;
+  // 其值为统计的对象数目减去 unflushable 对象数
+  if (num_user_objects &gt; unflushable)
+    num_user_objects -= unflushable;
+  else
+    num_user_objects = 0;
+  
+  
+  uint64_t num_user_bytes = info.stats.stats.sum.num_bytes;
+  uint64_t unflushable_bytes = info.stats.stats.sum.num_bytes_hit_set_archive;
+  // 计算 num_user_bytes，其值为统计信息的字节数减去 unflushable 字节数
+  num_user_bytes -= unflushable_bytes;
+  
+  uint64_t num_overhead_bytes = osd-&gt;store-&gt;estimate_objects_overhead(num_user_objects);
+  num_user_bytes += num_overhead_bytes;
+
+  // 计算脏对象的数目 num_dirty 值
+  // also reduce the num_dirty by num_objects_omap
+  int64_t num_dirty = info.stats.stats.sum.num_objects_dirty;
+  // 如果 base_pool 不支持 omap，去掉带 omap 的对象
+  if (!base_pool-&gt;supports_omap()) {
+    if (num_dirty &gt; info.stats.stats.sum.num_objects_omap)
+      num_dirty -= info.stats.stats.sum.num_objects_omap;
+    else
+      num_dirty = 0;
+  }
+
+  dout(10) &lt;&lt; __func__
+	   &lt;&lt; &quot; flush_mode: &quot;
+	   &lt;&lt; TierAgentState::get_flush_mode_name(agent_state-&gt;flush_mode)
+	   &lt;&lt; &quot; evict_mode: &quot;
+	   &lt;&lt; TierAgentState::get_evict_mode_name(agent_state-&gt;evict_mode)
+	   &lt;&lt; &quot; num_objects: &quot; &lt;&lt; info.stats.stats.sum.num_objects
+	   &lt;&lt; &quot; num_bytes: &quot; &lt;&lt; info.stats.stats.sum.num_bytes
+	   &lt;&lt; &quot; num_objects_dirty: &quot; &lt;&lt; info.stats.stats.sum.num_objects_dirty
+	   &lt;&lt; &quot; num_objects_omap: &quot; &lt;&lt; info.stats.stats.sum.num_objects_omap
+	   &lt;&lt; &quot; num_dirty: &quot; &lt;&lt; num_dirty
+	   &lt;&lt; &quot; num_user_objects: &quot; &lt;&lt; num_user_objects
+	   &lt;&lt; &quot; num_user_bytes: &quot; &lt;&lt; num_user_bytes
+	   &lt;&lt; &quot; num_overhead_bytes: &quot; &lt;&lt; num_overhead_bytes
+	   &lt;&lt; &quot; pool.info.target_max_bytes: &quot; &lt;&lt; pool.info.target_max_bytes
+	   &lt;&lt; &quot; pool.info.target_max_objects: &quot; &lt;&lt; pool.info.target_max_objects
+	   &lt;&lt; dendl;
+
+  // 计算脏数据的比率和数据满的比率，单位为百万分之一
+  // get dirty, full ratios
+  uint64_t dirty_micro = 0;
+  uint64_t full_micro = 0;
+  // 如果设置了 target_max_bytes，就按照字节数算
+  if (pool.info.target_max_bytes &amp;&amp; num_user_objects &gt; 0) {
+    // 首先计算每个对象的平均大小 avg_size
+    uint64_t avg_size = num_user_bytes / num_user_objects;
+    // 脏数据率 = 100w * 脏数据对象数目 * 每个对象的平均大小 / 每个PG的平均字节数
+    dirty_micro =
+      num_dirty * avg_size * 1000000 /
+      std::max&lt;uint64_t&gt;(pool.info.target_max_bytes / divisor, 1);
+    // 满数据率 = 100w * 用户对象数目 * 每个对象的平均大小 / 每个PG的平均字节数  
+    full_micro =
+      num_user_objects * avg_size * 1000000 /
+      std::max&lt;uint64_t&gt;(pool.info.target_max_bytes / divisor, 1);
+  }
+  
+  // 如果设置了 target_max_objects，就按照对象个数算
+  if (pool.info.target_max_objects &gt; 0) {
+    // 脏数据率 = 100w * 脏数据对象数目 / 每个 PG 的平均对象数目
+    uint64_t dirty_objects_micro =
+      num_dirty * 1000000 /
+      std::max&lt;uint64_t&gt;(pool.info.target_max_objects / divisor, 1);
+    // 取两种计算方式中的最大值
+    if (dirty_objects_micro &gt; dirty_micro)
+      dirty_micro = dirty_objects_micro;
+    // 满数据率 = 100w * 用户对象数目 / 每个 PG 的平均对象数目  
+    uint64_t full_objects_micro =
+      num_user_objects * 1000000 /
+      std::max&lt;uint64_t&gt;(pool.info.target_max_objects / divisor, 1);
+    if (full_objects_micro &gt; full_micro)
+      full_micro = full_objects_micro;
+  }
+  dout(20) &lt;&lt; __func__ &lt;&lt; &quot; dirty &quot; &lt;&lt; ((float)dirty_micro / 1000000.0)
+	   &lt;&lt; &quot; full &quot; &lt;&lt; ((float)full_micro / 1000000.0)
+	   &lt;&lt; dendl;
+
+  // flush mode
+  // 获取 flush_target 和 flush_high_target 参数，以及计算 flush_slop
+  uint64_t flush_target = pool.info.cache_target_dirty_ratio_micro;
+  uint64_t flush_high_target = pool.info.cache_target_dirty_high_ratio_micro;
+  uint64_t flush_slop = (float)flush_target * cct-&gt;_conf-&gt;osd_agent_slop;
+  
+  // 根据传入的参数和 flush_mode 对 target 做修正 
+  if (restart || agent_state-&gt;flush_mode == TierAgentState::FLUSH_MODE_IDLE) {
+    flush_target += flush_slop;
+    flush_high_target += flush_slop;
+  } else {
+    flush_target -= std::min(flush_target, flush_slop);
+    flush_high_target -= std::min(flush_high_target, flush_slop);
+  }
+
+  // 根据脏数据的比例，设置 flush_mode
+  if (dirty_micro &gt; flush_high_target) {
+    flush_mode = TierAgentState::FLUSH_MODE_HIGH;
+  } else if (dirty_micro &gt; flush_target || (!flush_target &amp;&amp; num_dirty &gt; 0)) {
+    flush_mode = TierAgentState::FLUSH_MODE_LOW;
+  }
+
+  // evict mode
+  // 获取 evict_target 的值，用 evict_slop 做修正
+  uint64_t evict_target = pool.info.cache_target_full_ratio_micro;
+  uint64_t evict_slop = (float)evict_target * cct-&gt;_conf-&gt;osd_agent_slop;
+  if (restart || agent_state-&gt;evict_mode == TierAgentState::EVICT_MODE_IDLE)
+    evict_target += evict_slop;
+  else
+    evict_target -= std::min(evict_target, evict_slop);
+
+  // 判定缓存满
+  // 如果 full_micro &gt; 100w，设置为EVICT_MODE_FULL，evict_effort为100w
+  if (full_micro &gt; 1000000) {
+    // evict anything clean
+    evict_mode = TierAgentState::EVICT_MODE_FULL;
+    evict_effort = 1000000;
+  } else if (full_micro &gt; evict_target) {
+    // 设置为 EVICT_MODE_SOME，部分满，需要计算 evic_effort(PG 在 agent 队列中的优先级 )
+    // set effort in [0..1] range based on where we are between
+    evict_mode = TierAgentState::EVICT_MODE_SOME;
+    uint64_t over = full_micro - evict_target;
+    uint64_t span  = 1000000 - evict_target;
+    evict_effort = std::max(over * 1000000 / span,
+			    uint64_t(1000000.0 *
+				     cct-&gt;_conf-&gt;osd_agent_min_evict_effort));
+
+    // 通过 osd_agent_quantize_effort 进行修正，使得优先级级别不会太多
+    // quantize effort to avoid too much reordering in the agent_queue.
+    uint64_t inc = cct-&gt;_conf-&gt;osd_agent_quantize_effort * 1000000;
+    ceph_assert(inc &gt; 0);
+    uint64_t was = evict_effort;
+    evict_effort -= evict_effort % inc;
+    if (evict_effort &lt; inc)
+      evict_effort = inc;
+    ceph_assert(evict_effort &gt;= inc &amp;&amp; evict_effort &lt;= 1000000);
+    dout(30) &lt;&lt; __func__ &lt;&lt; &quot; evict_effort &quot; &lt;&lt; was &lt;&lt; &quot; quantized by &quot; &lt;&lt; inc &lt;&lt; &quot; to &quot; &lt;&lt; evict_effort &lt;&lt; dendl;
+  }
+  }
+
+  skip_calc:
+  bool old_idle = agent_state-&gt;is_idle();
+  // 设置新的 flush_mode，并更新统计信息
+  if (flush_mode != agent_state-&gt;flush_mode) {
+    dout(5) &lt;&lt; __func__ &lt;&lt; &quot; flush_mode &quot;
+	    &lt;&lt; TierAgentState::get_flush_mode_name(agent_state-&gt;flush_mode)
+	    &lt;&lt; &quot; -&gt; &quot;
+	    &lt;&lt; TierAgentState::get_flush_mode_name(flush_mode)
+	    &lt;&lt; dendl;
+    recovery_state.update_stats(
+      [=](auto &amp;history, auto &amp;stats) {
+	if (flush_mode == TierAgentState::FLUSH_MODE_HIGH) {
+	  osd-&gt;agent_inc_high_count();
+	  stats.stats.sum.num_flush_mode_high = 1;
+	} else if (flush_mode == TierAgentState::FLUSH_MODE_LOW) {
+	  stats.stats.sum.num_flush_mode_low = 1;
+	}
+	if (agent_state-&gt;flush_mode == TierAgentState::FLUSH_MODE_HIGH) {
+	  osd-&gt;agent_dec_high_count();
+	  stats.stats.sum.num_flush_mode_high = 0;
+	} else if (agent_state-&gt;flush_mode == TierAgentState::FLUSH_MODE_LOW) {
+	  stats.stats.sum.num_flush_mode_low = 0;
+	}
+	return false;
+      });
+    agent_state-&gt;flush_mode = flush_mode;
+  }
+  
+  // 设置新的 evict_mode
+  if (evict_mode != agent_state-&gt;evict_mode) {
+    dout(5) &lt;&lt; __func__ &lt;&lt; &quot; evict_mode &quot;
+	    &lt;&lt; TierAgentState::get_evict_mode_name(agent_state-&gt;evict_mode)
+	    &lt;&lt; &quot; -&gt; &quot;
+	    &lt;&lt; TierAgentState::get_evict_mode_name(evict_mode)
+	    &lt;&lt; dendl;
+    // 如果evict_mode由 FULL 变为其他类型，并且 PG 的状态 Active，需要把当前的 op 以及因 cache full 而等待的操作都重新加入请求队列，设置返回值为 true
+    if (agent_state-&gt;evict_mode == TierAgentState::EVICT_MODE_FULL &amp;&amp; is_active()) {
+      // 把当前的 op 以及因 cache full 而等待的操作都重新加入请求队列
+      if (op)
+	    requeue_op(op);
+	  // 各个操作的等待队列
+      requeue_ops(waiting_for_flush);
+      requeue_ops(waiting_for_active);
+      requeue_ops(waiting_for_readable);
+      requeue_ops(waiting_for_scrub);
+      requeue_ops(waiting_for_cache_not_full);
+      objects_blocked_on_cache_full.clear();
+      // 设置返回值为 true
+      requeued = true;
+    }
+    
+    recovery_state.update_stats(
+      [=](auto &amp;history, auto &amp;stats) {
+	if (evict_mode == TierAgentState::EVICT_MODE_SOME) {
+	  stats.stats.sum.num_evict_mode_some = 1;
+	} else if (evict_mode == TierAgentState::EVICT_MODE_FULL) {
+	  stats.stats.sum.num_evict_mode_full = 1;
+	}
+	if (agent_state-&gt;evict_mode == TierAgentState::EVICT_MODE_SOME) {
+	  stats.stats.sum.num_evict_mode_some = 0;
+	} else if (agent_state-&gt;evict_mode == TierAgentState::EVICT_MODE_FULL) {
+	  stats.stats.sum.num_evict_mode_full = 0;
+	}
+	return false;
+      });
+    agent_state-&gt;evict_mode = evict_mode;
+  }
+  uint64_t old_effort = agent_state-&gt;evict_effort;
+  if (evict_effort != agent_state-&gt;evict_effort) {
+    dout(5) &lt;&lt; __func__ &lt;&lt; &quot; evict_effort &quot;
+	    &lt;&lt; ((float)agent_state-&gt;evict_effort / 1000000.0)
+	    &lt;&lt; &quot; -&gt; &quot;
+	    &lt;&lt; ((float)evict_effort / 1000000.0)
+	    &lt;&lt; dendl;
+    agent_state-&gt;evict_effort = evict_effort;
+  }
+
+  // 根据 MODE 做相应的处理
+  // NOTE: we are using evict_effort as a proxy for *all* agent effort
+  // (including flush).  This is probably fine (they should be
+  // correlated) but it is not precisely correct.
+  if (agent_state-&gt;is_idle()) {
+    if (!restart &amp;&amp; !old_idle) {
+      // 把该 PG 从 agent_queue 中删除
+      osd-&gt;agent_disable_pg(this, old_effort);
+    }
+  } else {
+    if (restart || old_idle) {
+      // 把该 PG 重新加入 agent_queue 处理队列
+      osd-&gt;agent_enable_pg(this, agent_state-&gt;evict_effort);
+    } else if (old_effort != agent_state-&gt;evict_effort) {
+      // 已经存在与队列中，调整 evict_effort 队列中的优先级
+      osd-&gt;agent_adjust_pg(this, old_effort, agent_state-&gt;evict_effort);
+    }
+  }
+  return requeued;
+}
+</code></pre>
+<h5 id="maybe_handle_cache_detail">maybe_handle_cache_detail</h5>
+<ul>
+<li><a href="https://github.com/zjs1224522500/ceph/blob/master/src/osd/PrimaryLogPG.cc#L2694-L2880">PrimaryLogPG.cc/maybe_handle_cache_detail</a></li>
+</ul>
+<pre><code class="language-C++">PrimaryLogPG::cache_result_t PrimaryLogPG::maybe_handle_cache_detail(
+  OpRequestRef op,
+  bool write_ordered,
+  ObjectContextRef obc,
+  int r, hobject_t missing_oid,
+  bool must_promote,
+  bool in_hit_set,
+  ObjectContextRef *promote_obc)
+{
+  // return quickly if caching is not enabled
+  if (pool.info.cache_mode == pg_pool_t::CACHEMODE_NONE)
+    return cache_result_t::NOOP;
+
+  if (op &amp;&amp;
+      op-&gt;get_req() &amp;&amp;
+      op-&gt;get_req()-&gt;get_type() == CEPH_MSG_OSD_OP &amp;&amp;
+      (op-&gt;get_req&lt;MOSDOp&gt;()-&gt;get_flags() &amp;
+       CEPH_OSD_FLAG_IGNORE_CACHE)) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: ignoring cache due to flag&quot; &lt;&lt; dendl;
+    return cache_result_t::NOOP;
+  }
+
+  must_promote = must_promote || op-&gt;need_promote();
+
+  if (obc)
+    dout(25) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; &quot; &quot;
+	     &lt;&lt; (obc-&gt;obs.exists ? &quot;exists&quot; : &quot;DNE&quot;)
+	     &lt;&lt; &quot; missing_oid &quot; &lt;&lt; missing_oid
+	     &lt;&lt; &quot; must_promote &quot; &lt;&lt; (int)must_promote
+	     &lt;&lt; &quot; in_hit_set &quot; &lt;&lt; (int)in_hit_set
+	     &lt;&lt; dendl;
+  else
+    dout(25) &lt;&lt; __func__ &lt;&lt; &quot; (no obc)&quot;
+	     &lt;&lt; &quot; missing_oid &quot; &lt;&lt; missing_oid
+	     &lt;&lt; &quot; must_promote &quot; &lt;&lt; (int)must_promote
+	     &lt;&lt; &quot; in_hit_set &quot; &lt;&lt; (int)in_hit_set
+	     &lt;&lt; dendl;
+
+  // if it is write-ordered and blocked, stop now
+  if (obc.get() &amp;&amp; obc-&gt;is_blocked() &amp;&amp; write_ordered) {
+    // we're already doing something with this object
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; blocked on &quot; &lt;&lt; obc-&gt;obs.oi.soid &lt;&lt; dendl;
+    return cache_result_t::NOOP;
+  }
+
+  if (r == -ENOENT &amp;&amp; missing_oid == hobject_t()) {
+    // we know this object is logically absent (e.g., an undefined clone)
+    return cache_result_t::NOOP;
+  }
+
+  // 判断该object是否在cache pool中是否命中。如果在cachepool中命中，则直接return false，然后在do_op中会直接操作cache pool后面的流程。
+  if (obc.get() &amp;&amp; obc-&gt;obs.exists) {
+    osd-&gt;logger-&gt;inc(l_osd_op_cache_hit);
+    return cache_result_t::NOOP;
+  }
+  if (!is_primary()) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; cache miss; ask the primary&quot; &lt;&lt; dendl;
+    osd-&gt;reply_op_error(op, -EAGAIN);
+    return cache_result_t::REPLIED_WITH_EAGAIN;
+  }
+
+  // 如果缓存未能命中，则获取对应的 oid 信息
+  if (missing_oid == hobject_t() &amp;&amp; obc.get()) {
+    missing_oid = obc-&gt;obs.oi.soid;
+  }
+
+  auto m = op-&gt;get_req&lt;MOSDOp&gt;();
+  const object_locator_t oloc = m-&gt;get_object_locator();
+
+  if (op-&gt;need_skip_handle_cache()) {
+    return cache_result_t::NOOP;
+  }
+
+  OpRequestRef promote_op;
+
+  // 根据不同的缓存策略分别处理
+  switch (pool.info.cache_mode) {
+  
+  // Write Back 策略
+  case pg_pool_t::CACHEMODE_WRITEBACK:
+    
+    // Cache 满
+    if (agent_state &amp;&amp;
+	agent_state-&gt;evict_mode == TierAgentState::EVICT_MODE_FULL) {
+      
+      // 读操作 Proxy Read
+      if (!op-&gt;may_write() &amp;&amp; !op-&gt;may_cache() &amp;&amp; !write_ordered &amp;&amp; !must_promote) {
+	    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; cache pool full, proxying read&quot; &lt;&lt; dendl;
+	    do_proxy_read(op);
+	    return cache_result_t::HANDLED_PROXY;
+      }
+      
+      // 写操作，等待缓存淘汰
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot; cache pool full, waiting&quot; &lt;&lt; dendl;
+      block_write_on_full_cache(missing_oid, op);
+      return cache_result_t::BLOCKED_FULL;
+    }
+
+    // Cache 未满
+    if (must_promote || (!hit_set &amp;&amp; !op-&gt;need_skip_promote())) {
+      promote_object(obc, missing_oid, oloc, op, promote_obc);
+      return cache_result_t::BLOCKED_PROMOTE;
+    }
+    
+    // 写操作 代理写
+    if (op-&gt;may_write() || op-&gt;may_cache()) {
+      do_proxy_write(op);
+
+      // Promote too? 判断是否需要从 Base 层取数据到 Cache
+      if (!op-&gt;need_skip_promote() &amp;&amp; maybe_promote(obc, missing_oid, oloc, in_hit_set, pool.info.min_write_recency_for_promote, OpRequestRef(), promote_obc)) {
+	    return cache_result_t::BLOCKED_PROMOTE;
+      }
+      return cache_result_t::HANDLED_PROXY;
+    } else {
+      // 读操作 代理读
+      do_proxy_read(op);
+
+      // Avoid duplicate promotion
+      if (obc.get() &amp;&amp; obc-&gt;is_blocked()) {
+	    if (promote_obc)
+	        *promote_obc = obc;
+        return cache_result_t::BLOCKED_PROMOTE;
+      }
+
+      // Promote too?
+      if (!op-&gt;need_skip_promote()) {
+        (void)maybe_promote(obc, missing_oid, oloc, in_hit_set,
+                            pool.info.min_read_recency_for_promote,
+                            promote_op, promote_obc);
+      }
+
+      return cache_result_t::HANDLED_PROXY;
+    }
+    
+    // 异常信息输出
+    ceph_abort_msg(&quot;unreachable&quot;);
+    return cache_result_t::NOOP;
+
+  // Read Only 策略
+  case pg_pool_t::CACHEMODE_READONLY:
+    // TODO: clean this case up
+    // 缓存中无该对象，对应地去从 Base 层 Promote 对象
+    if (!obc.get() &amp;&amp; r == -ENOENT) {
+      // we don't have the object and op's a read
+      promote_object(obc, missing_oid, oloc, op, promote_obc);
+      return cache_result_t::BLOCKED_PROMOTE;
+    }
+    
+    // 非读操作 - 写操作 重定向写操作
+    if (!r) { // it must be a write
+      do_cache_redirect(op);
+      return cache_result_t::HANDLED_REDIRECT;
+    }
+    
+    // 异常处理
+    // crap, there was a failure of some kind
+    return cache_result_t::NOOP;
+
+  // Forward 策略 已过期，由 Proxy 取代
+  case pg_pool_t::CACHEMODE_FORWARD:
+    // this mode is deprecated; proxy instead
+  
+  // Proxy 策略
+  case pg_pool_t::CACHEMODE_PROXY:
+    
+    // 可以不从 Base 层 Promote 的情况
+    if (!must_promote) {
+      if (op-&gt;may_write() || op-&gt;may_cache() || write_ordered) {
+	    // 写操作 - 代理写
+	    do_proxy_write(op);
+	    return cache_result_t::HANDLED_PROXY;
+      } else {
+        // 读操作 - 代理读
+	    do_proxy_read(op);
+	    return cache_result_t::HANDLED_PROXY;
+      }
+    }
+    
+    // ugh, we're forced to promote.
+    // 写操作 缓存已满 进入等待队列
+    if (agent_state &amp;&amp; agent_state-&gt;evict_mode == TierAgentState::EVICT_MODE_FULL) {
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot; cache pool full, waiting&quot; &lt;&lt; dendl;
+      block_write_on_full_cache(missing_oid, op);
+      return cache_result_t::BLOCKED_FULL;
+    }
+    // 缓存未满，进行 Promote
+    promote_object(obc, missing_oid, oloc, op, promote_obc);
+    return cache_result_t::BLOCKED_PROMOTE;
+
+  // READ-FORWARD 模式，已过期，由 Proxy 模式处理
+  case pg_pool_t::CACHEMODE_READFORWARD:
+    // this mode is deprecated; proxy instead
+  
+  // READ-PROXY 模式
+  case pg_pool_t::CACHEMODE_READPROXY:
+  
+    // Do writeback to the cache tier for writes
+    if (op-&gt;may_write() || write_ordered || must_promote) {
+      if (agent_state &amp;&amp; agent_state-&gt;evict_mode == TierAgentState::EVICT_MODE_FULL) {
+	    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; cache pool full, waiting&quot; &lt;&lt; dendl;
+	    block_write_on_full_cache(missing_oid, op);
+	    return cache_result_t::BLOCKED_FULL;
+      }
+      promote_object(obc, missing_oid, oloc, op, promote_obc);
+      return cache_result_t::BLOCKED_PROMOTE;
+    }
+
+    // If it is a read, we can read, we need to proxy it
+    do_proxy_read(op);
+    return cache_result_t::HANDLED_PROXY;
+
+  default:
+    ceph_abort_msg(&quot;unrecognized cache_mode&quot;);
+  }
+  return cache_result_t::NOOP;
+}
+</code></pre>
+<h5 id="图解缓存策略">图解缓存策略</h5>
+<ul>
+<li>将以上缓存策略的处理流程转换为流程图如下所示（<strong>注：流程细节随着Ceph版本的迭代已经有锁改变，此处重点关注最终的调用</strong>）：</li>
+</ul>
+<figure data-type="image" tabindex="3"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/project/cache-process.png?raw=true" alt="image" loading="lazy"></figure>
+<ul>
+<li>WriteBack 策略：</li>
+</ul>
+<figure data-type="image" tabindex="4"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/project/WriteBackProcess.png?raw=true" alt="image" loading="lazy"></figure>
+<ul>
+<li>针对其中涉及到的几个封装好的方法的操作： <strong>do_cache_redirect</strong>， <strong>do_proxy_read</strong>， <strong>do_proxy_write</strong>, <strong>promote_object</strong></li>
+</ul>
+<figure data-type="image" tabindex="5"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/project/proxy-read.png?raw=true" alt="image" loading="lazy"></figure>
+<ul>
+<li><strong>do_cache_redirect</strong> ：客户端请求cache pool，cache pool告诉客户端你应该去base pool中请求，客户端收到应答后，再次发送请求到base pool中请求数据，由base pool告诉客户端请求完成。</li>
+</ul>
+<pre><code class="language-C++">void PrimaryLogPG::do_cache_redirect(OpRequestRef op)
+{
+  // Cast the request to MOSDOp
+  auto m = op-&gt;get_req&lt;MOSDOp&gt;();
+  int flags = m-&gt;get_flags() &amp; (CEPH_OSD_FLAG_ACK|CEPH_OSD_FLAG_ONDISK);
+  
+  // 构造 MOSDOpReply 对象
+  MOSDOpReply *reply = new MOSDOpReply(m, -ENOENT, get_osdmap_epoch(), flags, false);
+  
+  // 将请求重定向到指定的存储池 Pool     
+  request_redirect_t redir(m-&gt;get_object_locator(), pool.info.tier_of);
+  reply-&gt;set_redirect(redir);
+  dout(10) &lt;&lt; &quot;sending redirect to pool &quot; &lt;&lt; pool.info.tier_of &lt;&lt; &quot; for op &quot;
+	   &lt;&lt; op &lt;&lt; dendl;
+  // 发送响应信息（包含重定向目标存储池的信息和对象的相关信息）	   
+  m-&gt;get_connection()-&gt;send_message(reply);
+  return;
+}
+</code></pre>
+<ul>
+<li><strong>do_proxy_read</strong>：客户端发送读请求到cache pool，但是未命中，则cache pool自己会发送请求到base pool中，获取数据后，由cache pool将数据发送给客户端，完成读请求。但是值得注意的是，虽然cache pool读取到了该object，但不会保存在cache pool中，下次请求仍然需要重新向basepool请求。</li>
+</ul>
+<pre><code class="language-C++">void PrimaryLogPG::do_proxy_read(OpRequestRef op, ObjectContextRef obc)
+{
+  // NOTE: non-const here because the ProxyReadOp needs mutable refs to
+  // stash the result in the request's OSDOp vector
+  MOSDOp *m = static_cast&lt;MOSDOp*&gt;(op-&gt;get_nonconst_req());
+  object_locator_t oloc;
+  hobject_t soid;
+  /* extensible tier */
+  // 获取对应的需要查询的对象的信息
+  // 判断是否包含 manifest
+  if (obc &amp;&amp; obc-&gt;obs.exists &amp;&amp; obc-&gt;obs.oi.has_manifest()) {
+    switch (obc-&gt;obs.oi.manifest.type) {
+      // 如果为 redirect 类型，获取对应的重定向 Target
+      case object_manifest_t::TYPE_REDIRECT:
+	    oloc = object_locator_t(obc-&gt;obs.oi.manifest.redirect_target);
+	    // 获取重定向 target 对应的信息
+	    soid = obc-&gt;obs.oi.manifest.redirect_target;  
+	    break;
+      default:
+	    ceph_abort_msg(&quot;unrecognized manifest type&quot;);
+    }
+  } else {
+    // 不包含 manifest
+    /* proxy */
+    soid = m-&gt;get_hobj();
+    oloc = object_locator_t(m-&gt;get_object_locator());
+    oloc.pool = pool.info.tier_of;
+  }
+  unsigned flags = CEPH_OSD_FLAG_IGNORE_CACHE | CEPH_OSD_FLAG_IGNORE_OVERLAY;
+
+  // pass through some original flags that make sense.
+  //  - leave out redirection and balancing flags since we are
+  //    already proxying through the primary
+  //  - leave off read/write/exec flags that are derived from the op
+  flags |= m-&gt;get_flags() &amp; (CEPH_OSD_FLAG_RWORDERED |
+			     CEPH_OSD_FLAG_ORDERSNAP |
+			     CEPH_OSD_FLAG_ENFORCE_SNAPC |
+			     CEPH_OSD_FLAG_MAP_SNAP_CLONE);
+
+  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; Start proxy read for &quot; &lt;&lt; *m &lt;&lt; dendl;
+
+  ProxyReadOpRef prdop(std::make_shared&lt;ProxyReadOp&gt;(op, soid, m-&gt;ops));
+
+  ObjectOperation obj_op;
+  obj_op.dup(prdop-&gt;ops);
+
+  // 判断 Cache Mode 和 缓存是否已满
+  if (pool.info.cache_mode == pg_pool_t::CACHEMODE_WRITEBACK &amp;&amp;
+      (agent_state &amp;&amp; agent_state-&gt;evict_mode != TierAgentState::EVICT_MODE_FULL)) {
+    for (unsigned i = 0; i &lt; obj_op.ops.size(); i++) {
+      ceph_osd_op op = obj_op.ops[i].op;
+      switch (op.op) {
+	case CEPH_OSD_OP_READ:
+	case CEPH_OSD_OP_SYNC_READ:
+	case CEPH_OSD_OP_SPARSE_READ:
+	case CEPH_OSD_OP_CHECKSUM:
+	case CEPH_OSD_OP_CMPEXT:
+	  op.flags = (op.flags | CEPH_OSD_OP_FLAG_FADVISE_SEQUENTIAL) &amp;
+		       ~(CEPH_OSD_OP_FLAG_FADVISE_DONTNEED | CEPH_OSD_OP_FLAG_FADVISE_NOCACHE);
+      }
+    }
+  }
+
+  C_ProxyRead *fin = new C_ProxyRead(this, soid, get_last_peering_reset(),
+				     prdop);
+  unsigned n = info.pgid.hash_to_shard(osd-&gt;m_objecter_finishers);
+  
+  // 调用 objecter read 方法读取对象数据
+  ceph_tid_t tid = osd-&gt;objecter-&gt;read(
+    soid.oid, oloc, obj_op,
+    m-&gt;get_snapid(), NULL,
+    flags, new C_OnFinisher(fin, osd-&gt;objecter_finishers[n]),
+    &amp;prdop-&gt;user_version,
+    &amp;prdop-&gt;data_offset,
+    m-&gt;get_features());
+  fin-&gt;tid = tid;
+  prdop-&gt;objecter_tid = tid;
+  proxyread_ops[tid] = prdop;
+  in_progress_proxy_ops[soid].push_back(op);
+}
+</code></pre>
+<ul>
+<li><strong>do_proxy_write</strong>：类似于 do_proxy_read</li>
+</ul>
+<pre><code class="language-C++">void PrimaryLogPG::do_proxy_write(OpRequestRef op, ObjectContextRef obc)
+{
+  // NOTE: non-const because ProxyWriteOp takes a mutable ref
+  MOSDOp *m = static_cast&lt;MOSDOp*&gt;(op-&gt;get_nonconst_req());
+  object_locator_t oloc;
+  SnapContext snapc(m-&gt;get_snap_seq(), m-&gt;get_snaps());
+  hobject_t soid;
+  /* extensible tier */
+  if (obc &amp;&amp; obc-&gt;obs.exists &amp;&amp; obc-&gt;obs.oi.has_manifest()) {
+    switch (obc-&gt;obs.oi.manifest.type) {
+      case object_manifest_t::TYPE_REDIRECT:
+	  oloc = object_locator_t(obc-&gt;obs.oi.manifest.redirect_target);
+	  soid = obc-&gt;obs.oi.manifest.redirect_target;  
+	  break;
+      default:
+	ceph_abort_msg(&quot;unrecognized manifest type&quot;);
+    }
+  } else {
+  /* proxy */
+    soid = m-&gt;get_hobj();
+    oloc = object_locator_t(m-&gt;get_object_locator());
+    oloc.pool = pool.info.tier_of;
+  }
+
+  unsigned flags = CEPH_OSD_FLAG_IGNORE_CACHE | CEPH_OSD_FLAG_IGNORE_OVERLAY;
+  if (!(op-&gt;may_write() || op-&gt;may_cache())) {
+    flags |= CEPH_OSD_FLAG_RWORDERED;
+  }
+  if (op-&gt;allows_returnvec()) {
+    flags |= CEPH_OSD_FLAG_RETURNVEC;
+  }
+
+  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; Start proxy write for &quot; &lt;&lt; *m &lt;&lt; dendl;
+
+  ProxyWriteOpRef pwop(std::make_shared&lt;ProxyWriteOp&gt;(op, soid, m-&gt;ops, m-&gt;get_reqid()));
+  pwop-&gt;ctx = new OpContext(op, m-&gt;get_reqid(), &amp;pwop-&gt;ops, this);
+  pwop-&gt;mtime = m-&gt;get_mtime();
+
+  ObjectOperation obj_op;
+  obj_op.dup(pwop-&gt;ops);
+
+  C_ProxyWrite_Commit *fin = new C_ProxyWrite_Commit(
+      this, soid, get_last_peering_reset(), pwop);
+  unsigned n = info.pgid.hash_to_shard(osd-&gt;m_objecter_finishers);
+  ceph_tid_t tid = osd-&gt;objecter-&gt;mutate(
+    soid.oid, oloc, obj_op, snapc,
+    ceph::real_clock::from_ceph_timespec(pwop-&gt;mtime),
+    flags, new C_OnFinisher(fin, osd-&gt;objecter_finishers[n]),
+    &amp;pwop-&gt;user_version, pwop-&gt;reqid);
+  fin-&gt;tid = tid;
+  pwop-&gt;objecter_tid = tid;
+  proxywrite_ops[tid] = pwop;
+  in_progress_proxy_ops[soid].push_back(op);
+}
+</code></pre>
+<ul>
+<li><strong>promote_object</strong>：当客户端发送请求到cache pool中，但是cache pool未命中，cache pool会选择将该object从base pool中提升到cache pool中，然后在cache pool进行读写操作，操作完成后告知客户端请求完成，在cache pool会缓存该object，下次直接在cache中处理，和proxy_read存在的区别。</li>
+</ul>
+<pre><code class="language-C++">void PrimaryLogPG::promote_object(ObjectContextRef obc,
+				  const hobject_t&amp; missing_oid,
+				  const object_locator_t&amp; oloc,
+				  OpRequestRef op,
+				  ObjectContextRef *promote_obc)
+{
+  hobject_t hoid = obc ? obc-&gt;obs.oi.soid : missing_oid;
+  ceph_assert(hoid != hobject_t());
+  
+  // 等待 Scrub 操作完成
+  if (write_blocked_by_scrub(hoid)) {
+    dout(10) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; hoid
+	     &lt;&lt; &quot; blocked by scrub&quot; &lt;&lt; dendl;
+    if (op) {
+      waiting_for_scrub.push_back(op);
+      op-&gt;mark_delayed(&quot;waiting for scrub&quot;);
+      dout(10) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; hoid
+	       &lt;&lt; &quot; placing op in waiting_for_scrub&quot; &lt;&lt; dendl;
+    } else {
+      dout(10) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; hoid
+	       &lt;&lt; &quot; no op, dropping on the floor&quot; &lt;&lt; dendl;
+    }
+    return;
+  }
+  if (op &amp;&amp; !check_laggy_requeue(op)) {
+    return;
+  }
+  // Context为空创建一个新的Context
+  if (!obc) { // we need to create an ObjectContext
+    ceph_assert(missing_oid != hobject_t());
+    obc = get_object_context(missing_oid, true);
+  }
+  if (promote_obc)
+    *promote_obc = obc;
+
+  /*
+   * Before promote complete, if there are  proxy-reads for the object,
+   * for this case we don't use DONTNEED.
+   */
+  unsigned src_fadvise_flags = LIBRADOS_OP_FLAG_FADVISE_SEQUENTIAL;
+  // 获取该对象对应的 proxy_read 等待队列的遍历器
+  map&lt;hobject_t, list&lt;OpRequestRef&gt;&gt;::iterator q = in_progress_proxy_ops.find(obc-&gt;obs.oi.soid);
+  if (q == in_progress_proxy_ops.end()) {
+    src_fadvise_flags |= LIBRADOS_OP_FLAG_FADVISE_DONTNEED;
+  }
+
+  // 构造 PromoteCallback
+  CopyCallback *cb;
+  object_locator_t my_oloc;
+  hobject_t src_hoid;
+  
+  // 判断是否有 manifest
+  if (!obc-&gt;obs.oi.has_manifest()) {
+    my_oloc = oloc;
+    my_oloc.pool = pool.info.tier_of;
+    src_hoid = obc-&gt;obs.oi.soid;
+    cb = new PromoteCallback(obc, this);
+  } else {
+    // 有manifest，判断类型是否为 chunk_data
+    if (obc-&gt;obs.oi.manifest.is_chunked()) {
+      src_hoid = obc-&gt;obs.oi.soid;
+      cb = new PromoteManifestCallback(obc, this);
+    } else if (obc-&gt;obs.oi.manifest.is_redirect()) {
+      // mainfest 类型为 redirect
+      object_locator_t src_oloc(obc-&gt;obs.oi.manifest.redirect_target);
+      my_oloc = src_oloc;
+      src_hoid = obc-&gt;obs.oi.manifest.redirect_target;
+      cb = new PromoteCallback(obc, this);
+    } else {
+      ceph_abort_msg(&quot;unrecognized manifest type&quot;);
+    }
+  }
+
+  unsigned flags = CEPH_OSD_COPY_FROM_FLAG_IGNORE_OVERLAY |
+                   CEPH_OSD_COPY_FROM_FLAG_IGNORE_CACHE |
+                   CEPH_OSD_COPY_FROM_FLAG_MAP_SNAP_CLONE |
+                   CEPH_OSD_COPY_FROM_FLAG_RWORDERED;
+                   
+  // 复制对象数据
+  start_copy(cb, obc, src_hoid, my_oloc, 0, flags,
+	     obc-&gt;obs.oi.soid.snap == CEPH_NOSNAP,
+	     src_fadvise_flags, 0);
+
+  ceph_assert(obc-&gt;is_blocked());
+
+  if (op)
+    wait_for_blocked_object(obc-&gt;obs.oi.soid, op);
+
+  recovery_state.update_stats(
+    [](auto &amp;history, auto &amp;stats) {
+      stats.stats.sum.num_promote++;
+      return false;
+    });
+}
+
+void PrimaryLogPG::start_copy(CopyCallback *cb, ObjectContextRef obc,
+			      hobject_t src, object_locator_t oloc,
+			      version_t version, unsigned flags,
+			      bool mirror_snapset,
+			      unsigned src_obj_fadvise_flags,
+			      unsigned dest_obj_fadvise_flags)
+{
+  const hobject_t&amp; dest = obc-&gt;obs.oi.soid;
+  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; dest
+	   &lt;&lt; &quot; from &quot; &lt;&lt; src &lt;&lt; &quot; &quot; &lt;&lt; oloc &lt;&lt; &quot; v&quot; &lt;&lt; version
+	   &lt;&lt; &quot; flags &quot; &lt;&lt; flags
+	   &lt;&lt; (mirror_snapset ? &quot; mirror_snapset&quot; : &quot;&quot;)
+	   &lt;&lt; dendl;
+
+  ceph_assert(!mirror_snapset || src.snap == CEPH_NOSNAP);
+
+  // cancel a previous in-progress copy?
+  if (copy_ops.count(dest)) {
+    // FIXME: if the src etc match, we could avoid restarting from the
+    // beginning.
+    CopyOpRef cop = copy_ops[dest];
+    vector&lt;ceph_tid_t&gt; tids;
+    cancel_copy(cop, false, &amp;tids);
+    osd-&gt;objecter-&gt;op_cancel(tids, -ECANCELED);
+  }
+
+  // 封装 cop 对象
+  CopyOpRef cop(std::make_shared&lt;CopyOp&gt;(cb, obc, src, oloc, version, flags,
+			   mirror_snapset, src_obj_fadvise_flags,
+			   dest_obj_fadvise_flags));
+  copy_ops[dest] = cop;
+  obc-&gt;start_block();
+
+  if (!obc-&gt;obs.oi.has_manifest()) {
+    // 执行实际的 copy 操作
+    _copy_some(obc, cop);
+  } else {
+    if (obc-&gt;obs.oi.manifest.is_redirect()) {
+      _copy_some(obc, cop);
+    } else if (obc-&gt;obs.oi.manifest.is_chunked()) {
+      auto p = obc-&gt;obs.oi.manifest.chunk_map.begin();
+      _copy_some_manifest(obc, cop, p-&gt;first);
+    } else {
+      ceph_abort_msg(&quot;unrecognized manifest type&quot;);
+    }
+  }
+}
+
+void PrimaryLogPG::_copy_some(ObjectContextRef obc, CopyOpRef cop)
+{
+  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; *obc &lt;&lt; &quot; &quot; &lt;&lt; cop &lt;&lt; dendl;
+
+  unsigned flags = 0;
+  if (cop-&gt;flags &amp; CEPH_OSD_COPY_FROM_FLAG_FLUSH)
+    flags |= CEPH_OSD_FLAG_FLUSH;
+  if (cop-&gt;flags &amp; CEPH_OSD_COPY_FROM_FLAG_IGNORE_CACHE)
+    flags |= CEPH_OSD_FLAG_IGNORE_CACHE;
+  if (cop-&gt;flags &amp; CEPH_OSD_COPY_FROM_FLAG_IGNORE_OVERLAY)
+    flags |= CEPH_OSD_FLAG_IGNORE_OVERLAY;
+  if (cop-&gt;flags &amp; CEPH_OSD_COPY_FROM_FLAG_MAP_SNAP_CLONE)
+    flags |= CEPH_OSD_FLAG_MAP_SNAP_CLONE;
+  if (cop-&gt;flags &amp; CEPH_OSD_COPY_FROM_FLAG_RWORDERED)
+    flags |= CEPH_OSD_FLAG_RWORDERED;
+
+  C_GatherBuilder gather(cct);
+
+  if (cop-&gt;cursor.is_initial() &amp;&amp; cop-&gt;mirror_snapset) {
+    // list snaps too.
+    ceph_assert(cop-&gt;src.snap == CEPH_NOSNAP);
+    ObjectOperation op;
+    op.list_snaps(&amp;cop-&gt;results.snapset, NULL);
+    ceph_tid_t tid = osd-&gt;objecter-&gt;read(cop-&gt;src.oid, cop-&gt;oloc, op,
+				    CEPH_SNAPDIR, NULL,
+				    flags, gather.new_sub(), NULL);
+    cop-&gt;objecter_tid2 = tid;
+  }
+
+  ObjectOperation op;
+  if (cop-&gt;results.user_version) {
+    op.assert_version(cop-&gt;results.user_version);
+  } else {
+    // we should learn the version after the first chunk, if we didn't know
+    // it already!
+    ceph_assert(cop-&gt;cursor.is_initial());
+  }
+  op.copy_get(&amp;cop-&gt;cursor, get_copy_chunk_size(),
+	      &amp;cop-&gt;results.object_size, &amp;cop-&gt;results.mtime,
+	      &amp;cop-&gt;attrs, &amp;cop-&gt;data, &amp;cop-&gt;omap_header, &amp;cop-&gt;omap_data,
+	      &amp;cop-&gt;results.snaps, &amp;cop-&gt;results.snap_seq,
+	      &amp;cop-&gt;results.flags,
+	      &amp;cop-&gt;results.source_data_digest,
+	      &amp;cop-&gt;results.source_omap_digest,
+	      &amp;cop-&gt;results.reqids,
+	      &amp;cop-&gt;results.reqid_return_codes,
+	      &amp;cop-&gt;results.truncate_seq,
+	      &amp;cop-&gt;results.truncate_size,
+	      &amp;cop-&gt;rval);
+  op.set_last_op_flags(cop-&gt;src_obj_fadvise_flags);
+
+  C_Copyfrom *fin = new C_Copyfrom(this, obc-&gt;obs.oi.soid,
+				   get_last_peering_reset(), cop);
+  unsigned n = info.pgid.hash_to_shard(osd-&gt;m_objecter_finishers);
+  gather.set_finisher(new C_OnFinisher(fin,
+				       osd-&gt;objecter_finishers[n]));
+
+  // 调用 objecter-&gt;read方法进行读取
+  ceph_tid_t tid = osd-&gt;objecter-&gt;read(cop-&gt;src.oid, cop-&gt;oloc, op,
+				  cop-&gt;src.snap, NULL,
+				  flags,
+				  gather.new_sub(),
+				  // discover the object version if we don't know it yet
+				  cop-&gt;results.user_version ? NULL : &amp;cop-&gt;results.user_version);
+  fin-&gt;tid = tid;
+  cop-&gt;objecter_tid = tid;
+  gather.activate();
+}
+</code></pre>
+<ul>
+<li>无论是 Proxy Read 还是 Promote Object 操作最终都是调用了 objecter 的 read 方法来从base storage层读取对象数据</li>
+</ul>
+<h3 id="cache-flush-evict">Cache flush &amp; evict</h3>
+<h4 id="flush">flush</h4>
+<ul>
+<li>cache pool 空间不够时，需要选择一些对象回刷到数据层</li>
+</ul>
+<h4 id="evict">evict</h4>
+<ul>
+<li>将一些 clean 对象从缓存层中剔除。以释放更多的缓存空间</li>
+</ul>
+<h5 id="data-structure-2">Data Structure</h5>
+<ul>
+<li>OSDServices ：定义了 AgentThread 线程，用于完成 flush 和 evict 操作</li>
+</ul>
+<pre><code class="language-C++">class OSDService {
+  ....
+  // -- agent shared state --
+  // agent 线程锁，保护下面所有数据结构
+  ceph::mutex agent_lock = ceph::make_mutex(&quot;OSDService::agent_lock&quot;);
+  // 线程相应的条件变量
+  ceph::condition_variable agent_cond;
+  
+  // 所有淘汰或者回刷所需的 PG 集合，根据 PG 集合的优先级，保存在不同的 map 中
+  map&lt;uint64_t, set&lt;PGRef&gt; &gt; agent_queue;
+  
+  // 当前在扫描的 PG 集合的一个位置，只有 agent_valid_iterator 为 true 时，这个指针才有效，否则从集合的起始处开始扫描
+  set&lt;PGRef&gt;::iterator agent_queue_pos;
+  bool agent_valid_iterator;
+  
+  // 所有正在进行的回刷和淘汰操作
+  int agent_ops;
+  
+  // once have one pg with FLUSH_MODE_HIGH then flush objects with high speed
+  int flush_mode_high_count;
+  
+  // 所有正在进行的 agent 操作（回刷或者淘汰）的对象
+  set&lt;hobject_t&gt; agent_oids;
+  
+  // agent 是否有效
+  bool agent_active;
+  
+  // agent 线程
+  struct AgentThread : public Thread {
+    OSDService *osd;
+    explicit AgentThread(OSDService *o) : osd(o) {}
+    void *entry() override {
+      osd-&gt;agent_entry();
+      return NULL;
+    }
+  } agent_thread;
+  
+  // agent 停止的标志
+  bool agent_stop_flag;
+  ceph::mutex agent_timer_lock = ceph::make_mutex(&quot;OSDService::agent_timer_lock&quot;);
+  
+  // agent 相关定时器：当扫描一个 PG 对象时，该对象既没有剔除操作，也没有回刷操作，就停止 PG 的扫描，把该 PG 加入到定时器中，5S 后继续
+  SafeTimer agent_timer;
+}
+</code></pre>
+<ul>
+<li>TierAgentState：用于保存 PG 相关的 agent 信息</li>
+</ul>
+<h5 id="flushevict-执行入口">flush/evict 执行入口</h5>
+<ul>
+<li>agent_entry：agent_entry 是 agent_thread 的入口函数，它在后台完成 flush 操作和 evict 操作</li>
+</ul>
+<pre><code class="language-C++">void OSDService::agent_entry()
+{
+  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; start&quot; &lt;&lt; dendl;
+  // 加锁，保护相关字段
+  std::unique_lock agent_locker{agent_lock};
+
+  while (!agent_stop_flag) {
+    if (agent_queue.empty()) {
+      // 扫描 agent_queue 队列，如果为空则在 agent_cond 上等待
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot; empty queue&quot; &lt;&lt; dendl;
+      agent_cond.wait(agent_locker);
+      continue;
+    }
+    
+    uint64_t level = agent_queue.rbegin()-&gt;first;
+    // 从队列中取出优先级最高的 PG 的集合 top
+    set&lt;PGRef&gt;&amp; top = agent_queue.rbegin()-&gt;second;
+    dout(10) &lt;&lt; __func__
+	     &lt;&lt; &quot; tiers &quot; &lt;&lt; agent_queue.size()
+	     &lt;&lt; &quot;, top is &quot; &lt;&lt; level
+	     &lt;&lt; &quot; with pgs &quot; &lt;&lt; top.size()
+	     &lt;&lt; &quot;, ops &quot; &lt;&lt; agent_ops &lt;&lt; &quot;/&quot;
+	     &lt;&lt; cct-&gt;_conf-&gt;osd_agent_max_ops
+	     &lt;&lt; (agent_active ? &quot; active&quot; : &quot; NOT ACTIVE&quot;)
+	     &lt;&lt; dendl;
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; oids &quot; &lt;&lt; agent_oids &lt;&lt; dendl;
+    
+    // 获取 agent 操作的最大数目 max 值和 agent_flush_quota
+    int max = cct-&gt;_conf-&gt;osd_agent_max_ops - agent_ops;
+    int agent_flush_quota = max;
+    if (!flush_mode_high_count)
+      agent_flush_quota = cct-&gt;_conf-&gt;osd_agent_max_low_ops - agent_ops;
+    if (agent_flush_quota &lt;= 0 || top.empty() || !agent_active) {
+      agent_cond.wait(agent_locker);
+      continue;
+    }
+
+    // 迭代器获取 PG 
+    if (!agent_valid_iterator || agent_queue_pos == top.end()) {
+      agent_queue_pos = top.begin();
+      agent_valid_iterator = true;
+    }
+    PGRef pg = *agent_queue_pos;
+    dout(10) &lt;&lt; &quot;high_count &quot; &lt;&lt; flush_mode_high_count
+	     &lt;&lt; &quot; agent_ops &quot; &lt;&lt; agent_ops
+	     &lt;&lt; &quot; flush_quota &quot; &lt;&lt; agent_flush_quota &lt;&lt; dendl;
+    agent_locker.unlock();
+    
+    // 调用 pg-&gt;agent_work()，正常返回 true，若返回 false，则处于 delay，需要加入定时器
+    if (!pg-&gt;agent_work(max, agent_flush_quota)) {
+      dout(10) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; pg-&gt;pg_id
+	&lt;&lt; &quot; no agent_work, delay for &quot; &lt;&lt; cct-&gt;_conf-&gt;osd_agent_delay_time
+	&lt;&lt; &quot; seconds&quot; &lt;&lt; dendl;
+
+      osd-&gt;logger-&gt;inc(l_osd_tier_delay);
+      // Queue a timer to call agent_choose_mode for this pg in 5 seconds
+      std::lock_guard timer_locker{agent_timer_lock};
+      Context *cb = new AgentTimeoutCB(pg);
+      agent_timer.add_event_after(cct-&gt;_conf-&gt;osd_agent_delay_time, cb);
+    }
+    agent_locker.lock();
+  }
+  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; finish&quot; &lt;&lt; dendl;
+}
+</code></pre>
+<ul>
+<li>agent_work：完成一个 PG 内的 evict 操作和 flush 操作</li>
+</ul>
+<pre><code class="language-C++">bool PrimaryLogPG::agent_work(int start_max, int agent_flush_quota)
+{
+  // 加锁
+  std::scoped_lock locker{*this};
+  if (!agent_state) {
+    dout(10) &lt;&lt; __func__ &lt;&lt; &quot; no agent state, stopping&quot; &lt;&lt; dendl;
+    return true;
+  }
+
+  ceph_assert(!recovery_state.is_deleting());
+
+  if (agent_state-&gt;is_idle()) {
+    dout(10) &lt;&lt; __func__ &lt;&lt; &quot; idle, stopping&quot; &lt;&lt; dendl;
+    return true;
+  }
+
+  osd-&gt;logger-&gt;inc(l_osd_agent_wake);
+
+  dout(10) &lt;&lt; __func__
+	   &lt;&lt; &quot; max &quot; &lt;&lt; start_max
+	   &lt;&lt; &quot;, flush &quot; &lt;&lt; agent_state-&gt;get_flush_mode_name()
+	   &lt;&lt; &quot;, evict &quot; &lt;&lt; agent_state-&gt;get_evict_mode_name()
+	   &lt;&lt; &quot;, pos &quot; &lt;&lt; agent_state-&gt;position
+	   &lt;&lt; dendl;
+  ceph_assert(is_primary());
+  ceph_assert(is_active());
+
+  // 加载 hit_set 历史对象到内存
+  agent_load_hit_sets();
+
+  const pg_pool_t *base_pool = get_osdmap()-&gt;get_pg_pool(pool.info.tier_of);
+  ceph_assert(base_pool);
+
+  int ls_min = 1;
+  int ls_max = cct-&gt;_conf-&gt;osd_pool_default_cache_max_evict_check_size;
+
+  // list some objects.  this conveniently lists clones (oldest to
+  // newest) before heads... the same order we want to flush in.
+  //
+  // NOTE: do not flush the Sequencer.  we will assume that the
+  // listing we get back is imprecise.
+  vector&lt;hobject_t&gt; ls;
+  hobject_t next;
+  
+  // 扫描本 PG 的对象，从 agent_state-&gt;position 开始扫描，结果保存在 ls 中
+  int r = pgbackend-&gt;objects_list_partial(agent_state-&gt;position, ls_min, ls_max, &amp;ls, &amp;next);
+  ceph_assert(r &gt;= 0);
+  dout(20) &lt;&lt; __func__ &lt;&lt; &quot; got &quot; &lt;&lt; ls.size() &lt;&lt; &quot; objects&quot; &lt;&lt; dendl;
+  int started = 0;
+  
+  // 对扫描的 ls 对象做相应的检查
+  for (vector&lt;hobject_t&gt;::iterator p = ls.begin();
+       p != ls.end();
+       ++p) {
+       
+    // 跳过 hitset   
+    if (p-&gt;nspace == cct-&gt;_conf-&gt;osd_hit_set_namespace) {
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (hit set) &quot; &lt;&lt; *p &lt;&lt; dendl;
+      osd-&gt;logger-&gt;inc(l_osd_agent_skip);
+      continue;
+    }
+    
+    // 跳过 degraded 对象
+    if (is_degraded_or_backfilling_object(*p)) {
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (degraded) &quot; &lt;&lt; *p &lt;&lt; dendl;
+      osd-&gt;logger-&gt;inc(l_osd_agent_skip);
+      continue;
+    }
+    
+    // 跳过 missing 对象
+    if (is_missing_object(p-&gt;get_head())) {
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (missing head) &quot; &lt;&lt; *p &lt;&lt; dendl;
+      osd-&gt;logger-&gt;inc(l_osd_agent_skip);
+      continue;
+    }
+    
+    // 跳过 object_context 不存在的对象
+    ObjectContextRef obc = get_object_context(*p, false, NULL);
+    if (!obc) {
+      // we didn't flush; we may miss something here.
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (no obc) &quot; &lt;&lt; *p &lt;&lt; dendl;
+      osd-&gt;logger-&gt;inc(l_osd_agent_skip);
+      continue;
+    }
+    
+    // 跳过对象的 obs
+    if (!obc-&gt;obs.exists) {
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (dne) &quot; &lt;&lt; obc-&gt;obs.oi.soid &lt;&lt; dendl;
+      osd-&gt;logger-&gt;inc(l_osd_agent_skip);
+      continue;
+    }
+    
+    // 跳过正在进行 scrub 操作的对象
+    if (range_intersects_scrub(obc-&gt;obs.oi.soid,
+			       obc-&gt;obs.oi.soid.get_head())) {
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (scrubbing) &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+      osd-&gt;logger-&gt;inc(l_osd_agent_skip);
+      continue;
+    }
+    
+    // 跳过已经被阻塞的对象
+    if (obc-&gt;is_blocked()) {
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (blocked) &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+      osd-&gt;logger-&gt;inc(l_osd_agent_skip);
+      continue;
+    }
+    
+    // 跳过有正在读写请求的对象
+    if (obc-&gt;is_request_pending()) {
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (request pending) &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+      osd-&gt;logger-&gt;inc(l_osd_agent_skip);
+      continue;
+    }
+
+    // 如果不支持 omap，跳过有 omap 的对象
+    // be careful flushing omap to an EC pool.
+    if (!base_pool-&gt;supports_omap() &amp;&amp;
+	obc-&gt;obs.oi.is_omap()) {
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (omap to EC) &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+      osd-&gt;logger-&gt;inc(l_osd_agent_skip);
+      continue;
+    }
+
+    // agent_maybe_evict 完成对象的 evict 操作
+    if (agent_state-&gt;evict_mode != TierAgentState::EVICT_MODE_IDLE &amp;&amp;
+	agent_maybe_evict(obc, false))
+      ++started;
+    // agent_maybe_flush 完成一个对象的 flush 操作  
+    else if (agent_state-&gt;flush_mode != TierAgentState::FLUSH_MODE_IDLE &amp;&amp;
+             agent_flush_quota &gt; 0 &amp;&amp; agent_maybe_flush(obc)) {
+      ++started;
+      --agent_flush_quota;
+    }
+    if (started &gt;= start_max) {
+      // If finishing early, set &quot;next&quot; to the next object
+      if (++p != ls.end())
+	next = *p;
+      break;
+    }
+  }
+
+  if (++agent_state-&gt;hist_age &gt; cct-&gt;_conf-&gt;osd_agent_hist_halflife) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; resetting atime and temp histograms&quot; &lt;&lt; dendl;
+    agent_state-&gt;hist_age = 0;
+    agent_state-&gt;temp_hist.decay();
+  }
+
+  // Total objects operated on so far
+  int total_started = agent_state-&gt;started + started;
+  bool need_delay = false;
+
+  dout(20) &lt;&lt; __func__ &lt;&lt; &quot; start pos &quot; &lt;&lt; agent_state-&gt;position
+    &lt;&lt; &quot; next start pos &quot; &lt;&lt; next
+    &lt;&lt; &quot; started &quot; &lt;&lt; total_started &lt;&lt; dendl;
+
+  // See if we've made a full pass over the object hash space
+  // This might check at most ls_max objects a second time to notice that
+  // we've checked every objects at least once.
+  if (agent_state-&gt;position &lt; agent_state-&gt;start &amp;&amp;
+      next &gt;= agent_state-&gt;start) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; wrap around &quot; &lt;&lt; agent_state-&gt;start &lt;&lt; dendl;
+    if (total_started == 0)
+      need_delay = true;
+    else
+      total_started = 0;
+    agent_state-&gt;start = next;
+  }
+  agent_state-&gt;started = total_started;
+
+  // See if we are starting from beginning
+  if (next.is_max())
+    agent_state-&gt;position = hobject_t();
+  else
+    agent_state-&gt;position = next;
+
+  // Discard old in memory HitSets
+  hit_set_in_memory_trim(pool.info.hit_set_count);
+
+  if (need_delay) {
+    ceph_assert(agent_state-&gt;delaying == false);
+    agent_delay();
+    return false;
+  }
+  
+  // 重新计算 agent 的 evict 和 flush 值
+  agent_choose_mode();
+  return true;
+}
+</code></pre>
+<h5 id="真正执行操作的方法">真正执行操作的方法</h5>
+<ul>
+<li>evict：agent_maybe_evict</li>
+</ul>
+<pre><code class="language-C++">bool PrimaryLogPG::agent_maybe_evict(ObjectContextRef&amp; obc, bool after_flush)
+{
+  const hobject_t&amp; soid = obc-&gt;obs.oi.soid;
+  // 检查对象的状态
+  if (!after_flush &amp;&amp; obc-&gt;obs.oi.is_dirty()) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (dirty) &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+    return false;
+  }
+  // This is already checked by agent_work() which passes after_flush = false
+  if (after_flush &amp;&amp; range_intersects_scrub(soid, soid.get_head())) {
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (scrubbing) &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+      return false;
+  }
+  if (!obc-&gt;obs.oi.watchers.empty()) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (watchers) &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+    return false;
+  }
+  if (obc-&gt;is_blocked()) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (blocked) &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+    return false;
+  }
+  if (obc-&gt;obs.oi.is_cache_pinned()) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (cache_pinned) &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+    return false;
+  }
+
+  if (soid.snap == CEPH_NOSNAP) {
+    int result = _verify_no_head_clones(soid, obc-&gt;ssc-&gt;snapset);
+    if (result &lt; 0) {
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (clones) &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+      return false;
+    }
+  }
+
+  // 检查 evict 模式是否为 EVICT_MODE_SOME 模式
+  if (agent_state-&gt;evict_mode != TierAgentState::EVICT_MODE_FULL) {
+    
+    // 检查 clean 的时间是否大于设置的最小淘汰时间
+    // is this object old than cache_min_evict_age?
+    utime_t now = ceph_clock_now();
+    utime_t ob_local_mtime;
+    if (obc-&gt;obs.oi.local_mtime != utime_t()) {
+      ob_local_mtime = obc-&gt;obs.oi.local_mtime;
+    } else {
+      ob_local_mtime = obc-&gt;obs.oi.mtime;
+    }
+    if (ob_local_mtime + utime_t(pool.info.cache_min_evict_age, 0) &gt; now) {
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (too young) &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+      osd-&gt;logger-&gt;inc(l_osd_agent_skip);
+      return false;
+    }
+    
+    // 计算对象的热度值
+    // is this object old and/or cold enough?
+    int temp = 0;
+    uint64_t temp_upper = 0, temp_lower = 0;
+    if (hit_set)
+      agent_estimate_temp(soid, &amp;temp);
+    agent_state-&gt;temp_hist.add(temp);
+    agent_state-&gt;temp_hist.get_position_micro(temp, &amp;temp_lower, &amp;temp_upper);
+
+    dout(20) &lt;&lt; __func__
+	     &lt;&lt; &quot; temp &quot; &lt;&lt; temp
+	     &lt;&lt; &quot; pos &quot; &lt;&lt; temp_lower &lt;&lt; &quot;-&quot; &lt;&lt; temp_upper
+	     &lt;&lt; &quot;, evict_effort &quot; &lt;&lt; agent_state-&gt;evict_effort
+	     &lt;&lt; dendl;
+    dout(30) &lt;&lt; &quot;agent_state:\n&quot;;
+    Formatter *f = Formatter::create(&quot;&quot;);
+    f-&gt;open_object_section(&quot;agent_state&quot;);
+    agent_state-&gt;dump(f);
+    f-&gt;close_section();
+    f-&gt;flush(*_dout);
+    delete f;
+    *_dout &lt;&lt; dendl;
+
+    if (1000000 - temp_upper &gt;= agent_state-&gt;evict_effort)
+      return false;
+  }
+
+
+  // evict_mode 为 FULL 模式，调用函数 _delete_oid 删除该对象
+  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; evicting &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+  OpContextUPtr ctx = simple_opc_create(obc);
+
+  auto null_op_req = OpRequestRef();
+  if (!ctx-&gt;lock_manager.get_lock_type(
+	ObjectContext::RWState::RWWRITE,
+	obc-&gt;obs.oi.soid,
+	obc,
+	null_op_req)) {
+    close_op_ctx(ctx.release());
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (cannot get lock) &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+    return false;
+  }
+
+  osd-&gt;agent_start_evict_op();
+  ctx-&gt;register_on_finish(
+    [this]() {
+      osd-&gt;agent_finish_evict_op();
+    });
+
+  ctx-&gt;at_version = get_next_version();
+  ceph_assert(ctx-&gt;new_obs.exists);
+  
+  // 删除该对象
+  int r = _delete_oid(ctx.get(), true, false);
+  if (obc-&gt;obs.oi.is_omap())
+    ctx-&gt;delta_stats.num_objects_omap--;
+  ctx-&gt;delta_stats.num_evict++;
+  ctx-&gt;delta_stats.num_evict_kb += shift_round_up(obc-&gt;obs.oi.size, 10);
+  if (obc-&gt;obs.oi.is_dirty())
+    --ctx-&gt;delta_stats.num_objects_dirty;
+  ceph_assert(r == 0);
+  finish_ctx(ctx.get(), pg_log_entry_t::DELETE);
+  
+  // 发起实际的删除请求
+  simple_opc_submit(std::move(ctx));
+  osd-&gt;logger-&gt;inc(l_osd_tier_evict);
+  osd-&gt;logger-&gt;inc(l_osd_agent_evict);
+  return true;
+}
+</code></pre>
+<ul>
+<li>flush：该方法完成一个对象的 flush 操作（非最底层的实现）</li>
+</ul>
+<pre><code class="language-C++">bool PrimaryLogPG::agent_maybe_flush(ObjectContextRef&amp; obc)
+{
+  // 检查对象是否为脏数据
+  if (!obc-&gt;obs.oi.is_dirty()) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (clean) &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+    osd-&gt;logger-&gt;inc(l_osd_agent_skip);
+    return false;
+  }
+  
+  // 检查对象是否为 cache_pinned 状态
+  if (obc-&gt;obs.oi.is_cache_pinned()) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (cache_pinned) &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+    osd-&gt;logger-&gt;inc(l_osd_agent_skip);
+    return false;
+  }
+
+  // 统计时间
+  utime_t now = ceph_clock_now();
+  utime_t ob_local_mtime;
+  if (obc-&gt;obs.oi.local_mtime != utime_t()) {
+    ob_local_mtime = obc-&gt;obs.oi.local_mtime;
+  } else {
+    ob_local_mtime = obc-&gt;obs.oi.mtime;
+  }
+  // 判断当前 evict 状态是否为 full
+  bool evict_mode_full =
+    (agent_state-&gt;evict_mode == TierAgentState::EVICT_MODE_FULL);
+  
+  // 未满则检查该对象作为脏数据的时间，和最短刷回时间进行对比
+  if (!evict_mode_full &amp;&amp;
+      obc-&gt;obs.oi.soid.snap == CEPH_NOSNAP &amp;&amp;  // snaps immutable; don't delay
+      (ob_local_mtime + utime_t(pool.info.cache_min_flush_age, 0) &gt; now)) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (too young) &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+    osd-&gt;logger-&gt;inc(l_osd_agent_skip);
+    return false;
+  }
+
+  // 检查对象是否处于 activate 状态
+  if (osd-&gt;agent_is_active_oid(obc-&gt;obs.oi.soid)) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; skip (flushing) &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+    osd-&gt;logger-&gt;inc(l_osd_agent_skip);
+    return false;
+  }
+
+  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; flushing &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+
+  // FIXME: flush anything dirty, regardless of what distribution of
+  // ages we expect.
+
+  hobject_t oid = obc-&gt;obs.oi.soid;
+  osd-&gt;agent_start_op(oid);
+  // no need to capture a pg ref, can't outlive fop or ctx
+  std::function&lt;void()&gt; on_flush = [this, oid]() {
+    osd-&gt;agent_finish_op(oid);
+  };
+
+  // 调用函数 start_flush   完成对象的刷回操作
+  int result = start_flush(
+    OpRequestRef(), obc, false, NULL,
+    on_flush);
+  if (result != -EINPROGRESS) {
+    on_flush();
+    dout(10) &lt;&lt; __func__ &lt;&lt; &quot; start_flush() failed &quot; &lt;&lt; obc-&gt;obs.oi
+      &lt;&lt; &quot; with &quot; &lt;&lt; result &lt;&lt; dendl;
+    osd-&gt;logger-&gt;inc(l_osd_agent_skip);
+    return false;
+  }
+
+  osd-&gt;logger-&gt;inc(l_osd_agent_flush);
+  return true;
+}
+</code></pre>
+<ul>
+<li>start_flush：该函数完成实际的 flush 操作</li>
+</ul>
+<pre><code class="language-C++">int PrimaryLogPG::start_flush(
+  OpRequestRef op, ObjectContextRef obc,
+  bool blocking, hobject_t *pmissing,
+  std::optional&lt;std::function&lt;void()&gt;&gt; &amp;&amp;on_flush)
+{
+  const object_info_t&amp; oi = obc-&gt;obs.oi;
+  const hobject_t&amp; soid = oi.soid;
+  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; soid
+	   &lt;&lt; &quot; v&quot; &lt;&lt; oi.version
+	   &lt;&lt; &quot; uv&quot; &lt;&lt; oi.user_version
+	   &lt;&lt; &quot; &quot; &lt;&lt; (blocking ? &quot;blocking&quot; : &quot;non-blocking/best-effort&quot;)
+	   &lt;&lt; dendl;
+
+  bool preoctopus_compat =
+    get_osdmap()-&gt;require_osd_release &lt; ceph_release_t::octopus;
+  SnapSet snapset;
+  if (preoctopus_compat) {
+    // 过滤掉已经删除的 snap 对象
+    // for pre-octopus compatibility, filter SnapSet::snaps.  not
+    // certain we need this, but let's be conservative.
+    snapset = obc-&gt;ssc-&gt;snapset.get_filtered(pool.info);
+  } else {
+    // NOTE: change this to a const ref when we remove this compat code
+    snapset = obc-&gt;ssc-&gt;snapset;
+  }
+
+  // 检查比当前 clone 对象更早版本的克隆对象
+  // verify there are no (older) check for dirty clones
+  {
+    dout(20) &lt;&lt; &quot; snapset &quot; &lt;&lt; snapset &lt;&lt; dendl;
+    vector&lt;snapid_t&gt;::reverse_iterator p = snapset.clones.rbegin();
+    while (p != snapset.clones.rend() &amp;&amp; *p &gt;= soid.snap)
+      ++p;
+    if (p != snapset.clones.rend()) {
+      hobject_t next = soid;
+      next.snap = *p;
+      ceph_assert(next.snap &lt; soid.snap);
+      if (recovery_state.get_pg_log().get_missing().is_missing(next)) {
+	dout(10) &lt;&lt; __func__ &lt;&lt; &quot; missing clone is &quot; &lt;&lt; next &lt;&lt; dendl;
+	if (pmissing)
+	  *pmissing = next;
+	return -ENOENT;
+      }
+      ObjectContextRef older_obc = get_object_context(next, false);
+      if (older_obc) {
+	dout(20) &lt;&lt; __func__ &lt;&lt; &quot; next oldest clone is &quot; &lt;&lt; older_obc-&gt;obs.oi
+		 &lt;&lt; dendl;
+	if (older_obc-&gt;obs.oi.is_dirty()) {
+	  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; next oldest clone is dirty: &quot;
+		   &lt;&lt; older_obc-&gt;obs.oi &lt;&lt; dendl;
+	  return -EBUSY;
+	}
+      } else {
+	dout(20) &lt;&lt; __func__ &lt;&lt; &quot; next oldest clone &quot; &lt;&lt; next
+		 &lt;&lt; &quot; is not present; implicitly clean&quot; &lt;&lt; dendl;
+      }
+    } else {
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot; no older clones&quot; &lt;&lt; dendl;
+    }
+  }
+
+  // 设置对应的对象为 blocked 状态
+  if (blocking)
+    obc-&gt;start_block();
+
+  // 检查该对象是否在 flush_ops 中，也就是该对象是否已经在 flush
+  map&lt;hobject_t,FlushOpRef&gt;::iterator p = flush_ops.find(soid);
+  if (p != flush_ops.end()) {
+    FlushOpRef fop = p-&gt;second;
+    if (fop-&gt;op == op) {
+      // we couldn't take the write lock on a cache-try-flush before;
+      // now we are trying again for the lock.
+      return try_flush_mark_clean(fop);
+    }
+    if (fop-&gt;flushed_version == obc-&gt;obs.oi.user_version &amp;&amp;
+	(fop-&gt;blocking || !blocking)) {
+      // nonblocking can join anything
+      // blocking can only join a blocking flush
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot; piggybacking on existing flush &quot; &lt;&lt; dendl;
+      if (op)
+	    fop-&gt;dup_ops.push_back(op);
+      return -EAGAIN;   // clean up this ctx; op will retry later
+    }
+
+    // cancel current flush since it will fail anyway, or because we
+    // are blocking and the existing flush is nonblocking.
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; canceling previous flush; it will fail&quot; &lt;&lt; dendl;
+    if (fop-&gt;op)
+      osd-&gt;reply_op_error(fop-&gt;op, -EBUSY);
+    while (!fop-&gt;dup_ops.empty()) {
+      osd-&gt;reply_op_error(fop-&gt;dup_ops.front(), -EBUSY);
+      fop-&gt;dup_ops.pop_front();
+    }
+    vector&lt;ceph_tid_t&gt; tids;
+    cancel_flush(fop, false, &amp;tids);
+    osd-&gt;objecter-&gt;op_cancel(tids, -ECANCELED);
+  }
+
+  if (obc-&gt;obs.oi.has_manifest() &amp;&amp; obc-&gt;obs.oi.manifest.is_chunked()) {
+    // 执行对应的 flush 操作
+    int r = start_manifest_flush(op, obc, blocking, std::move(on_flush));
+    if (r != -EINPROGRESS) {
+      if (blocking)
+	obc-&gt;stop_block();
+    }
+    return r;
+  }
+</code></pre>
+<ul>
+<li>start_manifest_flush：真正刷回数据之前的数据准备</li>
+</ul>
+<pre><code class="language-C++">int PrimaryLogPG::start_manifest_flush(OpRequestRef op, ObjectContextRef obc, bool blocking,
+				       std::optional&lt;std::function&lt;void()&gt;&gt; &amp;&amp;on_flush)
+{
+  auto p = obc-&gt;obs.oi.manifest.chunk_map.begin();
+  FlushOpRef manifest_fop(std::make_shared&lt;FlushOp&gt;());
+  manifest_fop-&gt;op = op;
+  manifest_fop-&gt;obc = obc;
+  manifest_fop-&gt;flushed_version = obc-&gt;obs.oi.user_version;
+  manifest_fop-&gt;blocking = blocking;
+  manifest_fop-&gt;on_flush = std::move(on_flush);
+  int r = do_manifest_flush(op, obc, manifest_fop, p-&gt;first, blocking);
+  if (r &lt; 0) {
+    return r;
+  }
+
+  flush_ops[obc-&gt;obs.oi.soid] = manifest_fop;
+  return -EINPROGRESS;
+}
+</code></pre>
+<ul>
+<li>do_manifest_flush：真正刷回数据的过程</li>
+</ul>
+<pre><code>int PrimaryLogPG::do_manifest_flush(OpRequestRef op, ObjectContextRef obc, FlushOpRef manifest_fop,
+				    uint64_t start_offset, bool block)
+{
+  // 获取 manifest 和 实际的对象数据
+  struct object_manifest_t &amp;manifest = obc-&gt;obs.oi.manifest;
+  hobject_t soid = obc-&gt;obs.oi.soid;
+  ceph_tid_t tid;
+  SnapContext snapc;
+  uint64_t max_copy_size = 0, last_offset = 0;
+  
+  // 遍历 manifest 统计要复制刷回的数据大小
+  map&lt;uint64_t, chunk_info_t&gt;::iterator iter = manifest.chunk_map.find(start_offset); 
+  ceph_assert(iter != manifest.chunk_map.end());
+  for (;iter != manifest.chunk_map.end(); ++iter) {
+    if (iter-&gt;second.is_dirty()) {
+      last_offset = iter-&gt;first;
+      max_copy_size += iter-&gt;second.length;
+    }
+    if (get_copy_chunk_size() &lt; max_copy_size) {
+      break;
+    }
+  }
+
+  iter = manifest.chunk_map.find(start_offset);
+  for (;iter != manifest.chunk_map.end(); ++iter) {
+    // 如果数据 clean 则跳过
+    if (!iter-&gt;second.is_dirty()) {
+      continue;
+    }
+    uint64_t tgt_length = iter-&gt;second.length;
+    uint64_t tgt_offset= iter-&gt;second.offset;
+    hobject_t tgt_soid = iter-&gt;second.oid;
+    object_locator_t oloc(tgt_soid);
+    ObjectOperation obj_op;
+    bufferlist chunk_data;
+    
+    // 先读取数据到 chunk_data 中
+    int r = pgbackend-&gt;objects_read_sync(soid, iter-&gt;first, tgt_length, 0, &amp;chunk_data);
+    if (r &lt; 0) {
+      dout(0) &lt;&lt; __func__ &lt;&lt; &quot; read fail &quot; &lt;&lt; &quot; offset: &quot; &lt;&lt; tgt_offset
+	      &lt;&lt; &quot; len: &quot; &lt;&lt; tgt_length &lt;&lt; &quot; r: &quot; &lt;&lt; r &lt;&lt; dendl;
+      return r;
+    }
+    if (!chunk_data.length()) {
+      return -ENODATA;
+    }
+
+    // 判断刷回的模式
+    unsigned flags = CEPH_OSD_FLAG_IGNORE_CACHE | CEPH_OSD_FLAG_IGNORE_OVERLAY |
+		     CEPH_OSD_FLAG_RWORDERED;
+    tgt_length = chunk_data.length();
+    
+    // 根据不同的存储池指纹信息，选择对应的摘要算法获取 chunk_data 对应的 hash 值
+    if (pg_pool_t::fingerprint_t fp_algo = pool.info.get_fingerprint_type(); iter-&gt;second.has_reference() &amp;&amp; fp_algo != pg_pool_t::TYPE_FINGERPRINT_NONE) {
+      object_t fp_oid = [fp_algo, &amp;chunk_data]() -&gt; string {
+        switch (fp_algo) {
+	        case pg_pool_t::TYPE_FINGERPRINT_SHA1:
+	            return crypto::digest&lt;crypto::SHA1&gt;(chunk_data).to_str();
+	        case pg_pool_t::TYPE_FINGERPRINT_SHA256:
+	            return crypto::digest&lt;crypto::SHA256&gt;(chunk_data).to_str();
+	        case pg_pool_t::TYPE_FINGERPRINT_SHA512:
+	            return crypto::digest&lt;crypto::SHA512&gt;(chunk_data).to_str();
+	        default:
+	            assert(0 == &quot;unrecognized fingerprint type&quot;);
+	            return {};
+	    }}();
+      bufferlist in;
+      
+      // 如果 oid 不一致
+      if (fp_oid != tgt_soid.oid) {
+        // 减小旧块的引用计数
+	    // decrement old chunk's reference count 
+	    ObjectOperation dec_op;
+	    cls_chunk_refcount_put_op put_call;
+	    put_call.source = soid;
+	    ::encode(put_call, in);
+	    // 对 chunk 的计数执行修改 PUT 操作
+	    dec_op.call(&quot;cas&quot;, &quot;chunk_put&quot;, in);         
+	    
+	    // 执行 objecter_mutate 方法会将请求转化为 Op 请求，再进行请求的提交，写入到后端存储池 dec_op chunk_put
+	    // we don't care dec_op's completion. scrub for dedup will fix this.
+	    tid = osd-&gt;objecter-&gt;mutate(
+	        tgt_soid.oid, oloc, dec_op, snapc,
+	        ceph::real_clock::from_ceph_timespec(obc-&gt;obs.oi.mtime),
+	        flags, NULL);
+	    in.clear();
+      }
+      tgt_soid.oid = fp_oid;
+      iter-&gt;second.oid = tgt_soid;
+      
+      // 编码实际操作的关键数据（偏移量和数据长度）
+      // add data op
+      ceph_osd_op osd_op;
+      osd_op.extent.offset = 0;
+      osd_op.extent.length = chunk_data.length();
+      
+      // 将数据编码
+      encode(osd_op, in);
+      encode(soid, in);
+      in.append(chunk_data);
+      obj_op.call(&quot;cas&quot;, &quot;cas_write_or_get&quot;, in);
+    } else {
+      obj_op.add_data(CEPH_OSD_OP_WRITE, tgt_offset, tgt_length, chunk_data);
+    }
+
+    C_ManifestFlush *fin = new C_ManifestFlush(this, soid, get_last_peering_reset());
+    fin-&gt;offset = iter-&gt;first;
+    fin-&gt;last_offset = last_offset;
+    manifest_fop-&gt;chunks++;
+
+    unsigned n = info.pgid.hash_to_shard(osd-&gt;m_objecter_finishers);
+    
+    // 封装写请求写入到后端存储池 obj_op  cas_write_or_get
+    tid = osd-&gt;objecter-&gt;mutate(
+      tgt_soid.oid, oloc, obj_op, snapc,
+      ceph::real_clock::from_ceph_timespec(obc-&gt;obs.oi.mtime),
+      flags, new C_OnFinisher(fin, osd-&gt;objecter_finishers[n]));
+    fin-&gt;tid = tid;
+    manifest_fop-&gt;io_tids[iter-&gt;first] = tid;
+
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; offset: &quot; &lt;&lt; tgt_offset &lt;&lt; &quot; len: &quot; &lt;&lt; tgt_length 
+	    &lt;&lt; &quot; oid: &quot; &lt;&lt; tgt_soid.oid &lt;&lt; &quot; ori oid: &quot; &lt;&lt; soid.oid.name 
+	    &lt;&lt; &quot; tid: &quot; &lt;&lt; tid &lt;&lt; dendl;
+    if (last_offset &lt; iter-&gt;first) {
+      break;
+    }
+  }
+
+  return 0;
+}
+</code></pre>
+<ul>
+<li>通过源码分析我们不难看出，flush 操作最终是以 Op 请求的方式传递到底层存储层的，也就意味着需要再执行一次 Ceph 存储池写数据的相关逻辑。</li>
+</ul>
+<h3 id="command">Command</h3>
+<ul>
+<li><code>ceph osd tier add {data_pool} {cache pool}</code> // Bind cache pool to storage pool</li>
+<li><code>ceph osd tier cache-mode {cache-pool} {cache-mode}</code> // Set cache mode for cache pool</li>
+<li><code>ceph osd tier cache-mode {cache-pool} {cache-mode}</code> // Set read tier/write tier according to the cache mode</li>
+<li></li>
+</ul>
+<h2 id="references">References</h2>
+<ul>
+<li><a href="https://docs.ceph.com/docs/master/rados/operations/cache-tiering/">[1] Ceph IO：CACHE TIERING</a></li>
+<li><a href="https://my.oschina.net/u/2460844/blog/788172">[2] ceph的数据存储之路(12)----- cache tier 曾经有过的YY</a></li>
+<li><a href="https://blog.csdn.net/don_chiang709/article/details/99727048">[3] Ceph 进阶系列（三）：谈谈 Ceph Cache Tier(Cache Pool) 的配置 、原理 和 源码分析</a></li>
+<li><a href="https://blog.csdn.net/u010487568/article/details/91966082">[4] CSDN：ceph的 cache tier实现分析</a></li>
+<li><a href="https://www.cnblogs.com/mrjie/p/6007581.html">[5] CNBlogs：Ceph分层存储分析</a></li>
+<li><a href="http://www.51niux.com/?id=165">[6] 柴少鹏：Ceph跟着官网学一波（四）</a></li>
+<li><a href="http://www.10tiao.com/html/362/201703/2654062869/1.html">[7] Ceph冷知识 | Cache Tier 的抉择与使用</a></li>
+<li><a href="https://blog.csdn.net/huoshanbaofa123/article/details/51986222">[8] Ceph cache pool tiering: a scalable and distributed cache</a></li>
+<li><a href="https://www.csdn.net/article/a/2018-03-23/15943832">[9] 杉岩数据智能缓存技术AgileCache亮相2018 Ceph亚太峰会</a></li>
+<li><a href="https://mp.weixin.qq.com/s?__biz=MzIzMzk0MDgxNQ==&amp;mid=2247483770&amp;idx=1&amp;sn=20612712d8352039f56cc0476161d472&amp;chksm=e8fcb35adf8b3a4c68312ef5e516ee337e0574ebfcb0f60a098feef3ce5fb2535bdeb9934834&amp;scene=21#wechat_redirect">[10] 在Ceph中用对Flashcache了吗？（一）</a></li>
+<li><a href="https://mp.weixin.qq.com/s/OuylijsUxV_dbQhoMGMUtA?utm_medium=hao.caibaojian.com&amp;utm_source=hao.caibaojian.com">[11] 在Ceph中用对Flashcache了吗？（二）</a></li>
+<li><a href="https://www.codercto.com/a/85840.html">[12] ceph的 cache tier实现分析<br>
+</a></li>
+<li><a href="https://blog.csdn.net/u010487568/article/details/91966082">[13]<br>
+CSDN：ceph的 cache tier实现分析</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/project/Tier-Arch.png?raw=true');"></div>
+                 <a href="https://blog.shunzi.tech/post/ceph-tiring-cache-optimization/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-12-05">2019-12-05</time>
+                  <h4 class="title white no-margin">Ceph Tiring Cache 调优</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/file-systems-unit-as-distributed-storagelessons-from-10-years-of-ceph-evolution.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/file-systems-unit-as-distributed-storagelessons-from-10-years-of-ceph-evolution/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-11-07">2019-11-07</time>
+                  <h4 class="title white no-margin">File Systems Unit as Distributed Storage:Lessons from 10 Years of Ceph Evolution</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

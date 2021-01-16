@@ -1,0 +1,2119 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ceph-RBD 源码阅读 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+RBD 是 Ceph 分布式存储系统中提供的块存储服务
+该篇主要针对 RBD 中的整体架构以及 IO 流程进行介绍
+针对 librbd 中提供的接口进行简单介绍，后续将在此基础上进行实战
+
+
+
+Ceph RBD
+
+RBD：RADOS B..." />
+    <meta name="keywords" content="存储,分布式" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://blog.shunzi.tech/post-images/ceph-rbd-src.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2019-09-25"><i class="fa fa-calendar"></i><span class="lately">1 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/ceph-rbd-src/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/ceph-rbd-src/"> </span>
+              </a>
+              <span id="/ceph-rbd-src/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-1 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Ceph-RBD 源码阅读</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>RBD 是 Ceph 分布式存储系统中提供的块存储服务</li>
+<li>该篇主要针对 RBD 中的整体架构以及 IO 流程进行介绍</li>
+<li>针对 librbd 中提供的接口进行简单介绍，后续将在此基础上进行实战</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="ceph-rbd">Ceph RBD</h2>
+<ul>
+<li><strong>RBD：RADOS Block Devices</strong>.  Ceph block devices are thin-provisioned, resizable and store data striped over multiple OSDs in a Ceph cluster.</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200914101756.png" alt="20200914101756" loading="lazy"></figure>
+<h3 id="整体介绍">整体介绍</h3>
+<ul>
+<li>Ceph RBD 模块主要提供了两种对外接口：
+<ul>
+<li>一种是基于 librados 的用户态接口库 librbd，支持 C/C++ 接口以及 Python 等高级语言的绑定；</li>
+<li>另外一种是通过 kernel Module 的方式（一个叫 krbd 的内核模块），通过用户态的 rbd 命令行工具，将 RBD 块设备映射为本地的一个块设备文件。</li>
+</ul>
+</li>
+</ul>
+<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/files-and-images/master/blog/pic/RBD-Arch.png" alt="image" loading="lazy"></figure>
+<ul>
+<li>RDB 的块设备由于元数据信息少而且访问不频繁，故 RBD 在 Ceph 集群中不需要单独的守护进程讲元数据加载到内存进行元数据访问加速，所有的元数据和数据操作直接与集群中的 Monitor 服务和 OSD 服务进行交互。</li>
+</ul>
+<h3 id="rbd-io-流">RBD IO 流</h3>
+<ul>
+<li>RBD 模块 IO 流图</li>
+</ul>
+<figure data-type="image" tabindex="3"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/RBD-IO-Frame.png?raw=true" alt="image" loading="lazy"></figure>
+<h4 id="几个重要的存储组织">几个重要的存储组织</h4>
+<ul>
+<li>Pool：存储资源池。IO 之前，需要先创建一个存储池，存储池统一地对逻辑存储单元进行管理，并对其进行初始化。同时指定一个 Pool 中的 PG 数量。是 Ceph 存储数据时的逻辑分区，类似于 HDFS 中的 namespace</li>
+</ul>
+<pre><code class="language-Bash">ceph osd pool create rbd 32
+rbd pool init rbd
+</code></pre>
+<ul>
+<li>RBD：块设备镜像。在创建好 Pool 的基础之上，对应的创建块设备镜像并和存储池进行映射绑定</li>
+<li>Object：按照数据切片的大小，将所有数据切片为一个个对象，进行相应的对象存储操作。其中 Key 需要根据序号进行生成从而进行区分。</li>
+</ul>
+<pre><code class="language-Bash">rbd create --size {megabytes} {pool-name}/{image-name}
+rbd create --size 1024 swimmingpool/bar
+</code></pre>
+<ul>
+<li>PG：Placement Group，用于放置标准大小的 Object 的载体。其数量的计算公式：<code>Total PGs = (Total_number_of_OSD * 100) / max_replication_count</code> 再对结果向上取 2 的 N 次方作为最终的数量。PG 同时作为数据均衡和迁移的最小单位，PG 也有相应的主从之分。</li>
+<li>OSD：OSD 是负责物理存储的进程，也可以理解为最终的对象存储节点。一般情况下，一块磁盘启动一个 OSD 进程，一组 PG （多副本）分布在不同的 OSD 上。</li>
+</ul>
+<h4 id="io-流程">IO 流程</h4>
+<ol>
+<li>客户端创建对应的存储池 Pool，指定相应的 PG 个数以及 PGP 个数（用于 PG 中的数据均衡）</li>
+<li>创建 pool/image rbd设备进行挂载</li>
+<li>用户写入的数据进行切块，每个块有默认大小，并且每个块都有一个 Key，Key 就是 object+序号</li>
+<li>将每个 object 通过 pg 进行副本位置的分配</li>
+<li>PG 根据 cursh 算法会寻找指定个数的 osd（主从个数），把这个 object 分别保存在这些 osd 上</li>
+<li>osd 上实际是把底层的 disk 进行了格式化操作，一般部署工具会将它格式化为 xfs 文件系统</li>
+<li>object 的存储就变成了存储一个文件 rbd0.object1.file</li>
+</ol>
+<h4 id="rbd-io-框架">RBD IO 框架</h4>
+<figure data-type="image" tabindex="4"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/RBD-IO.png?raw=true" alt="image" loading="lazy"></figure>
+<h5 id="客户端写数据osd过程">客户端写数据osd过程：</h5>
+<ol>
+<li>采用的是 librbd 的形式，使用 librbd 创建一个块设备，向这个块设备中写入数据</li>
+<li>在客户端本地同过调用 librados 接口，然后经过 pool，rbd，object，pg 进行层层映射（CRUSH 算法）,在 PG 这一层中，可以知道数据保存在哪几个 OSD 上，这几个 OSD 分为主从的关系</li>
+<li>客户端与 primary OSD 建立 SOCKET 通信，将要写入的数据传给 primary OSD，由 primary OSD 再将数据发送给其他 replica OSD 数据节点。</li>
+</ol>
+<h3 id="librbd">librbd</h3>
+<ul>
+<li>librbd 到 OSD 的数据流向如下：</li>
+</ul>
+<figure data-type="image" tabindex="5"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/librbd-io.png?raw=true" alt="image" loading="lazy"></figure>
+<h4 id="模块介绍">模块介绍</h4>
+<ul>
+<li><strong>librbd</strong>：Librbd 是Ceph提供的块存储接口的抽象，它提供C/C++、Python等多种接口。对于C++，最主要的两个类就是RBD 和 Image。 RBD 主要负责创建、删除、克隆映像等操作，而Image 类负责映像的读写等操作。</li>
+<li><strong>cls_rbd</strong>：cls_rbd是Cls的一个扩展模块，Cls允许用户自定义对象的操作接口和实现方法，为用户提供了一种比较直接的接口扩展方式。通过动态链接的形式加入 osd 中，在 osd 上直接执行。</li>
+<li><strong>librados</strong>：librados 提供客户端访问 Ceph 集群的原生态统一接口。其它接口或者命令行工具都基于该动态库实现。在 librados 中实现了 Crush 算法和网络通信等公共功能，数据请求操作在 librados 计算完成后可以直接与对应的 OSD 交互进行数据传输。</li>
+<li><strong>OSDC</strong>：该模块是客户端模块比较底层的模块，用于封装操作数据，计算对象的地址、发送请求和处理超时。</li>
+<li><strong>OSD</strong>：部署在每一个硬盘上的 OSD 进程，主要功能是存储数据、复制数据、平衡数据、恢复数据等，与其它OSD间进行心跳检查等，并将一些变化情况上报给Ceph Monitor</li>
+<li><strong>OS</strong>：操作系统，在此处则主要是 OSD 的 IO 请求下发到对应的硬盘上的文件系统，由文件系统来完成后续的 IO 操作。</li>
+</ul>
+<h4 id="librbd-详细介绍">librbd 详细介绍</h4>
+<h5 id="功能模块">功能模块</h5>
+<figure data-type="image" tabindex="6"><img src="https://zhoubofsy.github.io/images/ceph/librbd_frame.png" alt="image" loading="lazy"></figure>
+<h5 id="核心机制">核心机制</h5>
+<ul>
+<li>
+<p>librbd 是一个将 block io （[off, len]）转换成 rados object io （[oid, off, len]）的中间层。为了支持高性能 io 处理，其内部维护了一个 io 队列，一个异步回调队列，以及对这两个队列中的请求进行处理的线程池，如下图所示。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200914102334.png" alt="20200914102334" loading="lazy"></p>
+</li>
+<li>
+<p>IO 时序图<br>
+<img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/rbd-io-time-sequence.png?raw=true" alt="image" loading="lazy"></p>
+</li>
+<li>
+<p>librbd 提供了针对 image 的数据读写和管理操作两种访问接口，其中数据读写请求入 <code>io_work_queue</code>，然后由线程池中的线程将 io 请求以 object 粒度切分并分别调用 rados 层的 aio 接口（IoCtxImpl）下发，当所有的 object 请求完成时，调用 librbd io 回调（librbd::io::AioCompletion）完成用户层的数据 io。而对 image 的管理操作通常需要涉及单个或多个对象的多次访问以及对内部状态的多次更新，其第一次访问将从用户线程调用至 rados 层 aio 接口或更新状态后入 <code>op_work_queue</code> 队列进行异步调用，当 rados aio 层回调或 Context 完成时再根据实现逻辑调用新的 rados aio 或构造 Context 回调，如此反复，最后调用应用层的回调完成管理操作请求。</p>
+</li>
+<li>
+<p>此外为了支持多客户端共享访问 image，librbd 提供了构建于 rados watch/notify 之上的通知、远程执行以及 exclusive lock 分布式锁机制。每个 librbd 客户端在打开 image 时（以非只读方式打开）都会 watch image 的 header 对象，从远程发往本地客户端的通知消息或者内部的 watch 错误消息会通过 RadosClient 的 Finisher 线程入 op_work_queue 队列进行异步处理。</p>
+</li>
+</ul>
+<h5 id="组成元素">组成元素</h5>
+<ul>
+<li>image 主要由 <code>rbd_header</code> 元数据 rados 对象及 <code>rbd_data</code> 数据 rados 对象组成，随着特性的增加会增加其它一些元数据对象，但 librbd 内部的运行机制并不会有大的变化，一切都以异步 io、事件（请求）驱动为基础。</li>
+</ul>
+<h5 id="相关接口声明">相关接口声明</h5>
+<ul>
+<li>此处以 librbd 的 C++ 库 <a href="https://github.com/ceph/ceph/blob/master/src/include/rbd/librbd.hpp">librbd.hpp</a> 为例对 librbd 提供的相关功能 API 进行介绍（除此以外还提供了 C 语言的相关库 <a href="https://github.com/ceph/ceph/blob/master/src/include/rbd/librbd.h">librbd.h</a>）</li>
+<li>librbd 提供的接口导图如下：<br>
+<img src="https://zhoubofsy.github.io/images/ceph/librbd.png" alt="image" loading="lazy"></li>
+</ul>
+<pre><code class="language-C++">namespace librbd { // 库在librbd名字空间中
+
+  using librados::IoCtx; // librados 库对外提供的接口
+
+  class Image;
+  class ImageOptions;
+  class PoolStats;
+  typedef void *image_ctx_t;
+  typedef void *completion_t;
+  typedef void (*callback_t)(completion_t cb, void *arg); // 异步操作回调接口
+
+  ...
+
+class CEPH_RBD_API RBD
+{
+public:
+  RBD();
+  ~RBD();
+
+  // This must be dynamically allocated with new, and
+  // must be released with release().
+  // Do not use delete.
+  struct AioCompletion {
+    void *pc;
+    AioCompletion(void *cb_arg, callback_t complete_cb);
+    bool is_complete();
+    int wait_for_complete();
+    ssize_t get_return_value();
+    void release();
+  };
+
+  // 接下来一些API: open/create/clone/remove/rename/list/migration 等
+  // RBD groups support functions  create/remove/list/rename
+
+private:
+  /* We don't allow assignment or copying */
+  RBD(const RBD&amp; rhs);
+  const RBD&amp; operator=(const RBD&amp; rhs);
+};
+
+// Image 参数设置
+class CEPH_RBD_API ImageOptions {
+public:
+  ImageOptions();
+  ImageOptions(rbd_image_options_t opts);
+  ImageOptions(const ImageOptions &amp;imgopts);
+  ~ImageOptions();
+
+  int set(int optname, const std::string&amp; optval);
+  int set(int optname, uint64_t optval);
+  int get(int optname, std::string* optval) const;
+  int get(int optname, uint64_t* optval) const;
+  int is_set(int optname, bool* is_set);
+  int unset(int optname);
+  void clear();
+  bool empty() const;
+
+private:
+  friend class RBD;
+  friend class Image;
+
+  rbd_image_options_t opts;
+};
+
+// 存储池 Pool 状态
+class CEPH_RBD_API PoolStats {
+public:
+  PoolStats();
+  ~PoolStats();
+
+  PoolStats(const PoolStats&amp;) = delete;
+  PoolStats&amp; operator=(const PoolStats&amp;) = delete;
+
+  int add(rbd_pool_stat_option_t option, uint64_t* opt_val);
+
+private:
+  friend class RBD;
+
+  rbd_pool_stats_t pool_stats;
+};
+
+class CEPH_RBD_API UpdateWatchCtx {
+public:
+  virtual ~UpdateWatchCtx() {}
+  /**
+   * Callback activated when we receive a notify event.
+   */
+  virtual void handle_notify() = 0;
+};
+
+class CEPH_RBD_API Image
+{
+public:
+  Image();
+  ~Image();
+
+  // 镜像的读写，flatten，trim等操作
+
+private:
+  friend class RBD;
+
+  Image(const Image&amp; rhs);
+  const Image&amp; operator=(const Image&amp; rhs);
+
+  image_ctx_t ctx; // viod*, 实际指向具体实现的类
+};
+}
+</code></pre>
+<h5 id="class-ceph_rbd_api-rbd">class CEPH_RBD_API RBD</h5>
+<ul>
+<li>RBD 主要负责 Image 的创建、删除、重命名、克隆映像等操作，包括对存储池的元数据的管理</li>
+<li>针对部分操作提供异步接口</li>
+</ul>
+<pre><code class="language-C++">class CEPH_RBD_API RBD
+{
+public:
+  RBD();
+  ~RBD();
+
+  // This must be dynamically allocated with new, and
+  // must be released with release().
+  // Do not use delete.
+  struct AioCompletion {
+    void *pc;
+    AioCompletion(void *cb_arg, callback_t complete_cb);
+    bool is_complete();
+    int wait_for_complete();
+    ssize_t get_return_value();
+    void *get_arg();
+    void release();
+  };
+
+  void version(int *major, int *minor, int *extra);
+
+  int open(IoCtx&amp; io_ctx, Image&amp; image, const char *name);
+  int open(IoCtx&amp; io_ctx, Image&amp; image, const char *name, const char *snapname);
+  int open_by_id(IoCtx&amp; io_ctx, Image&amp; image, const char *id);
+  int open_by_id(IoCtx&amp; io_ctx, Image&amp; image, const char *id, const char *snapname);
+  int aio_open(IoCtx&amp; io_ctx, Image&amp; image, const char *name,
+	       const char *snapname, RBD::AioCompletion *c);
+  int aio_open_by_id(IoCtx&amp; io_ctx, Image&amp; image, const char *id,
+	             const char *snapname, RBD::AioCompletion *c);
+  // see librbd.h
+  int open_read_only(IoCtx&amp; io_ctx, Image&amp; image, const char *name,
+		     const char *snapname);
+  int open_by_id_read_only(IoCtx&amp; io_ctx, Image&amp; image, const char *id,
+                           const char *snapname);
+  int aio_open_read_only(IoCtx&amp; io_ctx, Image&amp; image, const char *name,
+			 const char *snapname, RBD::AioCompletion *c);
+  int aio_open_by_id_read_only(IoCtx&amp; io_ctx, Image&amp; image, const char *id,
+                               const char *snapname, RBD::AioCompletion *c);
+
+  int list(IoCtx&amp; io_ctx, std::vector&lt;std::string&gt;&amp; names)
+    __attribute__((deprecated));
+  int list2(IoCtx&amp; io_ctx, std::vector&lt;image_spec_t&gt;* images);
+
+  int create(IoCtx&amp; io_ctx, const char *name, uint64_t size, int *order);
+  int create2(IoCtx&amp; io_ctx, const char *name, uint64_t size,
+	      uint64_t features, int *order);
+  int create3(IoCtx&amp; io_ctx, const char *name, uint64_t size,
+	      uint64_t features, int *order,
+	      uint64_t stripe_unit, uint64_t stripe_count);
+  int create4(IoCtx&amp; io_ctx, const char *name, uint64_t size,
+	      ImageOptions&amp; opts);
+  int clone(IoCtx&amp; p_ioctx, const char *p_name, const char *p_snapname,
+	       IoCtx&amp; c_ioctx, const char *c_name, uint64_t features,
+	       int *c_order);
+  int clone2(IoCtx&amp; p_ioctx, const char *p_name, const char *p_snapname,
+	     IoCtx&amp; c_ioctx, const char *c_name, uint64_t features,
+	     int *c_order, uint64_t stripe_unit, int stripe_count);
+  int clone3(IoCtx&amp; p_ioctx, const char *p_name, const char *p_snapname,
+	     IoCtx&amp; c_ioctx, const char *c_name, ImageOptions&amp; opts);
+  int remove(IoCtx&amp; io_ctx, const char *name);
+  int remove_with_progress(IoCtx&amp; io_ctx, const char *name, ProgressContext&amp; pctx);
+  int rename(IoCtx&amp; src_io_ctx, const char *srcname, const char *destname);
+
+  int trash_move(IoCtx &amp;io_ctx, const char *name, uint64_t delay);
+  int trash_get(IoCtx &amp;io_ctx, const char *id, trash_image_info_t *info);
+  int trash_list(IoCtx &amp;io_ctx, std::vector&lt;trash_image_info_t&gt; &amp;entries);
+  int trash_purge(IoCtx &amp;io_ctx, time_t expire_ts, float threshold);
+  int trash_purge_with_progress(IoCtx &amp;io_ctx, time_t expire_ts, float threshold,
+                                ProgressContext &amp;pctx);
+  int trash_remove(IoCtx &amp;io_ctx, const char *image_id, bool force);
+  int trash_remove_with_progress(IoCtx &amp;io_ctx, const char *image_id,
+                                 bool force, ProgressContext &amp;pctx);
+  int trash_restore(IoCtx &amp;io_ctx, const char *id, const char *name);
+
+  // Migration
+  int migration_prepare(IoCtx&amp; io_ctx, const char *image_name,
+                        IoCtx&amp; dest_io_ctx, const char *dest_image_name,
+                        ImageOptions&amp; opts);
+  int migration_execute(IoCtx&amp; io_ctx, const char *image_name);
+  int migration_execute_with_progress(IoCtx&amp; io_ctx, const char *image_name,
+                                      ProgressContext &amp;prog_ctx);
+  int migration_abort(IoCtx&amp; io_ctx, const char *image_name);
+  int migration_abort_with_progress(IoCtx&amp; io_ctx, const char *image_name,
+                                    ProgressContext &amp;prog_ctx);
+  int migration_commit(IoCtx&amp; io_ctx, const char *image_name);
+  int migration_commit_with_progress(IoCtx&amp; io_ctx, const char *image_name,
+                                     ProgressContext &amp;prog_ctx);
+  int migration_status(IoCtx&amp; io_ctx, const char *image_name,
+                       image_migration_status_t *status, size_t status_size);
+
+  // RBD pool mirroring support functions
+  int mirror_mode_get(IoCtx&amp; io_ctx, rbd_mirror_mode_t *mirror_mode);
+  int mirror_mode_set(IoCtx&amp; io_ctx, rbd_mirror_mode_t mirror_mode);
+  int mirror_peer_add(IoCtx&amp; io_ctx, std::string *uuid,
+                      const std::string &amp;cluster_name,
+                      const std::string &amp;client_name);
+  int mirror_peer_remove(IoCtx&amp; io_ctx, const std::string &amp;uuid);
+  int mirror_peer_list(IoCtx&amp; io_ctx, std::vector&lt;mirror_peer_t&gt; *peers);
+  int mirror_peer_set_client(IoCtx&amp; io_ctx, const std::string &amp;uuid,
+                             const std::string &amp;client_name);
+  int mirror_peer_set_cluster(IoCtx&amp; io_ctx, const std::string &amp;uuid,
+                              const std::string &amp;cluster_name);
+  int mirror_peer_get_attributes(
+      IoCtx&amp; io_ctx, const std::string &amp;uuid,
+      std::map&lt;std::string, std::string&gt; *key_vals);
+  int mirror_peer_set_attributes(
+      IoCtx&amp; io_ctx, const std::string &amp;uuid,
+      const std::map&lt;std::string, std::string&gt;&amp; key_vals);
+
+  int mirror_image_status_list(IoCtx&amp; io_ctx, const std::string &amp;start_id,
+      size_t max, std::map&lt;std::string, mirror_image_status_t&gt; *images);
+  int mirror_image_status_summary(IoCtx&amp; io_ctx,
+      std::map&lt;mirror_image_status_state_t, int&gt; *states);
+  int mirror_image_instance_id_list(IoCtx&amp; io_ctx, const std::string &amp;start_id,
+      size_t max, std::map&lt;std::string, std::string&gt; *sevice_ids);
+
+  // RBD groups support functions
+  int group_create(IoCtx&amp; io_ctx, const char *group_name);
+  int group_remove(IoCtx&amp; io_ctx, const char *group_name);
+  int group_list(IoCtx&amp; io_ctx, std::vector&lt;std::string&gt; *names);
+  int group_rename(IoCtx&amp; io_ctx, const char *src_group_name,
+                   const char *dest_group_name);
+
+  int group_image_add(IoCtx&amp; io_ctx, const char *group_name,
+		      IoCtx&amp; image_io_ctx, const char *image_name);
+  int group_image_remove(IoCtx&amp; io_ctx, const char *group_name,
+			 IoCtx&amp; image_io_ctx, const char *image_name);
+  int group_image_remove_by_id(IoCtx&amp; io_ctx, const char *group_name,
+                               IoCtx&amp; image_io_ctx, const char *image_id);
+  int group_image_list(IoCtx&amp; io_ctx, const char *group_name,
+                       std::vector&lt;group_image_info_t&gt; *images,
+                       size_t group_image_info_size);
+
+  int group_snap_create(IoCtx&amp; io_ctx, const char *group_name,
+			const char *snap_name);
+  int group_snap_remove(IoCtx&amp; io_ctx, const char *group_name,
+			const char *snap_name);
+  int group_snap_rename(IoCtx&amp; group_ioctx, const char *group_name,
+                        const char *old_snap_name, const char *new_snap_name);
+  int group_snap_list(IoCtx&amp; group_ioctx, const char *group_name,
+                      std::vector&lt;group_snap_info_t&gt; *snaps,
+                      size_t group_snap_info_size);
+  int group_snap_rollback(IoCtx&amp; io_ctx, const char *group_name,
+                          const char *snap_name);
+  int group_snap_rollback_with_progress(IoCtx&amp; io_ctx, const char *group_name,
+                                        const char *snap_name,
+                                        ProgressContext&amp; pctx);
+
+  int namespace_create(IoCtx&amp; ioctx, const char *namespace_name);
+  int namespace_remove(IoCtx&amp; ioctx, const char *namespace_name);
+  int namespace_list(IoCtx&amp; io_ctx, std::vector&lt;std::string&gt;* namespace_names);
+  int namespace_exists(IoCtx&amp; io_ctx, const char *namespace_name, bool *exists);
+
+  int pool_init(IoCtx&amp; io_ctx, bool force);
+  int pool_stats_get(IoCtx&amp; io_ctx, PoolStats *pool_stats);
+
+  int pool_metadata_get(IoCtx &amp;io_ctx, const std::string &amp;key,
+                        std::string *value);
+  int pool_metadata_set(IoCtx &amp;io_ctx, const std::string &amp;key,
+                        const std::string &amp;value);
+  int pool_metadata_remove(IoCtx &amp;io_ctx, const std::string &amp;key);
+  int pool_metadata_list(IoCtx &amp;io_ctx, const std::string &amp;start, uint64_t max,
+                         std::map&lt;std::string, ceph::bufferlist&gt; *pairs);
+
+  int config_list(IoCtx&amp; io_ctx, std::vector&lt;config_option_t&gt; *options);
+
+private:
+  /* We don't allow assignment or copying */
+  RBD(const RBD&amp; rhs);
+  const RBD&amp; operator=(const RBD&amp; rhs);
+};
+</code></pre>
+<h5 id="class-ceph_rbd_api-image">class CEPH_RBD_API Image</h5>
+<ul>
+<li>Image 类负责镜像的读写(read/write)，以及快照相关的操作等等。</li>
+<li>同时提供了相关异步操作的接口。</li>
+</ul>
+<pre><code class="language-C++">class CEPH_RBD_API Image
+{
+public:
+  Image();
+  ~Image();
+
+  // 镜像的读写，resize, flush, flatten，trim等操作
+  int close();
+  int aio_close(RBD::AioCompletion *c);
+
+  int resize(uint64_t size);
+  int resize2(uint64_t size, bool allow_shrink, ProgressContext&amp; pctx);
+  int resize_with_progress(uint64_t size, ProgressContext&amp; pctx);
+  int stat(image_info_t &amp;info, size_t infosize);
+  int get_name(std::string *name);
+  int get_id(std::string *id);
+  std::string get_block_name_prefix();
+  int64_t get_data_pool_id();
+  int parent_info(std::string *parent_poolname, std::string *parent_name,
+		  std::string *parent_snapname)
+      __attribute__((deprecated));
+  int parent_info2(std::string *parent_poolname, std::string *parent_name,
+                   std::string *parent_id, std::string *parent_snapname)
+      __attribute__((deprecated));
+  int get_parent(linked_image_spec_t *parent_image, snap_spec_t *parent_snap);
+
+  int old_format(uint8_t *old);
+  int size(uint64_t *size);
+  int get_group(group_info_t *group_info, size_t group_info_size);
+  int features(uint64_t *features);
+  int update_features(uint64_t features, bool enabled);
+  int get_op_features(uint64_t *op_features);
+  int overlap(uint64_t *overlap);
+  int get_flags(uint64_t *flags);
+  int set_image_notification(int fd, int type);
+
+  /* exclusive lock feature */
+  int is_exclusive_lock_owner(bool *is_owner);
+  int lock_acquire(rbd_lock_mode_t lock_mode);
+  int lock_release();
+  int lock_get_owners(rbd_lock_mode_t *lock_mode,
+                      std::list&lt;std::string&gt; *lock_owners);
+  int lock_break(rbd_lock_mode_t lock_mode, const std::string &amp;lock_owner);
+
+  /* object map feature */
+  int rebuild_object_map(ProgressContext &amp;prog_ctx);
+
+  int check_object_map(ProgressContext &amp;prog_ctx);
+
+  int copy(IoCtx&amp; dest_io_ctx, const char *destname);
+  int copy2(Image&amp; dest);
+  int copy3(IoCtx&amp; dest_io_ctx, const char *destname, ImageOptions&amp; opts);
+  int copy4(IoCtx&amp; dest_io_ctx, const char *destname, ImageOptions&amp; opts,
+	    size_t sparse_size);
+  int copy_with_progress(IoCtx&amp; dest_io_ctx, const char *destname,
+			 ProgressContext &amp;prog_ctx);
+  int copy_with_progress2(Image&amp; dest, ProgressContext &amp;prog_ctx);
+  int copy_with_progress3(IoCtx&amp; dest_io_ctx, const char *destname,
+			  ImageOptions&amp; opts, ProgressContext &amp;prog_ctx);
+  int copy_with_progress4(IoCtx&amp; dest_io_ctx, const char *destname,
+			  ImageOptions&amp; opts, ProgressContext &amp;prog_ctx,
+			  size_t sparse_size);
+
+  /* deep copy */
+  int deep_copy(IoCtx&amp; dest_io_ctx, const char *destname, ImageOptions&amp; opts);
+  int deep_copy_with_progress(IoCtx&amp; dest_io_ctx, const char *destname,
+                              ImageOptions&amp; opts, ProgressContext &amp;prog_ctx);
+
+  /* striping */
+  uint64_t get_stripe_unit() const;
+  uint64_t get_stripe_count() const;
+
+  int get_create_timestamp(struct timespec *timestamp);
+  int get_access_timestamp(struct timespec *timestamp);
+  int get_modify_timestamp(struct timespec *timestamp);
+
+  int flatten();
+  int flatten_with_progress(ProgressContext &amp;prog_ctx);
+
+  int sparsify(size_t sparse_size);
+  int sparsify_with_progress(size_t sparse_size, ProgressContext &amp;prog_ctx);
+  /**
+   * Returns a pair of poolname, imagename for each clone
+   * of this image at the currently set snapshot.
+   */
+  int list_children(std::set&lt;std::pair&lt;std::string, std::string&gt; &gt; *children)
+      __attribute__((deprecated));
+  /**
+  * Returns a structure of poolname, imagename, imageid and trash flag
+  * for each clone of this image at the currently set snapshot.
+  */
+  int list_children2(std::vector&lt;librbd::child_info_t&gt; *children)
+      __attribute__((deprecated));
+  int list_children3(std::vector&lt;linked_image_spec_t&gt; *images);
+  int list_descendants(std::vector&lt;linked_image_spec_t&gt; *images);
+
+  /* advisory locking (see librbd.h for details) */
+  int list_lockers(std::list&lt;locker_t&gt; *lockers,
+		   bool *exclusive, std::string *tag);
+  int lock_exclusive(const std::string&amp; cookie);
+  int lock_shared(const std::string&amp; cookie, const std::string&amp; tag);
+  int unlock(const std::string&amp; cookie);
+  int break_lock(const std::string&amp; client, const std::string&amp; cookie);
+
+  /* snapshots */
+  int snap_list(std::vector&lt;snap_info_t&gt;&amp; snaps);
+  /* DEPRECATED; use snap_exists2 */
+  bool snap_exists(const char *snapname) __attribute__ ((deprecated));
+  int snap_exists2(const char *snapname, bool *exists);
+  int snap_create(const char *snapname);
+  int snap_remove(const char *snapname);
+  int snap_remove2(const char *snapname, uint32_t flags, ProgressContext&amp; pctx);
+  int snap_remove_by_id(uint64_t snap_id);
+  int snap_rollback(const char *snap_name);
+  int snap_rollback_with_progress(const char *snap_name, ProgressContext&amp; pctx);
+  int snap_protect(const char *snap_name);
+  int snap_unprotect(const char *snap_name);
+  int snap_is_protected(const char *snap_name, bool *is_protected);
+  int snap_set(const char *snap_name);
+  int snap_set_by_id(uint64_t snap_id);
+  int snap_rename(const char *srcname, const char *dstname);
+  int snap_get_limit(uint64_t *limit);
+  int snap_set_limit(uint64_t limit);
+  int snap_get_timestamp(uint64_t snap_id, struct timespec *timestamp);
+  int snap_get_namespace_type(uint64_t snap_id,
+                              snap_namespace_type_t *namespace_type);
+  int snap_get_group_namespace(uint64_t snap_id,
+                               snap_group_namespace_t *group_namespace,
+                               size_t snap_group_namespace_size);
+  int snap_get_trash_namespace(uint64_t snap_id, std::string* original_name);
+
+  /* I/O */
+  ssize_t read(uint64_t ofs, size_t len, ceph::bufferlist&amp; bl);
+  /* @param op_flags see librados.h constants beginning with LIBRADOS_OP_FLAG */
+  ssize_t read2(uint64_t ofs, size_t len, ceph::bufferlist&amp; bl, int op_flags);
+  int64_t read_iterate(uint64_t ofs, size_t len,
+		       int (*cb)(uint64_t, size_t, const char *, void *), void *arg);
+  int read_iterate2(uint64_t ofs, uint64_t len,
+		    int (*cb)(uint64_t, size_t, const char *, void *), void *arg);
+  /**
+   * get difference between two versions of an image
+   *
+   * This will return the differences between two versions of an image
+   * via a callback, which gets the offset and length and a flag
+   * indicating whether the extent exists (1), or is known/defined to
+   * be zeros (a hole, 0).  If the source snapshot name is NULL, we
+   * interpret that as the beginning of time and return all allocated
+   * regions of the image.  The end version is whatever is currently
+   * selected for the image handle (either a snapshot or the writeable
+   * head).
+   *
+   * @param fromsnapname start snapshot name, or NULL
+   * @param ofs start offset
+   * @param len len in bytes of region to report on
+   * @param include_parent true if full history diff should include parent
+   * @param whole_object 1 if diff extents should cover whole object
+   * @param cb callback to call for each allocated region
+   * @param arg argument to pass to the callback
+   * @returns 0 on success, or negative error code on error
+   */
+  int diff_iterate(const char *fromsnapname,
+		   uint64_t ofs, uint64_t len,
+		   int (*cb)(uint64_t, size_t, int, void *), void *arg);
+  int diff_iterate2(const char *fromsnapname,
+		    uint64_t ofs, uint64_t len,
+                    bool include_parent, bool whole_object,
+		    int (*cb)(uint64_t, size_t, int, void *), void *arg);
+
+  ssize_t write(uint64_t ofs, size_t len, ceph::bufferlist&amp; bl);
+  /* @param op_flags see librados.h constants beginning with LIBRADOS_OP_FLAG */
+  ssize_t write2(uint64_t ofs, size_t len, ceph::bufferlist&amp; bl, int op_flags);
+  int discard(uint64_t ofs, uint64_t len);
+  ssize_t writesame(uint64_t ofs, size_t len, ceph::bufferlist &amp;bl, int op_flags);
+  ssize_t compare_and_write(uint64_t ofs, size_t len, ceph::bufferlist &amp;cmp_bl,
+                            ceph::bufferlist&amp; bl, uint64_t *mismatch_off, int op_flags);
+
+  int aio_write(uint64_t off, size_t len, ceph::bufferlist&amp; bl, RBD::AioCompletion *c);
+  /* @param op_flags see librados.h constants beginning with LIBRADOS_OP_FLAG */
+  int aio_write2(uint64_t off, size_t len, ceph::bufferlist&amp; bl,
+		  RBD::AioCompletion *c, int op_flags);
+  int aio_writesame(uint64_t off, size_t len, ceph::bufferlist&amp; bl,
+                    RBD::AioCompletion *c, int op_flags);
+  int aio_compare_and_write(uint64_t off, size_t len, ceph::bufferlist&amp; cmp_bl,
+                            ceph::bufferlist&amp; bl, RBD::AioCompletion *c,
+                            uint64_t *mismatch_off, int op_flags);
+  /**
+   * read async from image
+   *
+   * The target bufferlist is populated with references to buffers
+   * that contain the data for the given extent of the image.
+   *
+   * NOTE: If caching is enabled, the bufferlist will directly
+   * reference buffers in the cache to avoid an unnecessary data copy.
+   * As a result, if the user intends to modify the buffer contents
+   * directly, they should make a copy first (unconditionally, or when
+   * the reference count on ther underlying buffer is more than 1).
+   *
+   * @param off offset in image
+   * @param len length of read
+   * @param bl bufferlist to read into
+   * @param c aio completion to notify when read is complete
+   */
+  int aio_read(uint64_t off, size_t len, ceph::bufferlist&amp; bl, RBD::AioCompletion *c);
+  /* @param op_flags see librados.h constants beginning with LIBRADOS_OP_FLAG */
+  int aio_read2(uint64_t off, size_t len, ceph::bufferlist&amp; bl,
+		  RBD::AioCompletion *c, int op_flags);
+  int aio_discard(uint64_t off, uint64_t len, RBD::AioCompletion *c);
+
+  int flush();
+  /**
+   * Start a flush if caching is enabled. Get a callback when
+   * the currently pending writes are on disk.
+   *
+   * @param image the image to flush writes to
+   * @param c what to call when flushing is complete
+   * @returns 0 on success, negative error code on failure
+   */
+  int aio_flush(RBD::AioCompletion *c);
+
+  /**
+   * Drop any cached data for this image
+   *
+   * @returns 0 on success, negative error code on failure
+   */
+  int invalidate_cache();
+
+  int poll_io_events(RBD::AioCompletion **comps, int numcomp);
+
+  int metadata_get(const std::string &amp;key, std::string *value);
+  int metadata_set(const std::string &amp;key, const std::string &amp;value);
+  int metadata_remove(const std::string &amp;key);
+  /**
+   * Returns a pair of key/value for this image
+   */
+  int metadata_list(const std::string &amp;start, uint64_t max, std::map&lt;std::string, ceph::bufferlist&gt; *pairs);
+
+  // RBD image mirroring support functions
+  int mirror_image_enable();
+  int mirror_image_disable(bool force);
+  int mirror_image_promote(bool force);
+  int mirror_image_demote();
+  int mirror_image_resync();
+  int mirror_image_get_info(mirror_image_info_t *mirror_image_info,
+                            size_t info_size);
+  int mirror_image_get_status(mirror_image_status_t *mirror_image_status,
+			      size_t status_size);
+  int mirror_image_get_instance_id(std::string *instance_id);
+  int aio_mirror_image_promote(bool force, RBD::AioCompletion *c);
+  int aio_mirror_image_demote(RBD::AioCompletion *c);
+  int aio_mirror_image_get_info(mirror_image_info_t *mirror_image_info,
+                                size_t info_size, RBD::AioCompletion *c);
+  int aio_mirror_image_get_status(mirror_image_status_t *mirror_image_status,
+                                  size_t status_size, RBD::AioCompletion *c);
+
+  int update_watch(UpdateWatchCtx *ctx, uint64_t *handle);
+  int update_unwatch(uint64_t handle);
+
+  int list_watchers(std::list&lt;image_watcher_t&gt; &amp;watchers);
+
+  int config_list(std::vector&lt;config_option_t&gt; *options);
+
+private:
+  friend class RBD;
+
+  Image(const Image&amp; rhs);
+  const Image&amp; operator=(const Image&amp; rhs);
+
+  image_ctx_t ctx; // void*, 实际指向具体实现的类
+};
+</code></pre>
+<h5 id="具体实现">具体实现</h5>
+<ul>
+<li><a href="https://github.com/ceph/ceph/blob/master/src/librbd/librbd.cc">librbd.cc</a> 主要实现了 I/O 相关接口 read/write。</li>
+<li><a href="https://github.com/ceph/ceph/blob/master/src/librbd/internal.cc">internal.cc</a> 主要实现了定义在头文件中的相关函数接口</li>
+</ul>
+<h4 id="cls">Cls</h4>
+<ul>
+<li>cls_rbd是Cls的一个扩展模块，Cls允许用户自定义对象的操作接口和实现方法，为用户提供了一种比较直接的接口扩展方式。通过动态链接的形式加入 osd 中，在 osd 上直接执行。</li>
+</ul>
+<h5 id="client">Client</h5>
+<ul>
+<li><a href="https://github.com/ceph/ceph/blob/master/src/cls/rbd/cls_rbd_client.cc">cls_rbd_client.h/cc</a> 该文件中主要定义了客户端上运行的接口，将函数参数封装后发送给服务端 OSD ，然后做后续处理.</li>
+<li><code>cls_rbd_client.h/cc</code> 定义了通过客户端访问osd注册的cls函数的方法。以 <code>snapshot_add</code> 函数和 <code>create_image</code> 函数为例，这个函数将参数封装进 bufferlist ，通过 ioctx-&gt;exec 方法，把操作发送给osd处理。</li>
+</ul>
+<pre><code class="language-C++">void snapshot_add(librados::ObjectWriteOperation *op, snapid_t snap_id,
+              const std::string &amp;snap_name, const cls::rbd::SnapshotNamespace &amp;snap_namespace)
+{
+  bufferlist bl;
+  ::encode(snap_name, bl);
+  ::encode(snap_id, bl);
+  ::encode(cls::rbd::SnapshotNamespaceOnDisk(snap_namespace), bl);
+  op-&gt;exec(&quot;rbd&quot;, &quot;snapshot_add&quot;, bl);
+}
+
+void create_image(librados::ObjectWriteOperation *op, uint64_t size,
+                  uint8_t order, uint64_t features,
+                  const std::string &amp;object_prefix, int64_t data_pool_id)
+{
+  bufferlist bl;
+  ::encode(size, bl);
+  ::encode(order, bl);
+  ::encode(features, bl);
+  ::encode(object_prefix, bl);
+  ::encode(data_pool_id, bl);
+
+  op-&gt;exec(&quot;rbd&quot;, &quot;create&quot;, bl);
+}
+
+int create_image(librados::IoCtx *ioctx, const std::string &amp;oid,
+                 uint64_t size, uint8_t order, uint64_t features,
+                 const std::string &amp;object_prefix, int64_t data_pool_id)
+{
+  librados::ObjectWriteOperation op;
+  create_image(&amp;op, size, order, features, object_prefix, data_pool_id);
+  return ioctx-&gt;operate(oid, &amp;op);
+}
+</code></pre>
+<h5 id="server">Server</h5>
+<ul>
+<li><a href="https://github.com/ceph/ceph/blob/master/src/cls/rbd/cls_rbd.cc">cls_rbd.h/cc</a> 该类中主要定义了服务端上（OSD）执行的函数，响应客户端的请求。在 <code>cls_rbd.cc</code> 函数中，对函数进行定义和注册。</li>
+<li>例如，下面的代码注册了rbd模块，以及 <code>snapshot_add</code> 和 <code>create</code> 函数。</li>
+</ul>
+<pre><code class="language-C++">  cls_register(&quot;rbd&quot;, &amp;h_class);
+  cls_register_cxx_method(h_class, &quot;snapshot_add&quot;,
+              CLS_METHOD_RD | CLS_METHOD_WR,
+              snapshot_add, &amp;h_snapshot_add);
+              
+  cls_register_cxx_method(h_class, &quot;create&quot;,
+			  CLS_METHOD_RD | CLS_METHOD_WR,
+			  create, &amp;h_create);
+</code></pre>
+<ul>
+<li>cls_rbd.cc定义了方法在服务端的实现，其一般流程是：从bufferlist将客户端传入的参数解析出来，调用对应的方法实现，然后将结果返回客户端。</li>
+</ul>
+<pre><code class="language-C++">/**
+ * Adds a snapshot to an rbd header. Ensures the id and name are unique.
+ */
+int snapshot_add(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
+{
+  bufferlist snap_namebl, snap_idbl;
+  cls_rbd_snap snap_meta;
+  uint64_t snap_limit;
+  // 从bl中解析参数
+  try {
+    bufferlist::iterator iter = in-&gt;begin();
+    ::decode(snap_meta.name, iter);
+    ::decode(snap_meta.id, iter);
+    if (!iter.end()) {
+      ::decode(snap_meta.snapshot_namespace, iter);
+    }
+  } catch (const buffer::error &amp;err) {
+    return -EINVAL;
+  }
+  // 判断参数合法性，略
+  ......
+  // 完成操作，在rbd_header对象中增加新的snapshot元数据，并更新sanp_seq。
+  map&lt;string, bufferlist&gt; vals;
+  vals[&quot;snap_seq&quot;] = snap_seqbl;
+  vals[snapshot_key] = snap_metabl;
+  r = cls_cxx_map_set_vals(hctx, &amp;vals);
+  if (r &lt; 0) {
+    CLS_ERR(&quot;error writing snapshot metadata: %s&quot;, cpp_strerror(r).c_str());
+    return r;
+  }
+  return 0;
+}
+
+/**
+ * Initialize the header with basic metadata.
+ * Extra features may initialize more fields in the future.
+ * Everything is stored as key/value pairs as omaps in the header object.
+ *
+ * If features the OSD does not understand are requested, -ENOSYS is
+ * returned.
+ *
+ * Input:
+ * @param size number of bytes in the image (uint64_t)
+ * @param order bits to shift to determine the size of data objects (uint8_t)
+ * @param features what optional things this image will use (uint64_t)
+ * @param object_prefix a prefix for all the data objects
+ * @param data_pool_id pool id where data objects is stored (int64_t)
+ *
+ * Output:
+ * @return 0 on success, negative error code on failure
+ */
+int create(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
+{
+  string object_prefix;
+  uint64_t features, size;
+  uint8_t order;
+  int64_t data_pool_id = -1;
+
+  // 从 buffer 里解析参数
+  try {
+    auto iter = in-&gt;cbegin();
+    decode(size, iter);
+    decode(order, iter);
+    decode(features, iter);
+    decode(object_prefix, iter);
+    if (!iter.end()) {
+      decode(data_pool_id, iter);
+    }
+  } catch (const buffer::error &amp;err) {
+    return -EINVAL;
+  }
+
+  CLS_LOG(20, &quot;create object_prefix=%s size=%llu order=%u features=%llu&quot;,
+	  object_prefix.c_str(), (unsigned long long)size, order,
+	  (unsigned long long)features);
+
+  if (features &amp; ~RBD_FEATURES_ALL) {
+    return -ENOSYS;
+  }
+
+  if (!object_prefix.size()) {
+    return -EINVAL;
+  }
+
+  bufferlist stored_prefixbl;
+    // 从 cls context 里获取 object_prefix
+  int r = cls_cxx_map_get_val(hctx, &quot;object_prefix&quot;, &amp;stored_prefixbl);
+  if (r != -ENOENT) {
+    CLS_ERR(&quot;reading object_prefix returned %d&quot;, r);
+    return -EEXIST;
+  }
+
+  bufferlist sizebl;
+  bufferlist orderbl;
+  bufferlist featuresbl;
+  bufferlist object_prefixbl;
+  bufferlist snap_seqbl;
+  bufferlist timestampbl;
+  uint64_t snap_seq = 0;
+  utime_t timestamp = ceph_clock_now();
+  encode(size, sizebl);
+  encode(order, orderbl);
+  encode(features, featuresbl);
+  encode(object_prefix, object_prefixbl);
+  encode(snap_seq, snap_seqbl);
+  encode(timestamp, timestampbl);
+
+  // 更新 rbd_header omap 
+  map&lt;string, bufferlist&gt; omap_vals;
+  omap_vals[&quot;size&quot;] = sizebl;
+  omap_vals[&quot;order&quot;] = orderbl;
+  omap_vals[&quot;features&quot;] = featuresbl;
+  omap_vals[&quot;object_prefix&quot;] = object_prefixbl;
+  omap_vals[&quot;snap_seq&quot;] = snap_seqbl;
+  omap_vals[&quot;create_timestamp&quot;] = timestampbl;
+  omap_vals[&quot;access_timestamp&quot;] = timestampbl;
+  omap_vals[&quot;modify_timestamp&quot;] = timestampbl;
+
+  if ((features &amp; RBD_FEATURE_OPERATIONS) != 0ULL) {
+    CLS_ERR(&quot;Attempting to set internal feature: operations&quot;);
+    return -EINVAL;
+  }
+
+  if (features &amp; RBD_FEATURE_DATA_POOL) {
+    if (data_pool_id == -1) {
+      CLS_ERR(&quot;data pool not provided with feature enabled&quot;);
+      return -EINVAL;
+    }
+
+    bufferlist data_pool_id_bl;
+    encode(data_pool_id, data_pool_id_bl);
+    omap_vals[&quot;data_pool_id&quot;] = data_pool_id_bl;
+  } else if (data_pool_id != -1) {
+    CLS_ERR(&quot;data pool provided with feature disabled&quot;);
+    return -EINVAL;
+  }
+
+  // 更新 OMAP
+  r = cls_cxx_map_set_vals(hctx, &amp;omap_vals);
+  if (r &lt; 0)
+    return r;
+
+  return 0;
+}
+</code></pre>
+<h4 id="others">Others</h4>
+<figure data-type="image" tabindex="7"><img src="https://github.com/zjs1224522500/files-and-images/blob/0d8833c01f0f0d26954bbe6dfcfddce1b60eb9a9/blog/pic/librbd-io-method-stack.png?raw=true" alt="image" loading="lazy"></figure>
+<h4 id="分片-striper">分片 Striper</h4>
+<ul>
+<li>Ceph RBD 默认分片到了许多对象上，这些对象最终会存储在 RADOS 中，对 RBD Image 的读写请求会分布在集群中的很多个节点上，从而避免当 RBD Image 特别大或者繁忙的时候，单个节点不会成为瓶颈。</li>
+<li>Ceph RBD 的分片由三个参数控制
+<ul>
+<li>object-size，代码中常常简写为 os，通常为 2 的幂指数，默认的对象大小是4 MB，最小的是4K，最大的是32M</li>
+<li>stripe_unit，代码中常常简写为 su，一个对象中存储了连续该大小的分片。默认和对象大小相等。</li>
+<li>stripe_count，代码中常常简写为 sc，在向 [stripe_count] 对象写入 [stripe_unit] 字节后，循环到初始对象并写入另一个条带，直到对象达到其最大大小。此时，将继续处理下一个 [stripe_count] 对象。</li>
+</ul>
+</li>
+<li>分片的组织形式类似于 RAID0，看一个来自官网的 <a href="https://ceph.readthedocs.io/en/latest/dev/file-striping/">例子</a>。此处只举例一个 Object Set，对象大小在如下图示中即为纵向的一个对象大小，由整数个分片单元组成，而一个分片是指指定 stripe_count 个 stripe_unit，图示中的 stripe_count 即为 5，假设 stripe_unit 为 64KB，那么对应的分片大小即为 320KB，对象大小如果设置为 64GB，那么一个对象对应的就会有 64GB/64KB = 1048576 个 stripe_unit.</li>
+</ul>
+<pre><code class="language-C">   _________   _________   _________   _________   _________
+  /object  0\ /object  1\ /object  2\ /object  3\ /object  4\
+  +=========+ +=========+ +=========+ +=========+ +=========+
+  |  stripe | |  stripe | |  stripe | |  stripe | |  stripe |
+o |   unit  | |   unit  | |   unit  | |   unit  | |   unit  | stripe 0
+b |     0   | |     1   | |     2   | |     3   | |     4   |
+j |---------| |---------| |---------| |---------| |---------|
+e |  stripe | |  stripe | |  stripe | |  stripe | |  stripe |
+c |   unit  | |   unit  | |   unit  | |   unit  | |   unit  | stripe 1
+t |     5   | |     6   | |     7   | |     8   | |     9   |
+  |---------| |---------| |---------| |---------| |---------|
+s |     .   | |     .   | |     .   | |     .   | |     .   |
+e       .           .           .           .           .
+t |     .   | |     .   | |     .   | |     .   | |     .   |
+  |---------| |---------| |---------| |---------| |---------|
+0 |  stripe | |  stripe | |  stripe | |  stripe | |  stripe | stripe
+  |   unit  | |   unit  | |   unit  | |   unit  | |   unit  | 1048575
+  | 5242875 | | 5242876 | | 5242877 | | 5242878 | | 5242879 |
+  \=========/ \=========/ \=========/ \=========/ \=========/
+</code></pre>
+<ul>
+<li><a href="https://github.com/ceph/ceph/blob/master/src/osdc/Striper.h">ceph/src/osdc/Striper.h</a></li>
+</ul>
+<pre><code class="language-C++">  class Striper {
+  public:
+    static void file_to_extents(
+        CephContext *cct, const file_layout_t *layout, uint64_t offset,
+        uint64_t len, uint64_t trunc_size, uint64_t buffer_offset,
+        striper::LightweightObjectExtents* object_extents);
+
+    /*
+     * std::map (ino, layout, offset, len) to a (list of) ObjectExtents (byte
+     * ranges in objects on (primary) osds)
+     */
+    static void file_to_extents(CephContext *cct, const char *object_format,
+				const file_layout_t *layout,
+				uint64_t offset, uint64_t len,
+				uint64_t trunc_size,
+				std::map&lt;object_t, std::vector&lt;ObjectExtent&gt; &gt;&amp; extents,
+				uint64_t buffer_offset=0);
+
+...
+</code></pre>
+<ul>
+<li>分片大小对应的数据结构：</li>
+</ul>
+<pre><code class="language-C++">struct file_layout_t {
+  // file -&gt; object mapping
+  uint32_t stripe_unit;   ///&lt; stripe unit, in bytes,
+  uint32_t stripe_count;  ///&lt; over this many objects
+  uint32_t object_size;   ///&lt; until objects are this big
+
+  int64_t pool_id;        ///&lt; rados pool id
+  std::string pool_ns;         ///&lt; rados pool namespace
+
+  file_layout_t(uint32_t su=0, uint32_t sc=0, uint32_t os=0)
+    : stripe_unit(su),
+      stripe_count(sc),
+      object_size(os),
+      pool_id(-1) {
+  }
+
+  // 默认分片大小 4MB
+  static file_layout_t get_default() {
+    return file_layout_t(1&lt;&lt;22, 1, 1&lt;&lt;22);
+  }
+
+  uint64_t get_period() const {
+    return static_cast&lt;uint64_t&gt;(stripe_count) * object_size;
+  }
+
+  void from_legacy(const ceph_file_layout&amp; fl);
+  void to_legacy(ceph_file_layout *fl) const;
+
+  bool is_valid() const;
+
+  void encode(ceph::buffer::list&amp; bl, uint64_t features) const;
+  void decode(ceph::buffer::list::const_iterator&amp; p);
+  void dump(ceph::Formatter *f) const;
+  void decode_json(JSONObj *obj);
+  static void generate_test_instances(std::list&lt;file_layout_t*&gt;&amp; o);
+};
+</code></pre>
+<ul>
+<li>查看分片类对应的实现：<a href="https://github.com/ceph/ceph/blob/master/src/osdc/Striper.cc">ceph/src/osdc/Striper.cc</a></li>
+</ul>
+<pre><code class="language-C++">void Striper::file_to_extents(CephContext *cct, const char *object_format,
+			      const file_layout_t *layout,
+			      uint64_t offset, uint64_t len,
+			      uint64_t trunc_size,
+			      std::vector&lt;ObjectExtent&gt;&amp; extents,
+			      uint64_t buffer_offset)
+{
+  striper::LightweightObjectExtents lightweight_object_extents;
+  file_to_extents(cct, layout, offset, len, trunc_size, buffer_offset,
+                  &amp;lightweight_object_extents);
+
+  // convert lightweight object extents to heavyweight version
+  extents.reserve(lightweight_object_extents.size());
+  for (auto&amp; lightweight_object_extent : lightweight_object_extents) {
+    auto&amp; object_extent = extents.emplace_back(
+      object_t(format_oid(object_format, lightweight_object_extent.object_no)),
+      lightweight_object_extent.object_no,
+      lightweight_object_extent.offset, lightweight_object_extent.length,
+      lightweight_object_extent.truncate_size);
+
+    object_extent.oloc = OSDMap::file_to_object_locator(*layout);
+    object_extent.buffer_extents.reserve(
+      lightweight_object_extent.buffer_extents.size());
+    object_extent.buffer_extents.insert(
+      object_extent.buffer_extents.end(),
+      lightweight_object_extent.buffer_extents.begin(),
+      lightweight_object_extent.buffer_extents.end());
+  }
+}
+
+void Striper::file_to_extents(
+    CephContext *cct, const file_layout_t *layout, uint64_t offset,
+    uint64_t len, uint64_t trunc_size, uint64_t buffer_offset,
+    striper::LightweightObjectExtents* object_extents) {
+  ldout(cct, 10) &lt;&lt; &quot;file_to_extents &quot; &lt;&lt; offset &lt;&lt; &quot;~&quot; &lt;&lt; len &lt;&lt; dendl;
+  ceph_assert(len &gt; 0);
+
+  /*
+   * we want only one extent per object!  this means that each extent
+   * we read may map into different bits of the final read
+   * buffer.. hence buffer_extents
+   */
+
+  __u32 object_size = layout-&gt;object_size;
+  __u32 su = layout-&gt;stripe_unit;
+  __u32 stripe_count = layout-&gt;stripe_count;
+  ceph_assert(object_size &gt;= su);
+  if (stripe_count == 1) {
+    ldout(cct, 20) &lt;&lt; &quot; sc is one, reset su to os&quot; &lt;&lt; dendl;
+    su = object_size;
+  }
+  uint64_t stripes_per_object = object_size / su;
+  ldout(cct, 20) &lt;&lt; &quot; su &quot; &lt;&lt; su &lt;&lt; &quot; sc &quot; &lt;&lt; stripe_count &lt;&lt; &quot; os &quot;
+		 &lt;&lt; object_size &lt;&lt; &quot; stripes_per_object &quot; &lt;&lt; stripes_per_object
+		 &lt;&lt; dendl;
+
+  uint64_t cur = offset;
+  uint64_t left = len;
+  while (left &gt; 0) {
+    // layout into objects
+    uint64_t blockno = cur / su; // which block
+    // which horizontal stripe (Y)
+    uint64_t stripeno = blockno / stripe_count;
+    // which object in the object set (X)
+    uint64_t stripepos = blockno % stripe_count;
+    // which object set
+    uint64_t objectsetno = stripeno / stripes_per_object;
+    // object id
+    uint64_t objectno = objectsetno * stripe_count + stripepos;
+
+    // map range into object
+    uint64_t block_start = (stripeno % stripes_per_object) * su;
+    uint64_t block_off = cur % su;
+    uint64_t max = su - block_off;
+
+    uint64_t x_offset = block_start + block_off;
+    uint64_t x_len;
+    if (left &gt; max)
+      x_len = max;
+    else
+      x_len = left;
+
+    ldout(cct, 20) &lt;&lt; &quot; off &quot; &lt;&lt; cur &lt;&lt; &quot; blockno &quot; &lt;&lt; blockno &lt;&lt; &quot; stripeno &quot;
+		   &lt;&lt; stripeno &lt;&lt; &quot; stripepos &quot; &lt;&lt; stripepos &lt;&lt; &quot; objectsetno &quot;
+		   &lt;&lt; objectsetno &lt;&lt; &quot; objectno &quot; &lt;&lt; objectno
+		   &lt;&lt; &quot; block_start &quot; &lt;&lt; block_start &lt;&lt; &quot; block_off &quot;
+		   &lt;&lt; block_off &lt;&lt; &quot; &quot; &lt;&lt; x_offset &lt;&lt; &quot;~&quot; &lt;&lt; x_len
+		   &lt;&lt; dendl;
+
+    striper::LightweightObjectExtent* ex = nullptr;
+    auto it = std::upper_bound(object_extents-&gt;begin(), object_extents-&gt;end(),
+                               objectno, OrderByObject());
+    striper::LightweightObjectExtents::reverse_iterator rev_it(it);
+    if (rev_it == object_extents-&gt;rend() ||
+        rev_it-&gt;object_no != objectno ||
+        rev_it-&gt;offset + rev_it-&gt;length != x_offset) {
+      // expect up to &quot;stripe-width - 1&quot; vector shifts in the worst-case
+      ex = &amp;(*object_extents-&gt;emplace(
+        it, objectno, x_offset, x_len,
+        object_truncate_size(cct, layout, objectno, trunc_size)));
+        ldout(cct, 20) &lt;&lt; &quot; added new &quot; &lt;&lt; *ex &lt;&lt; dendl;
+    } else {
+      ex = &amp;(*rev_it);
+      ceph_assert(ex-&gt;offset + ex-&gt;length == x_offset);
+
+      ldout(cct, 20) &lt;&lt; &quot; adding in to &quot; &lt;&lt; *ex &lt;&lt; dendl;
+      ex-&gt;length += x_len;
+    }
+
+    ex-&gt;buffer_extents.emplace_back(cur - offset + buffer_offset, x_len);
+
+    ldout(cct, 15) &lt;&lt; &quot;file_to_extents  &quot; &lt;&lt; *ex &lt;&lt; dendl;
+    // ldout(cct, 0) &lt;&lt; &quot;map: ino &quot; &lt;&lt; ino &lt;&lt; &quot; oid &quot; &lt;&lt; ex.oid &lt;&lt; &quot; osd &quot;
+    //		  &lt;&lt; ex.osd &lt;&lt; &quot; offset &quot; &lt;&lt; ex.offset &lt;&lt; &quot; len &quot; &lt;&lt; ex.len
+    //		  &lt;&lt; &quot; ... left &quot; &lt;&lt; left &lt;&lt; dendl;
+
+    left -= x_len;
+    cur += x_len;
+  }
+}
+</code></pre>
+<h4 id="数据-io">数据 IO</h4>
+<ul>
+<li>主要对应于 <code>ImageCtx::io_work_queue</code> 成员变量。<code>librbd::io::ImageRequestWQ</code> 派生自 <code>ThreadPool::PointerWQ&lt;ImageRequest&gt;（&lt;= Luminous） / ThreadPool::PointerWQ&lt;ImageDispatchSpec&gt;（&gt;= Mimic）</code>。</li>
+<li>librbd 支持两种类型的 aio，一种是普通的 aio，一种是非阻塞 aio。前者的行为相对简单，直接在用户线程的上下文进行 io 处理，而后者将用户的 io 直接入 <code>io_work_queue</code> 队列，然后 io 由队列的工作线程出队并在工作线程上下文进行后续的处理。这两种 aio 的行为由配置参数 <code>rbd_non_blocking_aio</code> 决定，默认为 true，因此默认为非阻塞 aio，但需要注意的是，即使默认不是非阻塞 aio，在某些场景下 aio 仍然会需要入 <code>io_work_queue</code> 队列，总结如下:</li>
+</ul>
+<h5 id="read">read</h5>
+<ul>
+<li><code>ImageRequestWQ::writes_blocked()</code> 为 true，即已调用 <code>ImageRequestWQ::block_writes</code>，当前已禁止 write io 下发至 rados 层；</li>
+<li><code>ImageRequestWQ::writes_empty()</code> 为 false，即前面已经有 write io 入了 <code>io_work_queue</code> 队列；</li>
+<li><code>ImageRequestWQ::require_lock_on_read()</code> 为 true，这里的 lock 是指 exclusive lock，表示当前还未拿到，在启用 exclusive lock 特性的前提下，一旦开启克隆 COR (copy on read) 或者启用 journaling 特性，处理 read io 也要求拿锁；</li>
+</ul>
+<h5 id="write">write</h5>
+<ul>
+<li><code>ImageRequestWQ::writes_blocked()</code> 为 true，即已调用 <code>ImageRequestWQ::block_writes</code>，当前已禁止 write io 下发至 rados 层；</li>
+<li>对于 write 而言，并没有类似 <code>ImageRequestWQ::require_lock_on_write</code> 的接口，这是因为一旦启用 exclusive lock 特性，在初始化 exclusive lock 时会调用 <code>ImageRequestWQ::block_writes</code>（参考 ExclusiveLock::init），直至拿到锁（参考 <code>ExclusiveLock::handle_post_acquired_lock</code>），因此增加 <code>ImageRequestWQ::require_lock_on_write</code> 接口并没有必要。</li>
+<li>需要注意的是，ImageRequestWQ::block_writes 并不只是简单的设置禁止标志，还需要 flush 已下发的 rados io，即等待所有已下发的 rados io 结束才返回。</li>
+<li>从上面对 read、write 的分析，似乎 <code>ImageRequestWQ::writes_blocked</code> 改成 <code>ImageRequestWQ::io_blocked</code> 似乎更合理，但实际上这里并没有真的禁止 read io 下发至 rados 层，只是让 read io 先入 <code>io_work_queue</code> 队列。</li>
+</ul>
+<h4 id="tcmu-rbd">TCMU-RBD</h4>
+<pre><code class="language-C++">static void tcmu_rbd_image_close(struct tcmu_device *dev)
+{
+	struct tcmu_rbd_state *state = tcmur_dev_get_private(dev);
+
+	rbd_close(state-&gt;image);
+	rados_ioctx_destroy(state-&gt;io_ctx);
+	rados_shutdown(state-&gt;cluster);
+
+	state-&gt;cluster = NULL;
+	state-&gt;io_ctx = NULL;
+	state-&gt;image = NULL;
+}
+
+static int tcmu_rbd_image_open(struct tcmu_device *dev)
+{
+	struct tcmu_rbd_state *state = tcmur_dev_get_private(dev);
+	int ret;
+
+	ret = rados_create(&amp;state-&gt;cluster, state-&gt;id);
+	if (ret &lt; 0) {
+		tcmu_dev_err(dev, &quot;Could not create cluster. (Err %d)\n&quot;, ret);
+		return ret;
+	}
+
+	/* Try default location when conf_path=NULL, but ignore failure */
+	ret = rados_conf_read_file(state-&gt;cluster, state-&gt;conf_path);
+	if (state-&gt;conf_path &amp;&amp; ret &lt; 0) {
+		tcmu_dev_err(dev, &quot;Could not read config %s (Err %d)&quot;,
+			     state-&gt;conf_path, ret);
+		goto rados_shutdown;
+	}
+
+	rados_conf_set(state-&gt;cluster, &quot;rbd_cache&quot;, &quot;false&quot;);
+
+	ret = timer_check_and_set_def(dev);
+	if (ret)
+		tcmu_dev_warn(dev,
+			      &quot;Could not set rados osd op timeout to %s (Err %d. Failover may be delayed.)\n&quot;,
+			      state-&gt;osd_op_timeout, ret);
+
+	ret = rados_connect(state-&gt;cluster);
+	if (ret &lt; 0) {
+		tcmu_dev_err(dev, &quot;Could not connect to cluster. (Err %d)\n&quot;,
+			     ret);
+		goto rados_shutdown;
+	}
+
+	tcmu_rbd_detect_device_class(dev);
+	ret = rados_ioctx_create(state-&gt;cluster, state-&gt;pool_name,
+				 &amp;state-&gt;io_ctx);
+	if (ret &lt; 0) {
+		tcmu_dev_err(dev, &quot;Could not create ioctx for pool %s. (Err %d)\n&quot;,
+			     state-&gt;pool_name, ret);
+		goto rados_shutdown;
+	}
+
+	ret = rbd_open(state-&gt;io_ctx, state-&gt;image_name, &amp;state-&gt;image, NULL);
+	if (ret &lt; 0) {
+		tcmu_dev_err(dev, &quot;Could not open image %s. (Err %d)\n&quot;,
+			     state-&gt;image_name, ret);
+		goto rados_destroy;
+	}
+
+	ret = tcmu_rbd_service_register(dev);
+	if (ret &lt; 0)
+		goto rbd_close;
+
+	return 0;
+
+rbd_close:
+	rbd_close(state-&gt;image);
+	state-&gt;image = NULL;
+rados_destroy:
+	rados_ioctx_destroy(state-&gt;io_ctx);
+	state-&gt;io_ctx = NULL;
+rados_shutdown:
+	rados_shutdown(state-&gt;cluster);
+	state-&gt;cluster = NULL;
+	return ret;
+}
+
+static int tcmu_rbd_open(struct tcmu_device *dev, bool reopen)
+{
+	rbd_image_info_t image_info;
+	char *pool, *name, *next_opt;
+	char *config, *dev_cfg_dup;
+	struct tcmu_rbd_state *state;
+	uint32_t max_blocks;
+	int ret;
+
+	state = calloc(1, sizeof(*state));
+	if (!state)
+		return -ENOMEM;
+	tcmur_dev_set_private(dev, state);
+
+	dev_cfg_dup = strdup(tcmu_dev_get_cfgstring(dev));
+	config = dev_cfg_dup;
+	if (!config) {
+		ret = -ENOMEM;
+		goto free_state;
+	}
+
+	tcmu_dev_dbg(dev, &quot;tcmu_rbd_open config %s block size %u num lbas %&quot; PRIu64 &quot;.\n&quot;,
+		     config, tcmu_dev_get_block_size(dev),
+		     tcmu_dev_get_num_lbas(dev));
+
+	config = strchr(config, '/');
+	if (!config) {
+		tcmu_dev_err(dev, &quot;no configuration found in cfgstring\n&quot;);
+		ret = -EINVAL;
+		goto free_config;
+	}
+	config += 1; /* get past '/' */
+
+	pool = strtok(config, &quot;/&quot;);
+	if (!pool) {
+		tcmu_dev_err(dev, &quot;Could not get pool name\n&quot;);
+		ret = -EINVAL;
+		goto free_config;
+	}
+	state-&gt;pool_name = strdup(pool);
+	if (!state-&gt;pool_name) {
+		ret = -ENOMEM;
+		tcmu_dev_err(dev, &quot;Could not copy pool name\n&quot;);
+		goto free_config;
+	}
+
+	name = strtok(NULL, &quot;;&quot;);
+	if (!name) {
+		tcmu_dev_err(dev, &quot;Could not get image name\n&quot;);
+		ret = -EINVAL;
+		goto free_config;
+	}
+
+	state-&gt;image_name = strdup(name);
+	if (!state-&gt;image_name) {
+		ret = -ENOMEM;
+		tcmu_dev_err(dev, &quot;Could not copy image name\n&quot;);
+		goto free_config;
+	}
+
+	/* The next options are optional */
+	next_opt = strtok(NULL, &quot;;&quot;);
+	while (next_opt) {
+		if (!strncmp(next_opt, &quot;osd_op_timeout=&quot;, 15)) {
+			state-&gt;osd_op_timeout = strdup(next_opt + 15);
+			if (!state-&gt;osd_op_timeout ||
+			    !strlen(state-&gt;osd_op_timeout)) {
+				ret = -ENOMEM;
+				tcmu_dev_err(dev, &quot;Could not copy osd op timeout.\n&quot;);
+				goto free_config;
+			}
+		} else if (!strncmp(next_opt, &quot;conf=&quot;, 5)) {
+			state-&gt;conf_path = strdup(next_opt + 5);
+			if (!state-&gt;conf_path || !strlen(state-&gt;conf_path)) {
+				ret = -ENOMEM;
+				tcmu_dev_err(dev, &quot;Could not copy conf path.\n&quot;);
+				goto free_config;
+			}
+		} else if (!strncmp(next_opt, &quot;id=&quot;, 3)) {
+			state-&gt;id = strdup(next_opt + 3);
+			if (!state-&gt;id || !strlen(state-&gt;id)) {
+				ret = -ENOMEM;
+				tcmu_dev_err(dev, &quot;Could not copy id.\n&quot;);
+				goto free_config;
+			}
+		}
+		next_opt = strtok(NULL, &quot;;&quot;);
+	}
+
+	ret = tcmu_rbd_image_open(dev);
+	if (ret &lt; 0) {
+		goto free_config;
+	}
+
+	tcmu_rbd_check_excl_lock_enabled(dev);
+
+	ret = tcmu_rbd_check_image_size(dev, tcmu_dev_get_block_size(dev) *
+					tcmu_dev_get_num_lbas(dev));
+	if (ret) {
+		goto stop_image;
+	}
+
+	ret = rbd_stat(state-&gt;image, &amp;image_info, sizeof(image_info));
+	if (ret &lt; 0) {
+		tcmu_dev_err(dev, &quot;Could not stat image.\n&quot;);
+		goto stop_image;
+	}
+
+	/*
+	 * librbd/ceph can better split and align unmaps and internal RWs, so
+	 * just have runner pass the entire cmd to us. To try and balance
+	 * overflowing the OSD/ceph side queues with discards/RWs limit it to
+	 * up to 4.
+	 */
+	max_blocks = (image_info.obj_size * 4) / tcmu_dev_get_block_size(dev);
+	tcmu_dev_set_opt_xcopy_rw_len(dev, max_blocks);
+	tcmu_dev_set_max_unmap_len(dev, max_blocks);
+	tcmu_dev_set_opt_unmap_gran(dev, image_info.obj_size /
+				    tcmu_dev_get_block_size(dev), false);
+	tcmu_dev_set_write_cache_enabled(dev, 0);
+
+	free(dev_cfg_dup);
+	return 0;
+
+stop_image:
+	tcmu_rbd_image_close(dev);
+free_config:
+	free(dev_cfg_dup);
+free_state:
+	tcmu_rbd_state_free(state);
+	return ret;
+}
+
+static void tcmu_rbd_close(struct tcmu_device *dev)
+{
+	struct tcmu_rbd_state *state = tcmur_dev_get_private(dev);
+
+	tcmu_rbd_image_close(dev);
+	tcmu_rbd_state_free(state);
+}
+
+static int tcmu_rbd_aio_read(struct tcmu_device *dev, struct rbd_aio_cb *aio_cb,
+			     rbd_completion_t completion, struct iovec *iov,
+			     size_t iov_cnt, size_t length, off_t offset)
+{
+	struct tcmu_rbd_state *state = tcmur_dev_get_private(dev);
+	int ret;
+
+	aio_cb-&gt;bounce_buffer = malloc(length);
+	if (!aio_cb-&gt;bounce_buffer) {
+		tcmu_dev_err(dev, &quot;Could not allocate bounce buffer.\n&quot;);
+		return -ENOMEM;
+	}
+
+	ret = rbd_aio_read(state-&gt;image, offset, length, aio_cb-&gt;bounce_buffer,
+			   completion);
+	if (ret &lt; 0)
+		free(aio_cb-&gt;bounce_buffer);
+	return ret;
+}
+
+static int tcmu_rbd_aio_write(struct tcmu_device *dev, struct rbd_aio_cb *aio_cb,
+			      rbd_completion_t completion, struct iovec *iov,
+			      size_t iov_cnt, size_t length, off_t offset)
+{
+	struct tcmu_rbd_state *state = tcmur_dev_get_private(dev);
+	int ret;
+
+	aio_cb-&gt;bounce_buffer = malloc(length);
+	if (!aio_cb-&gt;bounce_buffer) {
+		tcmu_dev_err(dev, &quot;Failed to allocate bounce buffer.\n&quot;);
+		return -ENOMEM;;
+	}
+
+	tcmu_memcpy_from_iovec(aio_cb-&gt;bounce_buffer, length, iov, iov_cnt);
+
+	ret = rbd_aio_write(state-&gt;image, offset, length, aio_cb-&gt;bounce_buffer,
+			    completion);
+	if (ret &lt; 0)
+		free(aio_cb-&gt;bounce_buffer);
+	return ret;
+}
+
+static int tcmu_rbd_read(struct tcmu_device *dev, struct tcmulib_cmd *cmd,
+			     struct iovec *iov, size_t iov_cnt, size_t length,
+			     off_t offset)
+{
+	struct rbd_aio_cb *aio_cb;
+	rbd_completion_t completion;
+	ssize_t ret;
+
+	aio_cb = calloc(1, sizeof(*aio_cb));
+	if (!aio_cb) {
+		tcmu_dev_err(dev, &quot;Could not allocate aio_cb.\n&quot;);
+		goto out;
+	}
+
+	aio_cb-&gt;dev = dev;
+	aio_cb-&gt;type = RBD_AIO_TYPE_READ;
+	aio_cb-&gt;read.length = length;
+	aio_cb-&gt;tcmulib_cmd = cmd;
+	aio_cb-&gt;iov = iov;
+	aio_cb-&gt;iov_cnt = iov_cnt;
+
+	ret = rbd_aio_create_completion
+		(aio_cb, (rbd_callback_t) rbd_finish_aio_generic, &amp;completion);
+	if (ret &lt; 0) {
+		goto out_free_aio_cb;
+	}
+
+	ret = tcmu_rbd_aio_read(dev, aio_cb, completion, iov, iov_cnt,
+				length, offset);
+	if (ret &lt; 0)
+		goto out_release_tracked_aio;
+
+	return TCMU_STS_OK;
+
+out_release_tracked_aio:
+	rbd_aio_release(completion);
+out_free_aio_cb:
+	free(aio_cb);
+out:
+	return TCMU_STS_NO_RESOURCE;
+}
+
+static int tcmu_rbd_write(struct tcmu_device *dev, struct tcmulib_cmd *cmd,
+			  struct iovec *iov, size_t iov_cnt, size_t length,
+			  off_t offset)
+{
+	struct rbd_aio_cb *aio_cb;
+	rbd_completion_t completion;
+	ssize_t ret;
+
+	aio_cb = calloc(1, sizeof(*aio_cb));
+	if (!aio_cb) {
+		tcmu_dev_err(dev, &quot;Could not allocate aio_cb.\n&quot;);
+		goto out;
+	}
+
+	aio_cb-&gt;dev = dev;
+	aio_cb-&gt;type = RBD_AIO_TYPE_WRITE;
+	aio_cb-&gt;tcmulib_cmd = cmd;
+
+	ret = rbd_aio_create_completion
+		(aio_cb, (rbd_callback_t) rbd_finish_aio_generic, &amp;completion);
+	if (ret &lt; 0) {
+		goto out_free_aio_cb;
+	}
+
+	ret = tcmu_rbd_aio_write(dev, aio_cb, completion, iov, iov_cnt,
+				 length, offset);
+	if (ret &lt; 0) {
+		goto out_release_tracked_aio;
+	}
+
+	return TCMU_STS_OK;
+
+out_release_tracked_aio:
+	rbd_aio_release(completion);
+out_free_aio_cb:
+	free(aio_cb);
+out:
+	return TCMU_STS_NO_RESOURCE;
+}
+</code></pre>
+<h3 id="参考链接">参考链接</h3>
+<ul>
+<li><a href="https://docs.ceph.com/docs/master/rbd/">[1] Ceph RDB 官方文档介绍</a></li>
+<li><a href="https://www.jianshu.com/p/3b430832bb44">[2] 简书 - ceph rbd：总览<br>
+</a></li>
+<li><a href="https://juejin.im/entry/5b3ae5de518825624e14256c">[3] 掘金 - Ceph介绍及原理架构分享</a></li>
+<li><a href="https://blog.csdn.net/CSND_PAN/article/details/78728743">[4] CSDN：Ceph学习——Librbd块存储库与RBD读写流程源码分析<br>
+</a></li>
+<li><a href="https://blog.csdn.net/JDPlus/article/details/76522298">[5] CSDN：Ceph RBD编程接口Librbd(C++) -- 映像创建与数据读写<br>
+</a></li>
+<li><a href="https://cloud.tencent.com/developer/search/article-%E5%A4%A7%E8%AF%9DCeph">[6] 腾讯云专栏：大话Ceph系列</a></li>
+<li><a href="https://runsisi.com/2019-02-19/librbd">[7] runsisi.com - librbd 内部运行机制</a></li>
+<li><a href="https://blog.csdn.net/CSND_PAN/article/details/78707756">[8] CSDN：Ceph学习——Librados与Osdc实现源码解析</a></li>
+<li><a href="https://blog.csdn.net/scaleqiao/article/details/51165598">[9] CSDN：librbd代码目录解读<br>
+</a></li>
+<li><a href="https://rjerk.xyz/index.php/archives/36/">[10] Ceph: RBD 创建镜像过程以及源码分析</a></li>
+<li><a href="https://zhoubofsy.github.io/2017/01/22/storage/ceph/librbd-frame-analyse/">[11] librbd 架构分析</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/distributed-system-consistency.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/distributed-system-consistency/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-10-03">2019-10-03</time>
+                  <h4 class="title white no-margin">分布式系统中的一致性</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/kill-git.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/kill-git/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-09-20">2019-09-20</time>
+                  <h4 class="title white no-margin">Git 从入门到掐死</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

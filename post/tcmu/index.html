@@ -1,0 +1,1309 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TCMU学习笔记 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+iSCSI Target 端的用户态实现 TCMU 介绍
+TCMU 原理剖析
+TCMU 对接自定义后端存储代码示例讲解
+
+
+
+
+
+
+
+
+TCMU 简介
+TCMU 优势
+设计约束
+实现概览
+
+MailBox
+Command Ring
+
+T..." />
+    <meta name="keywords" content="存储,Linux" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/TCMU-LIO.png?raw=true');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2019-07-17"><i class="fa fa-calendar"></i><span class="lately">1 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/tcmu/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/tcmu/"> </span>
+              </a>
+              <span id="/tcmu/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-1 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">TCMU学习笔记</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>iSCSI Target 端的用户态实现 TCMU 介绍</li>
+<li>TCMU 原理剖析</li>
+<li>TCMU 对接自定义后端存储代码示例讲解</li>
+</ul>
+</blockquote>
+<!-- more -->
+<p><ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#tcmu-%E7%AE%80%E4%BB%8B">TCMU 简介</a></li>
+<li><a href="#tcmu-%E4%BC%98%E5%8A%BF">TCMU 优势</a></li>
+<li><a href="#%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F">设计约束</a></li>
+<li><a href="#%E5%AE%9E%E7%8E%B0%E6%A6%82%E8%A7%88">实现概览</a>
+<ul>
+<li><a href="#mailbox">MailBox</a></li>
+<li><a href="#command-ring">Command Ring</a>
+<ul>
+<li><a href="#tcmu_op_cmd">TCMU_OP_CMD</a></li>
+<li><a href="#tcmu_op_pad">TCMU_OP_PAD</a></li>
+</ul>
+</li>
+<li><a href="#data-area">Data Area</a></li>
+</ul>
+</li>
+<li><a href="#tcmu-%E5%8A%A8%E6%80%81%E9%85%8D%E7%BD%AE%E5%8A%A0%E8%BD%BD">TCMU 动态配置加载</a></li>
+<li><a href="#tcmu-plugin-handler">TCMU Plugin Handler</a>
+<ul>
+<li><a href="#%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%B8%80-%E5%85%A8%E6%9D%83%E6%8E%A5%E7%AE%A1%E5%91%BD%E4%BB%A4%E5%A4%84%E7%90%86">实现方式一  全权接管命令处理</a></li>
+<li><a href="#%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%BA%8C-%E4%BB%85%E5%AE%9E%E7%8E%B0%E5%85%B7%E4%BD%93%E7%9A%84io%E6%93%8D%E4%BD%9C">实现方式二  仅实现具体的IO操作</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</p>
+<h3 id="tcmu-简介">TCMU 简介</h3>
+<ul>
+<li>TCM 是 LIO 的别名，是内核态的 scsi target 实现。TCM targets 运行在内核态，TCMU（TCM in Userspace）是 LIO 的用户态实现。</li>
+<li>现有的内核为不同的SCSI传输协议提供了模块。TCM 也模块化数据存储，目前已经支持文件(fileio)，块设备(block)，RAMDISK 或其他iSCSI设备（pscsi），这些称为 backstore 或 storage engine。这些内建的模块完全在内核态实现。</li>
+<li>LIO 仅能使用内核态的 backstore。而如 tgt 这样的其他的用户态 target 解决方案，能够支持 Gluster 的 GLFS 和 Ceph 的 RBD 作为 backstore。target 相当于 translator，允许 initiators 通过标准协议存储数据到这些非传统的网络存储系统。</li>
+<li>为 LIO 增加这些支持存在更多的困难，因为 LIO 是纯内核态代码。要解决这个问题有两种方案，一种是将 GLFS 和 RBD API 和 protocols 库移植到内核，另一种方案是为 LIO 创建用户空间 pass-through backstore，称为 TCMU。前者的工作远比后者复杂。</li>
+</ul>
+<h3 id="tcmu-优势">TCMU 优势</h3>
+<ul>
+<li>除了可以容易支持 RBD 和 GLFS，TCMU 将允许更加简单的方式来开发新的 backstore。TCMU 与 LIO loopback 组合，实现类似于 FUSE(File system in Userspace) 的机制，只是 SCSI layer 替换了 file system layer。</li>
+<li>这种机制的劣势是需要配置更多不同的组件，存在故障的风险。如果我们希望工作量尽可能少的话，这些不可避免，只能希望故障不是致命的影响。</li>
+</ul>
+<h3 id="设计约束">设计约束</h3>
+<ul>
+<li>高性能： 高吞吐量，低延迟。</li>
+<li>简洁处理，如果用户空间发生如下故障：
+<ul>
+<li>1） nerver attaches</li>
+<li>2） hangs</li>
+<li>3） dies</li>
+<li>4） misbehaves</li>
+</ul>
+</li>
+<li>允许未来在用户空间和内核空间的灵活实现。</li>
+<li>合理的内存使用。</li>
+<li>简单地配置和运行。</li>
+<li>简单地编写用户空间 backend。<br>
+<img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/TCMU-LIO.png?raw=true" alt="image" loading="lazy"></li>
+</ul>
+<h3 id="实现概览">实现概览</h3>
+<ul>
+<li>TCMU 接口的核心是一段由用户态和内核态共享的内存区域。这块区域包括：
+<ul>
+<li>
+<ol>
+<li>控制区域（mailbox）；</li>
+</ol>
+</li>
+<li>
+<ol start="2">
+<li>无锁的生产者消费者环形buffer，用于命令的传递和状态的返回；</li>
+</ol>
+</li>
+<li>
+<ol start="3">
+<li>数据in/out的缓冲区。</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>TCMU 使用了已经存在的 UIO 子系统。 UIO 子系统允许设备驱动在用户态开发，这个概念十分贴近 TCMU 的使用案例，除了物理设备， TCMU 为 SCSI 命令实现了内存映射层。使用 UIO 也有利于 TCMU 处理设备的自省，如通过用户态去决定使用多大的共享区域，和两端的信号机制。</li>
+<li>内存区域是没有指针的，只有相对于内存区域起始位置的 offset。通过这种机制可以使在用户进程挂掉或者重启使得内存区域在不同的虚拟地址空间的情况下，仍然保持工作。可以查看<code>target_core_user.h</code>查看结构的定义。</li>
+</ul>
+<h4 id="mailbox">MailBox</h4>
+<ul>
+<li>mailbox总是在共享内存的开始位置，并且包含了version，开始位置的offset，command ring的大小，用户态和内核态存放ring command和command完成状态的head和tail指针。</li>
+</ul>
+<pre><code class="language-C">struct tcmu_mailbox {
+	__u16 version; // 2 如果是别的值，用户空间应该废弃）
+	__u16 flags; //TCMU_MAILBOX_FLAG_CAP_OOOC: 标志支持out-of-order completion
+	__u32 cmdr_off; //command ring在内存区域的起始位置的偏移量。
+	__u32 cmdr_size; //command ring区域的大小。这不需要2的幂来表示。
+
+	__u32 cmd_head; //由内核修改，表示一个command已经放置到ring中。
+
+	/* Updated by user. On its own cacheline */
+	__u32 cmd_tail __attribute__((__aligned__(ALIGN_SIZE))); //由用户空间修改，表示一个command已经处理完成。
+
+} __attribute__((packed));
+</code></pre>
+<h4 id="command-ring">Command Ring</h4>
+<ul>
+<li>Command放置到 ring 上，kernel 根据 command 的 size 移动 mailbox.cmd_head 指针，取模 cmdr_size，并且通过 uio_event_notify() 通知用户空间。当命令执行完成，用户空间更新 mailbox.cmd_tail，并且通过 write() 4个字节通知内核。当 cmd_head 等于 cmd_tail，ring 为空 – 说明没有 command 等待用户空间处理。</li>
+<li>TCMU commands 是 8 字节对齐的。command 以通用 header 起头，header 包含了 len_op，32 位的值，用于存储 command 的长度，同时使用了最低的 3 个 bit 存储操作码 opcode。也包含了 cmd_id 和 flags，由内核设置的kflags 和用户空间设置的 uflags。</li>
+<li>现在只定义了两种操作码opcode： <code>TCMU_OP_CMD</code> 和 <code>TCMU_OP_PAD</code>。</li>
+</ul>
+<h5 id="tcmu_op_cmd">TCMU_OP_CMD</h5>
+<ul>
+<li>在command ring的结构是<code>struct tcmu_cmd_entry</code>。</li>
+</ul>
+<pre><code class="language-C">struct tcmu_cmd_entry {
+	struct tcmu_cmd_entry_hdr hdr;
+
+	union {
+		struct {
+			uint32_t iov_cnt;  // The size of iov array.
+			uint32_t iov_bidi_cnt; // size of iov array for Data-In
+			uint32_t iov_dif_cnt; //
+			uint64_t cdb_off;  // Command data block offset
+			uint64_t __pad1;
+			uint64_t __pad2;
+			struct iovec iov[0]; // iov array - buffer
+		} req;
+		
+		struct {
+			uint8_t scsi_status; // Command executed, return status.
+			uint8_t __pad1;
+			uint16_t __pad2;
+			uint32_t __pad3;
+			char sense_buffer[TCMU_SENSE_BUFFERSIZE]; // response data
+		} rsp;
+	};
+
+} __attribute__((packed));
+
+
+/*
+ * Only a few opcodes, and length is 8-byte aligned, so use low bits for opcode.
+ */
+struct tcmu_cmd_entry_hdr {
+	__u32 len_op;
+	__u16 cmd_id;
+	__u8 kflags;
+#define TCMU_UFLAG_UNKNOWN_OP 0x1
+	__u8 uflags;
+
+} __attribute__((packed));
+</code></pre>
+<ul>
+<li>用户空间通过tcmu_cmd_entry.req.cdb_off找到SCSI CDB（Command Data Block）。这是command在整个共享内存区域起始位置的偏移量，而不是结构体或ring中的里面的偏移量。</li>
+<li>通过req.iov[]数据访问数据区域。iov_cnt包含了iov[]结构的数量，需要区分Data-In还是Data-Out的数据。对于双向的command，iov_cnt指定多少iovec覆盖了Data-Out区域，iov_bidi_cnt指定了多少iovec覆盖了Data-In区域（紧接在Data-Out区域）。就像别的field一样，iov.iov_base是相对于内存区域起始位置的偏移量。</li>
+<li>当command执行完成，用户空间设置rsp.scsi_status，如果有需要也设置rsp.sense_buffer。</li>
+<li>用户空间根据entry.hdr.length(mod cmdr_size)增加mailbox.cmd_tail，并且通过UIO方法通知内核，4字节写到文件描述符。</li>
+<li>如果设置TCMU_MAILBOX_FLAG_CAP_OOOC到mailbox-&gt;flags，kernel 可以处理 out-of-order completions。在这种情况下，用户空间能够处理与源头不同的顺序。由于kernel处理command的顺序与command ring中的一致，所以用户空间在command执行完成时，需要更新cmd-&gt;id。</li>
+</ul>
+<h5 id="tcmu_op_pad">TCMU_OP_PAD</h5>
+<ul>
+<li>当操作码opcode是PAD，用户空间只会更新cmd_tail -- 因为是一个no-op。kernel 插入PAD entries 确保每个CMD entry在command ring中是连续的。</li>
+<li>未来会加入更多的opcode。如果用户空间遇到一个不能处理的opcode，必须要设置 hdr.uflags 的第0个bit为UNKNOWN_OP，更新cmd_tail，处理附加的commands。</li>
+</ul>
+<h4 id="data-area">Data Area</h4>
+<ul>
+<li>数据区域是在command ring的后面，TCMU接口没有定义这片区域的结构，用户空间应该只访问pengding iovs指定的区域。</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/User-Kernel-Communication.png?raw=true" alt="image" loading="lazy"></figure>
+<h3 id="tcmu-动态配置加载">TCMU 动态配置加载</h3>
+<ul>
+<li>TCMU 使用了一个时刻监听 TCMU 配置文件的守护进程来检查配置文件的变化，对应地更新 TCMU 的相关配置，诸如日志级别, 日志输出路径等</li>
+</ul>
+<h3 id="tcmu-plugin-handler">TCMU Plugin Handler</h3>
+<ul>
+<li>为了在 TCMU 相关接口的基础之上，处理自定义后端存储的处理方法，需要自定义实现 TCMU Handler.</li>
+</ul>
+<pre><code class="language-C">struct tcmur_handler {
+	const char *name;	/* Human-friendly name */
+	const char *subtype;	/* Name for cfgstring matching */
+	const char *cfg_desc;	/* Description of this backstore's config string */
+
+	void *opaque;		/* Handler private data. */
+
+	/*
+	 * As much as possible, check that the cfgstring will result
+	 * in a working device when given to us as dev-&gt;cfgstring in
+	 * the -&gt;open() call.
+	 *
+	 * This function is optional but gives configuration tools a
+	 * chance to warn users in advance if the device they're
+	 * trying to create is invalid.
+	 *
+	 * Returns true if string is valid. Only if false, set *reason
+	 * to a string that says why. The string will be free()ed.
+	 * Suggest using asprintf().
+	 */
+	bool (*check_config)(const char *cfgstring, char **reason);
+
+	int (*reconfig)(struct tcmu_device *dev, struct tcmulib_cfg_info *cfg);
+
+	/* Per-device added/removed callbacks */
+	int (*open)(struct tcmu_device *dev, bool reopen);
+	void (*close)(struct tcmu_device *dev);
+
+	/*
+	 * If &gt; 0, runner will execute up to nr_threads IO callouts from
+	 * threads.
+	 * if 0, runner will call IO callouts from the cmd proc thread or
+	 * completion context for compound commands.
+	 */
+	int nr_threads;
+
+	/*
+	 * Async handle_cmd only handlers return:
+	 *
+	 * - TCMU_STS_OK if the command has been executed successfully
+	 * - TCMU_STS_NOT_HANDLED if opcode is not handled
+	 * - TCMU_STS_ASYNC_HANDLED if opcode is handled asynchronously
+	 * - Non TCMU_STS_OK code indicating failure
+	 * - TCMU_STS_PASSTHROUGH_ERR For handlers that require low level
+	 *   SCSI processing and want to setup their own sense buffers.
+	 *
+	 * Handlers that set nr_threads &gt; 0 and async handlers
+	 * that implement handle_cmd and the IO callouts below return:
+	 *
+	 * - TCMU_STS_OK if the handler has queued the command.
+	 * - TCMU_STS_NOT_HANDLED if the command is not supported.
+	 * - TCMU_STS_NO_RESOURCE if the handler was not able to allocate
+	 *   resources for the command.
+	 *
+	 * If TCMU_STS_OK is returned from the callout the handler must call
+	 * the tcmulib_cmd-&gt;done function with TCMU_STS return code.
+	 */
+	handle_cmd_fn_t handle_cmd;
+
+	/*
+	 * Below callbacks are only executed by generic_handle_cmd.
+	 * Returns:
+	 * - TCMU_STS_OK if the handler has queued the command.
+	 * - TCMU_STS_NO_RESOURCE if the handler was not able to allocate
+	 *   resources for the command.
+	 *
+	 * If TCMU_STS_OK is returned from the callout the handler must call
+	 * the tcmulib_cmd-&gt;done function with TCMU_STS return code.
+	 */
+	rw_fn_t write;
+	rw_fn_t read;
+	flush_fn_t flush;
+	unmap_fn_t unmap;
+
+	/*
+	 * If the lock is acquired and the tag is not TCMU_INVALID_LOCK_TAG,
+	 * it must be associated with the lock and returned by get_lock_tag on
+	 * local and remote nodes. When unlock is successful, the tag
+	 * associated with the lock must be deleted.
+	 *
+	 * Returns a TCMU_STS indicating success/failure.
+	 */
+	int (*lock)(struct tcmu_device *dev, uint16_t tag);
+	int (*unlock)(struct tcmu_device *dev);
+
+	/*
+	 * Return tag set in lock call in tag buffer and a TCMU_STS
+	 * indicating success/failure.
+	 */
+	int (*get_lock_tag)(struct tcmu_device *dev, uint16_t *tag);
+
+	/*
+	 * Must return TCMUR_DEV_LOCK state value.
+	 */
+	int (*get_lock_state)(struct tcmu_device *dev);
+
+	/*
+	 * internal field, don't touch this
+	 *
+	 * indicates to tcmu-runner whether this is an internal handler loaded
+	 * via dlopen or an external handler registered via dbus. In the
+	 * latter case opaque will point to a struct dbus_info.
+	 */
+	bool _is_dbus_handler;
+
+	/*
+	 * Update the logdir called by dynamic config thread.
+	 */
+	bool (*update_logdir)(void);
+};
+</code></pre>
+<h4 id="实现方式一-全权接管命令处理">实现方式一  全权接管命令处理</h4>
+<ul>
+<li>以 <code>file_optical.c</code> 为例：</li>
+</ul>
+<pre><code class="language-C">/*
+ * Return scsi status or TCMU_STS_NOT_HANDLED
+ */
+static int fbo_handle_cmd(struct tcmu_device *dev, struct tcmulib_cmd *cmd)
+{
+	uint8_t *cdb = cmd-&gt;cdb;
+	struct iovec *iovec = cmd-&gt;iovec;
+	size_t iov_cnt = cmd-&gt;iov_cnt;
+	uint8_t *sense = cmd-&gt;sense_buf;
+	struct fbo_state *state = tcmur_dev_get_private(dev);
+	bool do_verify = false;
+	int ret;
+
+	/* Check for format in progress */
+	/* Certain commands can be executed even if a format is in progress */
+	if (state-&gt;flags &amp; FBO_FORMATTING &amp;&amp;
+	    cdb[0] != INQUIRY &amp;&amp;
+	    cdb[0] != REQUEST_SENSE &amp;&amp;
+	    cdb[0] != GET_CONFIGURATION &amp;&amp;
+	    cdb[0] != GPCMD_GET_EVENT_STATUS_NOTIFICATION) {
+		tcmu_sense_set_key_specific_info(sense, state-&gt;format_progress);
+		ret = TCMU_STS_FRMT_IN_PROGRESS;
+		return ret;
+	}
+
+	switch(cdb[0]) {
+	case TEST_UNIT_READY:
+		ret = tcmu_emulate_test_unit_ready(cdb, iovec, iov_cnt);
+		break;
+	case REQUEST_SENSE:
+		ret = fbo_emulate_request_sense(dev, cdb, iovec, iov_cnt, sense);
+		break;
+	case FORMAT_UNIT:
+		ret = fbo_emulate_format_unit(dev, cdb, iovec, iov_cnt, sense);
+		break;
+	case READ_6:
+	case READ_10:
+	case READ_12:
+		ret = fbo_read(dev, cdb, iovec, iov_cnt, sense);
+		break;
+	case WRITE_VERIFY:
+		do_verify = true;
+	case WRITE_6:
+	case WRITE_10:
+	case WRITE_12:
+		ret = fbo_write(dev, cdb, iovec, iov_cnt, sense, do_verify);
+		break;
+	case INQUIRY:
+		ret = fbo_emulate_inquiry(cdb, iovec, iov_cnt, sense);
+		break;
+	case MODE_SELECT:
+	case MODE_SELECT_10:
+		ret = fbo_emulate_mode_select(cdb, iovec, iov_cnt, sense);
+		break;
+	case MODE_SENSE:
+	case MODE_SENSE_10:
+		ret = fbo_emulate_mode_sense(cdb, iovec, iov_cnt, sense);
+		break;
+	case START_STOP:
+		ret = tcmu_emulate_start_stop(dev, cdb);
+		break;
+	case ALLOW_MEDIUM_REMOVAL:
+		ret = fbo_emulate_allow_medium_removal(dev, cdb, sense);
+		break;
+	case READ_FORMAT_CAPACITIES:
+		ret = fbo_emulate_read_format_capacities(dev, cdb, iovec,
+							 iov_cnt, sense);
+		break;
+	case READ_CAPACITY:
+		if ((cdb[1] &amp; 0x01) || (cdb[8] &amp; 0x01))
+			/* Reserved bits for MM logical units */
+			return TCMU_STS_INVALID_CDB;
+		else
+			ret = tcmu_emulate_read_capacity_10(state-&gt;num_lbas,
+							    state-&gt;block_size,
+							    cdb, iovec,
+							    iov_cnt);
+		break;
+	case VERIFY:
+		ret = fbo_verify(dev, cdb, iovec, iov_cnt, sense);
+		break;
+	case SYNCHRONIZE_CACHE:
+		ret = fbo_synchronize_cache(dev, cdb, sense);
+		break;
+	case READ_TOC:
+		ret = fbo_emulate_read_toc(dev, cdb, iovec, iov_cnt, sense);
+		break;
+	case GET_CONFIGURATION:
+		ret = fbo_emulate_get_configuration(dev, cdb, iovec, iov_cnt,
+						    sense);
+		break;
+	case GPCMD_GET_EVENT_STATUS_NOTIFICATION:
+		ret = fbo_emulate_get_event_status_notification(dev, cdb,
+								iovec, iov_cnt,
+								sense);
+		break;
+	case READ_DISC_INFORMATION:
+		ret = fbo_emulate_read_disc_information(dev, cdb, iovec,
+							iov_cnt, sense);
+		break;
+	case READ_DVD_STRUCTURE:
+		ret = fbo_emulate_read_dvd_structure(dev, cdb, iovec, iov_cnt,
+						     sense);
+		break;
+	case MECHANISM_STATUS:
+		ret = fbo_emulate_mechanism_status(dev, cdb, iovec, iov_cnt,
+						   sense);
+		break;
+	default:
+		ret = TCMU_STS_NOT_HANDLED;
+	}
+	return ret;
+}
+</code></pre>
+<h4 id="实现方式二-仅实现具体的io操作">实现方式二  仅实现具体的IO操作</h4>
+<ul>
+<li>以 file.example.c为例</li>
+</ul>
+<pre><code class="language-C">/*
+ * Copyright (c) 2014 Red Hat, Inc.
+ *
+ * This file is licensed to you under your choice of the GNU Lesser
+ * General Public License, version 2.1 or any later version (LGPLv2.1 or
+ * later), or the Apache License 2.0.
+ */
+
+/*
+ * Example code to demonstrate how a TCMU handler might work.
+ *
+ * Using the example of backing a device by a file to demonstrate:
+ *
+ * 1) Registering with tcmu-runner
+ * 2) Parsing the handler-specific config string as needed for setup
+ * 3) Opening resources as needed
+ * 4) Handling SCSI commands and using the handler API
+ */
+
+#define _GNU_SOURCE
+#include &lt;stddef.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;stdbool.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;endian.h&gt;
+#include &lt;errno.h&gt;
+#include &lt;scsi/scsi.h&gt;
+
+#include &quot;scsi_defs.h&quot;
+#include &quot;libtcmu.h&quot;
+#include &quot;tcmu-runner.h&quot;
+#include &quot;tcmur_device.h&quot;
+
+struct file_state {
+	int fd;
+};
+
+static int file_open(struct tcmu_device *dev, bool reopen)
+{
+	struct file_state *state;
+	char *config;
+
+	state = calloc(1, sizeof(*state));
+	if (!state)
+		return -ENOMEM;
+
+    // Init the file state of tcmu
+	tcmur_dev_set_private(dev, state);
+
+    // Move the pointer to the first '/' location in path string
+	config = strchr(tcmu_dev_get_cfgstring(dev), '/');
+	if (!config) {
+	tcmu_err(&quot;no configuration found in cfgstring\n&quot;);
+		goto err;
+	}	
+	config += 1; /* get past '/' */
+
+    // Enable the tcmu write cache.(Set the value of tcmu_device as true)
+	tcmu_dev_set_write_cache_enabled(dev, 1);
+
+    // Open the file with path.(With mode)
+	state-&gt;fd = open(config, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+	if (state-&gt;fd == -1) {
+		tcmu_err(&quot;could not open %s: %m\n&quot;, config);
+		goto err;
+	}
+
+	tcmu_dbg(&quot;config %s\n&quot;, tcmu_dev_get_cfgstring(dev));
+
+	return 0;
+
+err:
+	free(state);
+	return -EINVAL;
+}
+
+static void file_close(struct tcmu_device *dev)
+{
+	// Get the file state of tcmu_device.
+	struct file_state *state = tcmur_dev_get_private(dev);
+
+    // Close the file
+	close(state-&gt;fd);
+
+	// free the state
+	free(state);
+}
+
+/**
+ * 
+ * @param *dev              tcmu device
+ * @param *cmd              Command line interface.(not used in this method)
+ * @param *iov              buffer array to syore the data
+ * @param iov_cnt           buffer array size  
+ * @param length            read length
+ * @param offset            start address
+ * 
+ * return                   the size of read data.
+ */
+static int file_read(struct tcmu_device *dev, struct tcmulib_cmd *cmd,
+		     struct iovec *iov, size_t iov_cnt, size_t length,
+		     off_t offset)
+{
+	// Get the file state of tecmu_device
+	struct file_state *state = tcmur_dev_get_private(dev);
+	size_t remaining = length;
+	ssize_t ret;
+
+    // Read the file in loop
+	while (remaining) {
+		// Read the data and store in the iov array. Return the data size.
+		ret = preadv(state-&gt;fd, iov, iov_cnt, offset);
+		if (ret &lt; 0) {
+			tcmu_err(&quot;read failed: %m\n&quot;);
+			ret = TCMU_STS_RD_ERR;
+			goto done;
+		}
+
+		if (ret == 0) {
+			/* EOF, then zeros the iovecs left */
+			tcmu_iovec_zero(iov, iov_cnt);
+			break;
+		}
+
+        // Consume the iov array. 
+		tcmu_iovec_seek(iov, ret);
+		// Move the offset
+		offset += ret;
+		// Change the length and continute to read file.
+		remaining -= ret;
+	}
+	// Read finished, and status is OK.
+	ret = TCMU_STS_OK;
+done:
+	return ret;
+}
+
+/**
+ * 
+ * @param *dev              tcmu device
+ * @param *cmd              Command line interface.(not used in this method)
+ * @param *iov              buffer array to syore the data
+ * @param iov_cnt           buffer array size  
+ * @param length            write length
+ * @param offset            start address
+ * 
+ * return                   the size of read data.
+ */
+static int file_write(struct tcmu_device *dev, struct tcmulib_cmd *cmd,
+		      struct iovec *iov, size_t iov_cnt, size_t length,
+		      off_t offset)
+{
+	// Get the file state of tecmu_device
+	struct file_state *state = tcmur_dev_get_private(dev);
+	size_t remaining = length;
+	ssize_t ret;
+
+    // Write the file in loop
+	while (remaining) {
+	    // Wirte the data in the iov array to file. Return the data size.
+		ret = pwritev(state-&gt;fd, iov, iov_cnt, offset);
+		if (ret &lt; 0) {
+			tcmu_err(&quot;write failed: %m\n&quot;);
+			ret = TCMU_STS_WR_ERR;
+			goto done;
+		}
+		// Consume an inv array.
+		tcmu_iovec_seek(iov, ret);
+		// Move the offset.
+		offset += ret;
+		// Change the length and continue to write.
+		remaining -= ret;
+	}
+	ret = TCMU_STS_OK;
+done:
+	return ret;
+}
+
+static int file_flush(struct tcmu_device *dev, struct tcmulib_cmd *cmd)
+{
+	// Get the file state of tcmu_device.
+	struct file_state *state = tcmur_dev_get_private(dev);
+	int ret;
+
+	// Sync(Flush) the data in page cache to disk.
+	if (fsync(state-&gt;fd)) {
+		tcmu_err(&quot;sync failed\n&quot;);
+		ret = TCMU_STS_WR_ERR;
+		goto done;
+	}
+	ret = TCMU_STS_OK;
+done:
+	return ret;
+}
+
+static int file_reconfig(struct tcmu_device *dev, struct tcmulib_cfg_info *cfg)
+{
+	switch (cfg-&gt;type) {
+	// Extend or Reduce the size of file.
+	case TCMULIB_CFG_DEV_SIZE:
+		/*
+		 * TODO - For open/reconfig we should make sure the FS the
+		 * file is on is large enough for the requested size. For
+		 * now assume we can grow the file and return 0.
+		 */
+		return 0;
+	case TCMULIB_CFG_DEV_CFGSTR:
+	// Handle the write cache.
+	case TCMULIB_CFG_WRITE_CACHE:
+	default:
+		return -EOPNOTSUPP;
+	}
+}
+
+static const char file_cfg_desc[] =
+	&quot;The path to the file to use as a backstore.&quot;;
+
+// Init the tcmu_handler with given static method defined in this class.
+static struct tcmur_handler file_handler = {
+	.cfg_desc = file_cfg_desc,
+
+	.reconfig = file_reconfig,
+
+	.open = file_open,
+	.close = file_close,
+	.read = file_read,
+	.write = file_write,
+	.flush = file_flush,
+	.name = &quot;File-backed Handler (example code)&quot;,
+	.subtype = &quot;file&quot;,
+	.nr_threads = 2,
+};
+
+/* Entry point must be named &quot;handler_init&quot;. */
+int handler_init(void)
+{
+	// Regist the file_handler to running_handler list
+	return tcmur_register_handler(&amp;file_handler);
+}
+</code></pre>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://pic.36krcnd.com/201804/20060915/yucn8kelclf6k0hj!1200');"></div>
+                 <a href="https://blog.shunzi.tech/post/storage-basic-concept/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-07-20">2019-07-20</time>
+                  <h4 class="title white no-margin">存储基本概念</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://docs.openstack.org/cinder/latest/_images/cinder.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/cinder/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-07-16">2019-07-16</time>
+                  <h4 class="title white no-margin">Cinder核心</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

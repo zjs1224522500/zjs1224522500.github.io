@@ -1,0 +1,1215 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>教你写测试 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+测试开发
+结合实际例子介绍相关测试框架的使用
+Findbugs, Fortify，SonarQube，PMD也会做简单介绍
+
+
+ 
+
+
+
+单元测试 Unit Test (UT)
+*
+
+JUnit4/5
+Mockito
+How
+
+serv..." />
+    <meta name="keywords" content="测试,Product Standard" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://thejournal.com/~/media/EDU/THEJournal/Images/2015/02/20150224test644.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2019-05-24"><i class="fa fa-calendar"></i><span class="lately">2 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/how-to-develop-test/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/how-to-develop-test/"> </span>
+              </a>
+              <span id="/how-to-develop-test/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-0 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-1 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">教你写测试</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>测试开发</li>
+<li>结合实际例子介绍相关测试框架的使用</li>
+<li>Findbugs, Fortify，SonarQube，PMD也会做简单介绍</li>
+</ul>
+</blockquote>
+<!-- more --> 
+<p><ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95-unit-test-ut">单元测试 Unit Test (UT)</a><br>
+*
+<ul>
+<li><a href="#junit45">JUnit4/5</a></li>
+<li><a href="#mockito">Mockito</a></li>
+<li><a href="#how">How</a>
+<ul>
+<li><a href="#servicedao-unit-test">service/dao unit test</a></li>
+</ul>
+</li>
+<li><a href="#springtest">SpringTest</a>
+<ul>
+<li><a href="#mockmvc-unit-test">mockMvc unit test</a></li>
+</ul>
+</li>
+<li><a href="#powermock">PowerMock</a>
+<ul>
+<li><a href="#how-to-use">How to use:</a></li>
+<li><a href="#caution">Caution:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E9%9B%86%E6%88%90%E6%B5%8B%E8%AF%95-integration-test-it">集成测试 Integration Test (IT)</a><br>
+*
+<ul>
+<li><a href="#spring-integration-test">Spring Integration Test</a></li>
+<li><a href="#prepare">Prepare:</a></li>
+<li><a href="#%E4%BB%A3%E7%A0%81%E5%AE%9E%E4%BE%8B">代码实例：</a></li>
+</ul>
+</li>
+<li><a href="#%E7%B3%BB%E7%BB%9F%E6%B5%8B%E8%AF%95-system-test-st">系统测试 System Test (ST)</a>
+<ul>
+<li><a href="#jmeter">JMeter</a>
+<ul>
+<li><a href="#download-and-launch">Download and Launch</a></li>
+<li><a href="#how-to-use-jmeter">How to use JMeter</a></li>
+<li><a href="#example-code">Example Code</a></li>
+<li><a href="#head-first">Head First</a>
+<ul>
+<li><a href="#step-1-create-thread-group">Step 1. Create Thread Group</a></li>
+<li><a href="#step-2-define-some-common-variables">Step 2. Define some common variables</a></li>
+<li><a href="#step-3-new-http-request">Step 3. New Http Request</a></li>
+<li><a href="#step-4-new-assertersjson-assertion-response-assertion-etc">Step 4. New Asserters.(JSON Assertion, Response Assertion etc.)</a></li>
+<li><a href="#step-5-processor-prepost">Step 5. Processor (Pre/Post)</a></li>
+<li><a href="#step-6-result-tree">Step 6. Result Tree</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95auto-ui-test">自动化测试（Auto UI Test）</a>
+<ul>
+<li><a href="#katalon-studio">Katalon Studio</a></li>
+<li><a href="#groovy-based-on-java">Groovy (Based on Java)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</p>
+<hr>
+<ul>
+<li>测试的重要性不做过多介绍。简单介绍一种 <code>TDD(Test Driven Development)</code>的模式。</li>
+<li><code>TDD</code> 旨在通过先编写相关的测试类和测试代码来驱动实际业务代码的开发。对于测试代码，业务代码更多的像是在承担一个黑盒的角色，而测试代码只需要关注输入输出，从逻辑意义上保证输入输出和我们预期的结果相对应则是业务代码需要去保证实现的。</li>
+<li><code>TDD</code>具体实现此处仅提供一种思路。测试类编写完成之后，使其一直运行在本地搭建的服务器上，编写相关业务代码完成后，通过在运行测试类的服务器上指定输入参数，通过测试代码的断言实时反应业务代码的正确性。</li>
+</ul>
+<hr>
+<h2 id="单元测试-unit-test-ut">单元测试 Unit Test (UT)</h2>
+<ul>
+<li>应用场景：从代码层面去测试相关代码的正确性，是否符合预期的结果。此处不涉及和其他软件或者应用交互的过程，仅仅针对代码的逻辑处理。常常用于寻找程序中可能出现的异常以及代码逻辑的正确性。</li>
+<li>工具：JUnit4/5, Mockito, SpringTest, PowerMock</li>
+</ul>
+<h4 id="junit45">JUnit4/5</h4>
+<ul>
+<li><a href="https://junit.org/junit5/docs/current/user-guide/">JUnit5 User Guide</a></li>
+<li>JUnit 主要是利用 Java 注解构建了一套单元测试的相关体系，同时提供了很多工具方便单元测试的编写。具体注解的使用，参照官方文档。</li>
+</ul>
+<h4 id="mockito">Mockito</h4>
+<ul>
+<li><a href="https://site.mockito.org/">官方主页</a></li>
+</ul>
+<h4 id="how">How</h4>
+<h5 id="servicedao-unit-test">service/dao unit test</h5>
+<ul>
+<li>Before: You must init mockito in @Before of JUnit.</li>
+</ul>
+<pre><code class="language-Java">@Before
+public void setUp() throws Exception
+{
+    MockitoAnnotations.initMocks(this);
+}
+</code></pre>
+<ul>
+<li>Annotation: <code>@Mock</code> <code>@InjectMocks</code>
+<ul>
+<li><code>@Mock</code> : This annotation is used to mock an object. It seems like new Object() to give memory for this pointer.</li>
+<li><code>@InjectMocks</code> : This annotation is used to inject other mocks objects to the annotation decorated obejct.</li>
+</ul>
+</li>
+<li>Method: <code>when()</code> <code>verify()</code> <code>any()</code>
+<ul>
+<li><code>when()</code> : This method is used to listen the emthod if be invoked.And when this method is invoked, you can give return value for this method. So you do not need to care the specific implemention of this method.</li>
+<li><code>verify()</code>: It is used to verify if this method be invoked and you also can verify the invoke times as params of this method.</li>
+<li><code>any()</code>: It is used for mock objects. You can only give the type of the param without specific value. It is common used in <code>when</code> method to instead of specific params.</li>
+</ul>
+</li>
+<li>Example:</li>
+</ul>
+<pre><code class="language-Java">package tech.shunzi.testdev.service;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import tech.shunzi.testdev.model.User;
+import tech.shunzi.testdev.model.dto.UserDto;
+import tech.shunzi.testdev.repo.UserRepository;
+import tech.shunzi.testdev.service.impl.UserServiceImpl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+public class UserServiceImplTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @InjectMocks
+    private UserServiceImpl userService;
+
+    @Before
+    public void setUp() throws Exception
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void testGetAllUsers() {
+
+        // Prepare data
+        List&lt;User&gt; userList = new ArrayList&lt;&gt;();
+        User user = new User();
+        user.setDesc(&quot;DESC&quot;);
+        user.setId(1111);
+        user.setName(&quot;Shunzi&quot;);
+        userList.add(user);
+
+        List&lt;UserDto&gt; dtos = new ArrayList&lt;&gt;();
+        UserDto dto = new UserDto();
+        dto.setGroupNo(1);
+        dto.setName(user.getName());
+        dto.setId(user.getId());
+        dto.setIntroduction(&quot;Hello, I am Shunzi. And my id is 1111. DESC&quot;);
+        dtos.add(dto);
+
+        // When
+        when(userRepository.findAll()).thenReturn(userList);
+
+        // Act
+        List&lt;UserDto&gt; users = userService.findAllUsers();
+
+        // Verify
+        verify(userRepository).findAll();
+
+        // Assert
+        // override method equals() in UserDto class
+        assertEquals(dtos, users);
+    }
+    
+    @Test
+    public void testGetUserById() {
+
+        // prepare data
+        int id = 1;
+        User user = new User();
+        user.setId(id);
+        user.setName(&quot;shunzi&quot;);
+        user.setDesc(&quot;desc&quot;);
+
+        // when
+        // anyInt() will match all params whose type is int
+        when(userRepository.findById(anyInt())).thenReturn(user);
+
+        // Act
+        UserDto userDto = userService.findSingleUser(id);
+
+        // verify
+        verify(userRepository).findById(anyInt());
+
+        // assert
+        assertEquals(id, userDto.getId());
+    }
+}
+</code></pre>
+<h4 id="springtest">SpringTest</h4>
+<h5 id="mockmvc-unit-test">mockMvc unit test</h5>
+<ul>
+<li>Before: You must init the MockMvc and bind it to controller class.</li>
+</ul>
+<pre><code class="language-Java">private HelloController helloController;
+private MockMvc mockMvc;
+
+@Before
+public void setUp() throws Exception
+{
+    MockitoAnnotations.initMocks(this);
+    //use controller to build mock mvc.
+    mockMvc = MockMvcBuilders.standaloneSetup(helloController).build();
+}
+</code></pre>
+<ul>
+<li>Class : <code>MockMvc</code></li>
+<li>Method : <code>perform()</code>,<code>get() post() put() delete()</code>, <code>contentType()</code>, <code>param()</code>, <code>andExpect()</code>,<code>status()</code>,<code>isOk()</code>,<code>andReturn()</code>,<code>getResponse()</code>, <code>getContentAsString()</code></li>
+<li>There are some use cases of methods.</li>
+</ul>
+<pre><code class="language-Java">// GET
+String responseStr = mockMvc.perform(get(requestUrl).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+//POST form                
+String responseData = mockMvc.perform(post(requestURI).param(&quot;tenantId&quot;, &quot;dev&quot;))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+//PUT
+String responseData = mockMvc.perform(put(requestURI).param(&quot;tenantId&quot;, &quot;dev&quot;)).
+                andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+//DELETE
+String data = mockMvc .perform(delete(requestURI).contentType(MediaType.APPLICATION_JSON).content(&quot;the params with json format&quot;)
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+</code></pre>
+<ul>
+<li>Example:</li>
+</ul>
+<pre><code class="language-Java">package tech.shunzi.testdev.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import tech.shunzi.testdev.model.dto.UserDto;
+import tech.shunzi.testdev.service.impl.UserServiceImpl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+public class UserControllerTest {
+
+    private MockMvc mockMvc;
+
+    @Mock
+    private UserServiceImpl userService;
+
+    @InjectMocks
+    private UserController userController;
+
+    @Before
+    public void setUp() throws Exception {
+        MockitoAnnotations.initMocks(this);
+        mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
+    }
+
+    @Test
+    public void testFindAll() throws Exception {
+        // Prepare data
+        String requestUrl = &quot;/users&quot;;
+        List&lt;UserDto&gt; userDtoList = new ArrayList&lt;&gt;();
+        UserDto userDto = new UserDto();
+        userDto.setName(&quot;shunzi&quot;);
+        userDtoList.add(userDto);
+
+        ObjectMapper mapper = new ObjectMapper();
+        String expectedValue = mapper.writeValueAsString(userDtoList);
+
+        // When
+        when(userService.findAllUsers()).thenReturn(userDtoList);
+
+        // Act
+        String responseStr = mockMvc.perform(get(requestUrl).accept(MediaType.APPLICATION_JSON_UTF8)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+        // Verify
+        verify(userService).findAllUsers();
+
+        // Assert
+        assertEquals(expectedValue, responseStr);
+    }
+}
+
+</code></pre>
+<h4 id="powermock">PowerMock</h4>
+<ul>
+<li>We usually use PowerrMock to mock static method.<code>public static returnValue methodName(T param)</code></li>
+</ul>
+<h5 id="how-to-use">How to use:</h5>
+<ul>
+<li>Prepare:
+<ul>
+<li>Use annotation <code>@PrepareForTest(IncludeStaticMethodClass.class)</code> to annotate unit test class.</li>
+<li>Use annotation <code>@RunWith(PowerMockRunner.class)</code> to annotate unit test class.</li>
+</ul>
+</li>
+<li>Use:
+<ul>
+<li>method:
+<ul>
+<li><code>PowerMockito.mockStatic()</code>  // mock static class</li>
+<li><code>PowerMocckito.when()</code> // mock static method invoke</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Example:</li>
+</ul>
+<pre><code class="language-Java">@PrepareForTest(ObjectFieldEmptyUtil.class)
+@RunWith(PowerMockRunner.class)
+public class UserServiceImplTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @InjectMocks
+    private UserServiceImpl userService;
+
+    @Before
+    public void setUp() throws Exception {
+        MockitoAnnotations.initMocks(this);
+    }
+    
+    @Test(expected = RuntimeException.class)
+    public void testSaveUser() {
+
+        // Prepare data
+        UserDto user = new UserDto();
+        user.setName(&quot;shunzi&quot;);
+        user.setIntroduction(&quot;intro&quot;);
+        User model = new User();
+        model.setDesc(&quot;intro&quot;);
+        model.setName(&quot;shunzi&quot;);
+        model.setId(1);
+        List&lt;String&gt; stringList = new ArrayList&lt;&gt;();
+        stringList.add(&quot;name&quot;);
+
+        PowerMockito.mockStatic(ObjectFieldEmptyUtil.class);
+        PowerMockito.when(ObjectFieldEmptyUtil.findEmptyFields(anyObject(), anyList())).thenReturn(stringList);
+
+        // Act
+        UserDto userDto = userService.saveUser(user);
+
+        // Assert
+        assertEquals(&quot;shunzi&quot;, userDto.getName());
+    }
+}
+</code></pre>
+<h5 id="caution">Caution:</h5>
+<ul>
+<li>Please refer <a href="https://github.com/powermock/powermock">PowerMock Github Repo</a> version issues.</li>
+<li>It must match <code>Mockito</code> version</li>
+</ul>
+<h2 id="集成测试-integration-test-it">集成测试 Integration Test (IT)</h2>
+<ul>
+<li>应用场景：比起单元测试，集成测试加载了相关的环境变量和上下文，能够对整个Spring上下文里的代码进行测试。而在单元测试中是通过<code>@Mock</code>的方式进行注入的，在集成测试的场景下可以直接 <code>@Autowire</code> 相关对象，同时能够和<code>DB</code>进行交互，也能对相关接口进行实际场景的测试。</li>
+<li>工具: JUnit4/5, Spring Test, SpringBoot Test.</li>
+</ul>
+<h4 id="spring-integration-test">Spring Integration Test</h4>
+<ul>
+<li><a href="https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-testing.html">官方文档</a></li>
+</ul>
+<h4 id="prepare">Prepare:</h4>
+<ul>
+<li>添加 application-test.xml 配置文件，为专门的测试系统进行配置。</li>
+<li>便于指定 <code>ActiveProfiles(&quot;test&quot;)</code></li>
+</ul>
+<h4 id="代码实例">代码实例：</h4>
+<ul>
+<li>BaseIntegrationTest</li>
+</ul>
+<pre><code class="language-Java">package tech.shunzi.testdev.integration.test;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc
+@ActiveProfiles(&quot;test&quot;)
+public abstract class BaseIntegrationTest {
+
+    @Autowired
+    protected MockMvc mockMvc;
+
+    @Rule
+    public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+
+    @Before
+    public void setUpEnv()
+    {
+        environmentVariables.set(&quot;key&quot;,&quot;value&quot;);
+    }
+}
+</code></pre>
+<ul>
+<li>其余具体的 <code>Integration Test Class</code>均可继承 <code>BaseIntegrationTest</code></li>
+</ul>
+<pre><code class="language-Java">package tech.shunzi.testdev.integration.test;
+
+import org.junit.Test;
+import org.springframework.http.MediaType;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+public class UserControllerIntTest extends BaseIntegrationTest {
+
+    @Test
+    public void testFindAll() throws Exception {
+        // Prepare data
+        String requestUrl = &quot;/users&quot;;
+
+        // Act
+        String responseStr = mockMvc.perform(get(requestUrl).accept(MediaType.APPLICATION_JSON_UTF8)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        
+        // Advise to use assert, sout in here is just to show query result from DB
+        System.out.println(responseStr);
+    }
+}
+</code></pre>
+<ul>
+<li>针对 Service 和 Dao 层可以不加载相关 Web 环境</li>
+</ul>
+<pre><code class="language-Java">package tech.shunzi.testdev.integration.test;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
+import tech.shunzi.testdev.service.UserService;
+
+@RunWith(SpringRunner.class)
+@SpringBootTest
+@ActiveProfiles(&quot;test&quot;)
+public class UserServiceTest {
+
+    @Autowired
+    private UserService userService;
+
+    @Test
+    public void testFindAll() {
+        System.out.println(userService.findAllUsers());
+    }
+}
+
+</code></pre>
+<h2 id="系统测试-system-test-st">系统测试 System Test (ST)</h2>
+<ul>
+<li>应用场景：系统测试相比于其他之前的测试，是从系统层面出发，对整个功能或者整套流程进行测试。是一种黑盒测试。也常常用来测试相关功能模块的性能。</li>
+<li>工具： JMeter</li>
+</ul>
+<h3 id="jmeter">JMeter</h3>
+<ul>
+<li><a href="https://jmeter.apache.org/">官方主页</a></li>
+</ul>
+<h4 id="download-and-launch">Download and Launch</h4>
+<ul>
+<li>download JMeter: https://jmeter.apache.org/download_jmeter.cgi and select &quot;apache-jmeter-4.0.zip&quot;</li>
+<li>unzip the jmeter to your own folder</li>
+<li>go to your jmeter folder: [your folder]\apache-jmeter-4.0\bin and run jmeter.bat or run ApacheJMeter.jar</li>
+</ul>
+<h4 id="how-to-use-jmeter">How to use JMeter</h4>
+<ul>
+<li><a href="https://video.sap.com/media/t/1_4nj2lh3u/39197781">Short video</a></li>
+</ul>
+<h4 id="example-code">Example Code</h4>
+<ul>
+<li><a href="https://github.com/zjs1224522500/dev-test/blob/master/src/main/resources/jmx/Thread%20Group-%20User%20Function.jmx">Github JMX</a></li>
+</ul>
+<h4 id="head-first">Head First</h4>
+<ul>
+<li>Aim: Test Create User function</li>
+<li>Procedure:
+<ul>
+<li>Query All User. Verify init data</li>
+<li>Create User And Verify Response Dara</li>
+<li>Query All User. Verify new added data</li>
+</ul>
+</li>
+</ul>
+<h5 id="step-1-create-thread-group">Step 1. Create Thread Group</h5>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/dev-test/master/src/main/resources/pic/new%20thread%20group.png" alt="image" loading="lazy"></figure>
+<h5 id="step-2-define-some-common-variables">Step 2. Define some common variables</h5>
+<ul>
+<li>You can define some common data. Such as host, port and even params etc.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/dev-test/master/src/main/resources/pic/new%20http%20request.png" alt="image" loading="lazy"></li>
+</ul>
+<h5 id="step-3-new-http-request">Step 3. New Http Request</h5>
+<ul>
+<li>Create Http Request Example<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/dev-test/master/src/main/resources/pic/new%20http%20request.png" alt="image" loading="lazy"></li>
+<li>Http Request Main Param<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/dev-test/master/src/main/resources/pic/Request%20Body%20Param.png" alt="image" loading="lazy"></li>
+<li>You can control the header attribute (key-value)<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/dev-test/master/src/main/resources/pic/Header%20Attributes.png" alt="image" loading="lazy"></li>
+<li>JSON Extractor: Extract json response data to variables<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/dev-test/master/src/main/resources/pic/Header%20Attributes.png" alt="image" loading="lazy"></li>
+</ul>
+<h5 id="step-4-new-assertersjson-assertion-response-assertion-etc">Step 4. New Asserters.(JSON Assertion, Response Assertion etc.)</h5>
+<ul>
+<li>Assertion should be combined with Assertion Results.</li>
+<li>JSON Assertion<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/dev-test/master/src/main/resources/pic/JSON%20Assertion.png" alt="image" loading="lazy"></li>
+<li>Response Assertion<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/dev-test/master/src/main/resources/pic/Response%20Assertion.png" alt="image" loading="lazy"></li>
+</ul>
+<h5 id="step-5-processor-prepost">Step 5. Processor (Pre/Post)</h5>
+<ul>
+<li>BeanShell Post Processor<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/dev-test/master/src/main/resources/pic/Bean%20shell%20processor.png" alt="image" loading="lazy"></li>
+</ul>
+<h5 id="step-6-result-tree">Step 6. Result Tree</h5>
+<ul>
+<li>Result tree shows all result of test http request.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/dev-test/master/src/main/resources/pic/result%20tree.png" alt="image" loading="lazy"></li>
+</ul>
+<h2 id="自动化测试auto-ui-test">自动化测试（Auto UI Test）</h2>
+<ul>
+<li>应用场景：为了减小人工测试过程中重复的工作量，通过编写相关脚本语言，实现模拟人为操作，进而对UI上的元素进行点击等操作，测试相关功能。除此以外，也可将部分固定流程的操作进行抽象，并绑定相关定时任务，实现对应的需求。</li>
+<li>工具： Katalon Studio(Groovy)</li>
+</ul>
+<h3 id="katalon-studio">Katalon Studio</h3>
+<ul>
+<li><a href="https://www.katalon.com/">官方主页</a></li>
+</ul>
+<h3 id="groovy-based-on-java">Groovy (Based on Java)</h3>
+<ul>
+<li><a href="http://www.groovy-lang.org/">官方主页</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/rabbitmq-cover.png?raw=true');"></div>
+                 <a href="https://blog.shunzi.tech/post/rabbitmq/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-07-14">2019-07-14</time>
+                  <h4 class="title white no-margin">RabbitMQ</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('http://www.spring-event.com/wp-content/uploads/2017/11/logo.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/spring-event/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2018-11-01">2018-11-01</time>
+                  <h4 class="title white no-margin">Spring Event</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

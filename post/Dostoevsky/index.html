@@ -1,0 +1,708 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+
+
+
+
+Abstract
+
+无论是学术界还是工业界，所有主流的基于 LSM 树的键值存储都在更新的 I/O 成本和查询和存储空间的 I/O 成本之间进行了权衡。因为在所有的 LSM Tree 的级别上都需要执行 Compaction 操..." />
+    <meta name="keywords" content="KVS,Paper,存储" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2021-01-12"><i class="fa fa-calendar"></i><span class="lately">4 天前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/Dostoevsky/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/Dostoevsky/"> </span>
+              </a>
+              <span id="/Dostoevsky/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li></li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li>无论是学术界还是工业界，所有主流的基于 LSM 树的键值存储都在更新的 I/O 成本和查询和存储空间的 I/O 成本之间进行了权衡。因为在所有的 LSM Tree 的级别上都需要执行 Compaction 操作来限制查询遍历的 runs，并删除 obsolete 的数据项来腾出存储空间。即便是最先进的 LSM Tree 设计，来自 LSM Tree 所有层此的合并操作（除了最大的层此）减少的点查询成本、大范围查询成本和存储空间，减少的效果可以忽略不计；与此同时还增加了更新操作的平摊开销。</li>
+<li>为了解决这个问题，我们提出了 Lazy Leveling，一种新的设计，从除开最大层以外的所有 level 中删除合并操作。同时提出了 Fluid LSM-tree，一种可以涵盖整个 LSM-tree 设计领域的通用设计，可以参数化以假设任何现有的设计。相对于 Lazy level, Fluid LSM-tree 可以通过在最大级别上合并更少的内容来优化更新，或者通过在所有其他级别上合并更多内容来优化小范围查询。</li>
+<li>Dostoevsky，一种键值存储，通过基于应用程序工作负载和硬件来动态调整的弹性的 LSM-tree 设计，自适应地消除多余的合并。基于 RocksDB 实现，测试表明无论是性能还是存储空间方面都优于目前最先进的设计。</li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<ul>
+<li>LSM-tree 将要插入/更新的条目缓冲在内存中，并在缓冲区填满时将缓冲区作为 sorted run 刷新到次要存储。LSM-tree 稍后对这些 runs 进行排序合并，以限制查找必须扫描的run 数量，并删除过时的条目。LSM-tree 将运行组织成指数级增长的容量，更大的级别包含更老的运行。当条目被替换更新时，点查找通过从最小到最大的级别查找条目的最新版本，并在查找目标键时终止查找。另一方面，范围查找必须在所有级别的所有 run 中访问相关的键范围，并从结果集中删除过时的条目。为了提高单个 run 的查询速度，设计中常常包含了两个额外的内存中的数据结构。首先，对于每个 run，都有一组包含每个 run 块的第一个键的 fence 指针，这允许查找在一个 run 中只使用一个 I/O 就可以访问特定的键；第二，每个 run 会有一个 BoolmFilter，这允许点查询跳过不包含目标键的 runs。这个设计被应用到了大量的现代 KV 存储中，如 LevelDB、BigTable 等。</li>
+<li><strong>问题</strong>：LSM-tree 中的合并操作的频率控制了在 更新的 I/O 成本 和 查询和存储空间放大的 I/O 成本之间的 trade-off，另外的问题就是现有的设计在这些指标之间的 trade-off 并不理想。下图表示了指标之间的权衡关系，虽然这些 y 轴指标具有不同的单位，但它们相对于 x 轴的权衡曲线具有相同的形状。两个极端分别是 log 和 sorted array。LSM-tree在完全不合并或尽可能多地合并时，分别退化为这些边缘点。我们将主流系统放置在这些边缘点之间的顶部曲线上，基于它们的默认合并频率，我们为 Monkey 绘制了一个优越的权衡曲线，我们证明了存在一个甚至比Monkey更好的权衡曲线。现有的设计放弃了大量的性能和/或存储空间，因为没有沿着这条底部曲线设计。</li>
+<li><strong>问题来源</strong>：通过分析最先进的 LSM 树的设计空间，我们指出了问题的根源，即最坏情况下的更新代价、点查询代价、范围查询代价和空间放大在不同的层次上产生不同的结果。
+<ul>
+<li>Update: 更新的 I/O 成本稍后通过更新条目参与的合并操作来分担。虽然较大级别的合并操作需要成倍地增加工作，但它们发生的频率却成倍地减少。因此，更新从所有级别的合并操作中同等地获得它们的 I/O 成本。</li>
+<li>Point lookups：虽然 图1 中沿顶部曲线的主流设计将跨 LSM-tree 所有级别的 Bloom flters 假阳性率设置为相同，但目前最先进的 Monkey 为更小的层此设置更低的假阳性率。他被证明可以最小化所有筛选器的误报率之和，从而最小化点查找的 I/O。与此同时，这意味着进入较小层此的可能性呈指数级下降，因此大多数点查询 I/O 将直接命中最大的层次。</li>
+<li>Long range lookup：因为 LSM Tree 的容量呈指数级增长，最大曾通常包含绝大部分数据，所以该层更可能包含给定键范围内的数据，因此大多数由大范围查询引起的 I/O 都将对最大层进行操作。</li>
+<li>Short range lookup： 使用极小键范围的范围查找在每次 run 中只能访问大约一个块，而不管 run 的大小，因为每一层 run 的最大个数是固定的，因此小范围查询在所有曾中是相当的。</li>
+<li>Space-Amplifcation：空间放大最差的情况就是较低层次的数据被更新到最大层此，因此在最大层中老旧的数据项比例最大。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png" alt="20210112173749" loading="lazy"></li>
+</ul>
+</li>
+<li>因为最坏情况下的点查询开销、大范围查询开销、空间放大都主要来源于最大层，LSM-tree 中所有级别的合并操作，除开最大层(即大多数合并操作)在这些指标上几乎没有改进，同时显著增加了更新的平摊成本。这导致了次优的权衡。我们用三个步骤从头开始解决这个问题：
+<ul>
+<li><strong>Solution 1: Lazy Leveling to Remove Superﬂuous Merging</strong>：
+<ul>
+<li>我们使用 Lazy level 拓展了 LSM-tree 设计思路，这种新设计除去了 LSM-tree 最大级别之外的所有合并。Lazy Leveling 改进了最坏情况下更新的成本复杂性，同时在点查找成本、大范围查找成本和空间放大上保持相同的限制，同时在小范围查找成本上提供具有竞争力的限制。我们证明改进的更新开销可以用来降低点查找开销和空间放大。这生成了 图1 中的底部曲线，它提供了更丰富的时空权衡，这是迄今为止最先进的设计无法实现的。</li>
+</ul>
+</li>
+<li><strong>Solution 2: Fluid LSM-Tree for Design Space Fluidity.</strong>
+<ul>
+<li>我们引入了 Fluid LSM-tree 作为新一代的 LSM Tree 支持在整个 LSM-tree 设计思路中流畅地切换。Fluid LSM-tree 通过分别控制最大级别和所有其他级别合并操作的频率，相对于 Lazy leveling, Fluid LSM-tree 可以通过在最大级别上合并更少的内容来优化更新，或者通过在所有其他级别上合并更多内容来优化小范围查询。</li>
+</ul>
+</li>
+<li><strong>Solution 3: Dostoevsky to Navigate the Design Space</strong>
+<ul>
+<li>Dostoevsky: Space-Time Optimized Evolvable Scalable Key-Value Store。Dostoevsky 分析地找到了Fluid LSM-tree 的调优方法，以最大限度地提高特定应用程序工作负载和硬件在空间放大方面的用户约束，通过精简搜索空间来快速找到最佳调优，并在运行时对其进行物理调整。因为 Dostoevsky 跨越了所有现有的设计，并能够针对给定的应用程序 navigate 到最佳的设计，因此它在性能和空间放大方面严格控制了现有的键值存储。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="background">BACKGROUND</h2>
+<ul>
+<li>如下图所示，为了优化写操作，LSM-Tree 初始时缓冲了所有的更新、插入和删除操作到内存中，当 Buffer 满了之后，LSM Tree 将 Buffer 以 Sorted Run 刷回到了第二层存储，LSM Tree 归并排序 runs 是为了：限制查询操作必须访问的 runs 的数量，以及删除老旧的数据项以回收空间。runs 被组织成 L 个呈指数级增长的层此，Level 0 是主存中的 Buffer，其他层次都位于二级存储。</li>
+<li>在合并的 I/O 开销和查询 I/O 开销以及空间放大之前的权衡可以由两个参数来控制，第一个是相邻两个层次之间的比例 T，T 控制了层级的个数因此决定了一个数据能够在层级之间合并多少次。第二个参数是合并策略，决定了数据项在一个 level 内的合并次数。所有的现有设计都使用了 tiering 或 leveling 两种策略。
+<ul>
+<li>tiering：当一个 level 到达容量时合并该 level 内的 runs</li>
+<li>leveling: 当一个新的 run 出现，就会在 level 中执行合并</li>
+</ul>
+</li>
+<li>如下图所示，size ratio 为 4，buffer 大小为一个 entry 的大小。在两种策略中，当 buffer flushing 造成 Level 1 到达容量时触发合并操作。对于 tiering，Level 1 的所有 runs 都被合并成同一个新的 run 放置在 Level 2。而对于 Leveling，合并操作还会包含 Level2 原有的 run。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210114224107.png" alt="20210114224107" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210115172909.png" alt="20210115172909" loading="lazy"></li>
+<li><strong>Number of Levels</strong>：Level 0 拥有的数据项个数 <em>B * P</em>。$$L = [log_T(\frac{N}{B<em>P}</em>\frac{T-1}{T})]$$。层级之间的大小比例 T 被限制到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>2</mn><mo>≤</mo><mi>T</mi><mo>≤</mo><msub><mi>T</mi><mrow><mi>l</mi><mi>i</mi><mi>m</mi></mrow></msub></mrow><annotation encoding="application/x-tex">2 ≤ T ≤ T_{lim}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.78041em;vertical-align:-0.13597em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.8193em;vertical-align:-0.13597em;"></span><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.01968em;">l</span><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight">m</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>，其中 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>T</mi><mrow><mi>l</mi><mi>i</mi><mi>m</mi></mrow></msub></mrow><annotation encoding="application/x-tex">T_{lim}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.01968em;">l</span><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight">m</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 被定义成 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mfrac><mi>N</mi><mrow><mi>B</mi><mo>∗</mo><mi>P</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">\frac{N}{B*P}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.217331em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.872331em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.05017em;">B</span><span class="mbin mtight">∗</span><span class="mord mathdefault mtight" style="margin-right:0.13889em;">P</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.10903em;">N</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span>，当 size ratio 达到上界时，levels 的数量减少到接近 1，超过上界之后将无结构性的变化。大于下界就表明 第 i 级合并操作的结果运行永远不会大到超过第 i + 1 级。换句话说就是确保了 runs 不会跨多个 levels。</li>
+<li><strong>Finding Entries</strong>：因为数据项是异地更新，相同 key 的数据的多个版本可能出现在多个 level 中，甚至对于 tiering 策略可能存在于一个 level 的多个 runs 中，为了确保查询操作总是能够找到最新版本的数据，LSM Tree 采用了如下措施：1. 当数据项被插入到 buffer 中且 buffer 中包含相同 key 对应的数据时，新的数据项将代替老的数据；2. 当两个包含相同 key 的数据项的 runs 被合并的时候，只有最新版本的数据将被保留；3. 为了能够获取到来自不同 runs 的相同 key 的不同数据项的插入顺序，一个单独的 run 只能够和相邻时间的 run 进行合并。从而保证当有两个 runs 包含不同版本的相同 key 对应的数据时，younger run 包含的是最新版本的数据。</li>
+<li><strong>Point Lookups</strong>：点查询通过从最小到最大层次进行遍历来查询最新版本的数据，对于 tiering 则是在一个 level 中从最新到最老的 runs 中遍历进行查询。当找到一个匹配当前 key 的数据时则终止。</li>
+<li><strong>Range Lookups</strong>：范围查询需要查找指定范围的键对应的所有最新的数据，通过对所有 levels 所有 runs 的相关键范围进行排序合并。当 sort-merging 时，识别出来自不同 runs 具有相同 key 的数据，然后丢弃掉老版本的数据。</li>
+<li><strong>Deletes</strong>：通过给每个数据项添加一位 flag 来实现。如果查询操作找到了该数据想的最新版本，且该数据项上有该 flag 那么将不会返回对应的 value 给应用。当一个删除的数据项和 最老的 run 合并的时候，该数据将被删除，因为该数据项已经代替了之前所有插入的具有当前 key 的数据。</li>
+<li><strong>Fragmented Merging</strong>：为了换接较大级别上由于长时间合并操作而导致的性能下降，主流设计把 runs 分区成了文件，也叫 Sorted String Tables，然后一次合并一个 SSTable 和下一个 older run 中具有重叠键范围的多个 SSTables，该技术不会影响最坏情况下的合并 I/O 开销，而只会影响这种开销如何调度。在整篇文章中，为了便于阅读，我们将合并操作讨论为具有 runs 的粒度，尽管它们也可以具有 sstables 的粒度。</li>
+<li><strong>Space-Amplifcation</strong>：过时条目的存在使存储空间增大的因素称为空间放大。由于磁盘的可承受性，空间放大传统上并不是数据结构设计的主要关注点。然而，SSD 的出现使空间放大成为一个重要的成本问题。我们将空间放大作为成本指标，以提供我们所引入和评估的设计的完整描述。</li>
+<li><strong>Fence Pointers</strong>：所有主要的基于 LSM 树的键值存储都在主存中对每次运行的每个块的第一个键建立索引，也就是图 2 所示的 fence pointer，通常这些指针占据内存空间大小为 O(N/B)，但是让查询操作中找到每个 runs 的 key 范围变成了只需要一次 I/O。</li>
+<li><strong>Bloom Filters</strong>：为了加速点查找，只需要在主存中为每个 run 维护一个 BloomFilter，点查找在访问存储中相应的 runs 之前首先检查 Bloom flter。如果 filter 返回 true positive，那么查询操作配合 fence pointer 只需要一次 I/O 就能访问对应的 run，从而找到对应的数据项并终止。如果返回 negative，那么将跳过该 run 并节省一次 I/O 操作。但还有 false positive 的情况，浪费一次 I/O 然后再去下一个 run 继续查找该 key。</li>
+<li>Bloom flter 有一个有用的特性，如果它被分割成较小的等大小的 Bloom flter，其中的条目也被等分，每一个新的分区布隆滤片的 FPR 渐近与原滤片的 FPR 相同(虽然实际略高)。为了便于讨论，我们将Bloom flters称为非分区的，尽管它们也可以按照工业中的某些设计进行分区（比如每个 run 的每个 block），从而为空间管理提供更大的灵活性。(例如，对于那些不经常被点查询读取的块，可以将其 offload 到存储器中以节省内存)</li>
+<li><strong>Applicability Beyond Key-Value Stores</strong>：根据工业上的设计，我们的讨论假设一个键在运行过程中与它的值相邻存储。为了便于阅读，本文中的所有图形都将条目描述为键，但它们表示键-值对。我们的工作也适用于没有 value 的应用程序(例如，LSM-tree 被用来回答关于键的集合成员查询)，其中的值是指向存储在 LSM-tree 之外的数据对象的指针，或者 LSM-tree 被用作解决更复杂算法问题的构建块(例如，图分析)， FTL 设计等)。我们将分析的范围限制在基本操作和 LSM-tree 的大小上，以便它可以很容易地应用于这些其他情况。</li>
+</ul>
+<h2 id="design-space-and-problem-analysis">DESIGN SPACE AND PROBLEM ANALYSIS</h2>
+<ul>
+<li>现在，我们分析更新和查找的最差情况下的空间放大和 I/O 成本是如何从不同的级别派生出与合并策略和大小比例相关的。为了分析更新和查找，我们使用磁盘访问模型来计算每个操作的 I/O 数量，其中 I/O 是从二级存储读取或写入一个块。</li>
+<li>分析结果如下所示：
+<ul>
+<li><strong>Updates</strong>：更新成本通常都是由更新条目参与的后续合并操作产生的，分析假设最坏情况的工作负载，其中所有更新的目标条目都在最大级别。这意味着一个过时的条目不会被删除，直到它相应的更新的条目达到最大级别。因此，每个条目都会在所有级别上合并(即，而不是在某个更小的级别上被最近的条目丢弃，从而减少以后合并操作的开销)。
+<ul>
+<li>tiering：每层合并 O(1) 次，每个合并过程中的 I/O 操作从原始的 run 中拷贝 B 个数据项到新的 run，因此每个数据项平均的更新操作成本开销如图所示。填满 level i，需要 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>B</mi><mo separator="true">⋅</mo><mi>P</mi><mo separator="true">⋅</mo><msup><mi>T</mi><mi>i</mi></msup></mrow><annotation encoding="application/x-tex">B · P · T^i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord mathdefault" style="margin-right:0.05017em;">B</span><span class="mpunct">⋅</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault" style="margin-right:0.13889em;">P</span><span class="mpunct">⋅</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span></span></span></span></span></span></span></span> 次更新，导致合并操作拷贝 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>B</mi><mo separator="true">⋅</mo><mi>P</mi><mo separator="true">⋅</mo><msup><mi>T</mi><mi>i</mi></msup></mrow><annotation encoding="application/x-tex">B · P · T^i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord mathdefault" style="margin-right:0.05017em;">B</span><span class="mpunct">⋅</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault" style="margin-right:0.13889em;">P</span><span class="mpunct">⋅</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span></span></span></span></span></span></span></span> 个数据项。</li>
+<li>leveling：到达 level i 的第 j 个 run 触发了一个合并操作，合并操作包括 level i 现有的 runs，这些 runs 是自上次 level i 为空以来到达的前 T−j 个 runs 的合并操作产生的。因此平均每个数据项在该层数据到达容量之前合并了 T/2 次，可以表示为 O(T)，同样需要除以一个块对应的 B 个数据项。每 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>B</mi><mo separator="true">⋅</mo><mi>P</mi><mo separator="true">⋅</mo><msup><mi>T</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">B · P · T^{i-1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord mathdefault" style="margin-right:0.05017em;">B</span><span class="mpunct">⋅</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault" style="margin-right:0.13889em;">P</span><span class="mpunct">⋅</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span></span></span></span> 次更新（每次有一个新的 run come in）之后执行一次合并操作，然后拷贝平均 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mfrac><mrow><mi>B</mi><mo separator="true">⋅</mo><mi>P</mi><mo separator="true">⋅</mo><msup><mi>T</mi><mi>i</mi></msup></mrow><mn>2</mn></mfrac></mrow><annotation encoding="application/x-tex">\frac{B · P · T^i}{2}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.3704599999999998em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.0254599999999998em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.05017em;">B</span><span class="mpunct mtight">⋅</span><span class="mord mathdefault mtight" style="margin-right:0.13889em;">P</span><span class="mpunct mtight">⋅</span><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.9020857142857143em;"><span style="top:-2.931em;margin-right:0.07142857142857144em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mathdefault mtight">i</span></span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span> 项数据，通过将复制的条目数除以级别 i 的合并操作的频率，<strong>我们观察到，在长期运行中，每个级别上的合并操作所做的工作量是相同的，直觉是，虽然合并操作在更大的级别上以指数方式完成更多的工作，但它们的频率也以指数方式降低</strong></li>
+</ul>
+</li>
+<li><strong>Analyzing Point Lookups</strong>：为了分析最坏情况下的点查找代价，我们将重点放在 zero-result 点查找（例如查询不存在的 Key）上，因为它们最大化了浪费的 I/O 的平均值。这种分析对于插入前判断是否存在的操作就很有用。开销最大的情况即为所有的 BloomFilter 返回 false positive，此时点查询操作会对每一个 run 发起一次 I/O，<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210116202849.png" alt="20210116202849" loading="lazy"></li>
+</ul>
+</li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/CRaft/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-12-16">2020-12-16</time>
+                  <h4 class="title white no-margin">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

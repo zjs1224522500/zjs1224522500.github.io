@@ -1,0 +1,1123 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Series Four of Basic of Virtualization - Memory Virtualization - Basic And Segmentation | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+威斯康辛州大学操作系统书籍《Operating Systems: Three Easy Pieces》读书笔记系列之 Virtualization（虚拟化）。本篇为虚拟化技术的基础篇系列第三篇（Memory Virtualization..." />
+    <meta name="keywords" content="存储,读书笔记,OS" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-08-23"><i class="fa fa-calendar"></i><span class="lately">5 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/basic-of-virtualization-four/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/basic-of-virtualization-four/"> </span>
+              </a>
+              <span id="/basic-of-virtualization-four/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-1 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-2 ctag-os" aria-label="">OS</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Series Four of Basic of Virtualization - Memory Virtualization - Basic And Segmentation</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>威斯康辛州大学操作系统书籍《Operating Systems: Three Easy Pieces》读书笔记系列之 Virtualization（虚拟化）。本篇为虚拟化技术的基础篇系列第三篇（Memory Virtualization），内存虚拟化。</li>
+<li>内存虚拟化又将分为两篇，本篇为第一篇内存虚拟化之基础和分段</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="chapter-index">Chapter Index</h2>
+<ul>
+<li>TODO</li>
+</ul>
+<h2 id="dialogue">Dialogue</h2>
+<ul>
+<li>Every address generated by a user program is a virtual address.</li>
+</ul>
+<h2 id="the-abstraction-address-spaces">The Abstraction: Address Spaces</h2>
+<h3 id="early-systems">Early Systems</h3>
+<ul>
+<li>早期的系统未提供太多内存的抽象给用户，物理内存的分布如图所示。操作系统曾经是一组函数（实际上是一个库），在内存中（在本例中，从物理地址 0 开始），然后有一个正在运行的程序（进程），目前在物理内存中（在本例中，从物理地址 64KB 开始），并使用剩余的内存。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200903104345.png" alt="20200903104345" loading="lazy"></li>
+</ul>
+<h3 id="multiprogramming-and-time-sharing">Multiprogramming and Time Sharing</h3>
+<ul>
+<li>多道程序（multiprogramming）：多个进程在给定时间准备运行，比如当有一个进程在等待 I/O 操作的时候，操作系统会切换这些进程，这样增加了 CPU 的有效利用率（utilization）。</li>
+<li>时分共享（Time Sharing）：因为厌倦了长时间的（因此也是低效率的）编程—调试循环。交互性（interactivity）变得很重要，因为许多用户可能同时在使用机器，每个人都在等待（或希望）他们执行的任务及时响应。</li>
+<li>一种实现时分共享的方法，是让一个进程单独占用全部内存运行一小段时间，如早期的系统一样，然后停止它，并将它所有的状态信息保存在磁盘上（包含所有的物理内存），加载其他进程的状态信息，再运行一段时间，这就实现了某种比较粗糙的机器共享。但该方法的问题在于太慢了，主要因为需要将内存信息保存到磁盘，磁盘速度较慢，所以考虑在进程切换时的进程信息仍然保存在内存中可以高效地实现时分共享。</li>
+<li>如图所示，三个进程 ABC，每个进程拥有从 512KB 物理内存中切出来给它们的一小部分内存。假定只有一个 CPU，操作系统选择运行其中一个进程（比如 A），同时其他进程（B 和 C）则在队列中等待运行。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200903105318.png" alt="20200903105318" loading="lazy"></li>
+<li>将进程信息都保存在内存中也就引入了新的问题，内存区域之间需要进行隔离或保护，防止其他进程修改了当前进程的内存区域。</li>
+</ul>
+<h3 id="the-address-space">The Address Space</h3>
+<ul>
+<li>操作系统为了解决上述问题，对物理内存提供一层抽象，也就是地址空间（Address Space），即运行的程序看到的系统的内存。</li>
+<li>一个进程的地址空间包含运行的程序的所有内存状态。
+<ul>
+<li>程序的代码（code，指令）必须在内存中，因此它们在地址空间里。</li>
+<li>当程序在运行的时候，利用栈（stack）来保存当前的函数调用信息，分配空间给局部变量，传递参数和函数返回值。</li>
+<li>堆（heap）用于管理动态分配的、用户管理的内存，就像你从 C 语言中调用 malloc()或面向对象语言（如 C ++<br>
+或 Java）中调用 new 获得内存。</li>
+<li>还有其他的区域（例如，静态初始化的变量），但现在假设只有这 3 个部分：代码、栈和堆。</li>
+</ul>
+</li>
+<li>如下图所示例子中，有一个 16KB 的地址空间，顶部 0-1KB 为代码对应的分段，因为指令在运行过程中所占用的空间不会发生变化，即静态的，所以分配一个固定大小的空间即可。但是堆和栈是动态的，堆在顶部，栈在底部，同时向中间部分增长，当用户动态分配内存的时候，堆从 1KB 开始向下增长，当用户进行程序调用的时候，栈从 16KB 向上增长。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200903110053.png" alt="20200903110053" loading="lazy"></li>
+<li>需要注意的是，我们描述地址空间时，所描述的是操作系统提供给运行程序的抽象（abstract）。程序不在物理地址 0～16KB 的内存中，而是加载在任意的物理地址。CRUX：操作系统如何在单一的物理内存上为多个运行的进程（所有进程共享内存）构建一个私有的、可能很大的地址空间的抽象？</li>
+</ul>
+<h3 id="goals">Goals</h3>
+<ul>
+<li>虚拟内存（VM）系统的一个主要目标是透明（transparency）
+<ul>
+<li>操作系统实现虚拟内存的方式，应该让运行的程序看不见。因此，程序不应该感知到内存被虚拟化的事实，相<br>
+反，程序的行为就好像它拥有自己的私有物理内存。在幕后，操作系统（和硬件）完成了所有的工作，让不同的工作复用内存，从而实现这个假象。</li>
+<li>虚拟内存的另一个目标是效率（efficiency）。操作系统应该追求虚拟化尽可能高效（efficient），包括时间上（即不会使程序运行得更慢）和空间上（即不需要太多额外的内存来支持虚拟化）。在实现高效率虚拟化时，操作系统将不得不依靠硬件支持，包括 TLB 这样的硬件功能。</li>
+<li>虚拟内存第三个目标是保护（protection）。操作系统应确保进程受到保护（protect），不会受其他进程影响，操作系统本身也不会受进程影响。当一个进程执行加载、存储或指令提取时，它不应该以任何方式访问或影响任何其他进程或操作系统本身的内存内容（即在它的地址空间之外的任何内容）。因此，保护让我们能够在进程之间提供隔离（isolation）的特性，每个进程都应该在自己的独立环境中运行，避免其他出错或恶意进程的影响。</li>
+</ul>
+</li>
+</ul>
+<h3 id="summary">Summary</h3>
+<ul>
+<li>虚拟内存系统负责为程序提供一个巨大的、稀疏的、私有的地址空间的假象，其中保存了程序的所有指令和数据。操作系统在专门硬件的帮助下，通过每一个虚拟内存的索引，将其转换为物理地址，物理内存根据获得的物理地址但获取所需的信息。操作系统会同时对许多进程执行此操作，并且确保程序之间互相不会受到影响，也不会影响操作系统。整个方法需要大量的机制（很多底层机制）和一些关键的策略。</li>
+</ul>
+<h2 id="interlude-memory-api">Interlude: Memory API</h2>
+<h3 id="types-of-memory">Types of Memory</h3>
+<ul>
+<li>栈 Stack 内存，它的申请和释放操作是编译器来隐式管理的，所以有时也称为自动（automatic）内存。通过在函数中声明即可，剩余事情由编译器完成，进入函数时开辟栈上的内存空间，退出函数时，释放对应的内存。但是对于某些函数调用之外的内存，则需要借助堆。</li>
+</ul>
+<pre><code class="language-C">void func() {
+ int x; // declares an integer on the stack
+ ...
+} 
+</code></pre>
+<ul>
+<li>堆（heap）内存，其中所有的申请和释放操作都由程序员显式地完成。如下代码所示展示了如何在堆上分配一个整数，得到指向它的指针。关于这一小段代码有两点说明。首先，你可能会注意到栈和堆的分配都发生在这一行：首先编译器看到指针的声明（int * x）时，知道为一个整型指针分配空间，随后，当程序调用 malloc()时，它会在堆上请求整数的空间，函数返回这样一个整数的地址（成功时，失败时则返回 NULL），然后将其存储在栈中以供程序使用。</li>
+</ul>
+<pre><code class="language-C">void func() {
+ int *x = (int *) malloc(sizeof(int));
+ ...
+} 
+</code></pre>
+<h3 id="the-malloc-and-free-call">The <code>malloc()</code> AND <code>free()</code> Call</h3>
+<ul>
+<li>malloc 函数非常简单：传入要申请的堆空间的大小，它成功就返回一个指向新申请空间的指针，失败就返回 NULL</li>
+</ul>
+<pre><code class="language-C">#include &lt;stdlib.h&gt;
+...
+void *malloc(size_t size); 
+</code></pre>
+<ul>
+<li>要释放不再使用的堆内存，程序员只需调用 free()，该函数接受一个参数，即一个由 malloc()返回的指针。</li>
+</ul>
+<pre><code class="language-C">int *x = malloc(10 * sizeof(int));
+...
+free(x); 
+</code></pre>
+<h3 id="common-errors">Common Errors</h3>
+<ul>
+<li>
+<p>很多高级语言支持自动内存管理，即采用 new 分配内存，不用手动显式释放，会有专门的 GC 来进行垃圾回收。</p>
+</li>
+<li>
+<p>忘记分配内存</p>
+<ul>
+<li>segmentation fault</li>
+</ul>
+</li>
+</ul>
+<pre><code>char *src = &quot;hello&quot;;
+char *dst; // oops! unallocated
+strcpy(dst, src); // segfault and die
+</code></pre>
+<ul>
+<li>没有分配足够的内存
+<ul>
+<li>buffer overflow</li>
+</ul>
+</li>
+</ul>
+<pre><code>char *src = &quot;hello&quot;;
+char *dst = (char *) malloc(strlen(src)); // too small!
+strcpy(dst, src); // work properly
+</code></pre>
+<ul>
+<li>
+<p>忘记初始化分配的内存</p>
+<ul>
+<li>uninitialized read</li>
+</ul>
+</li>
+<li>
+<p>忘记释放内存</p>
+<ul>
+<li>memory leak</li>
+</ul>
+</li>
+<li>
+<p>在用完之前释放内存</p>
+<ul>
+<li>dangling pointer</li>
+</ul>
+</li>
+<li>
+<p>反复释放内存</p>
+<ul>
+<li>double free</li>
+</ul>
+</li>
+</ul>
+<h3 id="underlying-os-support">Underlying OS Support</h3>
+<ul>
+<li>malloc() free() 都是库调用，malloc 库管理虚拟地址空间内的空间，但是它本身是建立在一些系统调用之上的，这些系统调用会进入操作系统，来请求本多内存或者将一些内容释放回系统。</li>
+<li>一个这样的系统调用叫作 brk，它被用来改变程序分断（break）的位置：堆结束的位置。它需要一个参数（新分断的地址），从而根据新分断是大于还是小于当前分断，来增加或减小堆的大小。另一个调用 sbrk 要求传入一个增量，但目的是类似的。</li>
+<li>你还可以通过 mmap()调用从操作系统获取内存。通过传入正确的参数，mmap() 可以在程序中创建一个匿名（anonymous）内存区域——这个区域不与任何特定文件相关联，而是与交换空间（swap space）相关联</li>
+</ul>
+<h2 id="mechanism-address-translation">Mechanism: Address Translation</h2>
+<ul>
+<li>CRUX：如何实现高效的内存虚拟化？如何提供应用程序所需的灵活性？如何保持控制应用程序可访问的内存位置，从而确保应用程序的内存访问受到合理的限制？如何高效地实现这一切？</li>
+<li>我们利用了一种通用技术，有时被称为基于硬件的地址转换（hardware-based address translation），简称为地址转换（address translation）。它可以看成是受限直接执行这种一般方法的补充。利用地址转换，硬件对每次内存访问进行处理（即指令获取、数据读取或写入），将指令中的虚拟（virtual）地址转换为数据实际存储的物理（physical）地址。因此，在每次内存引用时，硬件都会进行地址转换，将应用程序的内存引用重定位到内存中实际的位置。</li>
+<li>仅仅依靠硬件不足以实现虚拟内存，因为它只是提供了底层机制来提高效率。操作系统必须在关键的位置介入，设置好硬件，以便完成正确的地址转换。因此它必须管理内存（manage memory），记录被占用和空闲的内存位置，并明智而谨慎地介入，保持对内存使用的控制。</li>
+</ul>
+<h3 id="an-example">An Example</h3>
+<ul>
+<li>假设用户的地址空间必须连续地放在物理内存中。同时，为了简单，我们假设地址空间不是很大，具体来说，小于物理内存的大小。最后，假设每个地址空间的大小完全一样。别担心这些假设听起来不切实际，我们会逐步地放宽这些假设，从而得到现实的内存虚拟化。</li>
+</ul>
+<pre><code class="language-C">void func() {
+ int x;
+ x = x + 3; // this is the line of code we are interested in 
+</code></pre>
+<ul>
+<li>x86 下的汇编如下：假定 x 的地址已经存入寄存器 ebx，之后通过 movl 指令将这个地址的值加载到通用寄存器 eax（长字移动）。下一条指令对 eax 的内容加 3。最后一条指令将 eax 中的值写回到内存的同一位置。</li>
+</ul>
+<pre><code class="language-C">128: movl 0x0(%ebx), %eax ;load 0+ebx into eax
+132: addl $0x03, %eax ;add 3 to eax register
+135: movl %eax, 0x0(%ebx) ;store eax back to mem 
+</code></pre>
+<ul>
+<li>代码和数据都位于进程的地址空间，3 条指令序列位于地址 128（靠近头部的代码段），变量 x 的值位于地址 15KB（在靠近底部的栈中）。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200903150252.png" alt="20200903150252" loading="lazy"></li>
+<li>如果这 3 条指令执行，从进程的角度来看，发生了以下几次内存访问：
+<ul>
+<li>从地址 128 获取指令；</li>
+<li>执行指令（从地址 15KB 加载数据）；</li>
+<li>从地址 132 获取命令；</li>
+<li>执行命令（没有内存访问）；</li>
+<li>从地址 135 获取指令；</li>
+<li>执行指令（新值存入地址 15KB）。</li>
+</ul>
+</li>
+<li>从程序的角度来看，它的地址空间（address space）从 0 开始到 16KB 结束。它包含的所有内存引用都应该在这个范围内。然而，对虚拟内存来说，操作系统希望将这个进程地址空间放在物理内存的其他位置，并不一定从地址 0 开始。因此我们遇到了如下问题：怎样在内存中重定位这个进程，同时对该进程透明（transparent）？怎么样提供一种虚拟地址空间从 0 开始的假象，而实际上地址空间位于另外某个物理地址？</li>
+<li>如图所示展示了一个例子，说明这个进程的地址空间被放入物理内存后可能的样子。从图 15.2 中可以看到，操作系统将第一块物理内存留给了自己，并将上述例子中的进程地址空间重定位到从 32KB 开始的物理内存地址。剩下的两块内存空闲（16～32KB 和 48～64KB）。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200903153016.png" alt="20200903153016" loading="lazy"></li>
+</ul>
+<h3 id="dynamic-hardware-based-relocation">Dynamic (Hardware-based) Relocation</h3>
+<ul>
+<li>每个 CPU 需要两个硬件寄存器：基址（base）寄存器和界限（bound）寄存器，有时称为限制（limit）寄存器。
+<ul>
+<li>这组基址和界限寄存器，让我们能够将地址空间放在物理内存的任何位置，同时又能确保进程只能访问自己的地址空间。</li>
+</ul>
+</li>
+<li>采用这种方式，在编写和编译程序时假设地址空间从零开始。但是，当程序真正执行时，操作系统会决定其在物理内存中的实际加载地址，并将<strong>起始地址记录在基址寄存器中</strong>。
+<ul>
+<li>在上面的例子中，操作系统决定加载在物理地址 32KB 的进程，因此将基址寄存器设置为这个值。当进程运行时，该进程产生的所有内存引用，都会被处理器通过以下方式转换为物理地址：</li>
+</ul>
+</li>
+</ul>
+<pre><code>physical address = virtual address + base 
+</code></pre>
+<ul>
+<li>进程中使用的内存引用都是虚拟地址（virtual address），硬件接下来将虚拟地址加上基址寄存器中的内容，得到物理地址（physical address），再发给内存系统。如上面例子中的第一条指令 <code>128: movl 0x0(%ebx), %eax</code>:
+<ul>
+<li>程序计数器（PC）首先被设置为 128。</li>
+<li>当硬件需要获取这条指令时，它先将这个值加上基址寄存器中的 32KB(32768)，得到实际的物理地址 32896，然后硬件从这个物理地址获取指令。</li>
+<li>接下来，处理器开始执行该指令。</li>
+<li>这时，进程发起从虚拟地址 15KB 的加载，处理器同样将虚拟地址加上基址寄存器内容（32KB），得到最终的物理地址 47KB，从而获得需要的数据。</li>
+</ul>
+</li>
+<li>将虚拟地址转换为物理地址，这正是所谓的 <strong>地址转换</strong>（address translation）技术。也就是说，硬件取得进程认为它要访问的地址，将它转换成数据实际位于的物理地址。由于这种重定位是在 <strong>运行时</strong> 发生的，而且我们甚至可以在进程开始运行后改变其地址空间，这种技术一般被称为 <strong>动态重定位</strong>（dynamic relocation）</li>
+<li>界限寄存器提供了访问保护。在上面的例子中，界限寄存器被置为 16KB。如果进程需要访问超过这个界限或者为负数的虚拟地址，CPU 将触发异常，进程最终可能被终止。界限寄存器的用处在于，它确保了进程产生的所有地址都在进程的地址“界限”中。</li>
+<li><strong>这种基址寄存器配合界限寄存器的硬件结构是芯片中的（每个 CPU 一对）</strong>。有时我们将CPU 的这个负责地址转换的部分统称为 <strong>内存管理单元（Memory Management Unit，MMU）</strong>。随着我们开发更复杂的内存管理技术，MMU 也将有更复杂的电路和功能。</li>
+</ul>
+<h3 id="hardware-support-a-summary">Hardware Support: A Summary</h3>
+<ul>
+<li>首先，正如在 CPU 虚拟化的章节中提到的，我们需要两种 CPU 模式。
+<ul>
+<li>操作系统在特权模式（privileged mode，或内核模式，kernel mode），可以访问整个机器资源。</li>
+<li>应用程序在用户模式（user mode）运行，只能做有限的操作。</li>
+</ul>
+</li>
+<li>只要一个位，也许保存在处理器状态字（processor status word）中，就能说明当前的 CPU 运行模式。在一些特殊的时刻（如系统调用、异常或中断），CPU 会切换状态。</li>
+<li>硬件还必须提供基址和界限寄存器（base and bounds register），因此每个 CPU 的内存管理单元（Memory Management Unit，MMU）都需要这两个额外的寄存器。用户程序运行时，硬件会转换每个地址，即将用户程序产生的虚拟地址加上基址寄存器的内容。硬件也必须能检查地址是否有用，通过界限寄存器和 CPU 内的一些电路来实现。</li>
+<li>硬件应该提供一些特殊的指令，用于修改基址寄存器和界限寄存器，允许操作系统在切换进程时改变它们。这些指令是 <strong>特权（privileged）指令</strong>，只有在 <strong>内核模式</strong> 下，才能修改这些寄存器。</li>
+<li>最后，在用户程序尝试非法访问内存（越界访问）时，CPU必须能够产生异常（exception）。在这种情况下，CPU 应该阻止用户程序的执行，并安排操作系统的“越界”异常处理程序（exception handler）去处理。操作系统的处理程序会做出正确的响应，比如在这种情况下终止进程。类似地，如果用户程序尝试修改基址或者界限寄存器时，CPU 也应该产生异常，并调用“用户模式尝试执行特权指令”的异常处理程序。CPU 还必须提供一种方法，来通知它这些处理程序的位置，因此又需要另一些特权指令。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200903165836.png" alt="20200903165836" loading="lazy"></li>
+</ul>
+<h3 id="operating-system-issues">Operating System Issues</h3>
+<ul>
+<li>硬件支持和操作系统管理结合在一起，实现了一个简单的虚拟内存。具体来说，在一些关键的时刻操作系统需要介入，以实现基址和界限方式的虚拟内存<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200903170702.png" alt="20200903170702" loading="lazy"></li>
+<li>在进程创建时，操作系统必须采取行动，为进程的地址空间找到内存空间。由于我们假设每个进程的地址空间小于物理内存的大小，并且大小相同，这对操作系统来说很容易。它可以把整个物理内存看作一组槽块，标记了空闲或已用。当新进程创建时，操作系统检索这个数据结构（<strong>常被称为空闲列表，free list</strong>），为新地址空间找到位置，并将其标记为已用。
+<ul>
+<li>在图 15.2 中，操作系统将物理内存的第一个槽块分配给自己，然后将例子中的进程重定位到物理内存地址 32KB。另两个槽块（16～32KB，48～64KB）空闲，因此空闲列表（free list）就包含这两个槽块。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200903153016.png" alt="20200903153016" loading="lazy"></li>
+</ul>
+</li>
+<li>在进程终止时（正常退出，或因行为不端被强制终止），操作系统也必须做一些工作，回收它的所有内存，给其他进程或者操作系统使用。在进程终止时，操作系统会将这些内存放回到空闲列表，并根据需要清除相关的数据结构。</li>
+<li>在上下文切换时，操作系统也必须执行一些额外的操作。每个 CPU 毕竟只有一个基址寄存器和一个界限寄存器，但对于每个运行的程序，它们的值都不同，因为每个程序被加载到内存中不同的物理地址。因此，<strong>在切换进程时，操作系统必须保存和恢复基础和界限寄存器</strong>。具体来说，当操作系统决定中止当前的运行进程时，它必须将当前基址和界限寄存器中的内容保存在内存中，放在某种每个进程都有的结构中，如进程结构（process structure）或进程控制块（Process Control Block，PCB）中。类似地，当操作系统恢复执行某个进程时（或第一次执行），也必须给基址和界限寄存器设置正确的值。
+<ul>
+<li>当进程停止时（即没有运行），操作系统可以改变其地址空间的物理位置，这很容易。要移动进程的地址空间，操作系统首先让进程停止运行，然后将地址空间拷贝到新位置，最后更新保存的基址寄存器（在进程结构中），指向新位置。当该进程恢复执行时，它的（新）基址寄存器会被恢复，它再次开始运行，显然它的指令和数据都在新的内存位置了。</li>
+</ul>
+</li>
+<li>操作系统必须提供异常处理程序（exception handler），或要一些调用的函数，像上面提到的那样。操作系统在启动时加载这些处理程序（通过特权命令）。例如，当一个进程试图越界访问内存时，CPU 会触发异常。在这种异常产生时，操作系统必须准备采取行动。</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200903172421.png" alt="20200903172421" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200903172637.png" alt="20200903172637" loading="lazy"></p>
+<h3 id="summary-2">Summary</h3>
+<ul>
+<li>通过虚拟内存使用的一种特殊机制，即地址转换（address translation），扩展了受限直接访问的概念。利用地址转换，操作系统可以控制进程的所有内存访问，确保访问在地址空间的界限内。这个技术高效的关键是硬件支持，硬件快速地将所有内存访问操作中的虚拟地址（进程自己看到的内存位置）转换为物理地址（实际位置）。所有的这一切对进程来说都是透明的，进程并不知道自己使用的内存引用已经被重定位.</li>
+<li>一种特殊的虚拟化方式，称为基址加界限的动态重定位。基址加界限的虚拟化方式非常高效，因为只需要很少的硬件逻辑，就可以将虚拟地址和基址寄存器加起来，并检查进程产生的地址没有越界。基址加界限也提供了保护，操作系统和硬件的协作，确保没有进程能够访问其地址空间之外的内容。保护肯定是操作系统最重要的目标之一。没有保护，操作系统不可能控制机器（如果进程可以随意修改内存，它们就可以轻松地做出可怕的事情，比如重写陷阱表并完全接管系统）。</li>
+<li>遗憾的是，这个简单的动态重定位技术有 <strong>效率低下</strong> 的问题。重定位的进程使用了从 32KB 到 48KB 的物理内存，但由于该进程的栈区和堆区并不很大，导致这块内存区域中大量的空间被浪费。这种浪费通常称为 <strong>内部碎片（internal fragmentation）</strong>，指的是已经分配的内存单元内部有未使用的空间（即碎片），造成了浪费。</li>
+<li>在我们当前的方式中，即使有足够的物理内存容纳更多进程，但我们目前要求将地址空间放在固定大小的槽块中，因此会出现内部碎片。所以，我们需要更复杂的机制，以便更好地利用物理内存，避免内部碎片。第一次尝试是将基址加界限的概念稍稍泛化，得到分段（segmentation）的概念.</li>
+</ul>
+<h2 id="segmentation">Segmentation</h2>
+<ul>
+<li>如果我们将整个地址空间放入物理内存，那么栈和堆之间的空间并没有被进程使用，却依然占用了实际的物理内存。因此，简单的通过基址寄存器和界限寄存器实现的虚拟内存很浪费。另外，如果剩余物理内存无法提供连续区域来放置完整的地址空间，进程便无法运行。这种基址加界限的方式看来并不像我们期望的那样灵活。</li>
+<li>CRUX：怎样支持大地址空间？<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912170153.png" alt="20200912170153" loading="lazy"></li>
+</ul>
+<h3 id="segmentation-generalized-basebounds">Segmentation: Generalized Base/Bounds</h3>
+<ul>
+<li>在 MMU 中引入不止一个基址和界限寄存器对，而是给地址空间内的每个逻辑段（segment）一对。一个段只是地址空间里的一个连续定长的区域，在典型的地址空间里有 3 个逻辑不同的段：<strong>代码、栈和堆</strong>。分段的机制使得操作系统能够将不同的段放到不同的物理内存区域，从而避免了虚拟地址空间中的未使用部分占用物理内存。</li>
+<li>如图所示，64KB 的物理内存除去操作系统占用的 16KB 内存外可以划分成三个段，给每个段都分配一对基址和界限寄存器。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912170511.png" alt="20200912170511" loading="lazy"></li>
+<li>下表记录了上图例中的寄存器值，每个界限寄存器记录了一个段的大小。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912170808.png" alt="20200912170808" loading="lazy"></li>
+<li>地址转换举例：
+<ul>
+<li>假设现在要引用虚拟地址 100（在代码段中），MMU 将基址值加上偏移量（100）得到实际的物理地址：100 + 32KB = 32868。然后它会检查该地址是否在界限内（100 小于 2KB），发现是的，于是发起对物理地址 32868 的引用。</li>
+<li>一个堆中的地址，虚拟地址 4200。（参考图16.1） 如果用虚拟地址 4200 加上堆的基址（34KB），得到物理地址 39016，这不是正确的地址。<strong>我们首先应该先减去地址空间中堆的偏移量，即该地址指的是这个段中的哪个字节</strong>。因为堆从虚拟地址 4K（4096）开始，4200 的偏移量实际上是 4200 减去 4096，即 104，然后用这个偏移量（104）加上基址寄存器中的物理地址（34KB），得到真正的物理地址 34920。</li>
+</ul>
+</li>
+<li>如果我们试图访问非法的地址，例如 7KB，超出了堆的边界呢。硬件会发现该地址越界，因此陷入操作系统，很可能导致终止出错进程。从而产生段异常（segmentation violation）或段错误（segmentation fault）。</li>
+</ul>
+<h3 id="which-segment-are-we-referring-to">Which Segment Are We Referring To?</h3>
+<ul>
+<li>硬件在地址转换时使用段寄存器。它如何知道段内的偏移量，以及地址引用了哪个段？</li>
+</ul>
+<h4 id="explicit">Explicit</h4>
+<ul>
+<li>一种常见的方式，有时称为显式（explicit）方式，就是用虚拟地址的开头几位来标识不同的段，VAX/VMS 系统使用了这种技术。上述例子中有三个段，相应的需要两位就可以表示了。如果我们用 14 位虚拟地址的前两位来标识，那么前两位即为对应的段号，后12位则为偏移量。上述的 4200 （堆段+104）就标识为 01 0000 0110 1000
+<ul>
+<li>00 代码段 01 堆段 11 栈段（因为起始地址为 00 0000 0000 0000，地址空间如图所示 0-2KB 为代码段，二进制表示前四位为 0000-0010，4KB 为堆的起始地址，二进制表示前四位为 0100）</li>
+</ul>
+</li>
+<li>偏移量简化了对段边界的判断。我们只要检查偏移量是否小于界限，大于界限的为非法地址。因此，如果基址和界限放在数组中（每个段一项），为了获得需要的物理地址，硬件会做下面这样的事：在上述 14 位虚拟地址的例子中，对应 SEG_MASK 即为 0x3000，SEG_SHIFT 为 12，OFFSET_MASK 为 0xFFF。</li>
+</ul>
+<pre><code class="language-C">1   // get top 2 bits of 14-bit VA
+2   Segment = (VirtualAddress &amp; SEG_MASK) &gt;&gt; SEG_SHIFT
+3   // now get offset
+4   Offset = VirtualAddress &amp; OFFSET_MASK
+5   if (Offset &gt;= Bounds[Segment])
+6     RaiseException(PROTECTION_FAULT)
+7   else
+8     PhysAddr = Base[Segment] + Offset
+9     Register = AccessMemory(PhysAddr) 
+</code></pre>
+<ul>
+<li>由于用了两位来表示段号，但其实是可以表述四个段的，浪费了一个表示，所以有些系统会将堆和栈放在一个段中，因此就只需要一位来表示。</li>
+</ul>
+<h4 id="implict">Implict</h4>
+<ul>
+<li>隐式（implicit）方式中，硬件通过地址产生的方式来确定段。例如，如果地址由程序计数器产生（即它是指令获取），那么地址在代码段。如果基于栈或基址指针，它一定在栈段。其他地址则在堆段。</li>
+</ul>
+<h3 id="what-about-the-stack">What About The Stack?</h3>
+<ul>
+<li>上述例子中未涉及到栈的地址转换。在表 16.3 中，栈被重定位到物理地址 28KB。但有一点关键区别，它 <strong>反向增长</strong>。物理内存中，它始于 28KB，增长回到 26KB，相应虚拟地址从 16KB 到 14KB。因此地址转换方式和其他段会有所不同。</li>
+<li>所以对于段的硬件支持除了基地址寄存器和界限寄存器以外，还需要知道段地址的增长方向，可以用一位来表示。更新后的寄存器结果如下：1 表示正向增长（从小到大），0 表示反向增长。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912173028.png" alt="20200912173028" loading="lazy"></li>
+<li>假设要访问虚拟地址 15KB，根据图 16.1 知道这是个栈地址，以及根据物理内存的对应关系不难发现物理地址为 27KB。虚拟地址的二进制形式为 11 1100 0000 0000，前两位表示为 stack 段，偏移量为 3KB，但此时非正确偏移，只是二进制地址表示中的地址偏移。为了得到正确的反向偏移，我们必须从 3KB 中减去最大的段地址：在这个例子中，段可以是 4KB，因此正确的偏移量是 3KB 减去 4KB，即−1KB。只要用这个反向偏移量（−1KB）加上基址（28KB），就得到了正确的物理地址 27KB。用户可以进行界限检查，确保反向偏移量的绝对值小于段的大小。</li>
+</ul>
+<h3 id="support-for-sharing">Support for Sharing</h3>
+<ul>
+<li>随着分段机制的不断改进，系统设计人员很快意识到，通过再多一点的硬件支持，就能实现新的效率提升。具体来说，要节省内存，有时候在地址空间之间共享（share）某些内存段是有用的。尤其是，代码共享很常见，今天的系统仍然在使用。</li>
+<li>为了支持共享，需要一些额外的硬件支持，这就是保护位（protection bit）。基本为每个段增加了几个位，标识程序是否能够读写该段，或执行其中的代码。通过将代码段标记为只读，同样的代码可以被多个进程共享，而不用担心破坏隔离。虽然每个进程都认为自己独占这块内存，但操作系统秘密地共享了内存，进程不能修改这些内存，所以假象得以保持。</li>
+<li>如下表所示。代码段的权限是可读和可执行，因此物理内存中的一个段可以映射到多个虚拟地址空间。有了保护位，前面描述的硬件算法也必须改变。除了检查虚拟地址是否越界，硬件还需要检查特定访问是否允许。如果用户进程试图写入只读段，或从非执行段执行指令，硬件会触发异常，让操作系统来处理出错进程。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912174926.png" alt="20200912174926" loading="lazy"></li>
+</ul>
+<h3 id="fine-grained-vs-coarse-grained-segmentation">Fine-grained vs. Coarse-grained Segmentation</h3>
+<ul>
+<li>到目前为止，我们的例子大多针对只有很少的几个段的系统（即代码、栈、堆）。我们可以认为这种分段是粗粒度的（coarse-grained），因为它将地址空间分成较大的、粗粒度的块。但是，一些早期系统更灵活，允许将地址空间划分为大量较小的段，这被称为细粒度（fine-grained）分段。</li>
+<li>支持许多段需要进一步的硬件支持，并在内存中保存某种段表（segment table）。这种段表通常支持创建非常多的段，因此系统使用段的方式，可以比之前讨论的方式更灵活。例如，像 Burroughs B5000 这样的早期机器可以支持成千上万的段，有了操作系统和硬件的支持，编译器可以将代码段和数据段划分为许多不同的部分。当时的考虑是，通过更细粒度的段，操作系统可以更好地了解哪些段在使用哪些没有，从而可以更高效地利用内存。</li>
+</ul>
+<h3 id="os-support">OS Support</h3>
+<ul>
+<li>系统运行时，地址空间中的不同段被重定位到物理内存中。与我们之前介绍的整个地址空间只有一个基址/界限寄存器对的方式相比，大量节省了物理内存。具体来说，栈和堆之间没有使用的区域就不需要再分配物理内存，让我们能将更多地址空间放进物理内存。</li>
+<li>分段也带来了一些新的问题：
+<ul>
+<li>操作系统在上下文切换时应该做什么？各个段寄存器中的内容必须保存和恢复。显然，每个进程都有自己独立的虚拟地址空间，操作系统必须在进程运行前，确保这些寄存器被正确地赋值。</li>
+<li>管理物理内存的空闲空间。新的地址空间被创建时，操作系统需要在物理内存中为它的段找到空间。之前，我们假设所有的地址空间大小相同，物理内存可以被认为是一些槽块，进程可以放进去。现在，每个进程都有一些段，每个段的大小也可能不同。一般会遇到的问题是，物理内存很快充满了许多空闲空间的小洞，因而很难分配给新的段，或扩大已有的段。这种问题被称为外部碎片<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912193930.png" alt="20200912193930" loading="lazy"></li>
+</ul>
+</li>
+<li>在这个例子中，一个进程需要分配一个 20KB 的段。当前有 24KB 空闲，但并不连续（是3 个不相邻的块）。因此，操作系统无法满足这个 20KB 的请求。该问题的一种解决方案是紧凑（compact）物理内存，重新安排原有的段。例如，操作系统先终止运行的进程，将它们的数据复制到连续的内存区域中去，改变它们的段寄存器中的值，指向新的物理地址，从而得到了足够大的连续空闲空间。这样做，操作系统能让新的内存分配请求成功。但是，内存紧凑成本很高，因为拷贝段是内存密集型的，一般会占用大量的处理器时间。</li>
+<li>一种更简单的做法是利用空闲列表管理算法，试图保留大的内存块用于分配。相关的算法可能有成百上千种，包括传统的最优匹配（best-fit，从空闲链表中找最接近需要分配空间的空闲块返回）、最坏匹配（worst-fit）、首次匹配（first-fit）以及像伙伴算法（buddy algorithm）这样更复杂的算法。</li>
+<li>无论算法多么精妙，都无法完全消除外部碎片，因此，好的算法只是试图减小它。</li>
+</ul>
+<h3 id="summary-3">Summary</h3>
+<ul>
+<li>分段解决了一些问题，帮助我们实现了更高效的虚拟内存。不只是动态重定位，通过避免地址空间的逻辑段之间的大量潜在的内存浪费，分段能更好地支持稀疏地址空间。它还很快，因为分段要求的算法很容易，很适合硬件完成，地址转换的开销极小。分段还有一个附加的好处：代码共享。如果代码放在独立的段中，这样的段就可能被多个运行的程序共享。</li>
+<li>但我们已经知道，在内存中分配不同大小的段会导致一些问题，我们希望克服。首先，是我们上面讨论的外部碎片。由于段的大小不同，空闲内存被割裂成各种奇怪的大小，因此满足内存分配请求可能会很难。用户可以尝试采用聪明的算法，或定期紧凑内存，但问题很根本，难以避免。</li>
+<li>第二个问题也许更重要，分段还是不足以支持更一般化的稀疏地址空间。例如，如果有一个很大但是稀疏的堆，都在一个逻辑段中，整个堆仍然必须完整地加载到内存中。换言之，如果使用地址空间的方式不能很好地匹配底层分段的设计目标，分段就不能很好地工作。因此我们需要找到新的解决方案。</li>
+</ul>
+<h2 id="free-space-management">Free-Space Management</h2>
+<ul>
+<li>如果要管理的空闲空间由大小不同的单元构成，管理就变得困难（而且有趣）。这种情况出现在用户级的内存分配库（如 malloc()和 free()），或者操作系统用分段（segmentation）的方式实现虚拟内存。在这两种情况下，出现了外部碎片（external fragmentation）的问题：空闲空间被分割成不同大小的小块，成为碎片，后续的请求可能失败，因为没有一块足够大的连续空闲空间，即使这时总的空闲空间超出了请求的大小。</li>
+<li>CRUX：要满足变长的分配请求，应该如何管理空闲空间？什么策略可以让碎片最小化？不同方法的时间和空间开销如何？</li>
+</ul>
+<h3 id="assumptions">Assumptions</h3>
+<ul>
+<li>假定基本的接口就像 malloc()和 free()提供的那样。具体来说，void * malloc(size tsize)需要一个参数 size，它是应用程序请求的字节数。函数返回一个指针（没有具体的类型，在 C 语言的术语中是 void 类型），指向这样大小（或较大一点）的一块空间。对应的函数 void free(void *ptr)函数接受一个指针，释放对应的内存块。请注意该接口的隐含意义，在释放空间时，用户不需告知库这块空间的大小。因此，在只传入一个指针的情况下，库必须能够弄清楚这块内存的大小。</li>
+<li>进一步假设，我们主要关心的是外部碎片（external fragmentation），如上所述。当然，分配程序也可能有内部碎片（internal fragmentation）的问题。如果分配程序给出的内存块超出请求的大小，在这种块中超出请求的空间（因此而未使用）就被认为是内部碎片（因为浪费发生在已分配单元的内部），这是另一种形式的空间浪费。但是，简单起见，这里主要讨论外部碎片。</li>
+<li>还假设，内存一旦被分配给客户，就不可以被重定位到其他位置。例如，一个程<br>
+序调用 malloc()，并获得一个指向堆中一块空间的指针，这块区域就“属于”这个程序了，库不再能够移动，直到程序调用相应的 free()函数将它归还。因此，不可能进行压缩（compaction）空闲空间的操作，从而减少碎片。但是，操作系统层在实现分段（segmentation）时，却可以通过压缩来减少碎片。</li>
+<li>最后我们假设，分配程序所管理的是连续的一块字节区域。在一些情况下，分配程序可以要求这块区域增长。例如，一个用户级的内存分配库在空间快用完时，可以向内核申请增加堆空间（通过 sbrk 这样的系统调用），但是，简单起见，我们假设这块区域在整个生命周期内大小固定。</li>
+</ul>
+<h3 id="low-level-mechanisms">Low-level Mechanisms</h3>
+<h4 id="splitting-and-coalescing">Splitting and Coalescing</h4>
+<ul>
+<li>空闲列表包含一组元素，记录了堆中的哪些空间还没有分配。假设有下面的 30 字节的堆：<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912210800.png" alt="20200912210800" loading="lazy"></li>
+<li>这个堆对应的空闲列表会有两个元素，一个描述第一个 10 字节的空闲区域（字节0～9），一个描述另一个空闲区域（字节 20～29）：<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912210934.png" alt="20200912210934" loading="lazy"></li>
+<li>任何大于 10 字节的分配请求都会失败（返回 NULL），因为没有足够的连续可用空间。而恰好 10 字节的需求可以由两个空闲块中的任何一个满足。但是，如果申请小于 10 字节空间，分配程序会执行所谓的 **分割（splitting）**动作：它找到一块可以满足请求的空闲空间，将其分割，第一块返回给用户，第二块留在空闲列表中。</li>
+<li>假设分配 1 字节，分配程序选择使用第二块空闲空间，对 malloc()的调用会返回 20（1 字节分配区域的地址），空闲列表会变成这样：<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912211111.png" alt="20200912211111" loading="lazy"></li>
+<li>许多分配程序中因此也有一种机制，名为合并（coalescing）。还是看前面的例子（10字节的空闲空间，10 字节的已分配空间，和另外 10 字节的空闲空间）。</li>
+<li>对于这个（小）堆，如果应用程序调用 free(10)，归还堆中间的空间，会发生什么？如果只是简单地将这块空闲空间加入空闲列表，不多想想，可能得到如下的结果：<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912211230.png" alt="20200912211230" loading="lazy"></li>
+<li>问题出现了：尽管整个堆现在完全空闲，但它似乎被分割成了 3 个 10 字节的区域。这时，如果用户请求 20 字节的空间，简单遍历空闲列表会找不到这样的空闲块，因此返回失败。</li>
+<li>为了避免这个问题，分配程序会在释放一块内存时合并可用空间。想法很简单：在归还一块空闲内存时，仔细查看要归还的内存块的地址以及邻它的空闲空间块。如果新归还的空间与一个原有空闲块相邻（或两个，就像这个例子），就将它们合并为一个较大的空闲块。通过合并，最后空闲列表应该像这样：<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912211338.png" alt="20200912211338" loading="lazy"></li>
+</ul>
+<h4 id="tracking-the-size-of-allocated-regions">Tracking The Size Of Allocated Regions</h4>
+<ul>
+<li>free(void *ptr)接口没有块大小的参数。因此它是假定，对于给定的指针，内存分配库可以很快确定要释放空间的大小，从而将它放回空闲列表。</li>
+<li>要完成这个任务，大多数分配程序都会在头块（header）中保存一点额外的信息，它在内存中，通常就在返回的内存块之前。如下图所示的例子中，检查一个 20 字节的已分配块，由 ptr 指着，设想用户调用了 malloc()，并将结果保存在ptr 中：ptr = malloc(20)。</li>
+<li>该 head 块中至少包含所分配空间的大小（这个例子中是 20）。它也可能包含一些额外的指针来加速空间释放，包含一个幻数来提供完整性检查，以及其他信息。我们假定，一个简单的 head 块包含了分配空间的大小和一个幻数：</li>
+</ul>
+<pre><code class="language-C">typedef struct header_t {
+ int size;
+ int magic;
+} header_t; 
+</code></pre>
+<ul>
+<li>用户调用 free(ptr)时，库会通过简单的指针运算得到头块的位置：</li>
+</ul>
+<pre><code class="language-C">void free(void *ptr) {
+ header_t *hptr = (void *)ptr - sizeof(header_t);
+} 
+</code></pre>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912211638.png" alt="20200912211638" loading="lazy"></figure>
+<ul>
+<li>获得 head 块的指针后，库可以很容易地确定幻数是否符合预期的值，作为正常性检查（assert（hptr-&gt;magic == 1234567）），并简单计算要释放的空间大小即 head 块的大小加区域长度）。实际释放的是 head 块大小加上分配给用户的空间的大小。因此，如果用户请求 N 字节的内存，库不是寻找大小为 N 的空闲块，而是寻找 N 加上 head 块大小的空闲块。</li>
+</ul>
+<h4 id="embedding-a-free-list">Embedding A Free List</h4>
+<ul>
+<li>这个简单的空闲列表还只是一个概念上的存在，它就是一个列表，描述了堆中的空闲内存块。但如何在空闲内存自己内部建立这样一个列表呢？</li>
+<li>假设我们需要管理一个 4096 字节的内存块（即堆是 4KB）。为了将它作为一个空闲空间列表来管理，首先要初始化这个列表。开始，列表中只有一个条目，记录了大小为 4096 的空间（减去 head 块的大小）。下面是该列表中一个节点描述：</li>
+</ul>
+<pre><code class="language-C">typedef struct node_t {
+ int size; 
+ struct node_t *next;
+} node_t; 
+</code></pre>
+<ul>
+<li>现在来看一些代码，它们初始化堆，并将空闲列表的第一个元素放在该空间中。假设堆构建在某块空闲空间上，这块空间通过系统调用 mmap()获得。这不是构建这种堆的唯一选择，但在这个例子中很合适。下面是代码：</li>
+</ul>
+<pre><code class="language-C">// mmap() returns a pointer to a chunk of free space
+node_t *head = mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0);
+head-&gt;size = 4096 - sizeof(node_t);
+head-&gt;next = NULL; 
+</code></pre>
+<ul>
+<li>执行这段代码之后，列表的状态是它只有一个条目，记录大小为 4088。head 指针指向这块区域的起始地址，假设是 16KB（尽管任何虚拟地址都可以）。现在，假设有一个 100 字节的内存请求。为了满足这个请求，库首先要找到一个足够大小的块。因为只有一个 4088 字节的块，所以选中这个块。然后，这个块被分割（split）为两块：一块足够满足请求（以及头块，如前所述），一块是剩余的空闲块。假设记录 head 块为 8 个字节（一个整数记录大小，一个整数记录幻数），堆中的空间如图所示。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912212556.png" alt="20200912212556" loading="lazy"></li>
+<li>对于 100 字节的请求，库从原有的一个空闲块中分配了 108 字节，返回指向它的一个指针（在上图中用 ptr 表示），并在其之前连续的 8 字节中记录头块信息，供未来的free()函数使用。同时将列表中的空闲节点缩小为 3980 字节（4088−108）。</li>
+<li>现在再来看该堆，其中有 3 个已分配区域，每个 100（加上头块是 108）。这个堆如图所示。可以看出，堆的前 324 字节已经分配，因此我们看到该空间中有 3 个头块，以及 3 个 100 字节的用户使用空间。空闲列表只有一个节点（由 head 指向），但在 3 次分割后，现在大小只有 3764 字节。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912215631.png" alt="20200912215631" loading="lazy"></li>
+<li>但如果用户程序通过 free()归还一些内存，在这个例子中，应用程序调用 free(16500)，归还了中间的一块已分配空间（内存块的起始地址 16384 加上前一块的 108，和这一块的头块的 8 字节，就得到了 16500）。这个值在前图中用 sptr 指向。库马上弄清楚了这块要释放空间的大小，并将空闲块加回空闲列表。假设我们将它插入到空闲列表的头位置，该空间如图所示。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912220314.png" alt="20200912220314" loading="lazy"></li>
+<li>现在的空闲列表包括一个小空闲块（100 字节，由列表的头指向）和一个大空闲块（3764字节）。</li>
+<li>现在假设剩余的两块已分配的空间也被释放。没有合并，空闲列表将非常破碎，如图 17.7 所示。我们忘了合并（coalesce）列表项，虽然整个内存空间是空闲的，但却被分成了小段，因此形成了碎片化的内存空间。解决方案很简单：遍历列表，合并（merge）相邻块。完成之后，堆又成了一个整体。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912220526.png" alt="20200912220526" loading="lazy"></li>
+</ul>
+<h4 id="growing-the-heap">Growing The Heap</h4>
+<ul>
+<li>如果堆中的内存空间耗尽，应该怎么办？最简单的方式就是返回失败。在某些情况下这也是唯一的选择，因此返回 NULL 也是一种体面的方式。</li>
+<li>大多数传统的分配程序会从很小的堆开始，当空间耗尽时，再向操作系统申请更大的空间。通常，这意味着它们进行了某种系统调用（例如，大多数 UNIX 系统中的 sbrk），让堆增长。操作系统在执行 sbrk 系统调用时，会找到空闲的物理内存页，将它们映射到请求进程的地址空间中去，并返回新的堆的末尾地址。这时，就有了更大的堆，请求就可以成功满足。</li>
+</ul>
+<h3 id="basic-strategies">Basic Strategies</h3>
+<ul>
+<li>理想的分配程序可以同时保证快速和碎片最小化。遗憾的是，由于分配及释放的请求序列是任意的（毕竟，它们由用户程序决定），任何特定的策略在某组不匹配的输入下都会变得非常差。所以我们不会描述“最好”的策略，而是介绍一些基本的选择，并讨论它们的优缺点。</li>
+</ul>
+<h4 id="best-fit">Best Fit</h4>
+<ul>
+<li>最优匹配（best fit）策略非常简单：首先遍历整个空闲列表，找到和请求大小一样或更大的空闲块，然后返回这组候选者中最小的一块。这就是所谓的最优匹配（也可以称为最小匹配）。只需要遍历一次空闲列表，就足以找到正确的块并返回。</li>
+<li>最优匹配背后的想法很简单：选择最接它用户请求大小的块，从而尽量避免空间浪费。然而，这有代价。简单的实现在遍历查找正确的空闲块时，要付出较高的性能代价。</li>
+</ul>
+<h4 id="worst-fit">Worst Fit</h4>
+<ul>
+<li>最差匹配（worst fit）方法与最优匹配相反，它尝试找最大的空闲块，分割并满足用户需求后，将剩余的块（很大）加入空闲列表。最差匹配尝试在空闲列表中保留较大的块，而不是向最优匹配那样可能剩下很多难以利用的小块。但是，最差匹配同样需要遍历整个空闲列表。更糟糕的是，大多数研究表明它的表现非常差，导致过量的碎片，同时还有很高的开销。</li>
+</ul>
+<h4 id="first-fit">First Fit</h4>
+<ul>
+<li>首次匹配（first fit）策略就是找到第一个足够大的块，将请求的空间返回给用户。同样，剩余的空闲空间留给后续请求。</li>
+<li>首次匹配有速度优势（不需要遍历所有空闲块），但有时会让空闲列表开头的部分有很多小块。因此，分配程序如何管理空闲列表的顺序就变得很重要。一种方式是基于地址排序（address-based ordering）。通过保持空闲块按内存地址有序，合并操作会很容易，从而减少了内存碎片。</li>
+</ul>
+<h4 id="next-fit">Next Fit</h4>
+<ul>
+<li>不同于首次匹配每次都从列表的开始查找，下次匹配（next fit）算法多维护一个指针，指向上一次查找结束的位置。其想法是将对空闲空间的查找操作扩散到整个列表中去，避免对列表开头频繁的分割。这种策略的性能与首次匹配很接近，同样避免了遍历查找。</li>
+</ul>
+<h4 id="examples">Examples</h4>
+<ul>
+<li>设想一个空闲列表包含 3 个元素，长度依次为 10、30、20（我们暂时忽略头块和其他细节，只关注策略的操作方式）：</li>
+<li>假设有一个 15 字节的内存请求。最优匹配会遍历整个空闲列表，发现 20 字节是最优匹配，因为它是满足请求的最小空闲块。结果空闲列表变为：本例中发生的情况，在最优匹配中常常发生，现在留下了一个小空闲块。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912221244.png" alt="20200912221244" loading="lazy"></li>
+<li>最差匹配类似，但会选择最大的空闲块进行分割，在本例中是 30。结果空闲列表变为：在这个例子中，首次匹配会和最差匹配一样，也发现满足请求的第一个空闲块。不同的是查找开销，最优匹配和最差匹配都需要遍历整个列表，而首次匹配只找到第一个满足需求的块即可，因此减少了查找开销。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912221350.png" alt="20200912221350" loading="lazy"></li>
+</ul>
+<h3 id="other-approaches">Other Approaches</h3>
+<h4 id="segregated-lists">Segregated Lists</h4>
+<ul>
+<li>一直以来有一种很有趣的方式叫作分离空闲列表（segregated list）。基本想法很简单：如果某个应用程序经常申请一种（或几种）大小的内存空间，那就用一个独立的列表，只管理这样大小的对象。其他大小的请求都一给更通用的内存分配程序。</li>
+<li>这种方法的好处显而易见。通过拿出一部分内存专门满足某种大小的请求，碎片就不再是问题了。而且，由于没有复杂的列表查找过程，这种特定大小的内存分配和释放都很快。</li>
+<li>但也引入了新的复杂性。例如，应该拿出多少内存来专门为某种大小的请求服务，而将剩余的用来满足一般请求？超级工程师 Jeff Bonwick 为 Solaris 系统内核设计的厚块分配程序（slab allocator），很优雅地处理了这个问题</li>
+<li>具体来说，在内核启动时，它为可能频繁请求的内核对象创建一些对象缓存（object cache），如锁和文件系统 inode 等。这些的对象缓存每个分离了特定大小的空闲列表，因此能够很快地响应内存请求和释放。如果某个缓存中的空闲空间快耗尽时，它就向通用内存分配程序申请一些内存 slab（总量是页大小和对象大小的公倍数）。相反，如果给定 slab 中对象的引用计数变为 0，通用的内存分配程序可以从专门的分配程序中回收这些空间，这通常发生在虚拟内存系统需要更多的空间的时候。</li>
+<li>slab 分配程序比大多数分离空闲列表做得更多，它将列表中的空闲对象保持在预初始化的状态。Bonwick 指出，数据结构的初始化和销毁的开销很大。通过将空闲对象保持在初始化状态，slab 分配程序避免了频繁的初始化和销毁，从而显著降低了开销。</li>
+</ul>
+<h4 id="buddy-allocation">Buddy Allocation</h4>
+<ul>
+<li>因为合并对分配程序很关键，所以人们设计了一些方法，让合并变得简单，一个好例子就是二分伙伴分配程序（binary buddy allocator）</li>
+<li>在这种系统中，空闲空间首先从概念上被看成大小为 2^N 的大空间。当有一个内存分配请求时，空闲空间被递归地一分为二，直到刚好可以满足请求的大小（再一分为二就无法满足）。这时，请求的块被返回给用户。在下面的例子中，一个 64KB 大小的空闲空间被切分，以便提供 7KB 的块：<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200912222058.png" alt="20200912222058" loading="lazy"></li>
+<li>在这个例子中，最左边的 8KB 块被分配给用户（如上图中深灰色部分所示）。请注意，这种分配策略只允许分配 2 的整数次幂大小的空闲块，因此会有内部碎片（internal fragment）的麻烦。</li>
+<li>伙伴系统的漂亮之处在于块被释放时。如果将这个 8KB 的块归还给空闲列表，分配程序会检查“伙伴”8KB 是否空闲。如果是，就合二为一，变成 16KB 的块。然后会检查这个 16KB 块的伙伴是否空闲，如果是，就合并这两块。这个递归合并过程继续上溯，直到合并整个内存区域，或者某一个块的伙伴还没有被释放。</li>
+<li>伙伴系统运转良好的原因，在于很容易确定某个块的伙伴。怎么找？仔细想想上面例子中的各个块的地址。如果你想得够仔细，就会发现每对互为伙伴的块只有一位不同，正是这一位决定了它们在整个伙伴树中的层次。（2n 和 2n+1，2n 对应的二进制表示最低位肯定为 0，2n+1 该位即为 1）</li>
+</ul>
+<h4 id="other-ideas">Other Ideas</h4>
+<ul>
+<li>上面提到的众多方法都有一个重要的问题，缺乏可扩展性（scaling）。具体来说，就是查找列表可能很慢。因此，更先进的分配程序采用更复杂的数据结构来优化这个开销，牺牲简单性来换取性能。例子包括平衡二叉树、伸展树和偏序树。</li>
+<li>考虑到现代操作系统通常会有多核，同时会运行多线程的程序（本书之后关于并发的章节将会详细介绍），因此人们这了许多工作，提升分配程序在多核系统上的表现。这只是人们为了优化内存分配程序，在长时间内提出的几千种想法中的两种。感兴趣的话可以深入阅读。或者阅读 glibc 分配程序的工作原理，你会更了解现实的情形。</li>
+</ul>
+<h3 id="summary-4">Summary</h3>
+<ul>
+<li>在本章中，我们讨论了最基本的内存分配程序形式。这样的分配程序存在于所有地方，与你编写的每个 C 程序链接，也和管理其自身数据结构的内存的底层操作系统链接。与许多系统一样，在构建这样一个系统时需要这许多折中。对分配程序提供的确切工作负载了解得越多，就越能调整它以更好地处理这种工作负载。在现代计算机系统中，构建一个适用于各种工作负载、快速、空间高效、可扩展的分配程序仍然是一个持续的挑战。</li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200908093333.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/OC-SSD-AND-ZNS/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-09-09">2020-09-09</time>
+                  <h4 class="title white no-margin">OC SSD &amp; ZNS</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/basic-of-virtualization-three/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-08-20">2020-08-20</time>
+                  <h4 class="title white no-margin">Series Three of Basic of Virtulization - Mechanism and Policy Part.2</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

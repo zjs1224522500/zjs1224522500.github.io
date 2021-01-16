@@ -1,0 +1,977 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Servlet基础知识 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+该系列博文主要是介绍JavaEE基础知识。
+可以结合相关Web应用容器技术进行食用。（Tomcat）
+后续会解析相关JavaWeb框架的具体实现原理。
+
+
+
+1、什么是Servlet？
+
+Java Servlet 是运行在 Web 服务..." />
+    <meta name="keywords" content="JavaWeb" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('\media\images\custom-featureImage.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2017-10-28"><i class="fa fa-calendar"></i><span class="lately">3 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/Servlet-basic/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/Servlet-basic/"> </span>
+              </a>
+              <span id="/Servlet-basic/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-0 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Servlet基础知识</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>该系列博文主要是介绍JavaEE基础知识。</li>
+<li>可以结合相关Web应用容器技术进行食用。（Tomcat）</li>
+<li>后续会解析相关JavaWeb框架的具体实现原理。</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h1 id="1-什么是servlet">1、什么是<code>Servlet</code>？</h1>
+<blockquote>
+<p><code>Java Servlet</code> 是运行在 <code>Web</code> 服务器或应用服务器上的程序，它是作为来自 <code>Web</code> 浏览器或其他 <code>HTTP</code> 客户端的请求和 <code>HTTP</code> 服务器上的数据库或应用程序之间的中间层。</p>
+</blockquote>
+<hr>
+<blockquote>
+<p>个人见解:<code>Servlet</code>本质属于<code>MVC</code>架构模式中的<code>C（controller）</code>层，充当控制器的角色</p>
+</blockquote>
+<!--more-->
+<h1 id="2-servlet架构">2、<code>Servlet</code>架构</h1>
+<p><img src="http://www.runoob.com/wp-content/uploads/2014/07/servlet-arch.jpg" alt="image" loading="lazy"> <img src="http://www.runoob.com/wp-content/uploads/2014/07/Servlet-LifeCycle.jpg" alt="image" loading="lazy"></p>
+<h1 id="3-servlet声明周期">3、<code>Servlet</code>声明周期</h1>
+<ul>
+<li><code>Servlet</code> 通过调用 <code>init ()</code> 方法进行初始化。
+<ul>
+<li><code>init</code> 方法<strong>被设计成只调用一次</strong>。它在第一次创建 <code>Servlet</code> 时被调用，在后续每次用户请求时不再调用。当用户调用一个 <code>Servlet</code> 时，就会创建一个 <code>Servlet</code> 实例，<strong>每一个用户请求都会产生一个新的线程</strong>，适当的时候移交给 <code>doGet</code> 或 <code>doPost</code> 方法。<code>init()</code> 方法简单地创建或加载一些数据，这些数据将被用于 <code>Servlet</code> 的<strong>整个生命周期</strong>。</li>
+</ul>
+<blockquote>
+<p><a href="http://blog.csdn.net/wgyscsf/article/details/50129367?ref=myread">博文推荐：关于的servlet的单例模式(单实例多线程)的解释<br>
+</a></p>
+</blockquote>
+</li>
+<li><code>Servlet</code> 调用 <code>service()</code> 方法来处理客户端的请求。
+<ul>
+<li><code>service()</code> 方法是执行实际任务的主要方法。<code>Servlet</code> 容器（即 <code>Web</code> 服务器）调用 <code>service()</code> 方法来处理来自客户端（浏览器）的请求，并把格式化的响应写回给客户端。</li>
+</ul>
+<blockquote>
+<p><a href="http://blog.csdn.net/macroway/article/details/1428541">扩展阅读：Http协议中的方法</a></p>
+</blockquote>
+</li>
+<li><code>Servlet</code> 通过调用 <code>destroy()</code> 方法终止（结束）。
+<ul>
+<li>destroy() 方法只会被调用一次，在 Servlet 生命周期结束时被调用。destroy() 方法可以让您的 Servlet 关闭数据库连接、停止后台线程、把 Cookie 列表或点击计数器写入到磁盘，并执行其他类似的清理活动。在调用 destroy() 方法之后，servlet 对象被标记为垃圾回收。</li>
+</ul>
+</li>
+<li>最后，<code>Servlet</code> 是由 <code>JVM</code> 的垃圾回收器进行垃圾回收的。</li>
+</ul>
+<h1 id="4-servlet获取请求头信息">4、<code>Servlet</code>获取请求头信息</h1>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cookie[] getCookies()</td>
+<td>返回一个数组，包含客户端发送该请求的所有的 Cookie 对象。</td>
+</tr>
+<tr>
+<td>Enumeration getAttributeNames()</td>
+<td>返回一个枚举，包含提供给该请求可用的属性名称。</td>
+</tr>
+<tr>
+<td>Enumeration getHeaderNames()</td>
+<td>返回一个枚举，包含在该请求中包含的所有的头名。</td>
+</tr>
+<tr>
+<td>Enumeration getParameterNames()</td>
+<td>返回一个 String 对象的枚举，包含在该请求中包含的参数的名称。</td>
+</tr>
+<tr>
+<td>HttpSession getSession()</td>
+<td>返回与该请求关联的当前 session 会话，或者如果请求没有 session 会话，则创建一个。</td>
+</tr>
+<tr>
+<td>HttpSession getSession(boolean create)</td>
+<td>返回与该请求关联的当前 HttpSession，或者如果没有当前会话，且创建是真的，则返回一个新的 session 会话。</td>
+</tr>
+<tr>
+<td>Locale getLocale()</td>
+<td>基于 Accept-Language 头，返回客户端接受内容的首选的区域设置。</td>
+</tr>
+<tr>
+<td>Object getAttribute(String name)</td>
+<td>以对象形式返回已命名属性的值，如果没有给定名称的属性存在，则返回 null。</td>
+</tr>
+<tr>
+<td>ServletInputStream getInputStream()</td>
+<td>使用 ServletInputStream，以二进制数据形式检索请求的主体。</td>
+</tr>
+<tr>
+<td>String getAuthType()</td>
+<td>返回用于保护 Servlet 的身份验证方案的名称，例如，&quot;BASIC&quot; 或 &quot;SSL&quot;，如果JSP没有受到保护则返回 null。</td>
+</tr>
+<tr>
+<td>String getCharacterEncoding()</td>
+<td>返回请求主体中使用的字符编码的名称。</td>
+</tr>
+<tr>
+<td>String getContentType()</td>
+<td>返回请求主体的 MIME 类型，如果不知道类型则返回 null。</td>
+</tr>
+<tr>
+<td>String getContextPath()</td>
+<td>返回指示请求上下文的请求 URI 部分。</td>
+</tr>
+<tr>
+<td>String getHeader(String name)</td>
+<td>以字符串形式返回指定的请求头的值。</td>
+</tr>
+<tr>
+<td>String getMethod()</td>
+<td>返回请求的 HTTP 方法的名称，例如，GET、POST 或 PUT。</td>
+</tr>
+<tr>
+<td>String getParameter(String name)</td>
+<td>以字符串形式返回请求参数的值，或者如果参数不存在则返回 null。</td>
+</tr>
+<tr>
+<td>String getPathInfo()</td>
+<td>当请求发出时，返回与客户端发送的 URL 相关的任何额外的路径信息。</td>
+</tr>
+<tr>
+<td>String getProtocol()</td>
+<td>返回请求协议的名称和版本。</td>
+</tr>
+<tr>
+<td>String getQueryString()</td>
+<td>返回包含在路径后的请求 URL 中的查询字符串。</td>
+</tr>
+<tr>
+<td>String getRemoteAddr()</td>
+<td>返回发送请求的客户端的互联网协议（IP）地址。</td>
+</tr>
+<tr>
+<td>String getRemoteHost()</td>
+<td>返回发送请求的客户端的完全限定名称。</td>
+</tr>
+<tr>
+<td>String getRemoteUser()</td>
+<td>如果用户已通过身份验证，则返回发出请求的登录用户，或者如果用户未通过身份验证，则返回 null。</td>
+</tr>
+<tr>
+<td>String getRequestURI()</td>
+<td>从协议名称直到 HTTP 请求的第一行的查询字符串中，返回该请求的 URL 的一部分。</td>
+</tr>
+<tr>
+<td>String getRequestedSessionId()</td>
+<td>返回由客户端指定的 session 会话 ID。</td>
+</tr>
+<tr>
+<td>String getServletPath()</td>
+<td>返回调用 JSP 的请求的 URL 的一部分。</td>
+</tr>
+<tr>
+<td>String[] getParameterValues(String name)</td>
+<td>返回一个字符串对象的数组，包含所有给定的请求参数的值，如果参数不存在则返回 null。</td>
+</tr>
+<tr>
+<td>boolean isSecure()</td>
+<td>返回一个布尔值，指示请求是否使用安全通道，如 HTTPS。</td>
+</tr>
+<tr>
+<td>int getContentLength()</td>
+<td>以字节为单位返回请求主体的长度，并提供输入流，或者如果长度未知则返回 -1。</td>
+</tr>
+<tr>
+<td>int getIntHeader(String name)</td>
+<td>返回指定的请求头的值为一个 int 值。</td>
+</tr>
+<tr>
+<td>int getServerPort()</td>
+<td>返回接收到这个请求的端口号。</td>
+</tr>
+<tr>
+<td>int getParameterMap()</td>
+<td>将参数封装成 Map 类型。</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>示例代码</li>
+</ul>
+<pre><code class="language-java">    Enumeration headerNames = request.getHeaderNames();
+
+    while(headerNames.hasMoreElements()) {
+        String paramName = (String)headerNames.nextElement();
+        out.print(&quot;&lt;tr&gt;&lt;td&gt;&quot; + paramName + &quot;&lt;/td&gt;\n&quot;);
+        String paramValue = request.getHeader(paramName);
+        out.println(&quot;&lt;td&gt; &quot; + paramValue + &quot;&lt;/td&gt;&lt;/tr&gt;\n&quot;);
+    }
+</code></pre>
+<h1 id="5-设置http响应报头的方法">5、设置<code>HTTP</code>响应报头的方法</h1>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>String encodeRedirectURL(String url)</td>
+<td>为 sendRedirect 方法中使用的指定的 URL 进行编码，或者如果编码不是必需的，则返回 URL 未改变。</td>
+</tr>
+<tr>
+<td>String encodeURL(String url)</td>
+<td>对包含 session 会话 ID 的指定 URL 进行编码，或者如果编码不是必需的，则返回 URL 未改变。</td>
+</tr>
+<tr>
+<td>boolean containsHeader(String name)</td>
+<td>返回一个布尔值，指示是否已经设置已命名的响应报头。</td>
+</tr>
+<tr>
+<td>boolean isCommitted()</td>
+<td>返回一个布尔值，指示响应是否已经提交。</td>
+</tr>
+<tr>
+<td>void addCookie(Cookie cookie)</td>
+<td>把指定的 cookie 添加到响应。</td>
+</tr>
+<tr>
+<td>void addDateHeader(String name, long date)</td>
+<td>添加一个带有给定的名称和日期值的响应报头。</td>
+</tr>
+<tr>
+<td>void addHeader(String name, String value)</td>
+<td>添加一个带有给定的名称和值的响应报头。</td>
+</tr>
+<tr>
+<td>void addIntHeader(String name, int value)</td>
+<td>添加一个带有给定的名称和整数值的响应报头。</td>
+</tr>
+<tr>
+<td>void flushBuffer()</td>
+<td>强制任何在缓冲区中的内容被写入到客户端。</td>
+</tr>
+<tr>
+<td>void reset()</td>
+<td>清除缓冲区中存在的任何数据，包括状态码和头。</td>
+</tr>
+<tr>
+<td>void resetBuffer()</td>
+<td>清除响应中基础缓冲区的内容，不清除状态码和头。</td>
+</tr>
+<tr>
+<td>void sendError(int sc)</td>
+<td>使用指定的状态码发送错误响应到客户端，并清除缓冲区。</td>
+</tr>
+<tr>
+<td>void sendError(int sc, String msg)</td>
+<td>使用指定的状态发送错误响应到客户端。</td>
+</tr>
+<tr>
+<td>void sendRedirect(String location)</td>
+<td>使用指定的重定向位置 URL 发送临时重定向响应到客户端。</td>
+</tr>
+<tr>
+<td>void setBufferSize(int size)</td>
+<td>为响应主体设置首选的缓冲区大小。</td>
+</tr>
+<tr>
+<td>void setCharacterEncoding(String charset)</td>
+<td>设置被发送到客户端的响应的字符编码（MIME 字符集）例如，UTF-8。</td>
+</tr>
+<tr>
+<td>void setContentLength(int len)</td>
+<td>设置在 HTTP Servlet 响应中的内容主体的长度，该方法设置 HTTP Content-Length 头。</td>
+</tr>
+<tr>
+<td>void setContentType(String type)</td>
+<td>如果响应还未被提交，设置被发送到客户端的响应的内容类型。</td>
+</tr>
+<tr>
+<td>void setDateHeader(String name, long date)</td>
+<td>设置一个带有给定的名称和日期值的响应报头。</td>
+</tr>
+<tr>
+<td>void setHeader(String name, String value)</td>
+<td>设置一个带有给定的名称和值的响应报头。</td>
+</tr>
+<tr>
+<td>void setIntHeader(String name, int value)</td>
+<td>设置一个带有给定的名称和整数值的响应报头。</td>
+</tr>
+<tr>
+<td>void setLocale(Locale loc)</td>
+<td>如果响应还未被提交，设置响应的区域。</td>
+</tr>
+<tr>
+<td>void setStatus(int sc)</td>
+<td>为该响应设置状态码。</td>
+</tr>
+</tbody>
+</table>
+<h1 id="6-servlet中的http状态码">6、<code>Servlet</code>中的<code>HTTP</code>状态码</h1>
+<h2 id="请求报文和响应报文的格式">请求报文和响应报文的格式</h2>
+<ul>
+<li>初始状态行 + 回车换行符（回车+换行）</li>
+<li>零个或多个标题行+回车换行符</li>
+<li>一个空白行，即回车换行符</li>
+<li>一个可选的消息主体，比如文件、查询数据或查询输出</li>
+</ul>
+<h5 id="例子如下">例子如下：</h5>
+<pre><code class="language-html">HTTP/1.1 200 OK            // HTTP版本 状态码 对应状态码的短消息
+Content-Type: text/html    // 报文头中包含的各个属性信息:键值对的形式
+Header2: ...
+...
+HeaderN: ...
+  (Blank Line)
+&lt;!doctype ...&gt;
+&lt;html&gt;
+&lt;head&gt;...&lt;/head&gt;
+&lt;body&gt;
+...
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h2 id="设置-http-状态代码的方法">设置 HTTP 状态代码的方法</h2>
+<ul>
+<li>由于状态代码的产生都是服务端对于客户端发起的请求进行的相应的回应的过程中产生的，所以我们通过调用<code>HttpServletResponse</code>中的相关方法来进行对状态码的设置。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>public void setStatus ( int statusCode )</td>
+<td>该方法设置一个任意的状态码。setStatus 方法接受一个 int（状态码）作为参数。如果您的反应包含了一个特殊的状态码和文档，请确保在使用 PrintWriter 实际返回任何内容之前调用 setStatus。</td>
+</tr>
+<tr>
+<td>public void sendRedirect(String url)</td>
+<td>该方法生成一个 302 响应，连同一个带有新文档 URL 的 Location 头。</td>
+</tr>
+<tr>
+<td>public void sendError(int code, String message)</td>
+<td>该方法发送一个状态码（通常为 404），连同一个在 HTML 文档内部自动格式化并发送到客户端的短消息。</td>
+</tr>
+</tbody>
+</table>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/media/images/javaweb.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/VerifyCode-Java/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2017-10-29">2017-10-29</time>
+                  <h4 class="title white no-margin">验证码Java实现</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/media/images/fu-wu-qi.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/Docker-cmd/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2017-10-24">2017-10-24</time>
+                  <h4 class="title white no-margin">Docker常用命令</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

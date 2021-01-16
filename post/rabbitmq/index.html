@@ -1,0 +1,1435 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RabbitMQ | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+Introduce the RabbitMQ.
+Write some example code.
+Refer the official document.
+
+
+
+
+
+
+
+
+
+
+Introduction
+*
+
+RabbitMQ is a ..." />
+    <meta name="keywords" content="中间件" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/rabbitmq-cover.png?raw=true');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2019-07-14"><i class="fa fa-calendar"></i><span class="lately">2 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/rabbitmq/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/rabbitmq/"> </span>
+              </a>
+              <span id="/rabbitmq/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-0 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">RabbitMQ</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>Introduce the RabbitMQ.</li>
+<li>Write some example code.</li>
+<li>Refer the official document.</li>
+</ul>
+</blockquote>
+<!-- more -->
+<p><ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#introduction">Introduction</a><br>
+*
+<ul>
+<li><a href="#rabbitmq-is-a-message-broker%E6%B6%88%E6%81%AF%E4%B8%AD%E9%97%B4%E4%BB%B6">RabbitMQ is a message broker（消息中间件）:</a></li>
+</ul>
+</li>
+<li><a href="#brief-model-product-consume-model">Brief model (Product-Consume-Model)</a>
+<ul>
+<li><a href="#produce">Produce</a></li>
+<li><a href="#consume">Consume</a></li>
+</ul>
+</li>
+<li><a href="#start-with-hellorabbitmq">Start with &quot;Hello,RabbitMQ&quot;</a>
+<ul>
+<li><a href="#1-simple-send-and-receive-with-named-queue">1. Simple Send And Receive with Named Queue</a></li>
+<li><a href="#2-distribute-time-consuming-tasks-among-multiple-workers">2. Distribute time-consuming tasks among multiple workers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#publishsubscribe">Publish/Subscribe</a>
+<ul>
+<li><a href="#introduction-2">Introduction</a></li>
+<li><a href="#full-message-model-in-rabbit">Full Message Model in Rabbit</a>
+<ul>
+<li><a href="#previous-model">Previous model</a>
+<ul>
+<li><a href="#problems-existed">Problems existed:</a></li>
+</ul>
+</li>
+<li><a href="#new-model">New Model</a>
+<ul>
+<li><a href="#example-of-fanout-exchange">Example of Fanout Exchange</a></li>
+<li><a href="#example-of-direct-exchange">Example of Direct Exchange</a></li>
+<li><a href="#example-of-topic-exchange">Example of Topic Exchange</a></li>
+<li><a href="#relationship-between-different-exchange">Relationship between Different Exchange</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#header-exchange">Header Exchange</a></li>
+<li><a href="#rpc-system-with-rabbit-mq">RPC system with Rabbit MQ</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</p>
+<!-- more -->
+<p><a href=""></a></p>
+<h4 id="introduction">Introduction</h4>
+<blockquote>
+<h6 id="rabbitmq-is-a-message-broker消息中间件">RabbitMQ is a message broker（消息中间件）:</h6>
+<ul>
+<li><strong>it accepts and forwards messages.</strong>
+<ul>
+<li>You can think about it as a post office: when you put the mail that you want posting in a post box, you can be sure that Mr. Postman will eventually deliver the mail to your recipient. In this analogy, RabbitMQ is a post box, a post office and a postman.</li>
+<li>The major difference between RabbitMQ and the post office is that it doesn't deal with paper, instead it accepts, stores and forwards binary blobs of data ‒ messages.</li>
+<li>RabbitMQ, and messaging in general, uses some jargon.</li>
+</ul>
+</li>
+<li><a href="http://www.rabbitmq.com/tutorials/tutorial-one-java.html">According to &quot;Hello world in RabbitMQ with Java&quot; </a></li>
+</ul>
+</blockquote>
+<h4 id="brief-model-product-consume-model">Brief model (Product-Consume-Model)</h4>
+<blockquote>
+<p>Producing means nothing more than sending. A program that sends messages is a producer :</p>
+</blockquote>
+<h5 id="produce">Produce</h5>
+<ul>
+<li>A <strong>queue</strong> is the name for a post box which lives inside RabbitMQ. Although messages flow through RabbitMQ and your applications, they can only be stored inside a queue. A queue is only bound by the host's memory &amp; disk limits, it's essentially a large message buffer. Many producers can send messages that go to one queue, and many consumers can try to receive data from one queue. This is how we represent a queue:</li>
+</ul>
+<pre><code>// queue_name
+口口口口口口口口口口...... 
+// I am sorry about that I am not good at painting :(
+</code></pre>
+<blockquote>
+<p>Consuming has a similar meaning to receiving. A consumer is a program that mostly waits to receive messages:</p>
+</blockquote>
+<h5 id="consume">Consume</h5>
+<ul>
+<li>Note that the producer, consumer, and broker <strong>do not have to</strong> reside on the same host; indeed in most applications they don't.</li>
+</ul>
+<h4 id="start-with-hellorabbitmq">Start with &quot;Hello,RabbitMQ&quot;</h4>
+<ul>
+<li>In this part of the tutorial we'll write two programs in Java; a producer that sends a single message, and a consumer that receives messages and prints them out. We'll gloss over some of the detail in the Java API, concentrating on this very simple thing just to get started. It's a &quot;Hello World&quot; of messaging.</li>
+</ul>
+<h5 id="1-simple-send-and-receive-with-named-queue">1. Simple Send And Receive with Named Queue</h5>
+<ul>
+<li>SimpleSender.java</li>
+</ul>
+<pre><code class="language-Java">package tech.shunzi.mq.demo;
+
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+
+import static tech.shunzi.mq.demo.MQConstants.QUEUE_NAME;
+
+public class SimpleSender {
+
+    public static void main(String[] argv) throws Exception
+    {
+        ConnectionFactory factory = new ConnectionFactory();
+
+        // connect to a broker with its name or ip address
+        factory.setHost(&quot;localhost&quot;);
+        Connection connection = factory.newConnection();
+
+        // create a channel, which is where most of the API for getting things done resides.
+        Channel channel = connection.createChannel();
+
+        // Declaring a queue is idempotent - it will only be created if it doesn't exist already.
+        // String queue, boolean durable, boolean exclusive, boolean autoDelete, Map&lt;String, Object&gt; arguments
+        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+
+        String message = &quot;Hello World!&quot;;
+        // The message content is a byte array, so you can encode whatever you like there.
+        // String exchange, String routingKey, BasicProperties props, byte[] body
+        channel.basicPublish(&quot;&quot;, QUEUE_NAME, null, message.getBytes(&quot;UTF-8&quot;));
+
+        System.out.println(&quot; [x] Sent '&quot; + message + &quot;'&quot;);
+
+        channel.close();
+        connection.close();
+    }
+}
+</code></pre>
+<ul>
+<li>SimpleReceiver.java</li>
+</ul>
+<pre><code class="language-Java">package tech.shunzi.mq.demo;
+
+import com.rabbitmq.client.*;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+
+import static tech.shunzi.mq.demo.MQConstants.QUEUE_NAME;
+
+public class SimpleReceiver {
+
+    public static void main(String[] argv) throws Exception
+    {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(&quot;localhost&quot;);
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+
+        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+        System.out.println(&quot; [*] Waiting for messages. To exit press CTRL+C&quot;);
+
+        Consumer consumer = new DefaultConsumer(channel)
+        {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException, UnsupportedEncodingException {
+                String message = new String(body, &quot;UTF-8&quot;);
+                System.out.println(&quot; [x] Received '&quot; + message + &quot;'&quot;);
+            }
+        };
+        channel.basicConsume(QUEUE_NAME, true, consumer);
+    }
+}
+</code></pre>
+<ul>
+<li>Key Config: <strong>ConnectionFactory</strong>, <strong>Host</strong>, <strong>Connection</strong>, <strong>Channel</strong>, <strong>Queue</strong></li>
+</ul>
+<h5 id="2-distribute-time-consuming-tasks-among-multiple-workers">2. Distribute time-consuming tasks among multiple workers</h5>
+<ul>
+<li>NewTask.java</li>
+</ul>
+<pre><code class="language-Java">package tech.shunzi.mq.demo.multi.consumer;
+
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.MessageProperties;
+
+public class NewTask {
+
+    private static final String TASK_QUEUE_NAME = &quot;task_queue&quot;;
+
+    public static void main(String[] argv) throws Exception {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(&quot;localhost&quot;);
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+
+        channel.queueDeclare(TASK_QUEUE_NAME, true, false, false, null);
+
+        // get the argv from the command line and format e.g.: xxx xxx xxx
+        String message = getMessage(argv);
+
+        // MessageProperties.PERSISTENT_TEXT_PLAIN can make sure message persistent
+        // Marking messages as persistent doesn't fully guarantee that a message won't be lost.
+        channel.basicPublish(&quot;&quot;, TASK_QUEUE_NAME, MessageProperties.PERSISTENT_TEXT_PLAIN, message.getBytes(&quot;UTF-8&quot;));
+        System.out.println(&quot; [x] Sent '&quot; + message + &quot;'&quot;);
+
+        channel.close();
+        connection.close();
+    }
+
+    private static String getMessage(String[] strings) {
+        if (strings.length &lt; 1) {
+            return &quot;Hello World!&quot;;
+        }
+        return joinStrings(strings, &quot; &quot;);
+    }
+
+    private static String joinStrings(String[] strings, String delimiter) {
+        int length = strings.length;
+        if (length == 0)
+            return &quot;&quot;;
+        StringBuilder words = new StringBuilder(strings[0]);
+        for (int i = 1; i &lt; length; i++) {
+            words.append(delimiter).append(strings[i]);
+        }
+        return words.toString();
+    }
+}
+
+</code></pre>
+<ul>
+<li>Worker.java</li>
+</ul>
+<pre><code class="language-Java">package tech.shunzi.mq.demo.multi.consumer;
+
+import com.rabbitmq.client.*;
+
+import java.io.IOException;
+
+public class Worker {
+
+    private static final String TASK_QUEUE_NAME = &quot;task_queue&quot;;
+
+    public static void main(String[] argv) throws Exception {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(&quot;localhost&quot;);
+        final Connection connection = factory.newConnection();
+        final Channel channel = connection.createChannel();
+
+        // make the queue durable.   true
+        channel.queueDeclare(TASK_QUEUE_NAME, true, false, false, null);
+        System.out.println(&quot; [*] Waiting for messages. To exit press CTRL+C&quot;);
+
+        // producer can only send a message to a consumer.   balanced load
+        channel.basicQos(1);
+
+        final Consumer consumer = new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                String message = new String(body, &quot;UTF-8&quot;);
+
+                System.out.println(&quot; [x] Received '&quot; + message + &quot;'&quot;);
+                try {
+                    // simulate a task which cost some time.
+                    doWork(message);
+                } finally {
+                    System.out.println(&quot; [x] Done&quot;);
+                    // false means need ack to verify.
+                    channel.basicAck(envelope.getDeliveryTag(), false);
+                }
+            }
+        };
+        channel.basicConsume(TASK_QUEUE_NAME, false, consumer);
+    }
+
+    private static void doWork(String task) {
+        for (char ch : task.toCharArray()) {
+            if (ch == '.') {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException _ignored) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+    }
+}
+</code></pre>
+<ul>
+<li>Some key functions details: <strong>interface Channel.java</strong></li>
+</ul>
+<pre><code class="language-Java">    /**
+     * Declare a queue
+     * @see com.rabbitmq.client.AMQP.Queue.Declare
+     * @see com.rabbitmq.client.AMQP.Queue.DeclareOk
+     * @param queue the name of the queue
+     * @param durable true if we are declaring a durable queue (the queue will survive a server restart)
+     * @param exclusive true if we are declaring an exclusive queue (restricted to this connection)
+     * @param autoDelete true if we are declaring an autodelete queue (server will delete it when no longer in use)
+     * @param arguments other properties (construction arguments) for the queue
+     * @return a declaration-confirm method to indicate the queue was successfully declared
+     * @throws java.io.IOException if an error is encountered
+     */
+    Queue.DeclareOk queueDeclare(String queue, boolean durable, boolean exclusive, boolean autoDelete,
+                                 Map&lt;String, Object&gt; arguments) throws IOException;
+                                 
+    /**
+     * Publish a message.
+     *
+     * Publishing to a non-existent exchange will result in a channel-level
+     * protocol exception, which closes the channel.
+     *
+     * Invocations of &lt;code&gt;Channel#basicPublish&lt;/code&gt; will eventually block if a
+     * &lt;a href=&quot;http://www.rabbitmq.com/alarms.html&quot;&gt;resource-driven alarm&lt;/a&gt; is in effect.
+     *
+     * @see com.rabbitmq.client.AMQP.Basic.Publish
+     * @see &lt;a href=&quot;http://www.rabbitmq.com/alarms.html&quot;&gt;Resource-driven alarms&lt;/a&gt;
+     * @param exchange the exchange to publish the message to
+     * @param routingKey the routing key
+     * @param props other properties for the message - routing headers etc
+     * @param body the message body
+     * @throws java.io.IOException if an error is encountered
+     */
+    void basicPublish(String exchange, String routingKey, BasicProperties props, byte[] body) throws IOException; 
+    
+    /**
+     * Request a specific prefetchCount &quot;quality of service&quot; settings
+     * for this channel.
+     *
+     * @see #basicQos(int, int, boolean)
+     * @param prefetchCount maximum number of messages that the server
+     * will deliver, 0 if unlimited
+     * @throws java.io.IOException if an error is encountered
+     */
+    void basicQos(int prefetchCount) throws IOException;
+    
+    /**
+     * Acknowledge one or several received
+     * messages. Supply the deliveryTag from the {@link com.rabbitmq.client.AMQP.Basic.GetOk}
+     * or {@link com.rabbitmq.client.AMQP.Basic.Deliver} method
+     * containing the received message being acknowledged.
+     * @see com.rabbitmq.client.AMQP.Basic.Ack
+     * @param deliveryTag the tag from the received {@link com.rabbitmq.client.AMQP.Basic.GetOk} or {@link com.rabbitmq.client.AMQP.Basic.Deliver}
+     * @param multiple true to acknowledge all messages up to and
+     * including the supplied delivery tag; false to acknowledge just
+     * the supplied delivery tag.
+     * @throws java.io.IOException if an error is encountered
+     */
+    void basicAck(long deliveryTag, boolean multiple) throws IOException;  
+    
+    /**
+     * Start a non-nolocal, non-exclusive consumer, with
+     * a server-generated consumerTag.
+     * @param queue the name of the queue
+     * @param autoAck true if the server should consider messages
+     * acknowledged once delivered; false if the server should expect
+     * explicit acknowledgements
+     * @param callback an interface to the consumer object
+     * @return the consumerTag generated by the server
+     * @throws java.io.IOException if an error is encountered
+     * @see com.rabbitmq.client.AMQP.Basic.Consume
+     * @see com.rabbitmq.client.AMQP.Basic.ConsumeOk
+     * @see #basicConsume(String, boolean, String, boolean, boolean, Map, Consumer)
+     */
+    String basicConsume(String queue, boolean autoAck, Consumer callback) throws IOException;
+</code></pre>
+<ul>
+<li><strong>autoAck</strong>:
+<ul>
+<li><code>true</code> - The msg will be acknowledged once delivered</li>
+<li><code>false</code> - The server expects explicit acknowledgements. (It means that manual ack publish is necessary. <code>basicAck()</code>)</li>
+</ul>
+</li>
+<li><strong>durable</strong>: (Producer &amp; Consumer Both Config this)
+<ul>
+<li><code>true</code> - To make sure that RabbitMQ will never lose our queue. And it only makes sense when first create/setup.</li>
+</ul>
+</li>
+<li><strong>BasicProperties props</strong> :
+<ul>
+<li><code>MessageProperties.PERSISTENT_TEXT_PLAIN</code> - Make sure the message persistent. <strong>Attention</strong>: The persistence guarantees aren't strong, but it's more than enough for our simple task queue. One situation is that message is stored in cache and hasn't be stored on disk.</li>
+</ul>
+</li>
+<li><strong>prefetchCount</strong>: maximum number of messages that the server will deliver
+<ul>
+<li><code>1</code> - This tells RabbitMQ not to give more than one message to a worker at a time. Or, in other words, don't dispatch a new message to a worker until it has processed and acknowledged the previous one. Instead, it will dispatch it to the next worker that is not still busy.</li>
+<li>...</li>
+</ul>
+</li>
+</ul>
+<h3 id="publishsubscribe">Publish/Subscribe</h3>
+<h4 id="introduction-2">Introduction</h4>
+<blockquote>
+<p>In this part we'll do something completely different -- we'll deliver a message to <strong>multiple consumers</strong>. This pattern is known as <strong>&quot;publish/subscribe&quot;</strong>.<br>
+To illustrate the pattern, we're going to build a simple <strong>logging system</strong>. It will consist of two programs -- the first will emit log messages and the second will receive and print them. And there will be <strong>many receivers</strong> to receive the messages.</p>
+</blockquote>
+<h4 id="full-message-model-in-rabbit">Full Message Model in Rabbit</h4>
+<h5 id="previous-model">Previous model</h5>
+<ul>
+<li>A <strong>producer</strong> is a user application that sends messages.</li>
+<li>A <strong>queue</strong> is a buffer that stores messages.</li>
+<li>A <strong>consumer</strong> is a user application that receives messages.</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/files-and-images/master/blog/pic/producer-queue-consumer.png" alt="image" loading="lazy"></figure>
+<h6 id="problems-existed">Problems existed:</h6>
+<ul>
+<li>The core idea in the messaging model in RabbitMQ is that the producer <strong>never sends any messages directly to a queue</strong>. Actually, quite often the producer doesn't even know if a message will be delivered to any queue at all.</li>
+<li>There may be a lot of queues. And one producer may send msg to many queues. Duplicate code is bad practice.</li>
+</ul>
+<h5 id="new-model">New Model</h5>
+<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/files-and-images/master/blog/pic/exchange-binding-overall.png" alt="image" loading="lazy"></figure>
+<ul>
+<li><strong>Exchange :</strong> An exchange is a very simple thing. On one side it receives messages from producers and the other side it pushes them to queues. The exchange must know exactly what to do with a message it receives.
+<ul>
+<li><strong>Direct :</strong> Same routing key.(Same string)</li>
+<li><strong>Topic :</strong> Same string pattern of routing key.(eg. <code>*.*.#</code>,  <code>lazy.orange.rabbit</code>)</li>
+<li><strong>Headers :</strong> Ignore the routing key and match header attributes.</li>
+<li><strong>Fanout :</strong> Ignore routing key.(Broadcast to all queues)</li>
+</ul>
+</li>
+</ul>
+<h6 id="example-of-fanout-exchange">Example of Fanout Exchange</h6>
+<ul>
+<li>Publisher</li>
+</ul>
+<pre><code class="language-Java">package tech.shunzi.mq.demo.publish;
+
+import com.rabbitmq.client.BuiltinExchangeType;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+
+public class EmitLog {
+
+    private static final String EXCHANGE_NAME = &quot;logs&quot;;
+
+    public static void main(String[] argv) throws Exception {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(&quot;localhost&quot;);
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+
+        // Actively declare a non-autodelete, non-durable exchange with no extra arguments
+        // Declare an FANOUT exchange with name &quot;logs&quot;
+        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
+
+        String message = getMessage(argv);
+
+        // Publishing to a non-existent exchange named &quot;log&quot;
+        channel.basicPublish(EXCHANGE_NAME, &quot;&quot;, null, message.getBytes(&quot;UTF-8&quot;));
+        System.out.println(&quot; [x] Sent '&quot; + message + &quot;'&quot;);
+
+        channel.close();
+        connection.close();
+    }
+
+    private static String getMessage(String[] strings) {
+        if (strings.length &lt; 1) {
+            return &quot;info: Hello World!&quot;;
+        }
+        return joinStrings(strings, &quot; &quot;);
+    }
+
+    private static String joinStrings(String[] strings, String delimiter) {
+        int length = strings.length;
+        if (length == 0) {
+            return &quot;&quot;;
+        }
+        StringBuilder words = new StringBuilder(strings[0]);
+        for (int i = 1; i &lt; length; i++) {
+            words.append(delimiter).append(strings[i]);
+        }
+        return words.toString();
+    }
+}
+</code></pre>
+<ul>
+<li>Consumer</li>
+</ul>
+<pre><code class="language-Java">package tech.shunzi.mq.demo.publish;
+
+import com.rabbitmq.client.*;
+
+import java.io.IOException;
+
+public class ReceiveLogs {
+
+    private static final String EXCHANGE_NAME = &quot;logs&quot;;
+
+    public static void main(String[] argv) throws Exception {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(&quot;localhost&quot;);
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+
+        // Actively declare a non-auto-delete, non-durable exchange with no extra arguments
+        // Declare an FANOUT exchange with name &quot;logs&quot;
+        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
+
+        // Create a non-durable, exclusive, auto-delete queue with a generated name
+        String queueName = channel.queueDeclare().getQueue();
+        
+        // Bind the queues to the exchange, maintain the binding relationship between queues and exchange.
+        // The FANOUT exchange will ignore the routing-key value.
+        channel.queueBind(queueName, EXCHANGE_NAME, &quot;&quot;);
+
+        System.out.println(&quot; [*] Waiting for messages. To exit press CTRL+C&quot;);
+
+        Consumer consumer = new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope,
+                                       AMQP.BasicProperties properties, byte[] body) throws IOException {
+                String message = new String(body, &quot;UTF-8&quot;);
+                System.out.println(&quot; [x] Received '&quot; + message + &quot;'&quot;);
+            }
+        };
+        channel.basicConsume(queueName, true, consumer);
+    }
+}
+</code></pre>
+<h6 id="example-of-direct-exchange">Example of Direct Exchange</h6>
+<ul>
+<li>We will use a <strong>direct</strong> exchange instead. The routing algorithm behind a direct exchange is simple - a message goes to the <strong>queues whose binding key exactly matches the routing key of the message.</strong></li>
+</ul>
+<figure data-type="image" tabindex="3"><img src="https://raw.githubusercontent.com/zjs1224522500/files-and-images/master/blog/pic/direct-exchange-plus.png" alt="image" loading="lazy"></figure>
+<ul>
+<li>
+<p><strong>If the routing keys are the same as other queues, it will behave like FANOUT exchange.</strong></p>
+</li>
+<li>
+<p>Producer</p>
+</li>
+</ul>
+<pre><code class="language-Java">package tech.shunzi.mq.demo.exchange.direct;
+
+import com.rabbitmq.client.BuiltinExchangeType;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+
+public class EmitLogDirect {
+
+    private static final String EXCHANGE_NAME = &quot;direct_logs&quot;;
+
+    public static void main(String[] argv) throws Exception {
+
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(&quot;localhost&quot;);
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+
+        // Actively declare a non-auto-delete, non-durable exchange with no extra arguments
+        // Declare an Direct exchange with name &quot;direct_logs&quot;
+        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+
+        // Declare routing key name
+        String severity = getSeverity(argv);
+        String message = getMessage(argv);
+
+        channel.basicPublish(EXCHANGE_NAME, severity, null, message.getBytes(&quot;UTF-8&quot;));
+        System.out.println(&quot; [x] Sent '&quot; + severity + &quot;':'&quot; + message + &quot;'&quot;);
+
+        channel.close();
+        connection.close();
+    }
+
+    private static String getSeverity(String[] strings) {
+        if (strings.length &lt; 1) {
+            return &quot;info&quot;;
+        }
+        return strings[0];
+    }
+
+    private static String getMessage(String[] strings) {
+        if (strings.length &lt; 2) {
+            return &quot;Hello World!&quot;;
+        }
+        return joinStrings(strings, &quot; &quot;, 1);
+    }
+
+    private static String joinStrings(String[] strings, String delimiter, int startIndex) {
+        int length = strings.length;
+        if (length == 0) {
+            return &quot;&quot;;
+        }
+        if (length &lt; startIndex) {
+            return &quot;&quot;;
+        }
+        StringBuilder words = new StringBuilder(strings[startIndex]);
+        for (int i = startIndex + 1; i &lt; length; i++) {
+            words.append(delimiter).append(strings[i]);
+        }
+        return words.toString();
+    }
+}
+</code></pre>
+<ul>
+<li>Consumer</li>
+</ul>
+<pre><code class="language-Java">package tech.shunzi.mq.demo.exchange.direct;
+
+import com.rabbitmq.client.*;
+
+import java.io.IOException;
+
+public class ReceiveLogsDirect {
+
+    private static final String EXCHANGE_NAME = &quot;direct_logs&quot;;
+
+    public static void main(String[] argv) throws Exception {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(&quot;localhost&quot;);
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+
+        // Actively declare a non-auto-delete, non-durable exchange with no extra arguments
+        // Declare an Direct exchange with name &quot;direct_logs&quot;
+        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+
+        // Create a non-durable, exclusive, auto-delete queue with a generated name
+        String queueName = channel.queueDeclare().getQueue();
+
+        if (argv.length &lt; 1){
+            System.err.println(&quot;Usage: ReceiveLogsDirect [info] [warning] [error]&quot;);
+            System.exit(1);
+        }
+
+        for(String severity : argv){
+            // Bind the queues to the exchange
+            // Maintain the binding relationship between queues and exchange with given routing key name.
+            channel.queueBind(queueName, EXCHANGE_NAME, severity);
+        }
+        System.out.println(&quot; [*] Waiting for messages. To exit press CTRL+C&quot;);
+
+        Consumer consumer = new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope,
+                                       AMQP.BasicProperties properties, byte[] body) throws IOException {
+                String message = new String(body, &quot;UTF-8&quot;);
+                System.out.println(&quot; [x] Received '&quot; + envelope.getRoutingKey() + &quot;':'&quot; + message + &quot;'&quot;);
+            }
+        };
+        channel.basicConsume(queueName, true, consumer);
+    }
+}
+</code></pre>
+<h6 id="example-of-topic-exchange">Example of Topic Exchange</h6>
+<ul>
+<li><code>*</code> (star) can substitute for exactly one word.</li>
+<li><code>#</code> (hash) can substitute for zero or more words.</li>
+</ul>
+<figure data-type="image" tabindex="4"><img src="https://raw.githubusercontent.com/zjs1224522500/files-and-images/master/blog/pic/topic-exchange.png" alt="image" loading="lazy"></figure>
+<ul>
+<li>Producer</li>
+</ul>
+<pre><code class="language-Java">package tech.shunzi.mq.demo.exchange.topic;
+
+import com.rabbitmq.client.BuiltinExchangeType;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+
+public class EmitLogTopic {
+
+    private static final String EXCHANGE_NAME = &quot;topic_logs&quot;;
+
+    public static void main(String[] argv) {
+        Connection connection = null;
+        Channel channel = null;
+        try {
+            ConnectionFactory factory = new ConnectionFactory();
+            factory.setHost(&quot;localhost&quot;);
+
+            connection = factory.newConnection();
+            channel = connection.createChannel();
+
+            channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.TOPIC);
+
+            String routingKey = getRouting(argv);
+            String message = getMessage(argv);
+
+            channel.basicPublish(EXCHANGE_NAME, routingKey, null, message.getBytes(&quot;UTF-8&quot;));
+            System.out.println(&quot; [x] Sent '&quot; + routingKey + &quot;':'&quot; + message + &quot;'&quot;);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (Exception ignore) {
+                }
+            }
+        }
+    }
+
+    private static String getRouting(String[] strings) {
+        if (strings.length &lt; 1) {
+            return &quot;anonymous.info&quot;;
+        }
+        return strings[0];
+    }
+
+    private static String getMessage(String[] strings) {
+        if (strings.length &lt; 2) {
+            return &quot;Hello World!&quot;;
+        }
+        return joinStrings(strings, &quot; &quot;, 1);
+    }
+
+    private static String joinStrings(String[] strings, String delimiter, int startIndex) {
+        int length = strings.length;
+        if (length == 0) {
+            return &quot;&quot;;
+        }
+        if (length &lt; startIndex) {
+            return &quot;&quot;;
+        }
+        StringBuilder words = new StringBuilder(strings[startIndex]);
+        for (int i = startIndex + 1; i &lt; length; i++) {
+            words.append(delimiter).append(strings[i]);
+        }
+        return words.toString();
+    }
+}
+</code></pre>
+<ul>
+<li>Consumer</li>
+</ul>
+<pre><code class="language-Java">package tech.shunzi.mq.demo.exchange.topic;
+
+import com.rabbitmq.client.*;
+
+import java.io.IOException;
+
+public class ReceiveLogsTopic {
+
+    private static final String EXCHANGE_NAME = &quot;topic_logs&quot;;
+
+    public static void main(String[] argv) throws Exception {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(&quot;localhost&quot;);
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+
+        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.TOPIC);
+        String queueName = channel.queueDeclare().getQueue();
+
+        if (argv.length &lt; 1) {
+            System.err.println(&quot;Usage: ReceiveLogsTopic [binding_key]...&quot;);
+            System.exit(1);
+        }
+
+        for (String bindingKey : argv) {
+            channel.queueBind(queueName, EXCHANGE_NAME, bindingKey);
+        }
+
+        System.out.println(&quot; [*] Waiting for messages. To exit press CTRL+C&quot;);
+
+        Consumer consumer = new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope,
+                                       AMQP.BasicProperties properties, byte[] body) throws IOException {
+                String message = new String(body, &quot;UTF-8&quot;);
+                System.out.println(&quot; [x] Received '&quot; + envelope.getRoutingKey() + &quot;':'&quot; + message + &quot;'&quot;);
+            }
+        };
+        channel.basicConsume(queueName, true, consumer);
+    }
+}
+</code></pre>
+<h6 id="relationship-between-different-exchange">Relationship between Different Exchange</h6>
+<ul>
+<li>When a queue is bound with <code>&quot;#&quot;</code> (hash) binding key - it will receive all the messages, regardless of the routing key - like in fanout exchange.</li>
+<li>When special characters <code>&quot;*&quot;</code> (star) and <code>&quot;#&quot;</code> (hash) aren't used in bindings, the topic exchange will behave just like a direct one.</li>
+</ul>
+<hr>
+<h4 id="header-exchange">Header Exchange</h4>
+<ul>
+<li>Refer link : <a href="https://blog.csdn.net/qq1052441272/article/details/53940754">[CSDN Blog: Topic Exchange of Rabbit MQ]</a></li>
+</ul>
+<h4 id="rpc-system-with-rabbit-mq">RPC system with Rabbit MQ</h4>
+<ul>
+<li>Refer link: <a href="https://www.jianshu.com/p/a2f085c669ec">[Jianshu: RabbitMQ Tutorial Six]</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://docs.openstack.org/cinder/latest/_images/cinder.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/cinder/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-07-16">2019-07-16</time>
+                  <h4 class="title white no-margin">Cinder核心</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://thejournal.com/~/media/EDU/THEJournal/Images/2015/02/20150224test644.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/how-to-develop-test/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-05-24">2019-05-24</time>
+                  <h4 class="title white no-margin">教你写测试</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

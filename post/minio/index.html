@@ -1,0 +1,1376 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Minio | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+开源支持 S3 协议的对象存储
+支持多个客户端访问，支持分布式集群部署，容器化部署
+考虑集成在项目中，作为后端存储进行测试
+
+
+
+Introduction
+Features
+
+Open source Object Storage: MI..." />
+    <meta name="keywords" content="对象存储" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://blog.shunzi.tech/post-images/minio.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-03-28"><i class="fa fa-calendar"></i><span class="lately">10 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/minio/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/minio/"> </span>
+              </a>
+              <span id="/minio/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-0 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Minio</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>开源支持 S3 协议的对象存储</li>
+<li>支持多个客户端访问，支持分布式集群部署，容器化部署</li>
+<li>考虑集成在项目中，作为后端存储进行测试</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="introduction">Introduction</h2>
+<h3 id="features">Features</h3>
+<ul>
+<li>Open source Object Storage: MINIO</li>
+<li>Amazon S3, Apache License v2.0</li>
+<li>Client/Server Mode</li>
+<li>Support Erasure Code</li>
+<li>Website: https://min.io/</li>
+<li>Github Repo：https://github.com/minio/minio</li>
+</ul>
+<h3 id="details">Details</h3>
+<ul>
+<li>MinIO 是一个基于Apache License v2.0开源协议的对象存储服务。它兼容亚马逊S3云存储服务接口，非常适合于存储大容量非结构化的数据，例如图片、视频、日志文件、备份数据和容器/虚拟机镜像等，而一个对象文件可以是任意大小，从几kb到最大5T不等。</li>
+<li>MinIO是一个非常轻量的服务,可以很简单的和其他应用的结合，类似 NodeJS, Redis 或者 MySQL。</li>
+<li><a href="https://docs.minio.io/docs/java-client-api-reference">[Java Client API]</a></li>
+<li><a href="https://www.bookstack.cn/read/MinioCookbookZH/21.md">[Java Client API -zh]</a></li>
+<li>官方测试地址：https://play.minio.io:9000</li>
+</ul>
+<h2 id="start">Start</h2>
+<h3 id="docker">Docker</h3>
+<ul>
+<li>Pull Image</li>
+</ul>
+<pre><code class="language-cmd">docker pull minio/minio
+</code></pre>
+<ul>
+<li>Run image (without access_key &amp; secret_key)</li>
+</ul>
+<pre><code class="language-cmd"># -it 运行参数
+# -p 指定端口
+# -d 后台运行
+docker run -it -p 9000:9000 -d minio/minio server /data
+</code></pre>
+<ul>
+<li>Run image</li>
+</ul>
+<pre><code class="language-cmd">docker run -p 9000:9000 --name minio \
+-d --restart=always \
+-e &quot;MINIO_ACCESS_KEY=admin&quot; \
+-e &quot;MINIO_SECRET_KEY=admin123456&quot; \
+-v /home/data:/data \
+-v /home/config:/root/.minio \
+minio/minio server /data
+</code></pre>
+<h3 id="aws-s3-sdk-for-c">AWS S3 SDK for C++</h3>
+<h4 id="prerequisite">Prerequisite</h4>
+<ul>
+<li>Install CMake/GCC etc.</li>
+<li>Download AWS sdk.</li>
+<li>Build sdk firstly. <a href="https://www.cnblogs.com/qiuyi21/p/7239129.html?utm_source=itdadao&amp;utm_medium=referral">参考链接：博客园 AWS SDK for C++调用第三方S3 API</a></li>
+<li>单独编译要使用到的 aws-cpp-sdk-core 和 aws-cpp-sdk-s3</li>
+</ul>
+<pre><code>make -j `nproc` -C aws-cpp-sdk-core
+make -j `nproc` -C aws-cpp-sdk-s3
+</code></pre>
+<ul>
+<li>安装头文件和库到一个目录</li>
+</ul>
+<pre><code>make install DESTDIR=/c++/C-Example/linux/install -C ../build/aws-cpp-sdk-s3
+make install DESTDIR=/c++/C-Example/linux/install -C ../build/aws-cpp-sdk-core
+</code></pre>
+<h4 id="sample-code-list-buckets">Sample Code: List Buckets</h4>
+<ul>
+<li>Test Code: 使用 Minio 示例测试。</li>
+</ul>
+<pre><code class="language-C++">#include &lt;iostream&gt;
+#include &lt;aws/s3/S3Client.h&gt;
+#include &lt;aws/core/Aws.h&gt;
+#include &lt;aws/core/auth/AWSCredentialsProvider.h&gt;
+
+using namespace Aws::S3;
+using namespace Aws::S3::Model;
+using namespace std;
+
+int main(int argc, char* argv[]) {
+    Aws::SDKOptions options;
+    options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Trace;
+    Aws::InitAPI(options);
+
+    Aws::Client::ClientConfiguration cfg;
+    cfg.endpointOverride = &quot;https://play.minio.io:9000&quot;;  // S3服务器地址和端口
+    cfg.scheme = Aws::Http::Scheme::HTTP;
+    cfg.verifySSL = false;
+
+    Aws::Auth::AWSCredentials cred(&quot;Q3AM3UQ867SPQQA43P2F&quot;, &quot;zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG&quot;);  // 认证的Key
+    S3Client client(cred, cfg, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);
+
+    auto response = client.ListBuckets();
+    if (response.IsSuccess()) {
+        auto buckets = response.GetResult().GetBuckets();
+        for (auto iter = buckets.begin(); iter != buckets.end(); ++iter) {
+            cout &lt;&lt; iter-&gt;GetName() &lt;&lt; &quot;\t&quot; &lt;&lt; iter-&gt;GetCreationDate().ToLocalTimeString(Aws::Utils::DateFormat::ISO_8601) &lt;&lt; endl;
+        }
+    } else {
+        cout &lt;&lt; &quot;Error while ListBuckets &quot; &lt;&lt; response.GetError().GetExceptionName()
+            &lt;&lt; &quot; &quot; &lt;&lt; response.GetError().GetMessage() &lt;&lt; endl;
+    }
+
+    Aws::ShutdownAPI(options);
+    return 0;
+}
+</code></pre>
+<h4 id="ide-configuration-vs-code-remote">IDE Configuration (VS Code Remote)</h4>
+<ul>
+<li>VS Code Remote 开发时可能缺少对 gcc 的相关配置，示例如下：</li>
+</ul>
+<pre><code class="language-JSON">{
+    &quot;configurations&quot;: [
+        {
+            &quot;name&quot;: &quot;Linux&quot;,
+            &quot;includePath&quot;: [
+                &quot;${workspaceFolder}/install/**&quot;
+            ],
+            &quot;defines&quot;: [],
+            &quot;compilerPath&quot;: &quot;/usr/bin/gcc&quot;,
+            &quot;cStandard&quot;: &quot;c11&quot;,
+            &quot;cppStandard&quot;: &quot;c++14&quot;,
+            &quot;intelliSenseMode&quot;: &quot;clang-x64&quot;
+        },
+        {
+            &quot;name&quot;: &quot;huawei-cloud&quot;,
+            &quot;includePath&quot;: [
+                &quot;${workspaceFolder}/install/**&quot;
+            ],
+            &quot;defines&quot;: [],
+            &quot;compilerPath&quot;: &quot;/usr/bin/gcc&quot;,
+            &quot;cStandard&quot;: &quot;c11&quot;,
+            &quot;cppStandard&quot;: &quot;c++14&quot;,
+            &quot;intelliSenseMode&quot;: &quot;gcc-x64&quot;
+        }
+    ],
+    &quot;version&quot;: 4
+}
+</code></pre>
+<h4 id="cmake-env-configuration">CMake Env Configuration</h4>
+<ul>
+<li>编写 CMakeList.txt</li>
+</ul>
+<pre><code>cmake_minimum_required (VERSION 2.8)
+# 项目信息
+project (Demo)
+
+add_compile_options( -std=c++11 )
+include_directories(/c++/C-Example/linux/install/usr/local/include)
+link_directories(/c++/C-Example/linux/install/usr/local/lib64)
+
+# 指定生成目标
+add_executable(Demo object_storage.cpp)
+target_link_libraries(Demo -laws-cpp-sdk-core -laws-cpp-sdk-s3)
+</code></pre>
+<h4 id="build-and-run">Build And Run</h4>
+<ul>
+<li>运行 CMake 编译成可执行文件</li>
+</ul>
+<pre><code>cmake .
+make
+</code></pre>
+<ul>
+<li>make 时可能报错，缺少依赖，如  aws-c-common, aws-checksums and aws-c-event-stream. 在安装 AWS SDK 时会默认将这些依赖包放在 .deps/install/lib，如果没有安装，自行 make，make 完成之后导出</li>
+</ul>
+<pre><code>export LD_LIBRARY_PATH=/c++/C-Example/linux/.deps/install/lib64
+</code></pre>
+<ul>
+<li>重新编译我们的 demo</li>
+</ul>
+<pre><code>cmake .
+make
+</code></pre>
+<ul>
+<li>编译成功，运行可执行文件</li>
+</ul>
+<pre><code>./Demo
+
+# 输出结果 只列出部分
+ezz     2020-03-17T02:13:55Z
+ezz1    2020-03-17T02:19:09Z
+f0569eee-6888-4d7b-a40c-bf0ee4ce65ad    2020-03-10T06:09:44Z
+f0953c46-45d2-4442-b0b4-24d4e34206ef    2020-03-14T00:46:38Z
+f3d50918-fee0-438a-8d9d-5c80fab1e43c    2020-03-17T19:30:46Z
+flink   2020-02-25T21:00:54Z
+foobar  2020-03-12T19:16:42Z
+foobbar 2020-03-12T19:00:40Z
+form    2020-03-09T05:47:00Z
+foundation-qa   2020-03-24T00:39:02Z
+j2n1g7fjsa9rjhceprqhphfktreq5hjx        2020-02-26T02:21:04Z
+jalgasdlkglskadg        2020-02-29T18:27:11Z
+jayce   2020-03-03T20:56:08Z
+jgjhghgj        2020-03-16T00:07:13Z
+jh6-gateway     2020-03-23T10:19:00Z
+jianmeng2       2020-03-02T09:16:31Z
+jjj     2020-03-05T23:56:21Z
+jvtest  2020-03-19T23:53:31Z
+jyyy-enclosure  2020-03-03T15:10:44Z
+kannappan300    2020-03-19T02:55:18Z
+kdyotzwd9278ke3gvukngmuqovylerxu        2020-03-20T10:49:53Z
+kek     2020-03-18T06:46:26Z
+kgramlkxni5sbd116ep81gz3d38gysqd        2020-03-07T05:12:23Z
+kkk     2020-03-05T23:56:12Z
+kopia-test-00040bab8a787438     2020-03-21T12:20:30Z
+kopia-test-fe2c2dc0cc28b253     2020-03-04T12:46:37Z
+mikbucket       2020-03-19T21:16:31Z
+minio-backup-bucket-name-here   2020-03-26T16:38:50Z
+zzz01   2020-03-16T08:02:36Z
+zzz02   2020-03-16T08:02:38Z
+</code></pre>
+<h4 id="sample-code-2-getput">Sample Code 2 GET/PUT</h4>
+<pre><code class="language-C++">#include &lt;iostream&gt;
+#include &lt;aws/s3/S3Client.h&gt;
+#include &lt;aws/core/Aws.h&gt;
+#include &lt;aws/core/auth/AWSCredentialsProvider.h&gt;
+
+// Include object request header
+#include &lt;aws/s3/model/PutObjectRequest.h&gt;
+#include &lt;aws/s3/model/GetObjectRequest.h&gt;
+#include &lt;fstream&gt;
+
+using namespace Aws::S3;
+using namespace Aws::S3::Model;
+using namespace std;
+
+int main(int argc, char* argv[]) {
+
+    // Set log options and init aws sdk.
+    Aws::SDKOptions options;
+    options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Trace;
+    Aws::InitAPI(options);
+
+    // Create the client with configuration (endpoint, protocol, ssl, credential)
+    Aws::Client::ClientConfiguration cfg;
+    cfg.endpointOverride = &quot;http://localhost:9000&quot;;  // S3服务器地址和端口
+    cfg.scheme = Aws::Http::Scheme::HTTP;
+    cfg.verifySSL = false;
+
+    // Create credential with access key and secret key.
+    Aws::Auth::AWSCredentials cred(&quot;admin&quot;, &quot;admin123456&quot;);  // 认证的Key
+    S3Client client(cred, cfg, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);
+
+    // Call api provided by aws sdk.
+    // List buckets
+    auto response = client.ListBuckets();
+    if (response.IsSuccess()) {
+        // Parse response
+        auto buckets = response.GetResult().GetBuckets();
+        for (auto iter = buckets.begin(); iter != buckets.end(); ++iter) {
+            // cout bucket name and creation date.
+            cout &lt;&lt; iter-&gt;GetName() &lt;&lt; &quot;\t&quot; &lt;&lt; iter-&gt;GetCreationDate().ToLocalTimeString(Aws::Utils::DateFormat::ISO_8601) &lt;&lt; endl;
+        }
+    } else {
+        // Error handle.
+        cout &lt;&lt; &quot;Error while ListBuckets &quot; &lt;&lt; response.GetError().GetExceptionName()
+            &lt;&lt; &quot; &quot; &lt;&lt; response.GetError().GetMessage() &lt;&lt; endl;
+    }
+
+    // Read Objects
+    // Parameters
+    std::string BucketName = &quot;test&quot;;
+    std::string KeyName = &quot;key&quot;;
+    
+    // Local path to store the data returned by Cloud Storage
+    std::string PathKey = &quot;./test-data/key.png&quot;;
+
+    // Create the object get request
+    Aws::S3::Model::GetObjectRequest object_get_request;
+    object_get_request.WithBucket(BucketName.c_str()).WithKey(KeyName.c_str());
+    
+    // Send Get Request
+    auto get_response = client.GetObject(object_get_request);
+    
+    // Verify the status of response.
+    if (get_response.IsSuccess())
+    {
+        // Read data and write into the file.
+        Aws::OFStream local_file(PathKey.c_str(), std::ios::trunc | ::ios::out | std::ios::binary);
+        if (local_file) {
+            std::cout &lt;&lt; &quot;File exsits!&quot; &lt;&lt; std::endl;
+        } else {
+            std::cout &lt;&lt; &quot;File not exsits!&quot; &lt;&lt; std::endl;
+        }
+        local_file &lt;&lt; get_response.GetResult().GetBody().rdbuf();
+        if (local_file) {
+            std::cout &lt;&lt; &quot;After write, File exsits!&quot; &lt;&lt; std::endl;
+        } else {
+            std::cout &lt;&lt; &quot;After write, File not exsits!&quot; &lt;&lt; std::endl;
+        }
+        std::cout &lt;&lt; &quot;Done!&quot; &lt;&lt; std::endl;
+    }
+    else
+    {
+        std::cout &lt;&lt; &quot;GetObject error: &quot; &lt;&lt;
+            get_response.GetError().GetExceptionName() &lt;&lt; &quot; &quot; &lt;&lt;
+            get_response.GetError().GetMessage() &lt;&lt; std::endl;
+    }
+
+    // Write Objects
+    // Parameters
+    std::string writeKeyName = &quot;keyw&quot;;    
+    // Local path to store the data returned by Cloud Storage
+    std::string writePathKey = &quot;./test-data/key.png&quot;;
+
+    PutObjectRequest putObjectRequest;
+    putObjectRequest.WithBucket(BucketName.c_str()).WithKey(writeKeyName.c_str());
+    auto input_data = Aws::MakeShared&lt;Aws::FStream&gt;(&quot;PutObjectInputStream&quot;, writePathKey.c_str(), std::ios_base::in | std::ios_base::binary);
+    putObjectRequest.SetBody(input_data);
+    auto putObjectResult = client.PutObject(putObjectRequest);
+    if (putObjectResult.IsSuccess())
+    {
+        std::cout &lt;&lt; &quot;Upload Done!&quot; &lt;&lt; std::endl;
+    }
+    else
+    {
+        std::cout &lt;&lt; &quot;PutObject error: &quot; &lt;&lt;
+        putObjectResult.GetError().GetExceptionName() &lt;&lt; &quot; &quot; &lt;&lt;
+        putObjectResult.GetError().GetMessage() &lt;&lt; std::endl;
+    }
+
+    // Deallocate AWS resources
+    Aws::ShutdownAPI(options);
+    return 0;
+}
+</code></pre>
+<ul>
+<li>注意路径的格式，相对路径和绝对路径的区分，上例使用的是相对路径。</li>
+</ul>
+<h2 id="将-aws-s3-cpp-sdk-封装为-c-library">将 aws-s3-cpp-sdk 封装为 C library</h2>
+<h3 id="create-cpp-class">Create CPP Class</h3>
+<h5 id="project-tree">Project Tree</h5>
+<pre><code>├── CMakeLists.txt
+├── include
+│   ├── S3Util.h
+└── src
+    ├── CMakeLists.txt
+    ├── main.cpp
+    └── S3Util.cpp
+</code></pre>
+<h4 id="define-header-s3utilh">define header S3Util.h</h4>
+<pre><code>#ifndef S3UTIL_H
+#define S3UTIL_H
+#include &lt;iostream&gt;
+#include &lt;aws/s3/S3Client.h&gt;
+#include &lt;aws/core/Aws.h&gt;
+#include &lt;aws/core/auth/AWSCredentialsProvider.h&gt;
+
+// Include object request header
+#include &lt;aws/s3/model/PutObjectRequest.h&gt;
+#include &lt;aws/s3/model/GetObjectRequest.h&gt;
+#include &lt;aws/s3/model/CreateBucketRequest.h&gt;
+#include &lt;fstream&gt;
+
+
+using namespace Aws::S3;
+using namespace Aws::S3::Model;
+using namespace std;
+
+class S3Util
+{
+
+private:
+    static Aws::SDKOptions options;
+    static S3Client* client;
+public:
+    S3Util();
+    bool createBucket(char* BucketName);
+    bool uploadfile(char* BucketName, char* objectKey, char* pathkey);
+    bool downloadfile(char* BucketName, char* objectKey, char* pathkey);
+    ~S3Util();
+};
+#endif
+</code></pre>
+<h4 id="s3utilcpp">S3Util.cpp</h4>
+<pre><code class="language-C++">#include &quot;S3Util.h&quot;
+
+Aws::SDKOptions S3Util::options = {};
+S3Client* S3Util::client = {};
+S3Util::S3Util() {
+    // Set log options and init aws sdk.
+    options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Trace;
+    Aws::InitAPI(options);
+
+    // Create the client with configuration (endpoint, protocol, ssl, credential)
+    Aws::Client::ClientConfiguration cfg;
+    cfg.endpointOverride = &quot;http://114.116.234.136:9000&quot;;  // S3服务器地址和端口
+    cfg.scheme = Aws::Http::Scheme::HTTP;
+    cfg.verifySSL = false;
+
+    // Create credential with access key and secret key.
+    Aws::Auth::AWSCredentials cred(&quot;admin&quot;, &quot;admin123456&quot;);  // 认证的Key
+    client = new S3Client(cred, cfg, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);
+}
+
+bool S3Util::createBucket(char* BucketName) {
+    CreateBucketRequest createBucketReq;
+    createBucketReq.WithBucket(BucketName);
+    auto createResponse = client-&gt;CreateBucket(createBucketReq);
+    if (createResponse.IsSuccess())
+    {
+        std::cout &lt;&lt; &quot;Create Bucket Done!&quot; &lt;&lt; std::endl;
+        return true;
+    }
+    else
+    {
+        std::cout &lt;&lt; &quot;Create Bucket error: &quot; &lt;&lt;
+        createResponse.GetError().GetExceptionName() &lt;&lt; &quot; &quot; &lt;&lt;
+        createResponse.GetError().GetMessage() &lt;&lt; std::endl;
+        return false;
+    }
+}
+
+bool S3Util::uploadfile(char* BucketName, char* objectKey, char* pathkey) {
+    PutObjectRequest putObjectRequest;
+    putObjectRequest.WithBucket(BucketName).WithKey(objectKey);
+    auto input_data = Aws::MakeShared&lt;Aws::FStream&gt;(&quot;PutObjectInputStream&quot;, pathkey, std::ios_base::in | std::ios_base::binary);
+    putObjectRequest.SetBody(input_data);
+    auto putObjectResult = client-&gt;PutObject(putObjectRequest);
+    if (putObjectResult.IsSuccess())
+    {
+        std::cout &lt;&lt; &quot;Upload Done!&quot; &lt;&lt; std::endl;
+        return true;
+    }
+    else
+    {
+        std::cout &lt;&lt; &quot;PutObject error: &quot; &lt;&lt;
+        putObjectResult.GetError().GetExceptionName() &lt;&lt; &quot; &quot; &lt;&lt;
+        putObjectResult.GetError().GetMessage() &lt;&lt; std::endl;
+        return false;
+    }
+}
+
+bool S3Util::downloadfile(char* BucketName, char* objectKey, char* pathkey) {
+    // Create the object get request
+    Aws::S3::Model::GetObjectRequest object_get_request;
+    object_get_request.WithBucket(BucketName).WithKey(objectKey);
+    
+    // Send Get Request
+    auto get_response = client-&gt;GetObject(object_get_request);
+    
+    // Verify the status of response.
+    if (get_response.IsSuccess())
+    {
+        // Read data and write into the file.
+        Aws::OFStream local_file(pathkey, std::ios::trunc | ::ios::out | std::ios::binary);
+        if (local_file) {
+            std::cout &lt;&lt; &quot;File exsits!&quot; &lt;&lt; std::endl;
+        } else {
+            std::cout &lt;&lt; &quot;File not exsits!&quot; &lt;&lt; std::endl;
+        }
+        local_file &lt;&lt; get_response.GetResult().GetBody().rdbuf();
+        if (local_file) {
+            std::cout &lt;&lt; &quot;After write, File exsits!&quot; &lt;&lt; std::endl;
+        } else {
+            std::cout &lt;&lt; &quot;After write, File not exsits!&quot; &lt;&lt; std::endl;
+        }
+        std::cout &lt;&lt; &quot;Done!&quot; &lt;&lt; std::endl;
+        return true;
+    }
+    else
+    {
+        std::cout &lt;&lt; &quot;GetObject error: &quot; &lt;&lt;
+        get_response.GetError().GetExceptionName() &lt;&lt; &quot; &quot; &lt;&lt; get_response.GetError().GetMessage() &lt;&lt; std::endl;
+        return false;
+    }
+}
+
+S3Util::~S3Util() {
+    Aws::ShutdownAPI(options);
+}
+</code></pre>
+<h4 id="测试程序-maincpp">测试程序 main.cpp</h4>
+<pre><code>#include &quot;S3Util.h&quot;
+#include &lt;iostream&gt;
+using namespace std;
+
+int main(int argc, char* argv[]) {
+    std::cout &lt;&lt; &quot;Start!&quot;&lt;&lt; std::endl;
+    char *BucketName = &quot;test&quot;;
+    char *objectKey = &quot;key&quot;;
+    char *path = &quot;./../test-data/key.png&quot;;
+    S3Util* util = new S3Util();
+    bool result = util-&gt;downloadfile(BucketName, objectKey, path);
+    std::cout &lt;&lt; &quot;Download reslut &quot; &lt;&lt; result &lt;&lt; std::endl;
+    std::cout &lt;&lt; &quot;End!&quot;&lt;&lt; std::endl;
+    return 0;
+}
+</code></pre>
+<h4 id="cmake-build">CMake build</h4>
+<h5 id="outside-cmakeliststxt">Outside CMakeLists.txt</h5>
+<pre><code>#CMake最低版本号要求
+cmake_minimum_required(VERSION 2.8)
+
+#指定项目名称
+project(s3util)
+
+#指定版本信息
+set(CMAKE_SYSTEM_VERSION 1)
+
+#若是需要指定编译器路径
+#set(CROSS_TOOLCHAIN_PREFIX &quot;/path/arm-linux-&quot;)
+#指定编译器
+#set(CMAKE_C_COMPILER   &quot;${CROSS_TOOLCHAIN_PREFIX}gcc&quot;)
+#set(CMAKE_CXX_COMPILER &quot;${CROSS_TOOLCHAIN_PREFIX}g++&quot;)
+
+#使用默认路径的g++指定编译器  
+#set(CMAKE_CXX_COMPILER &quot;g++&quot;) 
+
+#指定编译选项
+set(CMAKE_BUILD_TYPE Debug )
+
+#指定编译目录
+set(PROJECT_BINARY_DIR ${PROJECT_SOURCE_DIR}/build)
+
+#添加子目录,这样进入源码文件src目录可以继续构建  
+add_subdirectory(${PROJECT_SOURCE_DIR}/src)
+</code></pre>
+<h5 id="inside-cmakeliststxt">Inside CMakeLists.txt</h5>
+<pre><code>#查找当前目录下的所有源文件，
+#并将名称保存到DIR_LIB_SRCS目录
+#aux_source_directory(. DIR_LIB_SRCS)
+
+#指定头文件目录,PROJECT_SOURCE_DIR为工程的根目录  
+include_directories(${PROJECT_SOURCE_DIR}/include)
+
+add_compile_options( -std=c++11 )
+include_directories(/c++/C-Example/linux/install/usr/local/include)
+link_directories(/c++/C-Example/linux/install/usr/local/lib64)
+
+#指定可执行文件的输出目录，输出到bin下面  
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+
+#生成动态库    
+add_library(s3_shared_demo SHARED S3Util.cpp)
+#设置库输出名为 shared =&gt; libshared.so  
+set_target_properties(s3_shared_demo PROPERTIES OUTPUT_NAME &quot;s3shared&quot;)
+
+#生成静态库  
+add_library(s3_static_demo STATIC S3Util.cpp)
+#设置输库出名为 static =&gt; libstatic.a  
+set_target_properties(s3_static_demo PROPERTIES OUTPUT_NAME &quot;s3static&quot;)
+
+#指定库文件输出路径  
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+
+#在指定目录下查找库，并保存在LIBPATH变量中
+find_library(LIBPATHS shared ${PROJECT_SOURCE_DIR}/lib)
+
+#指定生成目标
+add_executable(main main.cpp)
+
+#链接共享库
+target_link_libraries(main ${LIBPATHS})
+target_link_libraries(main -laws-cpp-sdk-core -laws-cpp-sdk-s3 s3_shared_demo)
+
+</code></pre>
+<h3 id="编写-wrapper">编写 Wrapper</h3>
+<h5 id="project-tree-2">Project Tree</h5>
+<pre><code>├── CMakeLists.txt
+├── include
+│   ├── S3TestWrapper.h
+└── src
+    ├── CMakeLists.txt
+    ├── main.cpp
+    └── S3Util.cpp
+</code></pre>
+<h4 id="define-header">define header</h4>
+<pre><code>#ifndef S3TESTWRAPPER_H
+#define S3TESTWRAPPER_H
+
+#ifdef __cplusplus
+extern &quot;C&quot; {
+#endif 
+
+    int createBucket(char* BucketName);
+    int uploadfile(char* BucketName, char* objectKey, char* pathkey);
+    int downloadfile(char* BucketName, char* objectKey, char* pathkey);
+
+#ifdef __cplusplus
+}
+#endif 
+#endif
+</code></pre>
+<h4 id="define-wrapper">define wrapper</h4>
+<pre><code>#include &quot;S3TestWrapper.h&quot;
+#include &quot;S3Util.h&quot;
+
+#ifdef __cplusplus
+extern &quot;C&quot; {
+#endif 
+
+    int createBucket(char* BucketName) {
+        S3Util* util = new S3Util();
+        return util-&gt;createBucket(BucketName);
+    }
+    int uploadfile(char* BucketName, char* objectKey, char* pathkey) {
+        S3Util* util = new S3Util();
+        return util-&gt;uploadfile(BucketName, objectKey, pathkey);
+    }
+    int downloadfile(char* BucketName, char* objectKey, char* pathkey) {
+        S3Util* util = new S3Util();
+        return util-&gt;downloadfile(BucketName, objectKey, pathkey);
+    }
+
+#ifdef __cplusplus
+};
+#endif 
+</code></pre>
+<h4 id="测试程序-maincpp-2">测试程序 main.cpp</h4>
+<pre><code>#include &quot;S3TestWrapper.h&quot;
+#include &lt;iostream&gt;
+using namespace std;
+
+int main(int argc, char* argv[]) {
+    std::cout &lt;&lt; &quot;Start!&quot;&lt;&lt; std::endl;
+    char *BucketName = &quot;test&quot;;
+    char *objectKey = &quot;key&quot;;
+    char *path = &quot;./../test-data/key.png&quot;;
+    bool result = downloadfile(BucketName, objectKey, path);
+    std::cout &lt;&lt; &quot;Download reslut &quot; &lt;&lt; result &lt;&lt; std::endl;
+    std::cout &lt;&lt; &quot;End!&quot;&lt;&lt; std::endl;
+    return 0;
+}
+</code></pre>
+<h4 id="inside-cmakeliststxt-2">Inside CMakeLists.txt</h4>
+<pre><code>#查找当前目录下的所有源文件，
+#并将名称保存到DIR_LIB_SRCS目录
+aux_source_directory(. DIR_LIB_SRCS)
+
+#指定头文件目录,PROJECT_SOURCE_DIR为工程的根目录  
+include_directories(${PROJECT_SOURCE_DIR}/include)
+
+add_compile_options( -std=c++11 )
+include_directories(/c++/C-Example/linux/s3util/include)
+link_directories(/c++/C-Example/linux/s3util/lib)
+include_directories(/c++/C-Example/linux/install/usr/local/include)
+link_directories(/c++/C-Example/linux/install/usr/local/lib64)
+
+
+#指定可执行文件的输出目录，输出到bin下面  
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+
+#生成动态库    
+add_library(s3_shared_demo_c SHARED S3TestWrapper.cpp)
+#设置库输出名为 shared =&gt; libshared.so  
+set_target_properties(s3_shared_demo_c PROPERTIES OUTPUT_NAME &quot;s3sharedC&quot;)
+
+#生成静态库  
+add_library(s3_static_demo_c STATIC S3TestWrapper.cpp)
+#设置输库出名为 static =&gt; libstatic.a  
+set_target_properties(s3_static_demo_c PROPERTIES OUTPUT_NAME &quot;s3staticC&quot;)
+
+#指定库文件输出路径  
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+
+#在指定目录下查找库，并保存在LIBPATH变量中
+find_library(LIBPATHS shared ${PROJECT_SOURCE_DIR}/lib)
+
+#指定生成目标
+add_executable(main main.cpp)
+
+#链接共享库
+target_link_libraries(main ${LIBPATHS})
+target_link_libraries(main -ls3shared -laws-cpp-sdk-core -laws-cpp-sdk-s3 s3_shared_demo_c)
+
+#指定生成目标
+add_executable(test test.c)
+
+#链接共享库
+target_link_libraries(test ${LIBPATHS})
+target_link_libraries(test -ls3shared -laws-cpp-sdk-core -laws-cpp-sdk-s3 s3_shared_demo_c)
+</code></pre>
+<h4 id="outside-cmakeliststxt-2">Outside CMakeLists.txt</h4>
+<pre><code>#CMake最低版本号要求
+cmake_minimum_required(VERSION 2.8)
+
+#指定项目名称
+project(s3wrapperC)
+
+#指定版本信息
+set(CMAKE_SYSTEM_VERSION 1)
+
+#若是需要指定编译器路径
+#set(CROSS_TOOLCHAIN_PREFIX &quot;/path/arm-linux-&quot;)
+#指定编译器
+#set(CMAKE_C_COMPILER   &quot;${CROSS_TOOLCHAIN_PREFIX}gcc&quot;)
+#set(CMAKE_CXX_COMPILER &quot;${CROSS_TOOLCHAIN_PREFIX}g++&quot;)
+
+#使用默认路径的g++指定编译器  
+#set(CMAKE_CXX_COMPILER &quot;g++&quot;) 
+
+#指定编译选项
+set(CMAKE_BUILD_TYPE Debug )
+
+#指定编译目录
+set(PROJECT_BINARY_DIR ${PROJECT_SOURCE_DIR}/build)
+
+#添加子目录,这样进入源码文件src目录可以继续构建  
+add_subdirectory(${PROJECT_SOURCE_DIR}/src)
+</code></pre>
+<h4 id="使用-c-语言测试-mainc">使用 C 语言测试 main.c</h4>
+<h5 id="mainc">main.c</h5>
+<pre><code>#include &quot;S3TestWrapper.h&quot;
+#include&lt;stdio.h&gt;
+
+int main(int argc, char* argv[]) {
+    printf(&quot;start!\n&quot;);
+    char *BucketName = &quot;test&quot;;
+    char *objectKey = &quot;key&quot;;
+    char *path = &quot;./../test-data/key-test.png&quot;;
+    int result = downloadfile(BucketName, objectKey, path);
+    printf(&quot;Download Result: %d!\n&quot;, result);
+    printf(&quot;end!\n&quot;);
+    return 0;
+}
+</code></pre>
+<h5 id="cmakeliststxt">CMakeLists.txt</h5>
+<pre><code>cmake_minimum_required (VERSION 2.8)
+# 项目信息
+project (Demo)
+
+add_compile_options( -std=c++11 )
+include_directories(/c++/C-Example/linux/install/usr/local/include)
+link_directories(/c++/C-Example/linux/install/usr/local/lib64)
+include_directories(/c++/C-Example/linux/s3util/include)
+link_directories(/c++/C-Example/linux/s3util/lib)
+include_directories(/c++/C-Example/linux/s3-c/test/include)
+link_directories(/c++/C-Example/linux/s3-c/test/lib)
+
+# 指定生成目标
+add_executable(Demo main.c)
+target_link_libraries(Demo -laws-cpp-sdk-core -laws-cpp-sdk-s3 -ls3shared -ls3sharedC)
+</code></pre>
+<h2 id="集成-tcmu">集成 TCMU</h2>
+<h3 id="参考资料">参考资料</h3>
+<ul>
+<li><a href="https://www.jianshu.com/p/52dbc679094a">[1] 简书：Docker安装Minio存储服务器详解</a></li>
+<li><a href="https://www.jianshu.com/p/74f13cd08cc7">[2] (minIO) aws sdk for C++</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/cpp-basic.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/cpp-basic/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-04-06">2020-04-06</time>
+                  <h4 class="title white no-margin">C++基础快速入门</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/flashblox-achieving-both-performance-isolation-and-uniform-lifetime-for-virtualized-ssds.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/flashblox-achieving-both-performance-isolation-and-uniform-lifetime-for-virtualized-ssds/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-03-20">2020-03-20</time>
+                  <h4 class="title white no-margin">FlashBlox: Achieving Both Performance Isolation and Uniform Lifetime for Virtualized SSDs</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

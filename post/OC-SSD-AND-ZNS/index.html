@@ -1,0 +1,837 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OC SSD &amp; ZNS | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+项目新技术预研。OpenChannel SSD 和 ZNS SSD
+主要是资料整理，并考虑应用此类硬件技术到 Ceph.
+
+
+
+OC SSD &amp; ZNS
+Prepare
+
+NVM Express™ Specification: ..." />
+    <meta name="keywords" content="存储" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200908093333.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-09-09"><i class="fa fa-calendar"></i><span class="lately">4 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/OC-SSD-AND-ZNS/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/OC-SSD-AND-ZNS/"> </span>
+              </a>
+              <span id="/OC-SSD-AND-ZNS/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">OC SSD &amp; ZNS</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>项目新技术预研。OpenChannel SSD 和 ZNS SSD</li>
+<li>主要是资料整理，并考虑应用此类硬件技术到 Ceph.</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h1 id="oc-ssd-zns">OC SSD &amp; ZNS</h1>
+<h3 id="prepare">Prepare</h3>
+<ul>
+<li>NVM Express™ Specification: NVM Express™(NVMe™) 基础规范最初是为 SSD 设计的，用于帮助定义主机软件如何通过PCI Express®(PCIe®)总线与非易失性内存通信。它已经迅速发展成为各种形式的PCIe固态硬盘(SSD)的工业标准(U.2、M.2、AIC、EDSFF)。NVMe 基本规范提供了一个有效的接口，提供了更低的延迟，比串行ATA (SATA)等传统接口更适合 SSD。https://nvmexpress.org/developers/nvme-specification/</li>
+<li>此规范目的在于充分利用PCI-E通道的低延时以及并行性，还有当代处理器、平台与应用的并行性，在可控制的存储成本下，极大的提升固态硬盘的读写性能，降低由于AHCI接口带来的高延时，彻底解放SATA时代固态硬盘的极致性能。NVMe是为SSD而生。在此之前SSD都用SATA接口。SATA接口采用AHCI规范，其已经成为制约SSD速度的瓶颈。AHCI只有1个命令队列，队列深度32；而NVMe可以有65535个队列，每个队列都可以深达65536个命令。NVMe也充分使用了MSI的2048个中断向量优势，延迟大大减小。</li>
+<li>Zoned Block Commands (ZBC)：定义了SMR盘相关的术语和行为，成为SAS接口SMR盘所必须遵守的规范。</li>
+<li>Zoned-device ATA Commands (ZAC)：与ZBC类似，是SATA接口SMR盘所必须遵守的标准。</li>
+</ul>
+<h4 id="参考文献">参考文献</h4>
+<ul>
+<li><a href="https://www.cnblogs.com/luxiaodai/p/9686825.html">[1] 博客园：NVMe概述</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/26652622">[2] 杂说闪存一：关公战秦琼之 UFS VS NVMe</a></li>
+</ul>
+<h2 id="open-channel-ssd">Open-Channel SSD</h2>
+<ul>
+<li>
+<p><strong>为什么使用 OC SSD？</strong>: 以 Ceph 为例。</p>
+<ul>
+<li>传统的 FileStore 是基于本地文件系统设计的，在索引结构、空间管理、垃圾回收以及日志等方面，FileStore 的不同层级之间其实是有功能的冗余的，这种冗余带来的影响就是较高的软件开销。</li>
+<li>BlueStore 则 bypass 了文件系统，直接在用户空间分配和回收 SSD 的数据块，使用 RocksDB 来进行元数据的管理从而保证一致性，RocksDB 在定制的 BlueFS 上运行，相比于 FileStore，简化的 IO 路径带来了显著的性能提升。但在 BlueStore 和 FTL 中还是有功能冗余，导致两部分彼此隔离，而在实际进行决策的时候可能产生冲突。SSD 的性能和持久性还是未得到充分的利用。</li>
+</ul>
+</li>
+<li>
+<p>Object Store Architecture in Ceph<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200908160913.png" alt="20200908160913" loading="lazy"></p>
+</li>
+<li>
+<p>普通 NVMe SSD<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200908093255.png" alt="20200908093255" loading="lazy"></p>
+</li>
+<li>
+<p>Open-Channel SSD<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200908093333.png" alt="20200908093333" loading="lazy"></p>
+</li>
+<li>
+<p>Open-Channel将本来位于NVMe SSD上Firmware中的对Flash管理和控制的部分功能，交给了Host上的应用软件。让应用根据自身的业务特点，对盘上的Flash进行有效的管理。很多情况下，Host上应用的管理，可以避免在垃圾回收等各类对前端应用IO请求的影响。</p>
+</li>
+<li>
+<p>Open-Channel 向 Host 展示出内部 NAND 布局的细节，Host 可以决定数据实际存放的物理位置。这样，Host 就可以根据 IO 请求的发起方，将 IO 数据写到不同的位置，实现不同应用、用户数据的物理隔离，达到更好的 QOS 效果，如图所示。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200908154037.png" alt="20200908154037" loading="lazy"></p>
+</li>
+<li>
+<p>但就从实际应用的部署情况来看，Open-Channel的使用者需要实现一个复杂的FTL(Flash Translation Layer), 替代SSD中本已健壮成熟的Firmware层实现的功能，来管理NAND flash和数据存放。而且Open-Channel Specification 仅仅定义了Open-Channel涉及的最为通用的部分。不同厂商的SSD产品特性不同，它们或者难以统一，或者涉及敏感内容，不便公开，实际Open-Channel产品往往在兼容Open-Channel Spec的基础上，各有一部分私有定义。不同业务方的需求独特，往往需要在自己的FTL内加入定制化的内容。因此，至今尚未有通用的Open-Channel SSD和针对独特业务的通用FTL。这些制约严重影响了Open-Channel的发展速度。</p>
+</li>
+</ul>
+<h3 id="ecosystem">Ecosystem</h3>
+<h4 id="lightnvm-pblk">LightNVM &amp; PBLK</h4>
+<ul>
+<li>为了方便的管理和操作 Open-Channel SSD，LightNVM 应运而生。LightNVM 是在 Linux Kernel 中一个针对 Open-Channel SSD 的 Subsystem。LightNVM 提供了一套新的接口，用于管理 Open-Channel SSD，以及执行 IO 操作。为了和 Kernel 中现有的 IO 子系统协同工作，还存在 pblk（Physical Block Device）层。他在 LightNVM 的基础上实现了 FTL 的功能，同时对上层暴露传统的 Block 层接口，使得现有的文件系统可以通过 pblk 直接运行在 Open-Channel SSD 上。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200909132644.png" alt="20200909132644" loading="lazy"></li>
+<li>目前 LightNVM 已经被合并入 Kernel 的主线。而对于用户态的程序来说，可以通过 liblightnvm 操作 Open-Channel SSD。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200909212537.png" alt="20200909212537" loading="lazy"></li>
+</ul>
+<h5 id="ppa-addressing">PPA Addressing</h5>
+<ul>
+<li>Physical Page Addressing (PPA) Interface 物理页寻址。
+<ul>
+<li>通过这个接口暴露SSD的几何结构
+<ul>
+<li>逻辑/物理几何结构（取决于供应商）</li>
+<li>性能</li>
+<li>特定介质的元数据（需要的情况下）</li>
+<li>控制器功能</li>
+</ul>
+</li>
+<li>展示分层的地址空间
+<ul>
+<li>编码并行的几何结构单元（PUs）到地址空间<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200909210218.png" alt="20200909210218" loading="lazy"></li>
+</ul>
+</li>
+<li>向量 I/Os
+<ul>
+<li>读/写/擦除（有效访问给定的新的地址空间）</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="nvme-device-drivers">NVMe Device drivers</h4>
+<ul>
+<li>检测open-channel SSD 并实现 PPA 接口</li>
+<li>启用 LightNVM 的 NVMe 设备驱动程序使内核模块可以通过 PPA I/O 接口访问 open-channel SSD。设备驱动程序将设备作为传统的 Linux 设备公开给用户空间，从而允许应用程序通过 ioctl（专用于设备输入输出操作的系统调用） 与设备进行交互。</li>
+</ul>
+<h4 id="pblk">PBLK</h4>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200909164249.png" alt="20200909164249" loading="lazy"></figure>
+<ul>
+<li>处理控制器和特定介质之间的约束 （例如，缓存必要的数据量来对Flash页进行编程）</li>
+<li>将逻辑地址映射到物理地址（4KB粒度），并确保完整性，最终在面对关联映射表（L2P）崩溃时进行恢复</li>
+<li>处理错误和垃圾回收</li>
+<li>处理flush操作：因为典型的闪存页面大于4KB，flush会强制pblk的运行中数据在完成之前存储在设备上</li>
+</ul>
+<h5 id="write-buffering">Write Buffering</h5>
+<ul>
+<li>数据缓冲区，用于存储4KB用户数据入口（4KB对应于一个扇区的大小）</li>
+<li>上下文缓冲区，用于存储 Per entry 元数据。</li>
+<li>缓冲区的大小是闪存页大小（FPSZ），要写入的闪存页数（下/上页）和PU数（N）的乘积。如果FPSZ = 64KB，PP = 8，N = 128，则写缓冲区为64MB。多生产者-单消费者模型</li>
+</ul>
+<h3 id="solution">Solution</h3>
+<h4 id="qblk">QBLK</h4>
+<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200909132822.png" alt="20200909132822" loading="lazy"></figure>
+<ul>
+<li>多队列缓冲</li>
+<li>每个通道的地址管理</li>
+<li>无锁地址映射</li>
+<li>细粒度的刷回</li>
+</ul>
+<h4 id="ocstore">OCStore</h4>
+<ul>
+<li>基于 OC SSD（华为定制的 OC SSD，32 flash channels，每个 block 包含 512 个 pages，每个页大小为 4KB） 和 PFTL 构建的对象存储，直接在原始闪存上管理对象，减少了对象存储、文件系统和FTL层的冗余功能。提供了流事务更新，这不仅确保了利用非覆盖flash写入特性的多页原子性，而且还为独立的I/O流提供隔离，同时支持对不同通道的并行访问。OCStore 还协调不同的通道来支持事务感知调度，从而减少事务级别的延迟，并为分布式存储提供较低的响应时间。显著降低了延迟和写流量。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200908164256.png" alt="20200908164256" loading="lazy"></li>
+</ul>
+<h2 id="zoned-namespace">Zoned Namespace</h2>
+<ul>
+<li>OC SSDs 由于缺乏官方标准，一些供应商引入了不同的实现 OpenChannel SSD 接口的方法，导致实现支离破碎。为了防止这种情况发生，主要的供应商联合起来引入了一个新的 NVMe 标准，称为 Zoned Namespace (ZNS)，该标准定义了在不使用 FTL 情况下管理 SSD 的接口。</li>
+</ul>
+<h3 id="concepts">Concepts</h3>
+<ul>
+<li>Zoned Namespace（ZNS）是NVMe工作组为增加对定制化需求提供灵活性，而计划加入NVMe协议的新特性。</li>
+<li>Zoned Namespace中的zone名称，源自于为SMR硬盘(Shingled Magnetic Recording, 叠瓦式磁记录)所做的设计。相关标准化组织曾制定了ZBC(Zoned Block Commands，分区块命令集)与ZAC(Zoned-device ATA Commands， 区设备ATA指令集)，来对SCSI和ATA协议进行拓展。所以zone所涉及的状态转换与软件栈，都与之前的SMR硬盘相符。</li>
+<li>相对于正常的 NVMe Namespace, Zoned Namespace将一个Namespace的逻辑地址空间切分成一个个的zone。如图所示，zone是Namespace内的一种固定大小的子区间。每个zone都有一段LBA(Logical Block Address, 逻辑地址空间)区间，这段区间只能顺序写，而且如果要覆盖写，则必须显示的进行一次擦除操作。这样，namespace就可以把NAND内部结构的边界透露给外界。NVMe SSD也就能够将地址映射表等内部管理工作交由host去处理，从而减少写放大、选择合适的GC(Garbage Collection, 垃圾回收)时机。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200908171600.png" alt="20200908171600" loading="lazy"></li>
+</ul>
+<h3 id="states-and-operations">States And Operations</h3>
+<ul>
+<li>
+<p>Zone的基本操作有Read, Append Write，Zone Management 以及Get Log Page。Zone大小可以采用Open-Channel中Chunk的大小为单位，即与NAND介质的物理边界为单位。Zone Log Page也会与Open-Channel Spec 2.0中的Chunk Info Log相似。</p>
+</li>
+<li>
+<p>与Open-Channel相比，最大的区别就是在Zoned Namespace中，Zone的地址是LBA（Logical Block Address, 逻辑块地址），Zone X的起始地址与Zone X-1的结束地址相连，Zone X的结束地址与Zone X+1的起始地址相连。Zone的容量总是小于等于Zone的逻辑大小。这样一来，<strong>Zone Namespace就可以避免Open-Channel里繁琐的各类地址转换</strong>。</p>
+</li>
+<li>
+<p>Zone 状态：</p>
+<ul>
+<li>Emptyzone 内无有效数据</li>
+<li>Explicitly Openedzone 被 Management 命令显式的打开</li>
+<li>Implicitly Openedzone 处在打开状态，但并非是由 Management 命令打开的</li>
+<li>Closedzone 被 Management 命令显式的关闭</li>
+<li>Fullzone 处于写满状态</li>
+<li>Offlinezone 无法被读写</li>
+</ul>
+</li>
+</ul>
+<figure data-type="image" tabindex="3"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200908171946.png" alt="20200908171946" loading="lazy"></figure>
+<ul>
+<li>一个zone只有在Open状态下才可以写入数据；擦除可以使写满的zone回退到Empty状态；在zone的内部Nand介质达到磨损极限后处于Offline状态。它的正常工作状态变化过程为：Empty → Open → Full → Empty</li>
+<li>ZM（Zone Management，zone管理）command 有 <code>ZM Open</code>, <code>ZM Close</code>, <code>ZM Reset</code>, <code>ZM Finish</code> 等，可以控制zone的状态变化。例如，在正常工作过程中，zone的状态变化需要ZM命令的参与：Empty → &lt;<code>ZM Open</code>&gt; → Explicitly Opened → &lt;<code>Append Write Operations</code>&gt;/&lt;<code>ZM finish</code>&gt; → Full → &lt;<code>ZM Reset</code>&gt; → Empty</li>
+</ul>
+<h3 id="zns-ssd">ZNS SSD</h3>
+<figure data-type="image" tabindex="4"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200909215928.png" alt="20200909215928" loading="lazy"></figure>
+<h4 id="限制">限制</h4>
+<ul>
+<li>顺序写约束: 写操作需要按照顺序进行，就像SMR驱动器一样。</li>
+<li>主机需要直接控制 Zones，如 Zones 打开、关闭、重置和 Zones 垃圾收集。
+<ul>
+<li>空间利用率较高的时候垃圾收集开销很大，随着利用率增加，垃圾收集的开销增加尤为显著</li>
+<li>分组访问比单独访问快得多，因为每个 Zone 可能被映射到多个通道，可以利用内部并行性适当地增大 IO 大小来提升性能。</li>
+</ul>
+</li>
+</ul>
+<h3 id="ecosystem-2">Ecosystem</h3>
+<ul>
+<li>业界也早已为SMR硬盘的推广，添加了很多软件生态。如图所示， 例如在Linux体系中， 有用户态函数库libzbc；文件系统中加入针对SMR的优化；SCSI/ATA驱动增加对SMR相关指令集的支持。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200908172545.png" alt="20200908172545" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200909215303.png" alt="20200909215303" loading="lazy"></li>
+<li>Linux内核中块设备有对zone支持的zoned block device模型，通用设备映射器（Device Mapper）中加入的dm-zoned device mapper, 可以将一个zoned block device映射为不受追加写限制的通用块设备。开启此类映射需要用到两个工具命令，一个是Device Mapper的工具dmsetup，另一个是zoned block device 专用工具dmzadm (dm-zoned admin).</li>
+</ul>
+<pre><code class="language-Python"># dmzadm 格式化 zoned block device /dev/sdb
+dmzadm –format /dev/sdb 
+# 创建通用块设备 -&gt; /dev/mapper/dmz-sdb
+dmsetup create dmz-sdb
+</code></pre>
+<ul>
+<li>文件系统诸如F2FS、BTRFS中已经有了对zoned block device的直接支持，所以它们可以直接操作zoned block device，绕过DM-zoned。如果一个NVMe SSD的一个Namespace是Zoned Namespace时，F2FS和BTRFS可以直接配置使用它，而无需额外的开发工作。</li>
+</ul>
+<h4 id="spdk">SPDK</h4>
+<ul>
+<li>zonedev layer，它为FTL提供所有所需的操作集，从而屏蔽底层Open-Channel, Zoned Namespace, 以及其他各类第三方的非标准Spec的差异</li>
+<li>OC/Zonedev adapter: 考虑到Zoned Namespace将会被NVMe Spec接纳，zonedev layer 会以Zoned Namespace的定义为标准。Open-Channel设备则需再加入一个OC/Zonedev adapter去将Open-Channel的操作封装适配到zonedev layer中。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200908173122.png" alt="20200908173122" loading="lazy"></li>
+</ul>
+<h3 id="参考链接">参考链接</h3>
+<ul>
+<li><a href="https://mp.weixin.qq.com/s/ngAPnX_NVE2ODjIhLgoUFw">[1] Zoned Namespace: NVMe Spec对标Open-Channel的解决方案（上篇）</a></li>
+<li><a href="https://mp.weixin.qq.com/s/GatsQ4Whe1cOyROvt66KgA">[2] Zoned Namespace_NVMe Spec对标Open-Channel的解决方案（下篇）</a></li>
+<li><a href="https://dblp.uni-trier.de/search?q=Open-Channel%20SSD">[3] DBLP: q=Open-Channel</a></li>
+<li><a href="https://www.usenix.org/conference/hotstorage20/presentation/choi">[4] A New LSM-style Garbage Collection Scheme for ZNS SSDs</a></li>
+<li><a href="https://openchannelssd.readthedocs.io/en/latest/">[5] Open-Channel SSD Read The Docs</a></li>
+<li><a href="https://ieeexplore.ieee.org/document/8884857">[6] ICDCS19 - Lu Youyou: OCStore: Accelerating Distributed Object Storage with Open-Channel SSDs</a></li>
+<li><a href="https://www.sohu.com/a/404927587_127584">[7] Souhu: 获NVMe Express认可，ZNS标准化又进了一步</a></li>
+<li><a href="https://www.usenix.org/system/files/conference/atc16/atc16-paper-zhang.pdf">[8] ATC16 - Jiacheng Zhang: ParaFS: A Log-Structured File System to Exploit the Internal Parallelism of Flash Devices</a></li>
+<li><a href="https://www.usenix.org/conference/fast17/technical-sessions/presentation/bjorling">[9] FAST17 - LightNVM: The Linux Open-Channel SSD Subsystem</a></li>
+<li><a href="https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&amp;arnumber=8715049">[10] DATE2019 - QBLK: Towards Fully Exploiting the Parallelism of Open-Channel SSDs</a></li>
+<li><a href="https://zonedstorage.io/">[11] ZONED STORAGE</a></li>
+<li><a href="https://developer.aliyun.com/article/658502">[12] 阿里云 - 【阿里云总监课】存储系统设计——NVMe SSD性能影响因素一探究竟</a></li>
+<li><a href="https://www.usenix.org/conference/hotstorage20/presentation/choi">[13] HotStoreage20 - A New LSM-style Garbage Collection Scheme for ZNS SSDs</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200910163421.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/Optane-Memory-UPS/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-09-10">2020-09-10</time>
+                  <h4 class="title white no-margin">Optane Persisten Memory And UPS Memory</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/basic-of-virtualization-four/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-08-23">2020-08-23</time>
+                  <h4 class="title white no-margin">Series Four of Basic of Virtualization - Memory Virtualization - Basic And Segmentation</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

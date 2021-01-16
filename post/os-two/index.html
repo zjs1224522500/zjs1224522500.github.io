@@ -1,0 +1,1047 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>进程的描述与控制 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+该系列博文主要是针对操作系统课程中的一些知识点进行梳理。
+更多地是介绍相关概念，后续会结合部分代码介绍
+操作系统系列之二
+
+
+
+第二章 进程的描述与控制
+
+2.1 程序执行
+2.1.1 程序顺序执行
+
+特征：
+
+顺序性：处理机的操作严格..." />
+    <meta name="keywords" content="OS" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('\media\images\custom-featureImage.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2017-05-01"><i class="fa fa-calendar"></i><span class="lately">4 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/os-two/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/os-two/"> </span>
+              </a>
+              <span id="/os-two/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-0 ctag-os" aria-label="">OS</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">进程的描述与控制</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>该系列博文主要是针对操作系统课程中的一些知识点进行梳理。</li>
+<li>更多地是介绍相关概念，后续会结合部分代码介绍</li>
+<li>操作系统系列之二</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h1 id="第二章-进程的描述与控制">第二章 进程的描述与控制</h1>
+<hr>
+<h3 id="21-程序执行">2.1 程序执行</h3>
+<h4 id="211-程序顺序执行">2.1.1 程序顺序执行</h4>
+<ul>
+<li>特征：
+<ul>
+<li>顺序性：处理机的操作严格按照程序所规定的顺序执行。</li>
+<li>封闭性：程序运行时独占全机资源，程序一旦开始执行，其执行结果不受外界因素影响。</li>
+<li>可再现性：只要程序执行时的环境和初始条件相同，都将获得相同的结果。<br>
+（不论它是从头到尾不停顿地执行，还是“停停走走”地执行）</li>
+</ul>
+</li>
+</ul>
+<h4 id="212-程序并发执行">2.1.2 程序并发执行</h4>
+<ul>
+<li>特征：
+<ul>
+<li>间断性：程序并发执行是，由于共享系统资源，这些程序形成相互制约的关系，具有“执行-暂停-执行”特征。</li>
+<li>失去封闭性：程序并发执行时，多个程序共享系统资源，因而这些资源的状态将由多个程序来改变，从而导致程序的运行失去封闭性。</li>
+<li>不可再现性：程序并发执行，由于失去了封闭性，从而也失去了可再现性。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<!-- more -->
+<h3 id="22-进程的描述">2.2 进程的描述</h3>
+<h4 id="221-进程的定义和特征">2.2.1 进程的定义和特征</h4>
+<h5 id="2211-典型的进程定义有">2.2.1.1 典型的进程定义有：</h5>
+<ul>
+<li>
+<blockquote>
+<p>进程是程序的一次执行。</p>
+</blockquote>
+</li>
+<li>
+<blockquote>
+<p>进程是一个程序及其数据在处理机上顺序执行时所发生的活动。</p>
+</blockquote>
+</li>
+<li>
+<blockquote>
+<p>进程是程序在一个数据集合上运行的过程，它是系统进行资源分配和调度的一个独立单位</p>
+</blockquote>
+</li>
+</ul>
+<h5 id="2212-进程的结构">2.2.1.2 进程的结构</h5>
+<ul>
+<li>为使程序（含数据）能独立运行，应为之配置一进程控制块，即<code>PCB（程序控制块）</code></li>
+<li>由程序段、相关的数据段和PCB三部分便构成了<strong>进程实体</strong>（又称<strong>进程映像</strong>）。</li>
+<li>所谓创建进程，实质上是创建进程实体中的PCB；而撤消进程，实质上是撤消进程的PCB。</li>
+</ul>
+<pre><code class="language-C">PCB本质为一个结构体（eg:Linux中的PCB）：
+struct task_struct{
+...
+unsigned short uid; // 用户标识
+int pid;            // 进程标识
+int processor;//标识用户正在使用的CPU,以支持对称多处理机方式
+...
+volatile long state; // 标识进程的状态
+long prority;        // 表示进程的优先级
+unsighed long rt_prority;//表示实时进程的优先级，对于普通进程无效
+long counter//进程动态优先级计数器，用于进程轮转调度算法
+unsigned long flags;
+unsigned long policy;//进程调度策略
+...
+struct task_struct *next_task, *prev_task;
+struct task_struct *next_run,*prev_run;
+struct task_struct *p_opptr,*p_pptr,*p_cptr,*pysptr,*p_ptr;
+...
+};
+</code></pre>
+<h5 id="2213-进程的特征-重要">2.2.1.3 进程的特征 (重要)</h5>
+<ul>
+<li>动态性：（状态在不断地发生改变）
+<ul>
+<li>进程的实质是进程实体的一次执行过程，因此，<strong>动态性</strong>是进程的最基本的特征。</li>
+<li>动态性表现：“它由创建而产生，由调度而执行，由撤消而消亡”。可见，进程实体有一定的生命期。</li>
+<li><strong>程序</strong>是一组有序指令的集合，其本身并不具有运动的含义，因而是静态的。</li>
+</ul>
+</li>
+<li>并发性：
+<ul>
+<li>多个进程实体同存于内存中，且能在一段时间内同时运行。</li>
+</ul>
+</li>
+<li>独立性：
+<ul>
+<li>进程实体是一个能独立运行、独立分配资源和独立接受调度的基本单位。</li>
+</ul>
+</li>
+<li>异步性：
+<ul>
+<li>进程按各自独立的、不可预知的速度向前推进，或说进程实体按异步方式运行。</li>
+</ul>
+</li>
+</ul>
+<h4 id="222-进程的基本状态及转换-重要">2.2.2 进程的基本状态及转换 （重要）</h4>
+<ul>
+<li>
+<p>进程的三种基本状态：</p>
+<ul>
+<li><code>就绪（Ready）</code>状态：当进程已分配到除CPU以外的所有必要资源后，只要再获得CPU，便可立即执行。</li>
+<li><code>执行（Running）</code>状态：进程已获得CPU，其程序正在执行。单处理机系统中，只有一个进程处于执行状态，多处理机系统中，则有多个进程处于执行状态。</li>
+<li><code>阻塞（Block）</code>状态：正在执行的进程由于发生某事件而暂时无法继续执行时，便放弃处理机而处于暂停状态，把这种暂停状态称为阻塞状态，有时也称为等待状态。根据阻塞原因，系统中设置多个阻塞队列。</li>
+</ul>
+</li>
+<li>
+<p>三种基本状态的转换<br>
+<img src="http://oxp7d1tae.bkt.clouddn.com/7.jpg" alt="image" loading="lazy"></p>
+<ul>
+<li>进程状态转换过程既有主动原因，也有被动原因</li>
+</ul>
+</li>
+<li>
+<p>创建状态和终止状态</p>
+<ul>
+<li><code>创建</code>状态：如果进程所需资源尚不能得到满足，如无足够的内存空间，创建工作将无法完成，进程不能被调度，此时的进程状态为创建状态。</li>
+<li><code>终止</code>状态：一个进程到达了自然结束点，或者出现了无法克服的错误，或是被操作系统所终结，或是被其他有终止权的进程所终结，它将进入终止状态。</li>
+</ul>
+</li>
+</ul>
+<h4 id="223-挂起操作和进程状态的转换">2.2.3 挂起操作和进程状态的转换</h4>
+<ul>
+<li>挂起状态 使执行的进程暂停执行，静止下来，我们把这种静止状态成为挂起状态
+<ul>
+<li>
+<p>引入挂起状态的原因：</p>
+<ul>
+<li>
+<ol>
+<li>终端用户的请求用户；（发现程序运行有问题，将其暂停）</li>
+</ol>
+</li>
+<li>
+<ol start="2">
+<li>父进程请求；(挂起子进程，协调子进程的活动)</li>
+</ol>
+</li>
+<li>
+<ol start="3">
+<li>负荷调节的需要。当实时系统中的工作负荷较重，把一些不重要的进程挂起，以保证系统能正常运行。</li>
+</ol>
+</li>
+<li>
+<ol start="4">
+<li>操作系统的需要。操作系统有时希望挂起某些进程，以便检查运行中的资源使用情况或进行记账。</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>
+<p>进程挂起状态的转换<br>
+<img src="http://oxp7d1tae.bkt.clouddn.com/8.jpg" alt="image" loading="lazy"></p>
+</li>
+<li>
+<p>有挂起状态的进程转换<br>
+<img src="http://oxp7d1tae.bkt.clouddn.com/9.jpg" alt="image" loading="lazy"><br>
+<img src="http://oxp7d1tae.bkt.clouddn.com/10.jpg" alt="image" loading="lazy"></p>
+</li>
+<li>
+<p>挂起状态的思考</p>
+<ul>
+<li>就绪/挂起（静止就绪）可以从活动就绪因为挂起操作转变为静止就绪状态，也可以从执行状态因为某些原因挂起转变为静止就绪状态</li>
+<li>就绪/挂起状态无法直接进入执行状态</li>
+<li>挂起状态无法直接进入执行状态</li>
+<li>挂起进程无法自我激活，但是进程可以自我挂起（只要已知进程ID等有效信息）</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="224-进程管理中的数据结构">2.2.4 进程管理中的数据结构</h4>
+<h5 id="2241-进程控制块的作用">2.2.4.1 进程控制块的作用</h5>
+<ul>
+<li>独立运行基本单位的标志。</li>
+<li>能实现间断性运行方式。（保护CPU现场）</li>
+<li>提供进程管理所需要的信息。（OS通过PCB对进程- 实施控制和管理。）</li>
+<li>提供进程调度所需要的信息。（提供进程状态、优先级等信息）</li>
+<li>实现与其它进程的同步与通信。（消息队列指针，信号量等）</li>
+</ul>
+<h5 id="2242-进程控制块的内容">2.2.4.2 进程控制块的内容</h5>
+<ul>
+<li>进程标识符信息</li>
+<li>处理器状态信息</li>
+<li>进程调度信息</li>
+<li>进程控制信息</li>
+</ul>
+<ol>
+<li>
+<p>进程标识符信息:进程标识符用于惟一地标识一个进程。一个进程通常有两种标识符：</p>
+<ol>
+<li>内部标识符。为每一个进程赋予一个惟一的数字标识符，通常是进程的序号(Pid)。设置内部标识符主要是为了方便操作系统使用。</li>
+<li>外部标识符。它由创建者提供(进程的名字)，通常是由字母、数字组成，往往是由用户（进程）在访问该进程时使用。</li>
+</ol>
+</li>
+<li>
+<p>处理器状态信息:主要是由处理机的各种寄存器中的内容组成的。</p>
+<ol>
+<li>通用寄存器，又称为用户可视寄存器。</li>
+<li>指令计数器（PC），其中存放了要访问的下一条指令的地址。</li>
+<li>程序状态字PSW，其中含有状态信息，如条件码、执行方式、中断屏蔽标志等</li>
+<li>用户栈指针(SP)，用于存放系统调用参数及调用地址。栈指针指向该栈的栈顶。</li>
+</ol>
+</li>
+</ol>
+<ul>
+<li>这些都是中断和进程切换时需要保护的内容！</li>
+</ul>
+<ol start="3">
+<li>
+<p>进程调度信息:在PCB中还存放一些与进程调度和进程切换有关的信息。</p>
+<ol>
+<li>进程状态。指明进程的当前状态。</li>
+<li>进程优先级。</li>
+<li>进程调度所需的其它信息。如：进程已等待CPU的时间总和、进程已执行的时间总和等；</li>
+<li>事件。是指进程由执行状态转变为阻塞状态所等待发生的事件，即阻塞原因。</li>
+</ol>
+</li>
+<li>
+<p>进程控制信息</p>
+<ol>
+<li>程序和数据的地址，是指进程的程序和数据所在的内存或外存地址。</li>
+<li>进程同步和通信机制，指实现进程同步和通信时必需的机制，如消息队列指针、信号量等，他们可能全部或部分的放在PCB中。</li>
+<li>资源清单。进程所需的全部资源及已经分配到该进程的资源的清单；</li>
+<li>链接指针。本进程所在队列的下一个进程的PCB的首地址。</li>
+</ol>
+</li>
+</ol>
+<h5 id="2243-进程控制块的组织方式">2.2.4.3 进程控制块的组织方式</h5>
+<ul>
+<li>链接方式：把具有同一状态的PCB，用其中的链接字链接成一个队列。<br>
+<img src="http://oxp7d1tae.bkt.clouddn.com/11.jpg" alt="image" loading="lazy"></li>
+<li>索引方式：相同状态进程的PCB组织在一张表格中，系统根据所有进程的状态建立几张索引表，系统分别记载各PCB表格的起始地址。<br>
+<img src="http://oxp7d1tae.bkt.clouddn.com/12.jpg" alt="image" loading="lazy"></li>
+<li>多级队列：按照进程状态不同分别组织PCB队列，同一状态进程PCB按照优先级高低（或者到达的先后顺序）用链接指针连接起来。<br>
+<img src="http://oxp7d1tae.bkt.clouddn.com/13.jpg" alt="image" loading="lazy"></li>
+</ul>
+<h3 id="23-进程控制">2.3 进程控制</h3>
+<ul>
+<li>进程控制：
+<ul>
+<li>创建一个新进程，终止进程</li>
+<li>进程运行中的状态转换。</li>
+</ul>
+</li>
+<li>进程控制一般是由OS内核中的一组原语来实现的。</li>
+</ul>
+<h4 id="231-原语">2.3.1 原语</h4>
+<ul>
+<li>什么是原语？</li>
+</ul>
+<blockquote>
+<p>原语是由若干条指令组成的，用于完成一定功能的一个过程。是“原子操作”，即一个操作中的所有动作要么全做，要么全不做，换言之，是一个不可分割的基本单位，在执行过程中不允许被中断。</p>
+</blockquote>
+<h4 id="232-进程的创建">2.3.2 进程的创建</h4>
+<h5 id="2321-进程图process-graph">2.3.2.1 进程图（Process  Graph）</h5>
+<ul>
+<li>进程图是用于描述一个进程的家族关系的有向树。</li>
+<li>子进程可以继承父进程所拥有的资源。</li>
+<li>当子进程被撤消时，应将其从父进程那里获得的资源归还给父进程。</li>
+<li>在撤消父进程时，也必须同时撤消其所有的子进程。<br>
+<img src="http://oxp7d1tae.bkt.clouddn.com/14.jpg" alt="image" loading="lazy"></li>
+</ul>
+<h5 id="2322-引起创建进程的事件">2.3.2.2 引起创建进程的事件</h5>
+<ul>
+<li>
+<p>导致一个进程去创建另一个进程的典型事件，可有以下四类：</p>
+<ul>
+<li>（1）用户登录。分时系统中，用户通过终端登录成功后，系统将为用户建立一个进程。</li>
+<li>（2）作业调度。将作业调入内存后，创建进程。</li>
+<li>（3）提供服务。例如：I/O请求，打印进程等。</li>
+<li>（4）应用请求。基于应用进程的需求，由它自己创建一个新进程，以便使新进程以并发运行方式完成特定任务。</li>
+</ul>
+</li>
+<li>
+<p>调用进程创建原语步骤：</p>
+<ul>
+<li>（1）申请空白PCB。</li>
+<li>（2）为新进程分配资源。</li>
+<li>（3）初始化进程控制块。
+<ul>
+<li>① 初始化标识信息。</li>
+<li>② 初始化处理机状态信息。使程序计数器指向程序的入口地址，使栈指针指向栈顶；</li>
+<li>③ 初始化处理机控制信息：进程的状态、优先级。</li>
+</ul>
+</li>
+<li>（4）将新进程插入就绪队列，启动调度。</li>
+</ul>
+</li>
+</ul>
+<h4 id="233-进程的终止">2.3.3 进程的终止</h4>
+<ul>
+<li>
+<p>（1）正常结束。</p>
+</li>
+<li>
+<p>（2）异常结束：</p>
+<ul>
+<li>① 越界错误。</li>
+<li>② 保护错。</li>
+<li>③ 非法指令。</li>
+<li>④ 特权指令错。</li>
+<li>⑤ 运行超时。</li>
+<li>⑥ 等待超时。</li>
+<li>⑦ 算术运算错、被0除：</li>
+<li>⑧ I/O故障。</li>
+</ul>
+</li>
+<li>
+<p>（3）外界干预</p>
+<blockquote>
+<p>外界干预并非指在本进程运行中出现了异常事件，而是指进程因外界的请求而终止运行。</p>
+</blockquote>
+<ul>
+<li>① 操作员或操作系统干预。由于某种原因，例如，发生了死锁，由操作员或操作系统终止该进程；</li>
+<li>② 父进程请求终止该进程；</li>
+<li>③ 当父进程终止时，OS也将他的所有子孙进程终止。</li>
+</ul>
+</li>
+<li>
+<p>（4） 进程的终止过程</p>
+<ul>
+<li>根据被终止进程的PID找到它的PCB，从中读出该进程的状态。</li>
+<li>若被终止进程正处于执行状态，应立即终止该进程的执行，重新进行调度。</li>
+<li>若该进程还有子孙进程，立即将其所有子孙进程终止。</li>
+<li>将被终止进程所拥有的全部资源，归还给其父进程，或者归还给系统。</li>
+<li>将被终止进程的PCB从所在队列中移出。</li>
+</ul>
+</li>
+</ul>
+<h4 id="234-进程的阻塞与唤醒">2.3.4 进程的阻塞与唤醒</h4>
+<ul>
+<li>
+<p>引起进程阻塞和唤醒的事件</p>
+<ul>
+<li>1）向系统请求共享资源失败。</li>
+<li>2）等待某种操作的完成：如I/O操作时进程进入阻塞状态，I/O完成后，被中断处理程序唤醒。</li>
+<li>3）新数据尚未到达。处理数据的进程A阻塞，输入数据的进程B完成后去唤醒A。</li>
+<li>4）无新工作可做, 如此时使用<code>sleep（）</code>进入休眠</li>
+</ul>
+</li>
+<li>
+<p>进程阻塞过程</p>
+<ul>
+<li>① 正在执行的进程，当发现上述某事件时，由于无法继续执行，于是进程便通过调用阻塞原语block把自己阻塞；</li>
+<li>② 把进程控制块中的现行状态由“执行”改为阻塞，并将PCB插入阻塞队列；</li>
+<li>③ 转调度程序进行重新调度，将处理机分配给另一就绪进程，并进行切换。</li>
+</ul>
+</li>
+<li>
+<p>进程唤醒过程</p>
+<ul>
+<li>① 当被阻塞进程所期待的事件出现时，则由有关进程（比如，用完并释放了该I/O设备的进程）调用唤醒原语<code>wakeup()</code>，将等待该事件的进程唤醒。</li>
+<li>② 唤醒原语执行的过程是：首先把被阻塞的进程从等待该事件的阻塞队列中移出，将其PCB中的现行状态由阻塞改为就绪，然后再将该PCB插入到就绪队列中。</li>
+</ul>
+</li>
+</ul>
+<h4 id="235-进程的挂起和激活">2.3.5 进程的挂起和激活</h4>
+<ul>
+<li>
+<p>进程的挂起：当出现了引起进程挂起的事件时（比如，用户进程请求将自己挂起，或父进程请求将自己的某个子进程挂起），系统将利用挂起原语<code>suspend()</code>将指定进程挂起或处于阻塞状态的进程挂起。</p>
+</li>
+<li>
+<p>进程挂起的过程：</p>
+<ul>
+<li>挂起原语的执行过程是：
+<ul>
+<li>1、首先检查被挂起进程的状态，若处于活动就绪状态，便将其改为静止就绪；对于活动阻塞状态的进程，则将之改为静止阻塞；</li>
+<li>2、然后将被挂起进程的PCB复制到指定的内存区域。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>进程的激活过程</p>
+<ul>
+<li>① 当发生激活进程的事件时，例如，父进程或用户进程请求激活指定进程，系统将利用激活原语<code>active()</code>将指定进程激活。</li>
+<li>② 系统利用激活原语<code>active()</code>将指定进程激活：<br>
+激活原语检查该进程的现行状态，若是静止就绪，便将之改为活动就绪；<br>
+若为静止阻塞，便将之改为活动阻塞。</li>
+</ul>
+</li>
+<li>
+<p>进程控制原语可能引起的调度</p>
+</li>
+</ul>
+<blockquote>
+<p>时机：假如采用的是抢占调度策略，则每当有新进程进入就绪队列时，都应检查是否要进行重新调度。<br>
+创建、终止（自己）、挂起（自己）、激活、阻塞、唤醒都可能会产生新的调度。</p>
+</blockquote>
+<h3 id="24-进程的同步">2.4 进程的同步</h3>
+<h4 id="241-进程的同步的基本概念">2.4.1 进程的同步的基本概念</h4>
+<blockquote>
+<p>进程同步机制的主要任务，是对多个相关进程在执行次序上进行协调，使并发执行的诸进程之间能按照一定的规则（或时序）共享系统资源，并能很好的相互合作，从而使程序的执行具有可再现性。</p>
+</blockquote>
+<ul>
+<li>间接相互制约关系  并发执行的进程在使用共享资源时的关系，资源的互斥。</li>
+<li>直接相互制约关系 多个进程为完成同一项任务而相互合作的关系。</li>
+</ul>
+<h4 id="242">2.4.2</h4>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/media/images/os.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/os-one/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2017-05-01">2017-05-01</time>
+                  <h4 class="title white no-margin">操作系统引论</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/java-one.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/java-one/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2017-04-30">2017-04-30</time>
+                  <h4 class="title white no-margin">Java基本常识</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

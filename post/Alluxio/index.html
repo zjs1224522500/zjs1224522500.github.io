@@ -1,0 +1,994 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Alluxio | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+Alluxio 简单介绍，测试报告，然后会结合一些实际体验。
+
+
+
+Alluxio
+
+Alluxio（之前名为 Tachyon），是一个开源的具有内存级速度的虚拟分布式存储系统， 使得应用程序可以以内存级速度与任何存储系统中的数据进行交..." />
+    <meta name="keywords" content="存储,缓存" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-12-10"><i class="fa fa-calendar"></i><span class="lately">1 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/Alluxio/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/Alluxio/"> </span>
+              </a>
+              <span id="/Alluxio/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-1 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Alluxio</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>Alluxio 简单介绍，测试报告，然后会结合一些实际体验。</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h1 id="alluxio">Alluxio</h1>
+<ul>
+<li>Alluxio（之前名为 Tachyon），是一个开源的具有内存级速度的虚拟分布式存储系统， 使得应用程序可以以内存级速度与任何存储系统中的数据进行交互。</li>
+<li>源码：https://github.com/Alluxio/alluxio</li>
+<li>论文：https://www2.eecs.berkeley.edu/Pubs/TechRpts/2018/EECS-2018-29.pdf</li>
+</ul>
+<h2 id="架构">架构</h2>
+<ul>
+<li>文档：https://docs.alluxio.io/os/user/stable/cn/Overview.html</li>
+<li>初衷：建立底层存储和大数据计算框架之间的存储系统，为大数据应用提供一个数量级的加速，同时它还提供了通用的数据访问接口。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png" alt="20201210191906" loading="lazy"></li>
+<li>主要分为两层：UFS 和 Alluxio
+<ul>
+<li>UFS：底层文件存储，该存储空间代表不受Alluxio管理的空间。
+<ul>
+<li>UFS存储可能来自外部文件系统，包括如HDFS或S3。 Alluxio可能连接到一个或多个UFS并在一个命名空间中统一呈现这类底层存储。</li>
+<li>通常，UFS存储旨在相当长一段时间持久存储大量数据。</li>
+</ul>
+</li>
+<li>Alluxio 存储：
+<ul>
+<li>Alluxio 做为一个分布式缓存来管理 Alluxio workers 本地存储，包括内存。这个在用户应用程序与各种底层存储之间的快速数据层带来的是显著提高的I/O性能。</li>
+<li>Alluxio存储主要用于存储热的、暂时的数据，而不关注长期的持久性。</li>
+<li>要管理的每个Alluxio工作节点的存储数量和类型由用户配置决定。</li>
+<li><strong>即使数据当前不在Alluxio存储中，通过Alluxio连接的UFS​​中的文件仍然 对Alluxio客户可见。当客户端尝试读取仅可从UFS获得的文件时数据将被复制到Alluxio存储中。</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>和其他常见的分布式文件系统对比：<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201211095549.png" alt="20201211095549" loading="lazy"></li>
+</ul>
+<h3 id="角色">角色</h3>
+<ul>
+<li>Alluxio的设计使用了单Master和多Worker的架构。从高层的概念理解，Alluxio可以被分为三个部分，Master，Worker和Client。
+<ul>
+<li>Master和Worker一起组成了Alluxio的服务端，它们是系统管理员维护和管理的组件。</li>
+<li>Client通常是应用程序，如Spark或MapReduce作业，或者Alluxio的命令行用户。</li>
+</ul>
+</li>
+<li>以前的版本需要借助 ZooKeeper 进行高可用选主，后续的 Alluxio 自己实现了高可用机制。（注：Tachyon 为 Alluxio 旧称）<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201211093448.png" alt="20201211093448" loading="lazy"></li>
+</ul>
+<h4 id="master">Master</h4>
+<ul>
+<li>
+<p>主从模式：主Master主要负责处理全局的系统元数据，从Master不断的读取并处理主Master写的日志。同时从Master会周期性的把所有的状态写入日志。从Master不处理任何请求。</p>
+<ul>
+<li>主从之间心跳检测</li>
+<li>主Master不会主动发起与其他组件的通信，它只是以回复请求的方式与其他组件进行通信。一个Alluxio集群只有一个主Master。</li>
+</ul>
+</li>
+<li>
+<p>简单模式：最多只会有一个从Master，而且这个从Master不会被转换为主Maste。</p>
+</li>
+<li>
+<p>高可用模式：可以有零个或者多个从Master。 当主Master异常的时候，系统会选一个从Master担任新的主Master。</p>
+</li>
+</ul>
+<h4 id="worker">Worker</h4>
+<ul>
+<li>类似于 OSD</li>
+<li>Alluxio的Worker负责管理分配给Alluxio的本地资源。这些资源可以是本地内存，SSD 或者硬盘，其可以由用户配置。</li>
+<li>Alluxio的Worker以块的形式存储数据，并通过读或创建数据块的方式处理来自Client读写数据的请求。但Worker只负责这些数据块上的数据；文件到块的实际映射只会存储在Master上。</li>
+</ul>
+<h2 id="features">Features</h2>
+<h3 id="全局命名空间">全局命名空间</h3>
+<ul>
+<li>Alluxio通过使用透明的命名机制和挂载API来实现有效的跨不同底层存储系统的数据管理。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210220101.png" alt="20201210220101" loading="lazy"></li>
+<li>https://www.alluxio.io/resources/whitepapers/unified-namespace-allowing-applications-to-access-data-anywhere/</li>
+</ul>
+<h3 id="智能多层级缓存">智能多层级缓存</h3>
+<ul>
+<li>Alluxio支持分层存储，以便管理内存之外的其它存储类型。目前Alluxio支持这些存储类型(存储层)：MEM (内存)，SSD (固态硬盘)，HDD (硬盘驱动器)</li>
+<li><strong>单层/多层 区别？</strong></li>
+</ul>
+<h4 id="单层存储">单层存储</h4>
+<ul>
+<li>启动时默认分配一个 ramdisk，Alluxio将在每个worker节点上默认发放一个ramdisk并占用一定比例的系统的总内存。 此ramdisk将用作分配给每个Alluxio worker的唯一存储介质。</li>
+<li>可以显示地设置每个 Worker 的 ramdisk 大小</li>
+</ul>
+<pre><code class="language-shell">alluxio.worker.ramdisk.size=16GB
+</code></pre>
+<ul>
+<li>可以指定多个存储介质共同组成一个 level，也可以自定义添加存储介质类型</li>
+</ul>
+<pre><code class="language-shell">alluxio.worker.tieredstore.level0.dirs.path=/mnt/ramdisk,/mnt/ssd1,/mnt/ssd2
+alluxio.worker.tieredstore.level0.dirs.mediumtype=MEM,SSD,SSD
+</code></pre>
+<ul>
+<li>所提供的路径应该指向安装适当存储介质的本地文件系统中的路径。要启用短路操作，这些路径的权限应该允许客户端用户对该路径进行读、写和执行。例如，启动Alluxio服务的同一用户组中的客户端用户需要770权限。</li>
+<li>在更新存储媒体之后，我们需要指出为每个存储目录分配了多少存储空间。例如，如果我们想在ramdisk上使用 16GB，在每个 SSD 上使用 100GB:</li>
+</ul>
+<pre><code class="language-shell">alluxio.worker.tieredstore.level0.dirs.quota=16GB,100GB,100GB
+</code></pre>
+<h4 id="多层存储">多层存储</h4>
+<ul>
+<li>通常建议使用具有异构存储介质的单一存储层。在某些环境中，工作负载将受益于基于I/O速度的存储介质显式排序。Alluxio假设层是根据I/O性能从上到下排序的。例如，用户经常指定以下层:
+<ul>
+<li>MEM</li>
+<li>SSD</li>
+<li>HDD</li>
+</ul>
+</li>
+<li><strong>写策略</strong>：用户写新的数据块时，默认情况下会将其写入顶层存储。如果顶层没有足够的可用空间， 则会尝试下一层促成。如果在所有层上均未找到存储空间，因Alluxio的设计是易失性存储，Alluxio会释放空间来存储新写入的数据块。会基于  block annotation policies 尝试从 worker 中驱逐数据，如果不能释放出新的空间，那么该写入将会失败。
+<ul>
+<li>eviction model 是同步的且是代表客户端来执行空间的释放的，主要是为要写入的客户端的数据腾出一块空闲空间，这种同步模式预计不会导致性能下降，因为在 block annotation policies 下有序的一组数据块通常都是可用的。</li>
+</ul>
+</li>
+<li><strong>读策略</strong>：如果数据已经存在于Alluxio中，则客户端将简单地从已存储的数据块读取数据。 如果将Alluxio配置为多层，则不一定是从顶层读取数据块， 因为数据可能已经透明地挪到更低的存储层。有两种数据读取策略：<code>ReadType.CACHE</code> and <code>ReadType.CACHE_PROMOTE</code>。
+<ul>
+<li>用 <code>ReadType.CACHE_PROMOTE</code> 读取数据将在从worker读取数据前尝试首先将数据块挪到 顶层存储。也可以将其用作为一种数据管理策略 显式地将热数据移动到更高层存储读取。</li>
+<li><code>ReadType.CACHE</code> Alluxio将块缓存到有可用空间的最高层。因此，如果该块当前位于磁盘(SSD/HDD)上，您将以磁盘速度读取该缓存块。</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-shell"># configure 2 tiers in Alluxio
+alluxio.worker.tieredstore.levels=2
+# the first (top) tier to be a memory tier
+alluxio.worker.tieredstore.level0.alias=MEM
+# defined `/mnt/ramdisk` to be the file path to the first tier
+alluxio.worker.tieredstore.level0.dirs.path=/mnt/ramdisk
+# defined MEM to be the medium type of the ramdisk directory
+alluxio.worker.tieredstore.level0.dirs.mediumtype=MEM
+# set the quota for the ramdisk to be `100GB`
+alluxio.worker.tieredstore.level0.dirs.quota=100GB
+# configure the second tier to be a hard disk tier
+alluxio.worker.tieredstore.level1.alias=HDD
+# configured 3 separate file paths for the second tier
+alluxio.worker.tieredstore.level1.dirs.path=/mnt/hdd1,/mnt/hdd2,/mnt/hdd3
+# defined HDD to be the medium type of the second tier
+alluxio.worker.tieredstore.level1.dirs.mediumtype=HDD,HDD,HDD
+# define the quota for each of the 3 file paths of the second tier
+alluxio.worker.tieredstore.level1.dirs.quota=2TB,5TB,500GB
+</code></pre>
+<h5 id="block-allocation-policies">Block Allocation Policies</h5>
+<ul>
+<li>Alluxio使用块分配策略来定义如何跨多个存储目录(在同一层或不同层中)分配新块。分配策略定义将新块分配到哪个存储目录中。这是通过 worker 属性 <code>alluxio.worker.allocate.class</code> 配置的。
+<ul>
+<li><code>MaxFreeAllocator</code>：从 0 层开始尝试到最低层，尝试将块分配到当前最具有可用性的存储目录。这是默认行为。</li>
+<li><code>RoundRobinAllocator</code>：从 0 层到最低层开始尝试。在每一层上，维护存储目录的循环顺序。尝试按照轮询顺序将新块分配到一个目录中，如果这不起作用，就转到下一层。</li>
+<li><code>GreedyAllocator</code>：这是 Allocator 接口的一个示例实现。它从顶层循环到最低层，尝试将新块放入可以包含该块的第一个目录中。</li>
+</ul>
+</li>
+</ul>
+<h5 id="experimental-block-allocation-review-policies">[Experimental] Block Allocation Review Policies</h5>
+<ul>
+<li>这是在Alluxio 2.4.1中增加的一个实验特性。在未来的版本中，接口可能会发生变化。</li>
+<li>Alluxio 使用块分配审查策略来补充分配策略。与定义分配应该是什么样子的分配策略相比，分配审查过程验证分配决策，并防止那些不够好的分配决策。评审者与分配器一起工作</li>
+<li>这是由worker属性 <code>alluxio.worker.review.class</code> 配置的。
+<ul>
+<li><code>ProbabilisticBufferReviewer</code>：基于每个存储目录对应的可用的空间，概率性低拒绝把新的数据块写入对应目录的请求。这个概率由 <code>alluxio.worker.reviewer.probabilistic.hardlimit.bytes</code> 和 <code>alluxio.worker.reviewer.probabilistic.softlimit.bytes</code> 来决定。
+<ul>
+<li>当可用空间低于 hardlimit，默认是 64MB，新的块将被拒绝</li>
+<li>当可用空间大于 softlimit，默认 256MB，新的数据块将不会被拒绝</li>
+<li>当可用空间介于上下限之间时，接受新的块的写入的概率将会随着可用容量的下降而线性低下降，我们选择在目录被填满之前尽早拒绝新的块，因为当我们读取块中的新数据时，目录中的现有块会扩大大小。在每个目录中留下缓冲区可以减少 eviction 的机会。</li>
+</ul>
+</li>
+<li><code>AcceptingReviewer</code>：此审阅者接受每个块分配。和 v2.4.1 之前的行为完全一样</li>
+</ul>
+</li>
+</ul>
+<h5 id="block-annotation-policies">Block Annotation Policies</h5>
+<ul>
+<li>Alluxio使用块注释策略(从v2.3开始)来保持存储中块的严格顺序。Annotation策略定义了跨层块的顺序，并在以下过程中被参考:
+<ul>
+<li>Eviction</li>
+<li>Dynamic Block Placement.</li>
+</ul>
+</li>
+<li>与写操作一起发生的 Eviction 操作将尝试根据块注释策略执行的顺序删除块。按注释顺序排列的最后一个块是驱逐的第一个候选者，无论它位于哪一层。</li>
+<li>可配置对应的 Anotator 类型，<code>alluxio.worker.block.annotator.class</code>。有如下 annotation 实现：
+<ul>
+<li><code>LRUAnnotator</code>：根据最近最少使用的顺序注释块。这是Alluxio的默认注释器。</li>
+<li><code>LRFUAnnotator</code>：使用可配置的权重，根据最近最不常用和最不常用的顺序注释块。
+<ul>
+<li>如果权重完全偏向最近最少使用的，行为将与LRUAnnotator相同。</li>
+<li>使用 <code>alluxio.worker.block.annotator.lrfu.step.factor</code> 和 <code>alluxio.worker.block.annotator.lrfu.attenuation.factor</code> 来配置。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="managing-data-replication-in-alluxio">Managing Data Replication in Alluxio</h4>
+<h5 id="passive-replication">Passive Replication</h5>
+<ul>
+<li>与许多分布式文件系统一样，Alluxio中的每个文件都包含一个或多个分布在集群中存储的存储块。默认情况下，Alluxio可以根据工作负载和存储容量自动调整不同块的复制级别。例如，当更多的客户以类型CACHE或CACHE_PROMOTE请求来读取此块时Alluxio可能会创建此特定块更多副本。当较少使用现有副本时，Alluxio可能会删除一些不常用现有副本 来为经常访问的数据征回空间(块注释策略)。 在同一文件中不同的块可能根据访问频率不同而具有不同数量副本。</li>
+<li>默认情况下，此复制或征回决定以及相应的数据传输 对访问存储在Alluxio中数据的用户和应用程序完全透明。</li>
+</ul>
+<h5 id="active-replication">Active Replication</h5>
+<ul>
+<li>除了动态复制调整之外，Alluxio还提供API和命令行 界面供用户明确设置文件的复制级别目标范围。 尤其是，用户可以在Alluxio中为文件配置以下两个属性:
+<ul>
+<li><code>alluxio.user.file.replication.min</code> 是此文件的最小副本数。 默认值为0，即在默认情况下，Alluxio可能会在文件变冷后从Alluxio管理空间完全删除该文件。 通过将此属性设置为正整数，Alluxio 将定期检查此文件中所有块的复制级别。当某些块 的复制数不足时，Alluxio不会删除这些块中的任何一个，而是主动创建更多 副本以恢复其复制级别。</li>
+<li><code>alluxio.user.file.replication.max</code> 是最大副本数。一旦文件该属性 设置为正整数，Alluxio将检查复制级别并删除多余的 副本。将此属性设置为-1为不设上限(默认情况)，设置为0以防止 在Alluxio中存储此文件的任何数据。注意，<code>alluxio.user.file.replication.max</code> 的值 必须不少于 <code>alluxio.user.file.replication.min</code>。</li>
+</ul>
+</li>
+</ul>
+<h2 id="evaluation">Evaluation</h2>
+<h3 id="testing-alluxio-for-memory-speed-computation-on-ceph-objects">Testing Alluxio for Memory Speed Computation on Ceph Objects</h3>
+<ul>
+<li>https://blog.zhaw.ch/icclab/testing-alluxio-for-memory-speed-computation-on-ceph-objects/#more-12747</li>
+<li>4th SEPTEMBER 2020</li>
+</ul>
+<h4 id="环境介绍">环境介绍</h4>
+<ul>
+<li>底层存储：Ceph mimic
+<ul>
+<li>6 OpenStack VMs
+<ul>
+<li>one Ceph monitor</li>
+<li>three storage devices running Object Storage Devices (OSDs)</li>
+<li>one Ceph RADOS Gateway (RGW) node</li>
+<li>one administration node</li>
+</ul>
+</li>
+<li>total storage size of 420GiB was spread over 7 OSD volumes attached to the three OSD nodes</li>
+</ul>
+</li>
+<li>Alluxio 2.3， Java8 (换成 Java11 即升级 Alluxio 后会有后续提升)</li>
+<li>Spark 3.0.0</li>
+<li>两种模式：
+<ul>
+<li>单 VM 运行 Alluxio 和 Spark （16vCPU，40GB of memory）</li>
+<li>集群模式：two additional Spark and Alluxio worker nodes are configured (with 16vCPUs and 40GB of memory).</li>
+</ul>
+</li>
+<li>对比测试：
+<ul>
+<li>直接访问 Ceph RGW 和 通过 Alluxio 访问
+<ul>
+<li>通过 Alluxio 访问时，第一次访问文件的话，Alluxio 会将文件上传到内存中，后续的文件访问将直接命中内存，从而带来显著的性能提升。</li>
+</ul>
+</li>
+<li>不同文件大小： 1GB, 5GB and 10GB，记录第一层和第二次访问文件需要的时间。
+<ul>
+<li>平均会运行超过 10 次</li>
+<li>然后再次启动相同的应用程序，以再次测量相同的文件访问时间。这样做的目的是展示内存中的 Alluxio 缓存如何为以后访问相同数据的应用程序带来好处。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="测试结果">测试结果：</h4>
+<ul>
+<li>如下为单节点测试测试结果，Ceph 上第二次访问该文件相比于 Alluxio 在 1GB,5GB,10GB 时的执行时间分别为 75x，111x，107x<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201211113435.png" alt="20201211113435" loading="lazy"></li>
+<li>如下为集群模式下的测试结果，所有情况的整体时间比单机的时候少了很多，Ceph 相比于 Alluxio 的第二次访问时间为 35x, 57x, 65x<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201211114027.png" alt="20201211114027" loading="lazy"></li>
+</ul>
+<h3 id="accelerate-and-scale-big-data-analytics-with-alluxio-and-inteloptanetm-persistent-memory">Accelerate And Scale Big Data AnAlytics with Alluxio And intel®optane™ persistent Memory</h3>
+<ul>
+<li>https://www.alluxio.io/app/uploads/2020/05/Intel-Alluxio-DCPMM-Whitepaper-200507.pdf</li>
+</ul>
+<h3 id="reliability-testing">Reliability Testing</h3>
+<ul>
+<li>TODO</li>
+</ul>
+<h2 id="install-deploy">Install &amp; Deploy</h2>
+<h3 id="single-server">Single Server</h3>
+<h4 id="download">Download</h4>
+<ul>
+<li>Download Binary: https://www.alluxio.io/download/</li>
+<li>Choose Version. (eg. Alluxio 2.4.1 Release. 1.4GB)</li>
+<li>Tar file: <code>tar -xzf alluxio-2.4.1-bin.tar.gz</code></li>
+</ul>
+<h4 id="initial-config">Initial Config</h4>
+<ul>
+<li><code>cd alluxio-2.4.1/conf &amp;&amp; cp alluxio-site.properties.template alluxio-site.properties</code></li>
+<li><code>echo &quot;alluxio.master.hostname=localhost&quot; &gt;&gt; conf/alluxio-site.properties</code></li>
+<li>[Optional] If use local file system, you can specific configuration in conf files like this: <code>echo &quot;alluxio.master.mount.table.root.ufs=/root/shunzi/Alluxio/tmp&quot; &gt;&gt; conf/alluxio-site.properties</code></li>
+<li>Validate env: <code>./bin/alluxio validateEnv local</code></li>
+</ul>
+<pre><code class="language-cmd">2 Errors:
+ValidateRamDiskMountPrivilege
+ValidateHdfsVersion
+</code></pre>
+<h4 id="start-alluxio">Start Alluxio</h4>
+<ul>
+<li>Format journal and storage directory: <code>./bin/alluxio format</code>
+<ul>
+<li>It may throw exceptions <code>java.nio.file.NoSuchFileException: /mnt/ramdisk/alluxioworker</code> in <code>log/task.log</code>. So you need to <code>mkdir -p /mnt/ramdisk/alluxioworker</code></li>
+</ul>
+</li>
+<li>Start alluxio (with a master and a worker): <code>./bin/alluxio-start.sh local SudoMount</code></li>
+<li>Stop local server: <code>./bin/alluxio-stop.sh local</code>
+<ul>
+<li><code>./bin/alluxio-stop.sh all</code></li>
+</ul>
+</li>
+</ul>
+<h5 id="verify">Verify</h5>
+<ul>
+<li>Access website <code>http://localhost:19999</code> to check the master server status.</li>
+<li>Access website <code>http://localhost:30000</code> to check the worker server status.</li>
+<li>For internal network, you can use reverse proxy like this: (And you can access website <strong>master</strong> <code>http://114.116.234.136:19999</code> and <strong>worker</strong> <code>http://114.116.234.136:30000</code>)
+<ul>
+<li><code>autossh -M 1999 -fNR 19999:localhost:19999 root@114.116.234.136</code></li>
+<li><code>autossh -M 3000 -fNR 30000:localhost:30000 root@114.116.234.136</code></li>
+</ul>
+</li>
+</ul>
+<h5 id="run-tests">Run tests</h5>
+<ul>
+<li>Verify run status and run test cases: <code>./bin/alluxio runTests</code></li>
+<li>The runTests command runs end-to-end tests on an Alluxio cluster to provide a comprehensive sanity check.</li>
+<li>It will generate directory <code>/default_tests_files</code> and use different cache policy to upload files.
+<ul>
+<li>BASIC_CACHE_ASYNC_THROUGH</li>
+<li>BASIC_CACHE_CACHE_THROUGH</li>
+<li>BASIC_CACHE_MUST_CACHE</li>
+<li>BASIC_CACHE_PROMOTE_ASYNC_THROUGH</li>
+<li>BASIC_CACHE_PROMOTE_CACHE_THROUGH</li>
+<li>BASIC_CACHE_PROMOTE_MUST_CACHE</li>
+<li>BASIC_CACHE_PROMOTE_THROUGH</li>
+<li>BASIC_CACHE_THROUGH</li>
+<li>BASIC_NON_BYTE_BUFFER_CACHE_ASYNC_THROUGH</li>
+<li>BASIC_NON_BYTE_BUFFER_CACHE_CACHE_THROUGH</li>
+<li>BASIC_NON_BYTE_BUFFER_CACHE_MUST_CACHE</li>
+<li>BASIC_NON_BYTE_BUFFER_CACHE_PROMOTE_ASYNC_THROUGH</li>
+<li>BASIC_NON_BYTE_BUFFER_CACHE_PROMOTE_CACHE_THROUGH</li>
+<li>BASIC_NON_BYTE_BUFFER_CACHE_PROMOTE_MUST_CACHE</li>
+<li>BASIC_NON_BYTE_BUFFER_CACHE_PROMOTE_THROUGH</li>
+<li>BASIC_NON_BYTE_BUFFER_CACHE_THROUGH</li>
+<li>BASIC_NON_BYTE_BUFFER_NO_CACHE_ASYNC_THROUGH</li>
+<li>BASIC_NON_BYTE_BUFFER_NO_CACHE_CACHE_THROUGH</li>
+<li>BASIC_NON_BYTE_BUFFER_NO_CACHE_MUST_CACHE</li>
+<li>BASIC_NON_BYTE_BUFFER_NO_CACHE_THROUGH</li>
+<li>BASIC_NO_CACHE_ASYNC_THROUGH</li>
+<li>BASIC_NO_CACHE_CACHE_THROUGH</li>
+<li>BASIC_NO_CACHE_MUST_CACHE</li>
+<li>BASIC_NO_CACHE_THROUGH</li>
+</ul>
+</li>
+</ul>
+<h4 id="simple-example">Simple Example</h4>
+<h5 id="upload-files-from-local-server">Upload files from local server</h5>
+<ul>
+<li>Show fs command help: <code>./bin/alluxio fs</code></li>
+<li>List the files in Alluxio: <code>./bin/alluxio fs ls /</code></li>
+<li>Copy files from local server: <code>./bin/alluxio fs copyFromLocal LICENSE /LICENSE</code></li>
+<li>List again: <code>./bin/alluxio fs ls /</code></li>
+<li>Cat the file: <code>./bin/alluxio fs cat /LICENSE</code></li>
+</ul>
+<h2 id="references">References</h2>
+<ul>
+<li><a href="https://docs.alluxio.io/os/user/stable/cn/overview/Getting-Started.html">[1] Alluxio 快速上手指南</a></li>
+<li><a href="https://blog.csdn.net/baichoufei90/article/details/107322069">[2] CSDN - Alluxio学习</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/127118960">[3] 知乎 - 路云飞：Alluxio 技术分析</a></li>
+<li><a href="https://www.zhihu.com/column/alluxio">[4] 知乎 - Alluxio 专栏</a></li>
+<li><a href="https://www.jianshu.com/p/481675971727">[5] 简书 - Alluxio：架构及数据流</a></li>
+<li><a href="https://www.infoq.cn/article/q58xagobiioimqeem-a9">[6] InfoQ - Alluxio在多级分布式缓存系统中的应用</a></li>
+<li><a href="https://pdf.dfcfw.com/pdf/H3_AP201912181371929557_1.pdf?1596649255000.pdf">[7] Alluxio 开源 AI 和大数据存储编排平台-顾荣</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/CRaft/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-12-16">2020-12-16</time>
+                  <h4 class="title white no-margin">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112165715.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/RocksDB-Write-Amp/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-12-10">2020-12-10</time>
+                  <h4 class="title white no-margin">RocksDB Write Amplification Optimazation</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

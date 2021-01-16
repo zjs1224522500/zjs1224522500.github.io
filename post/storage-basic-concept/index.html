@@ -1,0 +1,953 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>存储基本概念 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+存储的一些基本概念
+一些专业的术语解释
+持续更新ing
+
+
+
+
+从逻辑上存储通常分为块存储，文件存储，对象存储。
+
+存储分类及应用
+
+块存储：块存储（DAS/SAN）通常应用在某些专有的系统中，这类应用要求很高的随机读写性能和高可靠性，..." />
+    <meta name="keywords" content="存储" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://pic.36krcnd.com/201804/20060915/yucn8kelclf6k0hj!1200');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2019-07-20"><i class="fa fa-calendar"></i><span class="lately">1 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/storage-basic-concept/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/storage-basic-concept/"> </span>
+              </a>
+              <span id="/storage-basic-concept/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">存储基本概念</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>存储的一些基本概念</li>
+<li>一些专业的术语解释</li>
+<li>持续更新ing</li>
+</ul>
+</blockquote>
+<!-- more -->
+<blockquote>
+<p>从逻辑上存储通常分为<strong>块存储</strong>，<strong>文件存储</strong>，<strong>对象存储</strong>。</p>
+</blockquote>
+<h3 id="存储分类及应用">存储分类及应用</h3>
+<ul>
+<li><strong>块存储</strong>：块存储（DAS/SAN）通常应用在某些专有的系统中，这类应用要求很高的随机读写性能和高可靠性，上面搭载的通常是Oracle/DB2这种传统数据库，连接通常是以FC光纤（8Gb/16Gb）为主，走光纤协议。如果要求稍低一些，也会出现基于千兆/万兆以太网的连接方式，MySQL这种数据库就可能会使用IP SAN，走iSCSI协议。通常使用块存储的都是系统而非用户，并发访问不会很多，经常出现一套存储只服务一个应用系统，例如如交易系统，计费系统。典型行业如金融，制造，能源，电信等。块存储通常都是通过光纤网络连接，服务器/小机上配置FC光纤HBA卡，通过光纤交换机连接存储（IP SAN可以通过千兆以太网，以iSCSI客户端连接存储），主机端以逻辑卷（Volume）的方式访问。连接成功后，应用访问存储是按起始地址，偏移量Offset的方法来访问的。</li>
+<li><strong>文件存储</strong>：文件存储（NAS）相对来说就更能兼顾多个应用和更多用户访问，同时提供方便的数据共享手段。毕竟大部分的用户数据都是以文件的形式存放，在PC时代，数据共享也大多是用文件的形式，比如常见的的FTP服务，NFS服务，Samba共享这些都是属于典型的文件存储。几十个用户甚至上百用户的文件存储共享访问都可以用NAS存储加以解决。在中小企业市场，一两台NAS存储设备就能支撑整个IT部门了。CRM系统，SCM系统，OA系统，邮件系统都可以使用NAS存储统统搞定。甚至在公有云发展的早几年，用户规模没有上来时，云存储的底层硬件也有用几套NAS存储设备就解决的，甚至云主机的镜像也有放在NAS存储上的例子。文件存储的广泛兼容性和易用性，是这类存储的突出特点。但是从性能上来看，相对SAN就要低一些。NAS存储基本上是以太网访问模式，普通千兆网，走NFS/CIFS协议。文件存储通常只要是局域网内，千兆/百兆的以太网环境皆可。网线连上，服务器端通过操作系统内置的NAS客户端，如NFS/CIFS/FTP客户端挂载存储成为一个本地的文件夹后访问，只要符合POXIS标准，应用就可以用标准的open，seek, write/read,close这些方法对其访问操作。</li>
+<li><strong>对象存储</strong>：对象存储概念出现得晚一些，存储标准化组织SINA早在2004年就给出了定义，但早期多出现在超大规模系统，所以并不为大众所熟知，相关产品一直也不温不火。一直到云计算和大数据的概念全民强推，才慢慢进入公众视野。前面说到的块存储和文件存储，基本上都还是在专有的局域网络内部使用，而对象存储的优势场景却是互联网或者公网，主要解决海量数据，海量并发访问的需求。基于互联网的应用才是对象存储的主要适配（当然这个条件同样适用于云计算，基于互联网的应用最容易迁移到云上，因为没出现云这个名词之前，他们已经在上面了），基本所有成熟的公有云都提供了对象存储产品，不管是国内还是国外。对象存储常见的适配应用如网盘、媒体娱乐，医疗PACS，气象，归档等数据量超大而又相对“冷数据”和非在线处理的应用类型。这类应用单个数据大，总量也大，适合对象存储海量和易扩展的特点。网盘类应用也差不多，数据总量很大，另外还有并发访问量也大，支持10万级用户访问这种需求就值得单列一个项目了（这方面的扫盲可以想想12306）。归档类应用只是数据量大的冷数据，并发访问的需求倒是不太突出。另外基于移动端的一些新兴应用也是适合的，智能手机和移动互联网普及的情况下，所谓UGD（用户产生的数据，手机的照片视频）总量和用户数都是很大挑战。毕竟直接使用HTTP get/put就能直接实现数据存取，对移动应用来说还是有一定吸引力的。对象存储的访问通常是在互联网，走HTTP协议，性能方面，单独看一个连接的是不高的（还要解决掉线断点续传之类的可靠性问题），主要强大的地方是支持的并发数量，聚合起来的性能带宽就非常可观了。对象存储不在乎网络，而且它的访问比较有特色，只能存取删（put/get/delete），不能打开修改存盘。只能取下来改好后上传，去覆盖原对象。//因为中间是不可靠的互联网啊，不能保证你在修改时候不掉线啊。所谓你在这头，对象在那头，所爱对象隔山海，山海不可平。</li>
+</ul>
+<h4 id="应用">应用</h4>
+<ul>
+<li><strong>块存储</strong>：通过某种协议（e.g.SAS、SCSI、SAN、iSCSI）从后端存储 Assigned、Attached 块设备（Volume），然后分区格式化、创建文件系统并 mount 到操作系统，然后就可以在此文件系统之上存储数据，或者也可以直接使用裸硬盘来存储数据（e.g. 数据库系统）</li>
+<li><strong>文件存储</strong>：通过 NFS、CIFS 等协议，mount 远程文件系统到本地操作系统。NAS、NFS 服务器，以及各种分布式文件系统提供的都是这种存储。</li>
+<li><strong>对象存储</strong>：对象存储是以对象形式存储数据的存储系统，最大的优势就是可以让用户更加灵活的处理海量数据。操作系统客户端可以通过对象存储提供的存储网关接口（一般是 HTTP/S）来上传或下载存储数据。</li>
+</ul>
+<hr>
+<h5 id="参考文献">参考文献</h5>
+<ul>
+<li><a href="http://www.talkwithtrend.com/Article/178247">[1] EricChan: 从应用角度看块/文件/对象三种存储 2017-05-24</a></li>
+<li><a href="http://www.talkwithtrend.com/Article/178249">[2] EricChan: 块存储，文件存储，对象存储的层次关系 2017-05-24</a></li>
+<li><a href="https://www.redhat.com/zh/topics/data-storage/file-block-object-storage">[3] RedHat: 文件存储、块存储还是对象存储？</a></li>
+<li><a href="https://www.cnblogs.com/jmilkfan-fanguiju/p/10589720.html">[4] 博客园：Cinder 架构分析、高可用部署与核心功能解析</a></li>
+</ul>
+<h3 id="raid-redundant-array-of-independent-disks">RAID (Redundant Array of Independent Disks)</h3>
+<ul>
+<li>独立硬盘冗余阵列（RAID, Redundant Array of Independent Disks），旧称廉价磁盘冗余阵列（Redundant Array of Inexpensive Disks），简称磁盘阵列。利用虚拟化存储技术把多个硬盘组合起来，成为一个或多个硬盘阵列组，目的提升性能或数据冗余或是两者同时提升。</li>
+<li>在运作中，取决于 RAID 层级不同，数据会以多种模式分散于各个硬盘，RAID 层级的命名会以 RAID 开头并带数字，例如.RAID 0，RAID 1，RAID 5，RAID 6，RAID 7，RAID 01，RAID 10，RAID 50，RAID 60。每种等级都有其理论上的优缺点，不同的等级在两个目标间获取平衡，分别是增加数据可靠性以及增加存储器（群）读写性能。</li>
+<li>简单来说，RAID把多个硬盘组合成为一个逻辑硬盘，因此，操作系统只会把它当作一个硬盘。RAID常被用在服务器计算机上，并且常使用完全相同的硬盘作为组合。由于硬盘价格的不断下降与RAID功能更加有效地与主板集成，它也成为普通用户的一个选择，特别是需要大容量存储空间的工作，如：视频与音频制作。</li>
+<li><strong>JBOD</strong>（Just a Bunch Of Disks）指将数个物理硬盘，在操作系统中合并成一个逻辑硬盘，以直接增加容量。</li>
+</ul>
+<h4 id="raid0-条带化">RAID0 条带化</h4>
+<ul>
+<li>RAID0 是一种简单的、无数据校验的数据条带化技术。实际上不是一种真正的 RAID ，因为它并不提供任何形式的冗余策略。 RAID0 将所在磁盘条带化后组成大容量的存储空间，将数据分散存储在所有磁盘中，以独立访问方式实现多块磁盘的并读访问。由于可以并发执行 I/O 操作，总线带宽得到充分利用。再加上不需要进行数据校验，RAID0 的性能在所有 RAID 等级中是最高的。理论上讲，一个由 n 块磁盘组成的 RAID0 ，它的读写性能是单个磁盘性能的 n 倍，但由于总线带宽等多种因素的限制，实际的性能提升低于理论值。</li>
+<li>RAID0 具有低成本、高读写性能、 100% 的高存储空间利用率等优点，但是它不提供数据冗余保护，一旦数据损坏，将无法恢复。 因此， RAID0 一般适用于对性能要求严格但对数据安全性和可靠性不高的应用，如视频、音频存储、临时数据缓存空间等。</li>
+</ul>
+<h4 id="raid1-镜像">RAID1 镜像</h4>
+<ul>
+<li>RAID1 称为镜像，它将数据完全一致地分别写到工作磁盘和镜像 磁盘，它的磁盘空间利用率为 50% 。 RAID1 在数据写入时，响应时间会有所影响，但是读数据的时候没有影响。 RAID1 提供了最佳的数据保护，一旦工作磁盘发生故障，系统自动从镜像磁盘读取数据，不会影响用户工作。</li>
+<li>RAID1 与 RAID0 刚好相反，是为了增强数据安全性使两块 磁盘数据呈现完全镜像，从而达到安全性好、技术简单、管理方便。 RAID1 拥有完全容错的能力，但实现成本高。 RAID1 应用于对顺序读写性能要求高以及对数据保护极为重视的应用，如对邮件系统的数据保护。</li>
+</ul>
+<h4 id="raid2-2n海明码校验">RAID2 2n海明码校验</h4>
+<ul>
+<li>RAID2 称为纠错海明码磁盘阵列，其设计思想是利用海明码实现数据校验冗余。海明码是一种在原始数据中加入若干校验码来进行错误检测和纠正的编码技术，其中第 2n 位（ 1, 2, 4, 8, … ）是校验码，其他位置是数据码。因此在 RAID2 中，数据按位存储，每块磁盘存储一位数据编码，磁盘数量取决于所设定的数据存储宽度，可由用户设定。图 4 所示的为数据宽度为 4 的 RAID2 ，它需要 4 块数据磁盘和 3 块校验磁盘。如果是 64 位数据宽度，则需要 64 块 数据磁盘和 7 块校验磁盘。可见， RAID2 的数据宽度越大，存储空间利用率越高，但同时需要的磁盘数量也越多。</li>
+<li>海明码自身具备纠错能力，因此 RAID2 可以在数据发生错误的情况下对纠正错误，保证数据的安全性。它的数据传输性能相当高，设计复杂性要低于后面介绍的 RAID3 、 RAID4 和 RAID5 。</li>
+<li>但是，海明码的数据冗余开销太大，而且 RAID2 的数据输出性能受阵列中最慢磁盘驱动器的限制。再者，海明码是按位运算， RAID2 数据重建非常耗时。由于这些显著的缺陷，再加上大部分磁盘驱动器本身都具备了纠错功能，因此 RAID2 在实际中很少应用，没有形成商业产品，目前主流存储磁盘阵列均不提供 RAID2 支持。</li>
+</ul>
+<h4 id="raid3-校验盘">RAID3 校验盘</h4>
+<ul>
+<li>RAID3 是使用专用校验盘的并行访问阵列，它采用一个专用的磁盘作为校验盘，其余磁盘作为数据盘，数据按位可字节的方式交叉存储到各个数据盘中。RAID3 至少需要三块磁盘，不同磁盘上同一带区的数据作 XOR 校验，校验值写入校验盘中。 RAID3 完好时读性能与 RAID0 完全一致，并行从多个磁盘条带读取数据，性能非常高，同时还提供了数据容错能力。向 RAID3 写入数据时，必须计算与所有同条带的校验值，并将新校验值写入校验盘中。一次写操作包含了写数据块、读取同条带的数据块、计算校验值、写入校验值等多个操作，系统开销非常大，性能较低。</li>
+<li>如果 RAID3 中某一磁盘出现故障，不会影响数据读取，可以借助校验数据和其他完好数据来重建数据。假如所要读取的数据块正好位于失效磁盘，则系统需要读取所有同一条带的数据块，并根据校验值重建丢失的数据，系统性能将受到影响。当故障磁盘被更换后，系统按相同的方式重建故障盘中的数据至新磁盘。</li>
+<li>RAID3 只需要一个校验盘，阵列的存储空间利用率高，再加上并行访问的特征，能够为高带宽的大量读写提供高性能，适用大容量数据的顺序访问应用，如影像处理、流媒体服务等。目前， RAID5 算法不断改进，在大数据量读取时能够模拟 RAID3 ，而且 RAID3 在出现坏盘时性能会大幅下降，因此常使用 RAID5 替代 RAID3 来运行具有持续性、高带宽、大量读写特征的应用。</li>
+</ul>
+<h4 id="raid4-块组织校验盘">RAID4 块组织校验盘</h4>
+<ul>
+<li>RAID4 与 RAID3 的原理大致相同，区别在于条带化的方式不同。 RAID4 （图 6 ）按照 块的方式来组织数据，写操作只涉及当前数据盘和校验盘两个盘，多个 I/O 请求可以同时得到处理，提高了系统性能。 RAID4 按块存储可以保证单块的完整性，可以避免受到其他磁盘上同条带产生的不利影响。</li>
+<li>RAID4 在不同磁盘上的同级数据块同样使用 XOR 校验，结果存储在校验盘中。写入数据时， RAID4 按这种方式把各磁盘上的同级数据的校验值写入校验 盘，读取时进行即时校验。因此，当某块磁盘的数据块损坏， RAID4 可以通过校验值以及其他磁盘上的同级数据块进行数据重建。</li>
+<li>RAID4 提供了 非常好的读性能，但单一的校验盘往往成为系统性能的瓶颈。对于写操作， RAID4 只能一个磁盘一个磁盘地写，并且还要写入校验数据，因此写性能比较差。而且随着成员磁盘数量的增加，校验盘的系统瓶颈将更加突出。正是如上这些限制和不足， RAID4 在实际应用中很少见，主流存储产品也很少使用 RAID4 保护。</li>
+</ul>
+<h4 id="raid5-校验数据散列分布">RAID5 校验数据散列分布</h4>
+<ul>
+<li>RAID5 应该是目前最常见的 RAID 等级，它的原理与 RAID4 相似，区别在于校验数据分布在阵列中的所有磁盘上，而没有采用专门的校验磁盘。对于数据和校验数据，它们的写操作可以同时发生在完全不同的磁盘上。因此， RAID5 不存在 RAID4 中的并发写操作时的校验盘性能瓶颈问题。另外， RAID5 还具备很好的扩展性。当阵列磁盘 数量增加时，并行操作量的能力也随之增长，可比 RAID4 支持更多的磁盘，从而拥有更高的容量以及更高的性能。</li>
+<li>RAID5 （图 7）的磁盘上同时存储数据和校验数据，数据块和对应的校验信息存保存在不同的磁盘上，当一个数据盘损坏时，系统可以根据同一条带的其他数据块和对应的校验数据来重建损坏的数据。与其他 RAID 等级一样，重建数据时， RAID5 的性能会受到较大的影响。</li>
+<li>RAID5 兼顾存储性能、数据安全和存储成本等各方面因素，它可以理解为 RAID0 和 RAID1 的折中方案，是目前综合性能最佳的数据保护解决方案。 RAID5 基本上可以满足大部分的存储应用需求，数据中心大多采用它作为应用数据的保护方案。</li>
+</ul>
+<h4 id="raid6-校验数据冗余分布-双重校验">RAID6 校验数据冗余分布 双重校验</h4>
+<ul>
+<li>前面所述的各个 RAID 等级都只能保护因单个磁盘失效而造成的数据丢失。如果两个磁盘同时发生故障，数据将无法恢复。 RAID6 （如图 8 ）引入双重校验的概念，它可以保护阵列中同时出现两个磁盘失效时，阵列仍能够继续工作，不会发生数据丢失。 RAID6 等级是在 RAID5 的基础上为了进一步增强数据保护而设计的一种 RAID 方式，它可以看作是一种扩展的 RAID5 等级。</li>
+<li>RAID6 不仅要支持数据的恢复，还要支持校验数据的恢复，因此实现代价很高，控制器的设计也比其他等级更复杂、更昂贵。 RAID6 思想最常见的实现方式是采用两个独立的校验算法，假设称为 P 和 Q ，校验数据可以分别存储在两个不同的校验盘上，或者分散存储在所有成员磁盘中。当两个磁盘同时失效时，即可通过求解两元方程来重建两个磁盘上的数据。</li>
+<li>RAID6 具有快速的读取性能、更高的容错能力。但是，它的成本要高于 RAID5 许多，写性能也较差，并有设计和实施非常复杂。因此， RAID6 很少得到实际应用，主要用于对数据安全等级要求非常高的场合。它一般是替代 RAID10 方案的经济性选择。</li>
+</ul>
+<h4 id="raid00-raid01-raid10-raid100-raid30-raid50-raid53-raid60">RAID00  RAID01  RAID10  RAID100  RAID30  RAID50  RAID53  RAID60</h4>
+<ul>
+<li>标准 RAID 等级各有优势和不足。自然地，我们想到把多个 RAID 等级组合起来，实现优势互补，弥补相互的不足，从而达到在性能、数据安全性等指标上更高的 RAID 系统。目前在业界和学术研究中提到的 RAID 组合等级主要有 RAID00 、 RAID01 、 RAID10 、 RAID100 、 RAID30 、 RAID50 、 RAID53 、 RAID60 ，但实际得到较为广泛应用的只有 RAID01 和 RAID10 两个等级。当然，组合等级的实现成本一般都非常昂贵，只是在 少数特定场合应用。</li>
+</ul>
+<h5 id="raid01-和-raid10">RAID01 和 RAID10</h5>
+<ul>
+<li>一些文献把这两种 RAID 等级看作是等同的，本文认为是不同的。 RAID01 是先做条带化再作镜像，本质是对物理磁盘实现镜像；而 RAID10 是先做镜像再作条带化，是对虚拟磁盘实现镜像。相同的配置下，通常 RAID01 比 RAID10 具有更好的容错能力，原理如图 9 所示。</li>
+<li>RAID01 兼备了 RAID0 和 RAID1 的优点，它先用两块磁盘建立镜像，然后再在镜像内部做条带化。 RAID01 的数据将同时写入到两个磁盘阵列中，如果其中一个阵列损坏，仍可继续工作，保证数据安全性的同时又提高了性能。 RAID01 和 RAID10 内部都含有 RAID1 模式，因此整体磁盘利用率均仅为 50% .</li>
+</ul>
+<p><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/RAID.png?raw=true" alt="image" loading="lazy"><br>
+<img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/RAID%20Table.png?raw=true" alt="image" loading="lazy"></p>
+<h4 id="参考链接">参考链接</h4>
+<ul>
+<li><a href="https://www.cnblogs.com/oneasdf/p/9367152.html">[1] 博客园：RAID技术超详细讲解</a></li>
+</ul>
+<h3 id="rom-read-only-memory">ROM (Read Only Memory)</h3>
+<h4 id="rom">ROM</h4>
+<ul>
+<li>一种非易失性只读存储器。在制造过程中，将资料以一特制光罩（mask）烧录于线路中，其资料内容在写入后就不能更改，所以有时又称为“光罩式只读内存”（mask ROM）。成本相对较低，常常用于电脑中的开启启动如启动光盘，BIOS芯片等，以及作为固件存放一些硬件的驱动程序。</li>
+</ul>
+<h4 id="prom">PROM</h4>
+<ul>
+<li>可编程只读存储器（Programmable ROM，PROM）其内部有行列式的镕丝，可依用户（厂商）的需要，利用电流将其烧断，以写入所需的数据及程序，镕丝一经烧断便无法再恢复，亦即数据无法再更改。</li>
+</ul>
+<h4 id="eprom">EPROM</h4>
+<ul>
+<li>可抹除可编程只读存储器（Erasable Programmable Read Only Memory，EPROM）可利用高电压将数据编程写入，但抹除时需将线路曝光于紫外线下一段时间，数据始可被清空，再供重复使用。因此，在封装外壳上会预留一个石英玻璃所制的透明窗以便进行紫外线曝光。写入程序后通常会用贴纸遮盖透明窗，以防日久不慎曝光过量影响数据。</li>
+</ul>
+<h4 id="otprom">OTPROM</h4>
+<ul>
+<li>一次编程只读存储器（One Time Programmable Read Only Memory，OTPROM）内部所用的芯片与写入原理同EPROM，但是为了节省成本，封装上不设置透明窗，因此编程写入之后就不能再抹除改写。</li>
+</ul>
+<h4 id="eeprom">EEPROM</h4>
+<ul>
+<li>电子抹除式可复写只读存储器（Electrically Erasable Programmable Read Only Memory，EEPROM）之运作原理类似EPROM，但是抹除的方式是使用高电场来完成，因此不需要透明窗。</li>
+</ul>
+<h4 id="flash">FLASH</h4>
+<ul>
+<li>闪存（Flash memory）的每一个记忆胞都具有一个“控制闸”与“浮动闸”，利用高电场改变浮动闸的临限电压即可进行编程动作。闪存主要分为NAND型与NOR型。现在NAND常用于固态硬盘、U盘、存储卡等用途，NOR则用于BIOS ROM芯片等用途。</li>
+</ul>
+<h5 id="nor-flash">NOR Flash</h5>
+<ul>
+<li>NOR Flash需要很长的时间进行抹写，但是它提供完整的寻址与数据总线，并允许随机存取存储器上的任何区域，这使的它非常适合取代老式的ROM芯片。当时ROM芯片主要用来存储几乎不需更新的代码，例如电脑的BIOS或机上盒(Set-top Box)的固件。NOR Flash可以忍受一万到一百万次抹写循环，它同时也是早期的可移除式快闪存储媒体的基础。</li>
+</ul>
+<h5 id="nand-flash">NAND Flash</h5>
+<ul>
+<li>NAND Flash式东芝在1989年的国际固态电路研讨会(ISSCC)上发表的， 要在NandFlash上面读写数据，要外部加主控和电路设计。。NAND Flash具有较快的抹写时间, 而且每个存储单元的面积也较小，这让NAND Flash相较于NOR Flash具有较高的存储密度与较低的每比特成本。同时它的可抹除次数也高出NOR Flash十倍。然而NAND Flash 的I/O接口并没有随机存取外部地址总线，它必须以区块性的方式进行读取，NAND Flash典型的区块大小是数百至数千比特。</li>
+</ul>
+<h5 id="emmc">EMMC</h5>
+<ul>
+<li>emmc存储器eMMC (Embedded Multi Media Card) 为MMC协会所订立的，eMMC 相当于 NandFlash+主控IC ，对外的接口协议与SD、TF卡一样，主要是针对手机或平板电脑等产品的内嵌式存储器标准规格。eMMC的一个明显优势是在封装中集成了一个控制器，它提供标准接口并管理闪存，使得手机厂商就能专注于产品开发的其它部分，并缩短向市场推出产品的时间。这些特点对于希望通过缩小光刻尺寸和降低成本的NAND供应商来说，同样的重要。</li>
+</ul>
+<h3 id="ram-random-access-memory">RAM (Random Access Memory)</h3>
+<ul>
+<li>与CPU直接交换数据的内部存储器。它可以随时读写（刷新时除外），而且速度很快，通常作为操作系统或其他正在运行中的程序的临时数据存储介质。</li>
+</ul>
+<h4 id="sram-static-random-access-memory">SRAM (Static Random Access Memory)</h4>
+<ul>
+<li>是随机存取存储器的一种。所谓的“静态”，是指这种存储器只要保持通电，里面储存的数据就可以恒常保持。相对之下，动态随机存取存储器（DRAM）里面所储存的数据就需要周期性地更新。然而，当电力供应停止时，SRAM储存的数据还是会消失（被称为volatile memory），这与在断电后还能储存资料的ROM或闪存是不同的。</li>
+</ul>
+<h4 id="dram-dynamic-random-access-memory">DRAM (Dynamic Random Access Memory)</h4>
+<ul>
+<li>主要的作用原理是利用电容内存储电荷的多寡来代表一个二进制比特（bit）是1还是0。由于在现实中晶体管会有漏电电流的现象，导致电容上所存储的电荷数量并不足以正确的判别数据，而导致数据毁损。因此对于DRAM来说，周期性地充电是一个无可避免的要件。由于这种需要定时刷新的特性，因此被称为“动态”存储器。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>DRAM</th>
+<th>SRAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>刷新</td>
+<td>需要刷新。如果存储单元没有被刷新，存储的信息就会丢失。</td>
+<td>不需要刷新。这种存储器只要保持通电，里面储存的数据就可以恒常保持</td>
+</tr>
+<tr>
+<td>速度</td>
+<td>慢（相对于SRAM）, 由于需要不断地刷新数据</td>
+<td>快</td>
+</tr>
+<tr>
+<td>集成度</td>
+<td>高</td>
+<td>低。管子数量多，结构复杂，因此集成度低</td>
+</tr>
+<tr>
+<td>静态功耗</td>
+<td>高,电容结构，需要对电容刷新充电</td>
+<td>低</td>
+</tr>
+<tr>
+<td>动态功耗</td>
+<td>低</td>
+<td>高。管子数量多。</td>
+</tr>
+<tr>
+<td>价格</td>
+<td>低</td>
+<td>高</td>
+</tr>
+<tr>
+<td>用途</td>
+<td>内存条</td>
+<td>CPU中cache，一级缓存，二级缓存</td>
+</tr>
+</tbody>
+</table>
+<h5 id="sdram-同步动态随机存取內存synchronous-dynamic-random-access-memory">SDRAM 同步动态随机存取內存（synchronous dynamic random-access memory）</h5>
+<ul>
+<li>是有一个同步接口的动态随机存取內存（DRAM）。通常DRAM是有一个异步接口的，这样它可以随时响应控制输入的变化。而SDRAM有一个同步接口，在响应控制输入前会等待一个时钟信号，这样就能和计算机的系统总线同步。时钟被用来驱动一个有限状态机，对进入的指令进行管线(Pipeline)操作。这使得SDRAM与没有同步接口的异步DRAM(asynchronous DRAM)相比，可以有一个更复杂的操作模式。</li>
+<li>SDRAM从发展到现在已经经历了五代，分别是：第一代SDR SDRAM，第二代DDR SDRAM，第三代DDR2 SDRAM，第四代DDR3 SDRAM，第五代，DDR4 SDRAM。<br>
+<img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/DDR.jpg?raw=true" alt="image" loading="lazy"></li>
+</ul>
+<h3 id="ssd-solid-state-drive">SSD (Solid-State Drive)</h3>
+<ul>
+<li>固态硬盘或固态驱动器（英语：Solid-state drive或Solid-state disk，简称SSD）,是一种主要以闪存(NAND Flash)作为永久性存储器的计算机存储设备，此处固态主要相对于以机械臂带动磁头转动实现读写操作的磁盘而言，NAND或者其他固态存储以电位高低或者相位状态的不同记录0和1，用集成电路代替了物理旋转磁盘。</li>
+<li>SSD 组成：Flash Controller (闪存控制器) and NAND Flash Memory chips (NAND 闪存芯片)</li>
+<li>固态硬盘采用SATA 3、M.2或者PCI Express、mSATA、U.2、ZIF、IDE、CF、CFast等接口。但由于价格及存储空间与机械硬盘有巨大差距，固态硬盘当前仍无法完全取代机械式硬盘。</li>
+</ul>
+<h4 id="易失性存储器">易失性存储器</h4>
+<ul>
+<li>由易失性存储器制成的固态硬盘主要用于临时性存储。因为这类存储器需要靠外界电力维持其记忆，所以由此制成的固态硬盘还需要配合电池才能使用。易失性存储器，例如SDRAM，具有访问速度快的特点。利用这一特点，可以将需要运行的程序从传统硬盘复制到易失性存储器中，然后再交由计算机运行，这样可以避免由于传统硬盘的引导延迟、搜索延迟等对程序以及系统造成的影响。</li>
+<li>由易失性存储器制成的固态硬盘通常会依靠电池来保证完成应急备份：当电源意外中断时，靠电池驱动的这类固态硬盘可以有足够的时间将数据转移到传统硬盘中。当电力恢复后，再从传统硬盘中恢复数据。</li>
+</ul>
+<h4 id="非易失性存储器">非易失性存储器</h4>
+<ul>
+<li>非易失性存储器的数据访问速度介于易失性存储器和传统硬盘之间。和易失性存储器相比，非易失性存储器一经写入数据，就不需要外界电力来维持其记忆。因此更适于作为传统硬盘的替代品。</li>
+<li>闪存当中的NAND Flash是最常见的非易失性存储器。小容量的NAND闪存可被制作成带有USB接口的移动存储设备，亦即人们常说的“U盘”。随着生产成本的下降，将多个大容量闪存模块集成在一起，制成以闪存为存储介质的固态硬盘已经是当前的趋势。</li>
+</ul>
+<h5 id="参考链接-2">参考链接</h5>
+<ul>
+<li><a href="https://zh.wikipedia.org/wiki/RAID">[1] 维基百科： RAID</a></li>
+<li><a href="https://zh.wikipedia.org/zh-cn/%E5%94%AF%E8%AE%80%E8%A8%98%E6%86%B6%E9%AB%94">[2] 维基百科：ROM</a></li>
+<li><a href="https://zh.wikipedia.org/zh-cn/%E9%97%AA%E5%AD%98">[3] 维基百科：闪存</a></li>
+<li><a href="https://baijiahao.baidu.com/s?id=1610041455262486965&amp;wfr=spider&amp;for=pc">[4] NorFlash、NandFlash、eMMC闪存的比较与区别</a></li>
+<li><a href="https://zh.wikipedia.org/zh-cn/%E9%9A%8F%E6%9C%BA%E5%AD%98%E5%8F%96%E5%AD%98%E5%82%A8%E5%99%A8">[5] 维基百科：RAM</a></li>
+<li><a href="https://blog.csdn.net/xiaofon/article/details/46120423">[6] CSDN ：DDR4, DDR3, DDR2, DDR1 及SDRAM各有何不同?</a></li>
+<li><a href="https://zh.wikipedia.org/zh-cn/%E5%9B%BA%E6%80%81%E7%A1%AC%E7%9B%98">[7] 维基百科：SSD</a></li>
+<li><a href="https://searchstorage.techtarget.com/definition/SSD-solid-state-drive">[8] searchstorage：SSD (solid-state drive)</a></li>
+</ul>
+<h3 id="iscsi-internet-small-computer-system-interface">iSCSI (Internet Small Computer System Interface)</h3>
+<ul>
+<li>Internet小型计算机系统接口，又称为IP-SAN，是一种基于因特网及SCSI-3协议下的存储技术，由IETF提出，并于2003年2月11日成为正式的标准。</li>
+<li>iSCSI利用了TCP/IP的port 860 和 3260 作为沟通的渠道。透过两部计算机之间利用iSCSI的协议来交换SCSI命令，让计算机可以透过高速的局域网集线来把SAN模拟成为本地的储存设备。</li>
+<li>iSCSI使用 TCP/IP 协议（一般使用TCP端口860和3260）。 本质上，iSCSI 让两个主机通过 IP 网络相互协商然后交换 SCSI 命令。这样一来，iSCSI 就是用广域网仿真了一个常用的高性能本地存储总线，从而创建了一个存储局域网（SAN）。不像某些 SAN 协议，iSCSI 不需要专用的电缆；它可以在已有的交换和 IP 基础架构上运行。然而，如果不使用专用的网络或者子网（ LAN 或者 VLAN ），iSCSI SAN 的部署性能可能会严重下降。于是，iSCSI 常常被认为是光纤通道（Fiber Channel）的一个低成本替代方法，而光纤通道是需要专用的基础架构的。但是，基于以太网的光纤通道（FCoE）则不需要专用的基础架构。</li>
+</ul>
+<h4 id="scsi-small-computer-system-interface">SCSI (Small Computer System Interface)</h4>
+<ul>
+<li><strong>概念</strong>：一种用于计算机和外部设备之间（硬盘、光驱、软驱、打印机等）系统级接口的独立处理器标准。SCSI是一种智能的通用接口标准，它是各种计算机和外部设备之间的接口标准。SCSI标准定义命令、通信协议以及实体的电气特性（换成OSI的说法，就是占据物理层、链接层、套接层、应用层），最大部分的应用是在存储设备上（例如硬盘、磁带机），除外，SCSI可以连接的设备包括有扫描仪、光学设备（像CD、DVD）、打印机等等，SCSI命令中有条列出支持的设备SCSI周边设备</li>
+</ul>
+<h4 id="san-storage-area-network">SAN (Storage Area Network)</h4>
+<ul>
+<li><strong>开放系统的存储</strong>：内置存储 和 外挂存储</li>
+<li><strong>外挂存储</strong>根据<strong>连接的方式</strong>分为直连式存储（Direct-Attached Storage，简称DAS）和网络化存储（Fabric-Attached Storage，简称FAS）；网络化存储根据传输协议又分为：网络接入存储（Network-Attached Storage，简称NAS）和存储区域网络（Storage Area Network，简称SAN）。</li>
+<li><strong>DAS</strong>: （Direct Attached Storage）直接附加存储，直接附加存储是指将存储设备通过总线（SCSI、PCI、IDE等）接口直接连接到一台服务器上使用。</li>
+<li><strong>NAS</strong>: (Network Attached Storage）网络附加存储。在NAS存储结构中，存储系统不再通过I/O总线附属于某个服务器或客户机，而直接通过网络接口与网络直接相连，由用户通过网络访问。</li>
+<li><strong>SAN</strong>: （Storage Area Network）存储区域网络，是一种高速的、专门用于存储操作的网络，通常独立于计算机局域网（LAN）。SAN将主机（管理server，业务server等）和存储设备连接在一起，能够为其上的任意一台主机和任意一台存储设备提供专用的通信通道。SAN将存储设备从服务器中独立出来，实现了服务器层次上的存储资源共享。SAN将通道技术和网络技术引入存储环境中，提供了一种新型的网络存储解决方案，能够同时满足吞吐率、可用性、可靠性、可扩展性和可管理性等方面的要求。
+<ul>
+<li><strong>FC-SAN</strong>: FC-SAN顾名思义就是直接通过FC(光纤)通道来连接磁盘阵列，数据通过发送SCSI命令来直接与硬件进行通信，从而提高了整体的速率。</li>
+<li><strong>IP-SAN</strong>: IP-SAN（IP存储）的通信通道是使用IP通道，而不是光纤通道，把服务器与存储设备连接起来的技术，除了标准已获通过的iSCSI，还有FCIP、iFCP等正在制定的标准。而iSCSI发展最快，已经成了IP存储一个有力的代表。<br>
+<img src="https://cloud.githubusercontent.com/assets/1736354/12811291/7906961c-cb66-11e5-89da-3f2bc2f00108.png" alt="image" loading="lazy"></li>
+</ul>
+</li>
+</ul>
+<h4 id="iscsi的使用">iSCSI的使用</h4>
+<ul>
+<li>iSCSI技术在工作形式上分为服务端（target）与客户端（initiator），iSCSI服务端即用于存放硬盘存储资源的服务器，作为前面创建RAID磁盘阵列组的存储端，能够为用户提供可用的存储资源。而iSCSI客户端则是用户使用的软件，用于获取远程服务端的存储资源</li>
+<li><strong>IQN (iSCSI Qualified Name)</strong>：“iSCSI限定名称”。每个发起端和目标需要唯一名称进行表示最好的作法是使用一个在INTERNET上可能独一无二的名称</li>
+<li><strong>iSCSI Client/Host</strong>：系统中的iSCSI客户端或主机（也称为iSCSI initiator），诸如服务器，连接在IP网络并对iSCSI target发起请求以及接收响应。每一个iSCSI主机通过唯一的IQN来识别，类似于光纤通道的WWN。要在IP网络上传递SCSI块命令，必须在iSCSI主机上安装iSCSI驱动。推荐通过GE适配器（每秒1000 megabits）连接至iSCSI target。如同标准10/100适配器，大多数Gigabit适配器使用Category 5 或Category 6E线缆。适配器上的各端口通过唯一的IP地址来识别。</li>
+<li><strong>iSCSI Target</strong>：iSCSI target是接收iSCSI命令的设备。此设备可以是终端节点，如存储设备，或是中间设备，如IP和光纤设备之间的连接桥。每一个iSCSI target通过唯一的IQN来标识，存储阵列控制器上（或桥接器上）的各端口通过一个或多个IP地址来标识。</li>
+</ul>
+<h5 id="参考链接-3">参考链接</h5>
+<ul>
+<li><a href="http://www.ptyqm.com/19026.html">[1] NAS、DAS和SAN三种存储方式的区别<br>
+</a></li>
+<li><a href="https://zh.wikipedia.org/zh-cn/ISCSI">[2] 维基百科：iSCSI</a></li>
+<li><a href="https://www.cnblogs.com/chris-cp/p/6022383.html">[3] iSCSI存储系统知识</a></li>
+<li><a href="https://blog.csdn.net/qq_38265137/article/details/80349383">[4] CSDN: SAN技术及应用</a></li>
+</ul>
+<h4 id="lvm-logical-volumn-manager">LVM (Logical Volumn Manager)</h4>
+<ul>
+<li>逻辑卷管理，主要解决的问题是，弹性调整文件系统的容量。</li>
+<li>与传统的磁盘与分区相比，LVM为计算机提供了更高层次的存储，通过在磁盘分区和文件系统之间增加一个逻辑层，提供一个抽象的逻辑盘卷。<br>
+<img src="https://cloud.githubusercontent.com/assets/1736354/12811308/9e2cf4e0-cb66-11e5-91e4-5d375b576ae7.png" alt="image" loading="lazy"></li>
+</ul>
+<h5 id="参考链接-4">参考链接</h5>
+<ul>
+<li><a href="http://yikun.github.io/2016/02/03/%E5%AD%98%E5%82%A8%E7%9F%A5%E8%AF%86%E5%AD%A6%E4%B9%A0/">[1] Yikun: 存储知识学习</a></li>
+</ul>
+<h4 id="磁盘基础知识">磁盘基础知识</h4>
+<ul>
+<li>盘面：硬盘一般含有一个或多个盘片，一个盘片包含两个盘面。一个盘面对应一个磁头。</li>
+<li>磁道：每个盘面被划成多个狭窄的同心圆环，这样的圆环叫做磁道。</li>
+<li>扇区：每个磁道的每段圆弧叫做一个扇区，是读写的最小单位。</li>
+<li>柱面：所有盘面上的同一磁道，在竖直方向构成一个圆柱，称为柱面。<br>
+<img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/disk.png?raw=true" alt="image" loading="lazy"></li>
+<li><strong>磁盘容量</strong> = 磁头数（盘面数） × 磁道(柱面)数 × 每道扇区数 × 每扇区字节数</li>
+<li><strong>磁盘读取响应时间</strong>：
+<ul>
+<li>寻道时间：磁头从开始移动到数据所在磁道所需要的时间，寻道时间越短，I/O操作越快。目前磁盘的平均寻道时间一般在3－15ms，一般都在10ms左右。</li>
+<li>旋转延迟：盘片旋转将请求数据所在扇区移至读写磁头下方所需要的时间，旋转延迟取决于磁盘转速。普通硬盘一般都是7200rpm，慢的5400rpm。</li>
+<li>数据传输时间：完成传输所请求的数据所需要的时间。</li>
+</ul>
+</li>
+</ul>
+<h5 id="块簇-外存">块/簇 -&gt; 外存</h5>
+<ul>
+<li>磁盘块/簇（虚拟出来的）。 块是操作系统中最小的逻辑存储单位。操作系统与磁盘打交道的最小单位是磁盘块。</li>
+<li>通俗的来讲，在Windows下如NTFS等文件系统中叫做簇；在Linux下如Ext4等文件系统中叫做块（block）。每个簇或者块可以包括2、4、8、16、32、64…2的n次方个扇区。</li>
+<li><strong>为什么存在磁盘块？</strong>
+<ul>
+<li>读取方便：由于扇区的数量比较小，数目众多在寻址时比较困难，所以操作系统就将相邻的扇区组合在一起，形成一个块，再对块进行整体的操作。</li>
+<li>分离对底层的依赖：操作系统忽略对底层物理存储结构的设计。通过虚拟出来磁盘块的概念，在系统中认为块是最小的单位。</li>
+</ul>
+</li>
+</ul>
+<h5 id="页-内存">页 -&gt; 内存</h5>
+<ul>
+<li>操作系统经常与内存和硬盘这两种存储设备进行通信，类似于“块”的概念，都需要一种虚拟的基本单位。所以，与内存操作，是虚拟一个页的概念来作为最小单位。与硬盘打交道，就是以块为最小单位。</li>
+</ul>
+<h5 id="总结">总结</h5>
+<ul>
+<li>扇区： 硬盘的最小读写单元</li>
+<li>块/簇： 是操作系统针对硬盘读写的最小单元</li>
+<li>page： 是内存与操作系统之间操作的最小单元</li>
+<li>扇区 &lt;= 块/簇 &lt;= page</li>
+</ul>
+<h4 id="磁盘分区">磁盘分区</h4>
+<ul>
+<li>MBR 分区表：(1) 主要开机区（MBR）446 bytes; (2) 分区表（Partition Table）64 bytes</li>
+<li>GPT 分区表：分区容量扩充较多，支持更大容量的磁盘。</li>
+</ul>
+<h5 id="参考链接-5">参考链接</h5>
+<ul>
+<li><a href="https://www.cnblogs.com/jswang/p/9071847.html">[1] 博客园: 硬盘基本知识（磁头、磁道、扇区、柱面）</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://cmake.org/wp-content/uploads/2018/11/cmake_logo_slider.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/cmake/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-07-22">2019-07-22</time>
+                  <h4 class="title white no-margin">CMake入门</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/TCMU-LIO.png?raw=true');"></div>
+                 <a href="https://blog.shunzi.tech/post/tcmu/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-07-17">2019-07-17</time>
+                  <h4 class="title white no-margin">TCMU学习笔记</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

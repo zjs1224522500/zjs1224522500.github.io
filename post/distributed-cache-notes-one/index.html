@@ -1,0 +1,1628 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>分布式缓存读书笔记（一） | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+分布式缓存读书笔记系列之一
+从缓存的基本概念以及淘汰算法简单介绍入手
+介绍优秀缓存框架的实现（本地缓存和集中式缓存）
+
+
+
+缓存基本概念
+缓存分类（软件系统中分类）
+
+根据所处位置的不同划分为：
+
+客户端缓存： BS 应用中页面的缓存（..." />
+    <meta name="keywords" content="缓存,分布式" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://blog.shunzi.tech/post-images/distributed-cache-notes-one.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2019-09-03"><i class="fa fa-calendar"></i><span class="lately">1 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/distributed-cache-notes-one/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/distributed-cache-notes-one/"> </span>
+              </a>
+              <span id="/distributed-cache-notes-one/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-0 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-1 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">分布式缓存读书笔记（一）</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>分布式缓存读书笔记系列之一</li>
+<li>从缓存的基本概念以及淘汰算法简单介绍入手</li>
+<li>介绍优秀缓存框架的实现（本地缓存和集中式缓存）</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="缓存基本概念">缓存基本概念</h2>
+<h3 id="缓存分类软件系统中分类">缓存分类（软件系统中分类）</h3>
+<ul>
+<li><strong>根据所处位置的不同划分为：</strong>
+<ul>
+<li>客户端缓存： BS 应用中页面的缓存（LocalStorage）和浏览器缓存，移动应用中APP自身所使用的缓存</li>
+<li>服务端缓存：
+<ul>
+<li>数据库缓存：例如Mysql 查询缓存：当开启了 Mysql 的 Query Cache，会针对查询的结果 ResultSet 进行缓存，当接收新的查询语句时，判断是否满足Qurey Cache要求，根据预先设定好的 Hash 算法将查询豫军进行 HASH，对应地作为键去查询缓存中的数据。</li>
+<li>平台级缓存：一般指带有缓存特性的应用框架，例如 Ehcache, JBoss Cache等</li>
+<li>应用级缓存：
+<ul>
+<li>面向 Redis 的缓存应用</li>
+<li>多级缓存：Nginx 应用服务器的本地缓存解决了热点数据的缓存问题，Redis分布式缓存集群减少了访问回源率，Tomcat集群使用的平台级缓存防止了相关缓存失效/崩溃之后的冲击，数据库缓存提升数据库查询时的效率。</li>
+<li>公有云提供的缓存服务：动态扩容，数据多备，自动容灾，成本较低。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>网路中的缓存：Web缓存（正向代理）-- Squid ，边缘缓存（反向代理）-- Varnish, SDN</li>
+</ul>
+</li>
+<li><strong>根据规模和部署方式可划分为：</strong>
+<ul>
+<li>单体缓存</li>
+<li>缓存集群</li>
+<li>分布式缓存</li>
+</ul>
+</li>
+</ul>
+<h3 id="缓存算法替代策略">缓存算法（替代策略）</h3>
+<h4 id="lru-least-recently-used">LRU - Least Recently Used</h4>
+<ul>
+<li>在CPU缓存淘汰和虚拟内存系统中使用的效果很好，浏览器缓存一般也使用了该算法。</li>
+</ul>
+<h4 id="lfu-least-frequently-used">LFU - Least Frequently Used</h4>
+<ul>
+<li>替换访问次数最少的缓存。针对某些一开始可能有很高的使用频率但之后再也不会使用的场景，容易导致缓存污染。</li>
+</ul>
+<h4 id="lru2-least-recently-used-2">LRU2 - Least Recently Used 2</h4>
+<ul>
+<li>LRU的一个变种，把被两次访问过的对象放入缓存池，缓存池满后对应的清除两次最少使用的缓存对象去除。因为需要跟踪对象2次，访问负载会随着缓存池的增加而增加。同理 LRUK</li>
+</ul>
+<h4 id="2q-two-queue">2Q - Two Queue</h4>
+<ul>
+<li>LRU的另一个变种。把被访问的数据放在LRU的缓存中，如果这个对象再一次被访问，就把他转移到第二个更大的LRU缓存中，使用了多级缓存的方式。去除缓存对象是为了保持第一个缓存池是第二个缓存池的1/3，当缓存的访问负载是固定的时候，把   LRU换成LRU2，就比增加缓存的容量更好。</li>
+</ul>
+<h4 id="size">SIZE</h4>
+<ul>
+<li>替换占用空间最大的对象，但针对部分进入缓存的小对象，之后可能永远不再被访问，SIZE策略没有提供淘汰这类对象的机制，也会导致“缓存污染”。</li>
+</ul>
+<h4 id="lru-threshold">LRU-Threshold</h4>
+<ul>
+<li>不缓存超过某一size的对象，其他与LRU相同</li>
+</ul>
+<h4 id="logsizelru">Log(Size)+LRU</h4>
+<ul>
+<li>替换 size 最大的对象，当 size 相同时，按照LRU进行替换。</li>
+</ul>
+<h4 id="hyper-g">Hyper-G</h4>
+<ul>
+<li>LFU 的改进版，同时考虑上次访问的时间和对象size。</li>
+</ul>
+<h4 id="pitkowrecker">Pitkow/Recker</h4>
+<ul>
+<li>替换最近最少使用的对象，除非所有对象都是今天访问过的，如果是这样，则替换掉最大的对象。</li>
+</ul>
+<h4 id="arc-adaptive-replacement-cache">ARC - Adaptive Replacement Cache</h4>
+<ul>
+<li>ARC 介于 LRU 和 LFU 之间，为了提高效果，由两个 LRU 组成，第一个包含的条目时最近只被使用过一次的，而第二个 LRU 包含的是最近被使用过两次的条目，因此得到了新的对象和常用的对象。ARC能够自我调节并且是低负载的。</li>
+</ul>
+<h4 id="mru-most-recently-used">MRU - Most Recently Used</h4>
+<ul>
+<li>MRU 与 LRU 是相对的，移除最近最多被使用的对象，针对某些场景，找到最近最少使用的对象是一项时间复杂度较高的任务，此时考虑 MRU。在数据库内存缓存中比较常见。</li>
+</ul>
+<h4 id="fifo-first-in-first-out">FIFO - First In First Out</h4>
+<ul>
+<li>队列先进先出。</li>
+</ul>
+<h4 id="random-cache">Random Cache</h4>
+<ul>
+<li>随即缓存就是随意地替换缓存数据，比FIFO机制好，某些特殊情况下甚至优于LRU</li>
+</ul>
+<h3 id="缓存的原理">缓存的原理</h3>
+<h4 id="缓存的规范">缓存的规范</h4>
+<ul>
+<li>以 JSR (Java Specification Requests) 为例，该规范主要定义了一种对 Java 对象临时在内存中的进行缓存的方法，包括对象的创建、访问、失效、一致性等。</li>
+<li>javax.cache 包中有一个 CacheManager 接口负责保存和控制一系列的缓存。主要包括以下特性：
+<ul>
+<li>缓存的读写；</li>
+<li>缓存具有原子性操作；</li>
+<li>具有缓存时间监听器；</li>
+<li>具有缓存注解；</li>
+<li>保存缓存的KV对类型应该为泛型。</li>
+</ul>
+</li>
+</ul>
+<h5 id="jcache-api">JCache API</h5>
+<ul>
+<li><strong>核心类</strong>
+<ul>
+<li>CacheProvider：创建、配置、管理 CacheManager</li>
+<li>CacheManager：创建、配置、管理 Cache</li>
+<li>Cache：类似 Map. 存储以 Key 为索引的值</li>
+<li>Entry：存储在 Cache 中的 kev-value 对</li>
+</ul>
+</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://blog.shunzi.tech/post-images/1567503922769.jpg" alt="" loading="lazy"></figure>
+<pre><code class="language-Java">CachingProvider cachingProvider = Caching. getCachingProvider();
+CacheManager cacheManager = cachingProvider. getCacheManager();
+MutableConfiguration&lt;String, String&gt; config = new MutableConfiguration();
+Cache&lt;String, String&gt; cache = cacheManager. createCache(&quot;JDKCodeNames&quot;,config);
+cache.put(&quot;JDK1.5&quot;,&quot;Tiger&quot;);
+cache.put(&quot;JDK1.6&quot;,&quot;Mustang&quot;);
+cache.put(&quot;JDK1.7&quot;,&quot;Dolphin&quot;);
+String jdk7CodeName = cache.get(&quot;JDK1.7&quot;);
+</code></pre>
+<ul>
+<li><strong>JCache 的配置：</strong> JCache API提供了一组标准的接口和实现，通过它们可以以编程方式配置缓存。javax.cache.configuration.MutableConfiguration及其构建器类API有助于配置。可以配置以下高速缓存特性:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>METHOD</th>
+<th>JCACHE CONFIGURATION ARTIFACT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>setTypes</td>
+<td>Data types to be stored in the Cache</td>
+</tr>
+<tr>
+<td>setStoreByValue</td>
+<td>Store by reference or value</td>
+</tr>
+<tr>
+<td>setExpiryPolicyFactory</td>
+<td>Expiration Policy</td>
+</tr>
+<tr>
+<td>setReadThrough, setWriteThrough</td>
+<td>Read through and Write through policies</td>
+</tr>
+<tr>
+<td>setCacheLoaderFactory, setCacheWriterFactory</td>
+<td>Loader and Writer implementation</td>
+</tr>
+<tr>
+<td>addCacheEntryListenerConfiguration</td>
+<td>Entry Listener implementation</td>
+</tr>
+<tr>
+<td>setManagementEnabled, setStatisticsEnabled</td>
+<td>Management and statistics activation</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Store-By-Value</strong> &amp; <strong>Store-By-Reference</strong>
+<ul>
+<li><strong>Value</strong>：存储 KV 对时，会将值拷贝一份存入缓存（复制一份），避免外界修改KV时，污染了缓存中的KV对内容；</li>
+<li><strong>Reference</strong>：存储 KV 对时，直接将引用存入缓存。Java常见的堆内缓存，一般使用该方式，从而提升缓存性能（免去了复制以及回收时的开销）</li>
+</ul>
+</li>
+<li><strong>缓存过期策略</strong>：这些策略都对应地实现了 <code>ExpirePolicy&lt;K, V&gt;</code> 接口</li>
+</ul>
+<pre><code class="language-Java">public interface ExpiryPolicy&lt;K, V&gt; {
+    Duration getExpiryForCreacedBntry(Entry&lt;? extends K, ? extends V&gt;entry)；
+    Duration getExpiryForAccessedEntry(Entry&lt;? extends K, ? extends V&gt;entry)； 
+    Duration getExpiryForKodifiedEntry(Entry&lt;? extends K, ? extends V&gt;entry)；
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>EXPIRATION POLICY IMPLEMENTATION CLASS</th>
+<th>DESCRIPTION</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AccessedExpiryPolicy</td>
+<td>Based on time of last access</td>
+</tr>
+<tr>
+<td>CreatedExpiryPolicy</td>
+<td>Based on creation time</td>
+</tr>
+<tr>
+<td>EternalExpiryPolicy</td>
+<td>Ensures the cache entries never expire (default expiry policy)</td>
+</tr>
+<tr>
+<td>ModifiedExpiryPolicy</td>
+<td>Based on time of last update</td>
+</tr>
+<tr>
+<td>TouchedExpiryPolicy</td>
+<td>Based on time of last access OR update</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-Java">MutableConfiguration&lt;String,String&gt; config = new MutableConfiguration();
+config.setExpiryPolicyFactory(CreatedExpiryPolicy.factoryOf(Duration.ONE_MINUTE));
+</code></pre>
+<h5 id="参考链接">参考链接</h5>
+<ul>
+<li><a href="https://blog.csdn.net/boonya/article/details/54632129">[1] CSDN ： Java Caching(缓存)-策略和JCache API</a></li>
+</ul>
+<h4 id="缓存框架的实现">缓存框架的实现</h4>
+<ul>
+<li><a href="https://github.com/jsr107/jsr107spec">CsCache 源码</a>基于SPI实现并定义了JCache的缓存规范。</li>
+<li><a href="https://blog.csdn.net/wireless_com/article/details/79277272">参考博客：《深入分布式缓存》之“自己动手写缓存”</a></li>
+</ul>
+<h2 id="ehcache-和-guava-cache">Ehcache 和 Guava Cache</h2>
+<h3 id="ehcache">Ehcache</h3>
+<h4 id="主要特点">主要特点</h4>
+<ul>
+<li><strong>快速、简单</strong>：对应的线程机制是为大型高并发系统设计的，同时提供了易于使用的 API. 被广泛用于了 Hibernate、Spring、Cocoon等其他开源系统。</li>
+<li><strong>多种缓存策略</strong>：LRU/LFU/FIFO</li>
+<li><strong>缓存数据有两级</strong>：内存和磁盘</li>
+<li><strong>虚拟机重启过程中缓存数据写入到磁盘</strong>：引入了缓存数据持久化存储，可以显示调用将缓存数据刷入磁盘。</li>
+<li><strong>可以通过 RMI 和可插入 API等方式进行分布式缓存</strong>：Terracotta 缓存集群；RMI、JGroups/JMS 冗余缓存数据。</li>
+<li><strong>提供相关监听器接口</strong>：可以监听缓存事件和缓存管理器。</li>
+<li><strong>提供 Hibernate 的缓存实现</strong></li>
+</ul>
+<h4 id="具体使用">具体使用</h4>
+<ul>
+<li>关于 EhCache 的一些具体使用，可以参考相关博客和官方示例文档，此处不赘述。</li>
+</ul>
+<h5 id="参考链接-2">参考链接</h5>
+<ul>
+<li><a href="https://blog.csdn.net/baidu_30325009/article/details/82947775">[1] CSDN：Spring整合EhCache的Demo<br>
+</a></li>
+<li><a href="https://blog.csdn.net/u011116672/article/details/52184260">[2] CSDN：Ehcache缓存入门实战（附源码）</a></li>
+</ul>
+<h4 id="ehcache-集群">Ehcache 集群</h4>
+<ul>
+<li>Ehcache 支持多种集群方案，分别是 Terracotta、RMI、JMS、JGroup、Ehcache Server</li>
+</ul>
+<h5 id="rmi-组播方式">RMI 组播方式</h5>
+<ul>
+<li>RMI 是 Java 的一种远程方法调用技术，是一种点对点的基于 Java 对象的通讯方式。</li>
+<li>采用 RMI 集群模式时，集群中的每个节点都是对等关系，并不存在主节点或者从节点的概念，因此节点间必须有一个机制能够互相认识对方，必须知道其它节点的信息，包括主机地址、端口号等。EhCache 提供两种节点的发现方式：手工配置和自动发现。
+<ul>
+<li>手工配置：要求在每个节点中配置其它所有节点的连接信息，一旦集群中的节点发生变化时，需要对缓存进行重新配置。</li>
+<li>自动发现：使用 TCP 广播来建立和包含一个广播组，它的特征是最小配置和对成员组的自动添加和管理。没有那个服务器是有优先级的。对等点每一秒中向广播组发送心跳，如果一个对等点在五秒钟内没发送过来，则此对等点将会被删除，如果有新的，则会被加入集群。</li>
+</ul>
+</li>
+<li>缓存改变时，Ehcache 会向组播 IP 地址和端口号发送 RMI UDP 组播包。</li>
+</ul>
+<h5 id="jms-消息方式">JMS 消息方式</h5>
+<ul>
+<li>JMS 是两个应用程序之间进行异步通信的 API，它为标准消息协议和消息服务提供了一组通用接口，包括创建、发送和读取消息等，同时也支持基于事件的通信机制，通过发布事件机制向所有与服务器保持连接的客户端发送消息，再发送消息的时候，接收者不需要在线，等到客户端上线的时候，能保证接收到服务端发送的消息。</li>
+<li>JMS 核心就是一个消息队列，每个应用节点都订阅预先定义好的主题，同时，节点有元素更新时，也会发布更新元素到主题中去。各个应用服务器节点通过侦听MQ获取到最新的数据，然后分别更新自己的Ehcache缓存，Ehcache默认支持ActiveMQ，我们也可以通过自定义组件的方式实现类似Kafka，RabbitMQ。</li>
+</ul>
+<h5 id="cache-server-模式">Cache Server 模式</h5>
+<ul>
+<li>Ehcache Server 集中存放缓存数据，Server 之间进行数据复制，提供了强大的安全机制和监控功能，以 WAR 包的形式进行部署，提供 RESTful 和 SOAP 类型的 API。</li>
+</ul>
+<h5 id="参考链接-3">参考链接</h5>
+<ul>
+<li><a href="https://www.ibm.com/developerworks/cn/java/j-lo-ehcache/">[1] IBM : 深入探讨在集群环境中使用 EhCache 缓存系统<br>
+</a></li>
+<li><a href="https://blog.csdn.net/tang06211015/article/details/52281551">[2] CSDN : 集群环境中使用 EhCache 缓存系统<br>
+</a></li>
+<li><a href="https://www.jianshu.com/p/5a0669d6305e?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation">[3] 简书 ：玩转EhCache之最简单的缓存框架<br>
+</a></li>
+</ul>
+<h4 id="ehcache-适用场景">Ehcache 适用场景</h4>
+<ul>
+<li><strong>比较少的更新数据表的情况下</strong>。（针对Hibernate） EhCache 作为 Hibernate 缓存时。在进行修改表数据的时候，会自动把缓存中关于此表的缓存全部删除掉，为了保证数据的一致性，但性能较差。</li>
+<li><strong>对并发要求不是很严格的情况下</strong>。多台应用服务器中的数据无法进行实时同步。</li>
+<li><strong>对一致性要求不高的情况下</strong>。因为 EhCache 本地缓存的特性，目前无法很好解决不同服务器之间的缓存同步的问题，在一致性要求高的情况下，建议使用 Redis、Memcached 等集中式缓存。</li>
+</ul>
+<h4 id="ehcache-的瓶颈">Ehcache 的瓶颈</h4>
+<ul>
+<li><strong>缓存漂移</strong>：每个应用节点只管理自己的缓存，在更新某个节点的时候，不会影响到其他节点，不能较好地进行数据之间的同步。</li>
+<li><strong>对数据库要求高</strong>：集群环境中，每一个应用数据为了保持最新，会增大相应的数据库开销。</li>
+</ul>
+<h4 id="实际应用">实际应用</h4>
+<h5 id="减小缓存击穿的风险">减小缓存击穿的风险</h5>
+<ul>
+<li>可以使用 EhCache 作为集中式缓存的<strong>二级缓存</strong>，利用服务器本地的应用缓存在集中式缓存宕机以后承担相应的负载。</li>
+<li>但与此同时也相应地引入了 <strong>本地缓存 Ehcache 的更新问题以及集群环境下的同步问题</strong>
+<ul>
+<li><strong>定时轮询</strong>：每台应用服务器定时轮询集中式缓存，比较缓存数据和本地缓存的版本号，如果不一致，对应地进行本地缓存的同步更新。
+<ul>
+<li>仍然会有数据一致性的问题。每台服务器定是轮询的时间点可能不一样，可能造成缓存数据不一致的问题，故只适用于对一致性要求不高的场景下。</li>
+</ul>
+</li>
+<li><strong>主动通知</strong>：引入消息队列，每台应用服务器的本地缓存侦听 MQ 消息，通过 MQ 推送或者拉取的方式，一定程度上保证数据的同步更新。
+<ul>
+<li>不同服务器之间的网络速度的不同仍然可能保证达到完全强一致性，基于此原理使用 ZooKeeper 等分布式协调通知组件也是如此。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="guava-cache">Guava Cache</h3>
+<h4 id="使用场景">使用场景</h4>
+<ul>
+<li><strong>愿意消耗一些本地内存空间来提升速度</strong></li>
+<li><strong>更新锁定</strong>：针对缓存不命中的情况，并发量较大的话，可能出现多个请求同时从数据源中请求相同的数据。而Guava Cache 可以在 CacheLoader 的 load 方法中加以控制，针对同一个 Key，只让一个请求去数据源中读取数据，而其他请求阻塞等待结果。同时也支持 refreshAfterWrite 定时刷新数据的配置项，刷新时其他请求会阻塞在一个固定的时间段，如果这段时间内没有获得新值，就直接返回旧值。</li>
+</ul>
+<h4 id="具体使用-2">具体使用</h4>
+<ul>
+<li>可参考相关博客例子。</li>
+<li>Guava 实现原理也可参考相关博客</li>
+</ul>
+<h5 id="参考链接-4">参考链接</h5>
+<ul>
+<li><a href="https://segmentfault.com/a/1190000011105644">[1] Segmentfault : Guava Cache用法介绍</a></li>
+<li><a href="https://blog.csdn.net/u012881904/article/details/79263787">[2] CSDN : Guava Cache 使用学习</a></li>
+<li><a href="https://segmentfault.com/a/1190000015272229">[3] crossoverjie : Guava 源码分析（Cache 原理）</a></li>
+<li><a href="https://segmentfault.com/a/1190000015643384">[4] crossoverjie : Guava 源码分析（Cache 原理【二阶段】）</a></li>
+<li><a href="https://github.com/google/guava/wiki/CachesExplained">[5] GIthub WIKI : Guava CachesExplained</a></li>
+</ul>
+<h4 id="淘汰策略">淘汰策略</h4>
+<h5 id="被动删除">被动删除</h5>
+<ul>
+<li>基于数据的大小进行删除：当容量即将达到（接近）指定的大小（最大条数）的时候，删除不常用的键值对</li>
+<li>基于过期时间进行删除：
+<ul>
+<li><code>expireAfterAccess(long, TimeUnit)</code>：当某个 Key 最后一次访问后，再隔多长时间后删除；</li>
+<li><code>expireAfterWrite(long, TimeUnit)</code>：当某个 Key 被创建后，隔多长时间后被删除。</li>
+</ul>
+</li>
+<li>基于引用的删除：基于 Java 的垃圾回收机制，判断缓存的数据引用的关系，如果没有被引用，则 Guava 会将该数据删除</li>
+</ul>
+<h5 id="主动删除">主动删除</h5>
+<ul>
+<li><code>Cache.invalidate(key)</code>：单独删除某一个 Key 对应的缓存</li>
+<li><code>Cache.invalidate(keys)</code>：批量删除一批 Key 对应的缓存</li>
+<li><code>Cache.invalidateAll()</code>：删除所有的数据</li>
+</ul>
+<h2 id="集中式缓存-memcached">集中式缓存 Memcached</h2>
+<h3 id="特性">特性</h3>
+<ul>
+<li><strong>协议简单</strong>：服务端和客户端通信不使用复杂的XML等格式，而是使用简单的基于文本协议或者二进制协议。</li>
+<li><strong>基于 libevent 的事件处理</strong>：由于 epoll, kqueue, /dev/poll 每个接口都有自己的特点，程序移植困难，故应运而生了将 Linux 的 epoll、BSD 类操作系统的 kqueue 等事件处理功能封装成统一的接口的库 libevent. 故在 Linux、BSD、Solaris 等操作系统上能发挥其高性能。</li>
+<li><strong>内置内存存储方式</strong>：数据均保存在内置的内存存储空间中从而提高性能，故掉电或者重启之后数据会全部丢失。另外内存达到指定的值后，会自动删除不使用的内存，采用 LRU 算法。</li>
+<li><strong>通过客户端实现分布式</strong>：服务器实例之间不会通信共享信息，在客户端会实现一些路由选择算法来决定具体定向到哪台 Memcached 缓存服务器，分布式的能力实在客户端代码实现的。</li>
+</ul>
+<h3 id="问题">问题</h3>
+<ul>
+<li><strong>无法备份，重启无法恢复</strong>：通过第三方的方案来进行持久化，需要兼容 Memcached。如 MemcachedDB 以及 Tokyo Cabinet （DBM 数据库）和 Tokyo Tyrant （网络协议）配合使用。</li>
+<li><strong>不支持高级查询</strong>：由于存储机制，不支持范围查询</li>
+<li><strong>单点故障 failover</strong>：可以通过主从模式解决。应用服务器通过客户端hash，对缓存服务器的主节点和子节点进行双写，同时更新；读取的时候，先读取主节点数据，若返回为空或者无法取得数据的s时候，访问子节点。针对可能存在的一致性问题，统一以Master为准。在进行缓存数据的更新操作的时候，先获取Master中的数据，再对应地进行CAS更新，更新成功后对应地再更新子节点。如果CAS多次后都失败，则对Master和Slave进行删除操作，后续让请求穿透缓存，从数据库中获取数据，再写回缓存。</li>
+</ul>
+<h3 id="内存存储">内存存储</h3>
+<h4 id="slab-allocation-机制">Slab-Allocation 机制</h4>
+<ul>
+<li>传统的内存分配机制为通过对所有记录简单地进行 malloc 和 free 来进行，但该方式会产生内存碎片，加重操作系统内存管理器的负担。</li>
+<li>Slab-Allocation 机制则是按照预先规定的大小，将分配的内存分割成各种尺寸的块（chunk），并把尺寸相同的块分成组 Slab Class（chunk 的集合）。分配的块可以重复利用，不释放到内存中。</li>
+</ul>
+<h4 id="核心概念">核心概念</h4>
+<ul>
+<li><strong>Page</strong>：分配给 Slab 的内存空间，默认 1MB。</li>
+<li><strong>Chunk</strong>：用于缓存记录的内存空间。</li>
+<li><strong>Slab Class</strong>：特定大小的 chunk 的组。</li>
+</ul>
+<hr>
+<ul>
+<li>Chunk 大小之间的关系由 growth factor 决定。如 88bytes * 1.25 = 112 bytes; 112 bytes * 1.25 = 144 bytes，依此类推。</li>
+<li>Slab-Allocation 的机制简单说就是，Memcached 根据收到的数据的大小，选择最合适数据大小的 Slab。Memcached 中保存着 Slab 内空闲的 Chunks 的列表，根据该列表选择 Chunk，然后将数据缓存其中。</li>
+<li>该机制解决了内存碎片的问题，但同时也引入了新的问题：无法有效利用分配的内存，内存的利用率不高。如 112bytes 的 chunk 存放 100bytes 的数据。</li>
+<li>可以调整 Growth Factor 来进行调优</li>
+</ul>
+<h4 id="item">Item</h4>
+<ul>
+<li>在内存中保存（key, value）30 秒，数据被打包成一个 Item</li>
+</ul>
+<pre><code>set key 0 30 5 value
+</code></pre>
+<ul>
+<li>一个完整的 Item 包括以下几个部分：
+<ul>
+<li>key ：键</li>
+<li>nkey：键长</li>
+<li>flags：用户定义的flag</li>
+<li>nbytes：值长，包括换行符</li>
+<li>suffix：后缀 Buffer</li>
+<li>nsuffix：后缀长</li>
+</ul>
+</li>
+<li>完整的 Item 长度是 “键长+值长+后缀长+item结构大小（32字节）”，从而计算 Slab 的 classid.</li>
+</ul>
+<h3 id="典型问题解析">典型问题解析</h3>
+<ul>
+<li><strong>容量问题</strong>：单一服务节点无法突破单机内存上限</li>
+<li><strong>服务高可用 HA</strong>：单实例场景下，如果因为网络波动或者机器故障等原因缓存不可用，会出现缓存击穿的情况</li>
+<li><strong>扩展问题</strong>：单一服务节点无法突破单实例请求峰值上限，比如热点问题，微博热搜，秒杀事件等。</li>
+</ul>
+<h4 id="过期机制">过期机制</h4>
+<ul>
+<li><strong>Lazy Expiration</strong>：在 get 时，查看记录的时间戳，检查记录是否过期，从而实现不会在过期监视上耗费 CPU 时间。</li>
+<li><strong>LRU 算法</strong>：在 Slab 的范围内执行
+<ul>
+<li>LRU ： 最近最少使用</li>
+<li>LRU-K ： 最近使用过 K 次</li>
+<li>Two Queues ： 两个缓存队列，一个是 FIFO 队列，一个是 LRU 队列</li>
+<li>Multi Queues ： 根据访问频率将数据划分为多个队列，不同队列具有不同的优先级。</li>
+</ul>
+</li>
+</ul>
+<h4 id="哈希算法">哈希算法</h4>
+<ul>
+<li>Memcached 的分布式部署结构以来的核心即为 <strong>哈希算法</strong>。例如部署了三个 Memcached 实例，简单的哈希算法实现即为 <code>hash(key) mod 3</code>，对应地将 Key 散列化之后取模，从而落到一个具体的实例上。</li>
+<li>但如上所示的简单 Hash 算法无法较好地解决实例的增加或减少的问题中去，考虑采用一致性 Hash和哈希环来解决。</li>
+</ul>
+<h4 id="热点问题">热点问题</h4>
+<ul>
+<li>数据热点访问问题（读热点问题）：例如某些热点商品的访问度非常高，可能造成单个 Memcached 节点的负载特别高，通用的解决思路是：在 Cache 的 Client 端做本地 LocalCache，当发现热点数据时直接缓存到客户端，而不用每次都请求到缓存服务端。</li>
+<li>巨热数据的处理：Facebook 的解决办法为通过多个 key_index(key:xxx#N) 来获取热点 Key 的数据，其实质也是把 Key 分散，对于非高一致性要求的高并发读有一定的效果。解决之道：把巨热数据的 key 发布到所有的服务器上，每个服务器给对应的 key 一个别名，比如 get key:xxx =&gt; get key:xxx#N。每次对热点数据访问时对应地进行Hash，从而转换成 子Key，从而分担单个缓存服务器的压力。</li>
+</ul>
+<h4 id="缓存与数据库的更新问题">缓存与数据库的更新问题</h4>
+<ul>
+<li>该问题主要是针对更新数据库数据时，对应地需要更新缓存中的数据（也可以选择淘汰缓存中的数据），从而保证数据库和缓存数据的一致性，同时要尽量保证整个过程耗时较短（根据具体的业务需求）。</li>
+</ul>
+<h5 id="参考链接-5">参考链接</h5>
+<ul>
+<li><a href="https://blog.csdn.net/ZLHZHJ/article/details/80176988?utm_source=copy">[1] CSDN : 高并发下缓存和数据库一致性问题（更新淘汰缓存不得不注意的细节）<br>
+</a></li>
+<li><a href="https://www.jianshu.com/p/c5a9cb739936">[2] 简书 ：缓存与数据库一致性之缓存更新设计<br>
+</a></li>
+</ul>
+<h4 id="命名空间">命名空间</h4>
+<ul>
+<li>如果很多不同的业务系统使用同一套 Memcached 服务，那么很有可能存在 Key 的冲突。为了对不同的业务数据进行隔离，引入命名空间的概念来进行区分。</li>
+<li>由于 Memcached 本身不提供命名空间机制，故可使用 Key 的前缀来模拟命名空间。如 orderid_xxx, userid_xxx</li>
+</ul>
+<h4 id="cas">CAS</h4>
+<ul>
+<li>CAS 主要解决原子性操作问题。操作一个 Key 的过程当中，不允许被其他访问操作，如果被操作过，当前操作则失败。</li>
+<li>Memcached 中使用 gets 命令获取 key-value 和对应的令牌（64位版本标识符），然后产生新的 Value，最后附带版本号提交新的 Key-Value；服务端判断 CAS 操作中的版本号是不是最新的，如果不是，则认为 Key 对应的 Value 已经被修改，本次 CAS 操作失败。</li>
+</ul>
+<h5 id="参考链接-6">参考链接</h5>
+<ul>
+<li><a href="https://blog.csdn.net/z69183787/article/details/52920244">[1] CSDN : Memcached的CAS机制的实现</a></li>
+<li><a href="https://www.cnblogs.com/duanxz/p/5138103.html">[2] 博客园 ：分布式缓存系统 Memcached CAS协议</a></li>
+</ul>
+<h3 id="memcached-客户端">Memcached 客户端</h3>
+<ul>
+<li>客户端的功能主要包括：Memcached 协议的封装，连接池的实现， sharding 机制，故障转移，序列化等机制</li>
+<li>此处以 Java Client Spymemcached 为例进行介绍。</li>
+</ul>
+<h4 id="spymemcached-设计思想解析">Spymemcached 设计思想解析</h4>
+<h5 id="特性-2">特性</h5>
+<ul>
+<li>异步：NIO 作为底层通信框架</li>
+<li>集群：默认支持服务器集群的 sharding 机制</li>
+<li>自动恢复：网络闪断，会进行异步重连，自动恢复</li>
+<li>failover 机制，提供可扩展的容错机制</li>
+<li>支持批量 get，本地进行数据的聚合</li>
+<li>序列化：默认支持 JDK 序列化机制，可自定义扩展</li>
+<li>超时机制，支持访问超时等设置</li>
+</ul>
+<h5 id="整体设计">整体设计</h5>
+<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/files-and-images/1cccaea5108beae6fc6f9e9a549a7bf1d8f4a63f/blog/pic/spymemcached.png" alt="image" loading="lazy"></figure>
+<ul>
+<li>API 接口：对外提供同步的接口和异步的接口调用。异步接口实际返回 Future</li>
+<li>任务封装：将访问操作和 callback 封装为 Task</li>
+<li>路由机制：通过默认的 Sharding 策略（支持 arrayMod 和 Ketama）,选择 Key 对应的连接。</li>
+<li>将 Task 放到对应连接的队列</li>
+<li>Selector 线程异步获取连接队列的 Task，进行协议的封装和发送</li>
+<li>收到 Memcached 返回的包，会找到对应的 Task，调用 callback 进行回调，对返回结果进行协议的解析，并进行序列化。</li>
+</ul>
+<h5 id="sharding-机制及容错">sharding 机制及容错</h5>
+<ul>
+<li><strong>路由机制</strong>：
+<ul>
+<li>实现的 HASH 算法：
+<ul>
+<li>NATIVE_HASH：默认的哈希算法，计算 hashCode</li>
+<li>CRC_HASH：使用 crc32 进行 hash</li>
+<li>KETAMA_HASH：ketama 的一致性 hash</li>
+</ul>
+</li>
+<li>默认支持的两种路由策略：
+<ul>
+<li>arrayMod：hash 采用的是 NATIVE_HASH，取模选择路由节点。但是取模带来了扩展性问题，导致缓存命中率降低。</li>
+<li>hash 采用 KETEMA_HASH，该算法选择路由节点，同时满足平衡性和单调性，有效解决了扩缩容带来的缓存不命中问题。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>容错</strong>：Key 路由到的节点挂掉了的时候。如何处理？
+<ul>
+<li>自动重连：失败的节点会从正常的队列中摘除，添加到重连队列中，定期对该节点进行重连，重连成功，添加到正常的队列中</li>
+<li>failover 处理：
+<ul>
+<li>Redistribute：若路由到一个失败节点，根据策略选择下一个节点，直到选择到正确的节点，容错性较强；但由于自动 failover 到其他节点，会导致大量回源，并且在启动的时候由于 Memcached 没有固化，导致再次大量回源。</li>
+<li>Retry：若路由的是失败节点，仍然用该节点访问，导致大量的访问失败。</li>
+<li>Cancel：如果路由的是失败节点，直接抛异常，影响缓存的可用性。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>序列化</strong>：根据对应的数据类型，按照预先制定好的序列化规则进行序列化，序列化完了以后根据二进制数据的长度是否大于阈值，来决定是否采用 GZIP 压缩。</li>
+<li><strong>扩缩容</strong>：将对应的节点信息更新到 Zookeeper 上，应用服务器监听 ZK 节点的状态，会收到来自 ZK 节点关于新加入节点信息的通知。集群里的路由策略采用一致性哈希来保证单调性</li>
+</ul>
+<h2 id="redis">Redis</h2>
+<h3 id="数据结构">数据结构</h3>
+<figure data-type="image" tabindex="3"><img src="https://raw.githubusercontent.com/zjs1224522500/files-and-images/6ce4a38c2abb6a5a75fd0d837c1c148e723c4818/blog/pic/Redis.png" alt="image" loading="lazy"></figure>
+<ul>
+<li>&quot;article:12345&quot; - 即为 article 这个命名空间（db）下 id 为 12345 的元素的 Key</li>
+</ul>
+<h4 id="通用的数据结构">通用的数据结构</h4>
+<pre><code class="language-C">typedef struct redisObject {
+    unsigned type:4;
+    unsigned encoding:4;
+    unsigned lru:REDIS_LRU_BITS; /* lru time (relative to server.lruclock) */
+    int refcount;
+    void *ptr;
+} robj;
+</code></pre>
+<ul>
+<li>type (4 位)： 2^4 = 8 &gt; 5 可以表示八种数据类型</li>
+</ul>
+<pre><code class="language-C">#define REDIS_STRING 0
+#define REDIS_LIST 1
+#define REDIS_SET 2
+#define REDIS_ZSET 3
+#define REDIS_HASH 4
+</code></pre>
+<ul>
+<li>encoding (4 位)： 2^4 = 8  可以表示八种编码方式</li>
+</ul>
+<pre><code class="language-C">#define REDIS_ENCODING_RAW 0     /* Raw representation */
+#define REDIS_ENCODING_INT 1     /* Encoded as integer */
+#define REDIS_ENCODING_HT 2      /* Encoded as hash table */
+#define REDIS_ENCODING_ZIPMAP 3  /* Encoded as zipmap */
+#define REDIS_ENCODING_LINKEDLIST 4 /* Encoded as regular linked list */
+#define REDIS_ENCODING_ZIPLIST 5 /* Encoded as ziplist */
+#define REDIS_ENCODING_INTSET 6  /* Encoded as intset */
+#define REDIS_ENCODING_SKIPLIST 7  /* Encoded as skiplist */
+</code></pre>
+<ul>
+<li>lru：表示本对象的空转时长，用于有限内存下长久不访问对象的清理</li>
+<li>refcount：应用计数用于对象的垃圾回收</li>
+<li>ptr：指向以 encoding 方式实现这个对象的实际承载者的地址</li>
+</ul>
+<h4 id="具体的数据结构">具体的数据结构</h4>
+<ul>
+<li>对于具体的数据结构以及 Redis 自身提供的一些优化方案，此处不再赘述，后续将专门针对 Redis 的源码和实现进行具体的分析。</li>
+</ul>
+<h3 id="客户端与服务器的交互">客户端与服务器的交互</h3>
+<ul>
+<li>Redis 实例运行于单独的进程，应用系统和 Redis 通过 Redis 协议进行交互。</li>
+</ul>
+<h4 id="客户端服务器协议">客户端/服务器协议</h4>
+<h5 id="网络交互">网络交互</h5>
+<ul>
+<li>Redis 协议位于 TCP 之上，即客户端和 Redis 实例保持双工的连接。</li>
+<li>交互的内容为序列化后的相应类型的协议数据，服务器端为每个客户端建立对应的连接，在应用层维护一系列状态保存在连接中，连接之间无相互关联。</li>
+</ul>
+<h5 id="序列化协议">序列化协议</h5>
+<ul>
+<li>Redis 中协议数据分为不同的类型，每种类型均已 CRLF 结束，根据数据的首字符进行区分：
+<ul>
+<li>Inline command：</li>
+<li>simple string：</li>
+<li>bulk string：</li>
+<li>error：</li>
+<li>Integer：</li>
+<li>array：</li>
+<li>C/S 两端使用的数据协议</li>
+</ul>
+</li>
+</ul>
+<h4 id="请求响应模式">请求/响应模式</h4>
+<h5 id="串行化实现">串行化实现</h5>
+<ul>
+<li>同一个连接上，客户端接收完第一个请求的响应之后，再发起第二个请求。每一次的请求的发送都依赖于上一次请求的响应结果完全接收，同一个连接每秒的吞吐量低。</li>
+<li>单连接的大部分时间都处于网络等待，没有充分利用服务器的处理能力。</li>
+</ul>
+<h5 id="pipeline实现">pipeline实现</h5>
+<ul>
+<li>基于本身就支持全双工的 TCP 协议，可以将请求数据批量发送到服务器，再批量地从服务器连接的字节流中依次读取每个响应数据，极大地提高单连接的吞吐量。</li>
+<li>主要由客户端来实现，通过发送批量请求或者异步化请求来实现，但非异步化批量发送时需要考虑每个批次的数据量，避免连接的 buffer 满之后的死锁。</li>
+</ul>
+<h4 id="事务模式">事务模式</h4>
+<h5 id="两阶段保证事务原子性">两阶段保证事务原子性</h5>
+<ul>
+<li>入队阶段：服务端将客户端发送来的请求暂存到连接对象的对应请求队列中。</li>
+<li>执行阶段：发送完一个批次的所有请求后，服务端依次执行连接对象队列中的所有请求。</li>
+</ul>
+<h5 id="事务的一致性">事务的一致性</h5>
+<ul>
+<li>严格意义上讲，Redis 的事务并不是一致的。由于自身并不包含回滚机制（执行到一半的批量操作必须继续执行完），在批量执行过程中有一条请求执行失败，后续继续执行，只在返回客户端的 array 类型响应中标记这条出错的结果，客户端决定如何恢复。</li>
+</ul>
+<h5 id="事务的只读操作">事务的只读操作</h5>
+<ul>
+<li>批量请求在服务端一次性执行，应用程序需要一开始就在入队阶段（未真正执行时）确定每次写操作的值，也就是说每个请求的参数取值不能依赖上一次的执行结果。</li>
+<li>由于只读操作放在批量执行中没有任何意义，既不会改变事务的执行行为，也不会改变 Redis 的数据状态，所以入队的请求应该均为写操作。只读操作需要放到事务开启之前的语句执行。</li>
+</ul>
+<h5 id="乐观锁的可串行化事务隔离">乐观锁的可串行化事务隔离</h5>
+<ul>
+<li>Redis 通过 WATCH 机制实现乐观锁解决上述一致性问题：
+<ul>
+<li>将本次事务所有涉及到的 Key 注册为观察模式，假设此时逻辑时间为 tstart</li>
+<li>执行只读操作</li>
+<li>根据只读操作的结果组装对应的写操作命令并发送到服务器端入队</li>
+<li>发送原子化的批量执行命令 EXEC 试图执行连接的请求队列中的命令，假设此时逻辑时间为 tcommit</li>
+<li>如果在 tstart 到 tcommit 的这段时间内，有一个或多个 key 被修改过，那么 EXEC 将直接失败，拒绝执行，否则顺序执行队列中的所有请求。</li>
+</ul>
+</li>
+</ul>
+<h4 id="脚本模式">脚本模式</h4>
+<ul>
+<li>Redis 允许客户端向服务端提交一个脚本，后者结构化地（分支/循环）编排业务事务中的多个 Redis 操作，脚本还可获取每次操作的结果作为下次操作的入参。使得服务端的逻辑潜入成为可能。</li>
+</ul>
+<h4 id="发布订阅模式">发布/订阅模式</h4>
+<ul>
+<li>除了上文描述的由客户端主动触发，服务端被动接收的交互模式以外，Redis还提供了一种一个客户端触发，多个客户端被动接收，通过服务器的中转的发布订阅模式。</li>
+</ul>
+<h5 id="核心概念-2">核心概念</h5>
+<ul>
+<li>客户端分为发布者和订阅者两种角色</li>
+<li>发布者和订阅者通过 Channel 进行关联</li>
+<li>发布者和 Redis 的交互仍然是 请求/响应 模式</li>
+<li>服务器向订阅者推送数据</li>
+<li>时序：推送发生在服务器收到发布消息之后</li>
+</ul>
+<h5 id="两类-channel">两类 channel</h5>
+<ul>
+<li>普通 channel：订阅者将自己绑定或者解绑到某个 channel 上；发布者的 publish 命令将指定某个消息发送到哪个 channel，再由服务器将消息转发给 channel 上绑定的订阅者。</li>
+<li>Pattern Channel：：订阅者将自己绑定或者解绑到某个 pattern channel 上；发布者的 publish 命令将指定某个消息发送到哪个 channel，再由服务器通过 channel 的名字和 pattern channel 的名字做匹配，匹配成功则将消息转发到这个 pattern channel 上的绑定的订阅者。</li>
+</ul>
+<h5 id="订阅关系的实现">订阅关系的实现</h5>
+<ul>
+<li>使用了字典的数据结构维护普通 channel 和订阅者的关系，键是 channel 的名字，值是所有订阅者 client 的指针链表。</li>
+<li>使用了一个来链表维护 pattern channel 和订阅者的关系</li>
+<li>发布者发布消息时，首先从 channel map 中寻找到对应 channel 的所有客户端，再发送消息；再遍历 Pattern Channel 链表，向匹配到的元素的 client 发送消息。</li>
+</ul>
+<h3 id="单机处理逻辑">单机处理逻辑</h3>
+<ul>
+<li>为了处理高吞吐量的访问需求，以及高并发访问，Redis 单线程地处理来自开所有客户端的并发请求来保证 hashtable 的线程安全。</li>
+</ul>
+<h4 id="多路复用">多路复用</h4>
+<figure data-type="image" tabindex="4"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/Redis-Multiplexing.png?raw=true" alt="image" loading="lazy"></figure>
+<ul>
+<li>首先从多路复用框架中 select 出已经 ready 的 文件描述符，asApiPoll 函数的实现根据实际宿主机器的具体环境，分为四种实现方式：epoll、evport、kqueue，以上实现都找不到时使用 select 这种最通用的方式；</li>
+<li>ready 的标准是依据每个 fd 的 interestSet，如已有数据到达 kernel（AE_READABLE）,已准备好写入数据；</li>
+<li>对于上一步已经 ready 的文件描述符，redis 会分别对每个文件描述符上已 ready 的事件进行处理，处理完相同文件描述符上的所有事件后，再处理下一个 ready 的文件描述符。其事件处理逻辑根据所属场景主要分为3种实现：
+<ul>
+<li>acceptTcpHandler 处理 redis 的 serverSocket 上来自客户端的连接建立请求 ，会为客户端对应的文件描述符注册其关注的事件（interestSet）：AS_READABLE，以便感知该文件描述符后续发来的数据；</li>
+<li>readQueryFromClient 处理来自客户端的数据，它会读取每一个完整的命令并执行，再将执行结果暂存，待客户端对应文件描述符准备好写时向客户端写入。所以该方法需要为文件描述符注册 AS_WRITEABLE 事件并以 sendReplyToClient 作为处理器。对于 multi （批处理的事务），需要等到 multi 包含一个全部的命令时才进行执行；</li>
+<li>sendReplyToClient 将暂存的执行结果写回客户端</li>
+</ul>
+</li>
+<li>处理完来自客户端的命令之后，处理定时任务（processEvent）</li>
+<li>aeApiPoll 的等待时间取决于定时任务处理（TimeEvents）逻辑；</li>
+<li>本次主循环完毕，进入下一次主循环的 beforeSleep 逻辑，后者负责处理数据过期，增量持久化的文件写入等任务。</li>
+</ul>
+<h4 id="定时任务处理">定时任务处理</h4>
+<ul>
+<li></li>
+</ul>
+<h3 id="持久化">持久化</h3>
+<ul>
+<li>Redis 对外提供数据访问服务时使用的是驻存在内存中的数据，这些数据在 Redis 重启之后将消失。为了让数据在重启之后得以恢复，Redis 具备将数据持久化到本地磁盘的能力。</li>
+</ul>
+<h4 id="全量模式">全量模式</h4>
+<ul>
+<li>在持久化触发的时刻，将当时的状态（所有 db 的 key-value 值）完全保存下来，形成了一个 snapshot，重启时通过加载最近的一个 snapshot 数据，可将 Redis 恢复至最近一次持久化时的状态上。</li>
+<li>故该模式可划分为<strong>写入</strong>和<strong>恢复</strong>两个流程。</li>
+</ul>
+<h5 id="写入流程">写入流程</h5>
+<ul>
+<li>SAVE：可以由客户端显示触发，也可以在 redis shutdown 时触发，无论以哪种形式触发，SAVE 本身都是以普通命令的方式执行——单线程地执行一个一个命令。SAVE的执行过程就是把 Redis 的当前状态写入磁盘作为快照保存的过程，期间其他所有命令不会并发执行。</li>
+<li>BGSAVE：客户端通过命令显示触发，可以通过配置由定时任务触发，也可以在 master-slave 的分布式结构下由 slave 节点触发。该命令执行始于 fork 出一个子线程，在子线程启动之后修改一些 redisServer 对象的状态之后执行完毕，Redis 进程的主循环接着处理后续命令。将 Redis 数据状态写入磁盘的工作由子线程并发地完成。子进程写入文件面对的是父进程在 fork 时的数据库状态副本，该副本在写入期间不会发生变更。</li>
+<li>BGSAVE 的优势在于可以在持久化期间继续对外提供数据读写服务，而需要付出涉及父进程内存复制的fork操作的代价，相应的会增加服务器内存的开销，当高到不得不使用虚拟内存时，BGSAVE 的 fork 会阻塞服务器运行，造成秒级以上的不可用，故在使用 BGSAVE 时需要确保内存空间足够。</li>
+</ul>
+<h5 id="恢复流程">恢复流程</h5>
+<ul>
+<li>从 Redis 启动到进入前文所述事件处理主循环时，Redis 会从本地磁盘加载之前持久化的文件，将内存置于文件所描述的数据”状态“时，再受理后续来自客户端的数据访问命令。</li>
+</ul>
+<h4 id="增量模式append-only-file">增量模式（Append-only File）</h4>
+<ul>
+<li>增量持久化保存的是状态的每一次”变迁“，在初始状态的基础之上，经过相同的”变迁“序列之后也能达到最终的状态。仅对数据的变化进行存储。</li>
+</ul>
+<h5 id="写入流程-2">写入流程</h5>
+<ul>
+<li>在主循环中的每次处理完写命令的执行之后，通过 propagate 函数显示触发增量持久化，该方法将当前命令的内容追加到 redisServer 对象的 aof_buf 变量中，在下一次迭代进入多路复用的 select 前，通过 flushAppendOnlyFile 方法将 aof_buf 的内容写到 AOF 对应的文件中，但此时只写到了缓存，需要显示调用 fsync 强制落盘。</li>
+<li>同步策略：
+<ul>
+<li>alaways：在 flushAppendOnlyFile 函数中直接同步触发 fsync 方法，强制落盘。该策略会降低 Redis 吞吐量，使得磁盘的写入成为 Redis 对外写服务的瓶颈，但由于每个命令都在写入磁盘后再返回，这种模式下具有最高的容错能力。</li>
+<li>every second：每秒异步触发 fsync, 由 bio 线程池中的某个线程来执行。flushAppendOnlyFile 函数只是作为生产者将 fsync 任务放入队列，由 bio 线程消费执行。</li>
+<li>no：不显式调用，由操作系统决定什么时候落盘。该模式下，Redis 无法决定曾玲落地时间，容错能力不可控。</li>
+</ul>
+</li>
+<li>采用 every second 策略，实际吞吐量仍然与磁盘的写入能力有关。Redis 对外写服务的吞吐量仍然可能超过磁盘的写入吞吐量，否则会造成 bio 任务队列积压，为保护内存用量会限制任务队列的长度使得后续提交任务时阻塞。Reids 仍然通过阻塞来处理磁盘吞吐量低的情况，如果发现 bio 执行 fsync 的线程还在执行中的时候，是不会往队列提交任务的，阻塞发生在 write 函数上：当 bio 线程执行 fsync 时，write 方法会自然阻塞。</li>
+</ul>
+<h5 id="恢复流程-2">恢复流程</h5>
+<ul>
+<li>一旦发现存在 AOF，会选择增量恢复，通过 loadAppendOnlyFile 方法恢复数据，将 AOF 中保存的命令重新执行一遍。</li>
+</ul>
+<h5 id="优化">优化</h5>
+<ul>
+<li>由于采用了追加写的方式，AOF文件会越来越大，占用大量的磁盘空间，同时降低了恢复加载效率，于是 Redis 通过 rewrite 机制合并历史 AOF 记录。</li>
+<li>该机制针对增量写过程中 AOF 文件大于某个状态的快照文件大小时，此时使用快照代替增量，以减少磁盘空间占用。快照采用 cmd 形式来承载，即将快照中的所有 KV 键值对用插入命令来表示，从而保证快照文件和普通的 AOF 文件一致，从而复用相同的加载逻辑来统一处理 Redis 启动时的数据恢复。</li>
+<li>实现：定时任务定期检查是否满足 rewrite 条件，满足的话 fork 一个子进程，创建完成后获得 Redis 主进程的数据状态，写入 rewrite的AOF文件，子进程运行期间，Redis 主进程继续对外提供服务，新的增量写入到 redisServer 对象的 aof_rewrite_buf_blocks 中，待子进程完成后，将增量内容追加到 rewrite 的快照文件末尾，再后续的增量，会写入新的 AOF 中。
+<ul>
+<li>历史 AOF 文件：快照形式保存，仍然使用 CMD 插入命令保存；</li>
+<li>快照写入期间的增量：待快照写入完成后追加到快照文件末尾；</li>
+<li>后续增量：写入到新的 AOF。</li>
+</ul>
+</li>
+</ul>
+<h2 id="分布式-redis">分布式 Redis</h2>
+<ul>
+<li>单实例节点在实际应用中可能面临的问题：
+<ul>
+<li><strong>数据量伸缩</strong>：面对存储容量达到瓶颈时，作为缓存可以利用 key 的过期淘汰机制从而控制容量；但作为 NoSQL 时，业务数据长期有效时淘汰机制不再适用。</li>
+<li><strong>访问量伸缩</strong>：单实例 Redis 单线程运行，吞吐量受限于单次请求处理的平均时耗。</li>
+<li><strong>单点故障</strong>：持久化机制一定程度上解决了单点故障的问题，但由于单实例部署，在发生不可恢复故障时，如何保证业务数据不丢失以及恢复机制成为了挑战。</li>
+</ul>
+</li>
+<li>解决方案（对于数据存储系统而言通用的解决方案）：
+<ul>
+<li><strong>水平拆分</strong>：分布式环境下，节点分为不同的分组，每个分组处理业务数据的一个子集，分组之间数据无交集。数据无交集的特性使得水平拆分解决了数据量瓶颈，可以通过增加减少分组来伸缩数据量，同时也解决了访问量瓶颈，吞吐量也会随着分组的增加而增加。</li>
+<li><strong>主备复制</strong>：同一份业务数据存在多个副本，对数据的每次访问根据一定规则分发到某一个或者多个副本上执行。通过 W + R &gt; N 的读写配置可以做到读取数据内容的实时性，随着N的增加，当读写访问量差不多时，业务的吞吐量相比单实例会提升到逼近2倍。但实际中，读的访问量常常远高于写的量，W=N，R=1，吞吐量会随着读写真的增加而提升。</li>
+<li><strong>故障转移</strong>：业务数据所在节点发生故障时，这部分业务数据转移到其他节点上进行，使得故障节点在恢复期间，对应的业务数据仍然可用。所以需要保证业务数据保持多个副本，位于不同的节点上。</li>
+</ul>
+</li>
+</ul>
+<h3 id="水平拆分">水平拆分</h3>
+<h4 id="数据分布">数据分布</h4>
+<ul>
+<li>数据分布指的是一种映射关系f，每个业务数据 key 都能通过映射关系确定唯一的实例。主要取决于 Redis 客户端。</li>
+</ul>
+<h5 id="hash-映射">hash 映射</h5>
+<ul>
+<li>将不可控的业务值域 key 映射到可控的有限值域（hash 值）上，且映射做到均匀，再将有限的均匀分布的 hash 值枚举地映射到 Redis 实例上。例如 <code>crc16(key) % 16384</code> 这个 hash 算法将 key 映射到 0~16383 的有限整数集合上，再依据一定的规则将整数集合的不同子集不相交地划分到不同 Redis 实例上，以实现数据分布。</li>
+</ul>
+<h5 id="范围映射">范围映射</h5>
+<ul>
+<li>选择 key 本身作为数据分布的条件，且每个数据节点存放的 key 的值域是连续的一段范围。如 0 &lt;= key &lt; 100 时，数据存放到实例 1 上；100 &lt;= key &lt; 200 时，数据存放到实例 2 上，以此类推；key 的值域由业务层决定，业务层需要清楚每个区间的范围和 Redis 实例数量才能完整地描述数据分布，使得业务域的信息（key 的值域）和系统域的信息（实例数量）耦合，数据分布无法在纯系统层面实现，从系统层面来看，业务域的 key 值域不确定，不可控。</li>
+</ul>
+<h5 id="hash-和范围结合">hash 和范围结合</h5>
+<ul>
+<li>典型的方式是一致性哈希，首先对 key 进行计算，得到值域有限的 hash 值，再对 hash 值做范围映射，确定该实例的具体存放实例。</li>
+<li>该方式的优势在于节点新增或减少时，涉及的数据迁移量小——变更的节点上涉及的数据只需要和相邻节点发生迁移关系；缺点是节点不是成倍变更（数量变成原有的 N 倍或者 1/N）时，会造成数据分布的不均匀。</li>
+</ul>
+<h4 id="请求路由">请求路由</h4>
+<ul>
+<li>根据请求中涉及到的 Key,用对应的数据分布算法得出数据位于哪个实例，再将请求路由至该实例。需要关注数据跨实例的问题。</li>
+</ul>
+<h5 id="只读的跨实例请求">只读的跨实例请求</h5>
+<ul>
+<li>将请求中的多个 Key 分别分发到对应实例上执行，再合并结果。其中涉及语句的拆分和重生成。</li>
+</ul>
+<h5 id="跨实例的原子读写请求">跨实例的原子读写请求</h5>
+<ul>
+<li>事务、集合型数据的转存操作（ZUNIONSTORE），向实例 B 的写入操作依赖于对实例 A 的读取。单实例情况下，Redis 的单线程特性保证此类读写依赖的并发安全，而在跨实例情况下，存在跨节点读写依赖的原子请求是不支持的。</li>
+<li>在 Redis Cluster 之前，通常通过 proxy 代理层来处理 sharding 逻辑，代理层可以位于客户端本身（如Predis）,也可以是独立的实例（如 Twemproxy）</li>
+</ul>
+<h3 id="主备复制">主备复制</h3>
+<ul>
+<li>Redis 采用主备复制的方式保证一致性，即所有的节点中，有一个主节点 master 它对外提供写入服务，所有的数据变更由外界对 master 的写入触发，之后 Redis 内部异步地将数据从主节点复制到其他节点 Slave 上。</li>
+</ul>
+<h4 id="主备复制流程">主备复制流程</h4>
+<ul>
+<li>Redis 包含 master 和 slave 两种节点：master 节点对外提供读写服务，slave 节点作为 master 的数据备份，拥有 master 的全量数据，对外不提供写服务。主备复制由 slave 主动触发，主要流程为：
+<ul>
+<li>slave 向 master 发起 SYNC 命令，这一步在 slave 启动后触发，master 被动地将新 slave 节点加入自己的主备复制集群；</li>
+<li>master 收到 SYNC 后，开启 BGSAVE 操作。BGSAVE 是 Redis 的一种全量模式的持久化机制；</li>
+<li>BGSAVE 完成后，master 将快照信息发送给 slave；</li>
+<li>发送期间，master 收到来自用户客户端新的写命令，除了正常地响应以外，再存入一份到 backlog 队列；</li>
+<li>快照信息发送完成后，master 继续发送 backlog 队列信息；</li>
+<li>backlog 发送完成后，后续的写操作同步发给 slave，保持实时地异步复制；</li>
+</ul>
+</li>
+<li>Slave 端的主要操作为：
+<ul>
+<li>发送完 SYNC 命令后，继续对外提供服务；</li>
+<li>开始接收 master 的快照信息，此时，将 slave 现有的数据清空，并将 master 快照写入自身内存；</li>
+<li>接收 backlog 内容并执行它，即恢复操作，期间对外提供读请求；</li>
+<li>继续接收后续来自 master 的命令副本并继续恢复，以保持数据和 master 一致。</li>
+</ul>
+</li>
+<li>有多个 slave 节点并发发送 SYNC 命令时，如果第二个 slave 的 SYNC 命令发生在 master 的 BGSAVE 之前，那么第二个 slave 将收到和第一个 slave 相同的快照和后续 backlog；否则，第二个 slave 的 SYNC 命令将触发 master 的第二次 BGSAVE。</li>
+</ul>
+<h4 id="断点续传">断点续传</h4>
+<ul>
+<li>每次 Slave 节点向 master 发起同步（SYNC）指令来同步数据时，master 都会 dump 全量数据并发送给 Slave。当一个 Slave 已经和 Master 完成了同步操作并持续保持了长时间，突然网络断开很短的一段时间再重新连接，Master 不得不做一次全量的 dump 的传送，然而由于只是断开了很短的时间，重连之后 master 和 slave 的差异数据较少，全量 dump 数据的绝大部分在 Slave 中已有，故只需要同步连接断开期间的少量数据即可。</li>
+<li>Redis 针对断点续传场景提出了 PSYNC 的命令来替代 SYNC，做到 Master-Slave 基于断点续传的主备同步协议。在两端通过维护一个 offset 记录当前已经通不过的命令，slave 断开期间，master 的客户端命令会保持在缓存中，当重连之后，告诉 master 断开时的最新 offset，master 则将缓存中大于 offset 的数据发给 slave，而断开前已经同步过的数据，则不需要再重新同步，减少了数据的传输开销。</li>
+</ul>
+<h3 id="故障迁移-failover">故障迁移 Failover</h3>
+<ul>
+<li>Failover：在具有主备关系的实例组成的集群中，当 master 故障时，slave 可以成为新的 master，对外提供读写的服务。</li>
+<li>主要问题：谁去发现 master 的故障做 failover 的决策？
+<ul>
+<li>保持一个守护进程，监控所有的 master-slave 节点。（无法保证守护进程本身的可用性）</li>
+<li>保持多个守护进程，同时监视所有的 master-slave 节点，解决了可用性问题，但带来了一致性问题：多个守护进程，如何就某个 master 是否可用达成一致</li>
+</ul>
+</li>
+<li>Redis 的 sentinel 提供了一套多守护进程间的交互机制，解决故障发现、故障迁移决策协商机制等问题。多个守护进程组成了一个集群，成为 sentinel 集群，其中的守护进程也被称为 sentinel 节点，节点间互相通信、选举、协商，在 master 节点的故障发现、故障迁移决策上表现出一致性。</li>
+</ul>
+<h4 id="sentinel-节点间的相互感知">sentinel 节点间的相互感知</h4>
+<ul>
+<li>守护进程集群中需要互相感知的节点，都向他们共同的 master 节点订阅相同的 channel：<code>__sentinel__:hello</code>，新加入的节点向该 channel 发布一条信息，该信息包含了自身的一些信息，该 channel 的订阅者们（其他节点）就可以发现这个新加入的节点，从而新加入的节点和已有的其他节点建立长连接。集群中的所有节点保持两两连接。</li>
+</ul>
+<h4 id="master-的故障发现">master 的故障发现</h4>
+<ul>
+<li>sentinel 节点通过定期地向 master 发送心跳包判断其存活状态（PING），一旦发现 master 没有正确地响应，sentinel 节点将此 master 置为“主观不可用态”。（该判定还未得到其他节点的确认）</li>
+<li>随后将该状态发送给其他所有节点进行确认，当确认的节点数达到一定的阈值（quorum）时，则判定该 master 为客观不可用，随后进入故障迁移流程。（该阈值可配置）</li>
+</ul>
+<h4 id="故障迁移决策">故障迁移决策</h4>
+<ul>
+<li>可能存在多个 sentinel 节点同时发现 master 的不可用问题并同时通过交互确认了客观不可用的状态，同时打算开始故障迁移流程，此时需要进行选举操作来决定唯一的故障迁移发起者。</li>
+<li>Redis 的 sentinel 机制采用了类似 Raft 协议实现了选举算法：
+<ul>
+<li>sentinelState 的 epoch 变量类似于 Raft 协议的中 term（选举回合）；</li>
+<li>每一个确认了 master 的客观不可用态的节点向周围广播自己参选的请求；</li>
+<li>每一个接收到参选请求的节点，如果是第一次接收到参选请求，就将该请求对应的节点置为本次选举回合的意向节点并回复它，如果已经给出了回复，将拒绝本回合的其他请求；</li>
+<li>参选者如果收到了超过一半的意向同意回复，则确定该节点为leader。如果持续了足够长时间还会竞选出leader，开始下一个回合。</li>
+</ul>
+</li>
+<li>leader sentinel 节点选取出来之后，由 leader 决定根据一定的规则从 master 所有的 slave 中选取一个新的节点作为 master，并告知其他 slave 节点连接这个新的 master。</li>
+</ul>
+<h3 id="redis-cluster">Redis Cluster</h3>
+<ul>
+<li>Redis 3.0 之后，通过去中心化的方式提供了完整的 sharding、replication(复制机制仍复用原有的机制，只是 cluster 具备感知主备的能力)、failover解决方案，称为 Redis Cluster，即将 Proxy/Sentinel 的工作融合到了普通的 Redis 节点里。</li>
+</ul>
+<h4 id="拓扑结构">拓扑结构</h4>
+<ul>
+<li>一个 Redis Cluster 由多个节点组构成，不同节点组的数据无交集，即每一个节点组对应数据 sharding 的一个分片，节点组内部分为主备（1个Master,0-N个Slave）两类节点，两者通过异步化的主备复制保证准实时一致。</li>
+<li>Redis Cluster 中的各个节点之间，两两通过 Redis Cluster Bus 交互，交互以下关键信息：
+<ul>
+<li>数据分片 slot 和节点的对应关系；</li>
+<li>集群中每个节点的可用状态；</li>
+<li>集群结构（配置）发生变更时，通过一定的协议对配置信息达成一致；（数据迁移，故障迁移，单点master发现和主备变更等行为）</li>
+<li>发布订阅功能内部实现所需要交互的信息。</li>
+</ul>
+</li>
+<li>Redis Cluster Bus 通过单独的端口连接，交互字节序列化信息，在内部进行通信，效率较高，相比于 Client 到 Server 的字符序列化传输。</li>
+<li>Redis Cluster 是一个去中心化的分布式实现方案，客户端可以和集群中的任一节点连接，根据某个节点在集群中的交互流程，逐渐获知全集群的数据分片映射关系。</li>
+</ul>
+<h4 id="配置的一致性">配置的一致性</h4>
+<ul>
+<li>Redis Cluster 通过引入两个自增的 epoch 变量来保证集群中各个节点配置信息保持最终一致</li>
+</ul>
+<h5 id="配置信息的数据结构">配置信息的数据结构</h5>
+<ul>
+<li>clusterState：单个节点的视角看集群的配置状态</li>
+</ul>
+<pre><code class="language-C">currentEpoch; //整个集群的最大版本号
+nodes;        //包含了本节点所知的集群中的所有节点的信息
+stateOne;     //分片迁移状态
+failoverState;//failover状态
+</code></pre>
+<ul>
+<li>clusterNode：记录了每个节点的信息</li>
+</ul>
+<pre><code class="language-C">nodeId;
+epoch;         //该信息的版本号
+slots;         //该节点对应的数据分片
+slaves;
+master;
+ip:port;
+state;
+type;
+</code></pre>
+<h5 id="信息交互">信息交互</h5>
+<ul>
+<li>由于不存在统一的配置中心，各个节点对集群的认知来自于节点信息间的交互，通过内部通信机制 Redis Cluster Bus 完成。</li>
+<li>clusterMsg</li>
+</ul>
+<pre><code class="language-C">type;      // 消息类型 PING/PONG
+epoch;     // epoch版本号相关
+senderNodeId;
+senderSlots;
+gossip;    // 消息体
+</code></pre>
+<ul>
+<li>clusterMsgDataGossip</li>
+</ul>
+<pre><code class="language-C">nodeId;
+ip:port;
+state;     // 类型状态
+</code></pre>
+<ul>
+<li>Gossip 协议中，每次PING/PONG包只包含全集群的部分节点信息，节点随机选取，以此控制网络流量，由于交互较为频繁，短时间的几次交互之后，集群状态以这样的Gossip协议方式被扩散到了集群中的所有节点。</li>
+</ul>
+<h5 id="一致性的达成">一致性的达成</h5>
+<ul>
+<li>当集群结构不发生变化时，可以通过 Gossip 协议在几轮交互之后得知全集群的结构信息，达到一致的状态。</li>
+<li>在集群结构发生变化时，只能由优先得知变更信息的节点利用 epoch 变量将自己的最新信息扩散到集群，达到最终一致。</li>
+<li>Redis Cluster 在集群结构发生变化时，通过一定的时间窗口控制和更新规则保证每个节点看到 currentEpoch 是最新的。</li>
+<li>集群信息更新遵循的规则：
+<ul>
+<li>某节点率先知道信息变更，该节点将 currentEpoch 自增使之成为集群中的最大值，再利用自增后的 currentEpoch 作为新的 epoch 版本</li>
+<li>某个节点收到比自己大的 currentEpoch 时，更新自己的 currentEpoch 值使之保持最新；</li>
+<li>收到 Redis Cluster Bus 消息里某个节点信息的 epoch 值大于接收者自己内部配置信息的存储的值时，将自己的映射信息更新为消息的内容；</li>
+<li>收到 Redis Cluster Bus 消息里某个节点信息未包含在接受节点的内部配置信息时，意味着接收者尚未意识到消息所指节点的存在，此时接收者直接将消息的信息添加到自己的内部配置信息中。</li>
+</ul>
+</li>
+</ul>
+<h4 id="sharding">sharding</h4>
+<h5 id="数据分片-slot">数据分片 slot</h5>
+<ul>
+<li>数据分布算法：<code>slotId = crc16(key) % 16384</code></li>
+<li>针对关联性较强但可能分散到不同节点的数据，Redis 引入了 HashTag 的概念，使得数据分布算法可以根据 Key 的某一部分计算，让相关的两条记录落到同一个分片，例如(根据{}内的数据作为分布算法的输入)：
+<ul>
+<li>商品交易记录：<code>product_trade_{prod123}</code></li>
+<li>商品详情记录：<code>product_detail_{prod123}</code></li>
+</ul>
+</li>
+</ul>
+<h5 id="客户端路由">客户端路由</h5>
+<ul>
+<li>Redis Cluster 的客户端具备路由语义的识别能力，且具备一定的路有缓存能力。当一个 client 访问的 key 不在对应 Redis 节点的 slots 中，Redis 返回给 client 一个 moved 命令，告知正确的路由信息。收到 moved 之后，client 端继续向新的 slot 发起请求，但仍然可能不是最新的节点，继续返回 moved，同时客户端更新本地路由缓存，以便下一次直接访问到正确的节点，减少交互次数。</li>
+<li>针对数据重分布场景，未命中时服务端通过 ask 指令控制客户端的路由。相比于 moved 的不同之处在于，ask 只重定向到新节点，不更新客户端的路由缓存。避免路有缓存信息发生频繁变更。</li>
+</ul>
+<h5 id="分片的迁移">分片的迁移</h5>
+<ul>
+<li>节点和分片的映射关系可能发生变更：
+<ul>
+<li>新节点作为 master 加入</li>
+<li>某个节点分组需要下线</li>
+<li>负载不均衡需要调整 slot 分布</li>
+</ul>
+</li>
+<li>分片迁移的触发和过程控制由外部系统完成，Redis Cluster 只提供迁移过程需要的原语供外部系统调用。</li>
+</ul>
+<figure data-type="image" tabindex="5"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/DataSliceMove.png?raw=true" alt="image" loading="lazy"></figure>
+<ul>
+<li>
+<p>针对迁移过程中的数据处理：</p>
+<ul>
+<li>访问 A 节点中的尚未迁出的 key，正常处理；</li>
+<li>访问 A 节点中的已经迁移出或者不存在的 Key，回复客户端 ASK 跳转到 B 执；</li>
+<li>B 节点不会处理非 ASK 操作重定向而来的请求，通过 MOVED 指令让客户端跳转到 A 执行。</li>
+</ul>
+</li>
+<li>
+<p>MIGRATE 为原子操作，单线程处理，保证了某个 Key 迁移过程中的一致性；</p>
+</li>
+<li>
+<p>CLUSTER SETSLOT 设置 B 的分片信息，使之包含 A 的 slot，设置过程中自增 epoch，将配置信息更新到整个集群，完成分片节点映射的更新</p>
+</li>
+</ul>
+<h4 id="failover">failover</h4>
+<h5 id="故障发现">故障发现</h5>
+<ul>
+<li>Redis Cluster 的节点之间通过 Redis Cluster Bus 两两周期性地进行 PING/PONG 交互，当某个节点宕机时，其他发向它的 PING 消息将无法及时响应，当超过一定时间（NODE_TIMEOUT）未收到 PONG 响应，则发送者认为该节点故障，置为 PFAIL 状态。</li>
+<li>针对可能产生误报的情况，在 NODE_TIMEOUT/2 过去了却还未收到 PONG，重建连接发送 PING 消息，若对端正常将会在很短的时间内抵达。</li>
+</ul>
+<h5 id="故障确认">故障确认</h5>
+<ul>
+<li>集群中的每个节点都是 Gossip 协议的接收者，当 A 与 B 节点无法连接时，A 将 B 置为 PFAIL，A 持续的通过 Gossip 接收关于来自不同节点发送的 B 节点的状态信息，当 A 收到的来自 master 的 PFAIL 累积到一定数量时，PFAIL 会变为 FAIL，后续发起 Slave 选举。</li>
+</ul>
+<figure data-type="image" tabindex="6"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/DumpVerify.png?raw=true" alt="image" loading="lazy"></figure>
+<h5 id="slave选举">Slave选举</h5>
+<ul>
+<li>当存在多个 Slave 同时竞选 master 的情况时，需要在选举前进行优先级的协商。根据 Slave 最后一次同步 master 信息的时间来决定优先级，时间越新，优先级越高，更有可能更早地发起选举。</li>
+<li>竞选投票的过程与之前的 Redis Failover 中保持一致。</li>
+</ul>
+<h5 id="结构变更通知">结构变更通知</h5>
+<ul>
+<li>选举成功（收到超半数的同意时），新 master 节点以最新的 Epoch 通过 PONG 消息广播自己成为 master 的信息，并让集群节点尽快更新集群拓扑信息。</li>
+</ul>
+<h4 id="可用性和性能">可用性和性能</h4>
+<ul>
+<li>Redis Cluster 提供了一些手段提升性能和可用性</li>
+</ul>
+<h5 id="读写分离">读写分离</h5>
+<ul>
+<li>针对有读写分离的需求的场景，读请求交由 Slave 处理，舍弃一定的数据一致性，换取更高的吞吐量。</li>
+<li>由于每个 Slot 对应的节点一定是个 master 节点，客户端的请求只能发送到 Master 上，即便是发送到了 Slave，后者也会回复 MOVED 定向到 Master 上。为此提供 READONLY 命令，客户端直接向 Slave 发起该命令时，不再回复 MOVED 而是直接处理。</li>
+</ul>
+<h5 id="master-单点保护">master 单点保护</h5>
+<figure data-type="image" tabindex="7"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/Protect-Single-End.png?raw=true" alt="image" loading="lazy"></figure>
+<ul>
+<li>当 A1 节点宕机时， A 节点作为 master 将成为单一节点，为了保证高可用性，会将 B 节点的其中一个 Slave 进行副本迁移，使其成为 A 节点的 Slave。</li>
+<li>故集群中至少保证 <code>2*master + 1</code> 个数据节点，就可以保证任一节点宕机后仍然能自动地维持高可用的状态，称为 master 的单点保护。若无该机制，则需要维持 <code>3*master</code> 个节点。</li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/kill-git.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/kill-git/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-09-20">2019-09-20</time>
+                  <h4 class="title white no-margin">Git 从入门到掐死</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/tutorial.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/tutorial/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-09-02">2019-09-02</time>
+                  <h4 class="title white no-margin">编程语言-教程和案例汇总</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

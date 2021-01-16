@@ -1,0 +1,1083 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SpringData-JPA | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+此篇博文主要是结合官方文档以及对JPA的一些使用进行记录。
+对于相关介绍，可参考相应博客。
+后续会对相关实现机制和核心思想进行深入探讨。
+
+
+
+参考书目：
+
+汪云飞：JavaEE开发的颠覆者 Spring Boot实战
+
+参考博客：
+
+..." />
+    <meta name="keywords" content="Spring" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('\media\images\custom-featureImage.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2018-05-06"><i class="fa fa-calendar"></i><span class="lately">3 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/learn-spring-data-jpa/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/learn-spring-data-jpa/"> </span>
+              </a>
+              <span id="/learn-spring-data-jpa/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-0 ctag-spring" aria-label="">Spring</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">SpringData-JPA</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>此篇博文主要是结合官方文档以及对JPA的一些使用进行记录。</li>
+<li>对于相关介绍，可参考相应博客。</li>
+<li>后续会对相关实现机制和核心思想进行深入探讨。</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h4 id="参考书目">参考书目：</h4>
+<ul>
+<li><strong>汪云飞：JavaEE开发的颠覆者 Spring Boot实战</strong></li>
+</ul>
+<h4 id="参考博客">参考博客：</h4>
+<ul>
+<li><a href="https://www.jianshu.com/p/633922bb189f">乐百川：Spring Data JPA 介绍和使用<br>
+</a></li>
+<li><a href="https://www.jianshu.com/p/5592369fc536">Javahih：Spring data jpa入门教程<br>
+</a></li>
+</ul>
+<h4 id="参考文档">参考文档：</h4>
+<ul>
+<li><a href="https://docs.spring.io/spring-data/jpa/docs/current/reference/html">Spring Data JPA - Reference Documentation</a></li>
+</ul>
+<h3 id="相关使用">相关使用</h3>
+<h4 id="1-引入依赖">1、引入依赖</h4>
+<pre><code class="language-xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.data&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-data-jpa&lt;/artifactId&gt;
+    &lt;!-- 版本号省略，maven相关不过多介绍 --&gt;
+&lt;/dependency&gt;
+</code></pre>
+<h4 id="2-建立数据访问层">2、建立数据访问层</h4>
+<blockquote>
+<p>The goal of Spring Data repository abstraction is to significantly reduce the amount of boilerplate code required to implement data access layers for various persistence stores.</p>
+</blockquote>
+<ul>
+<li>
+<p>建立抽象的 <strong>Repository或Dao</strong> 从而减少持久层相关代码的编写（模板化的代码，重复的代码）</p>
+</li>
+<li>
+<p><strong>空接口、标记接口：没有包含方法声明的接口</strong></p>
+</li>
+</ul>
+<pre><code class="language-java">public interface Repository&lt;T, ID extends Serializable&gt; {
+
+}
+</code></pre>
+<ul>
+<li>以自定义  <strong>PersonRepository</strong> 为例： 使得 Spring 容器能对自定义的 PersonRepository 进行管理（<strong>两种实现</strong>）</li>
+</ul>
+<pre><code class="language-java">/**
+ * 继承 Repository&lt;T, ID extends Serializable&gt; 接口使得 Spring 容器能对自定义的 PersonRepository 进行管理
+ */
+public interface PersonRepository extends Repository&lt;Person, Long&gt; {
+    //定义数据访问操作的方法
+}
+
+/**
+ * 除了继承 Repository 接口以外，还可以通过注解实现 Spring 容器对自定义 repository 进行管理
+ */
+@RepositoryDefinition(domainClass = Person.class,idClass = Long.class)
+public interface PersonRepository {
+    //定义数据访问操作的方法
+}
+</code></pre>
+<h5 id="repository-的相关子类实现">Repository 的相关子类实现</h5>
+<h6 id="自带repository">自带Repository</h6>
+<ul>
+<li>1)、<strong>CrudRepository</strong></li>
+</ul>
+<pre><code class="language-java">public interface CrudRepository&lt;T, ID extends Serializable&gt;
+  extends Repository&lt;T, ID&gt; {
+
+  // Saves the given entity.
+  &lt;S extends T&gt; S save(S entity);      
+
+  // Returns the entity identified by the given id.
+  Optional&lt;T&gt; findById(ID primaryKey); 
+
+  // Returns all entities.
+  Iterable&lt;T&gt; findAll();               
+
+  // Returns the number of entities
+  long count();                        
+  
+  // Deletes the given entity.
+  void delete(T entity);               
+
+  // Indicates whether an entity with the given id exists.
+  boolean existsById(ID primaryKey);   
+
+  // … more functionality omitted.
+}
+</code></pre>
+<ul>
+<li>2)、<strong>PagingAndSortingRepository extends CrudRepositor</strong>y</li>
+</ul>
+<pre><code class="language-java">public interface PagingAndSortingRepository&lt;T, ID extends Serializable&gt;
+  extends CrudRepository&lt;T, ID&gt; {
+
+  Iterable&lt;T&gt; findAll(Sort sort);
+
+  Page&lt;T&gt; findAll(Pageable pageable);
+}
+</code></pre>
+<ul>
+<li>3)、<strong>JpaRepository extends PagingAndSortingRepository</strong></li>
+</ul>
+<pre><code class="language-java">
+</code></pre>
+<h6 id="自定义抽象-repository">自定义抽象 Repository</h6>
+<ul>
+<li>选择性地暴露相关持久层数据操作的相关方法</li>
+<li>Repository 中关于 <strong>null</strong> 的处理，使用 spring 相关注解:
+<ul>
+<li><strong>@NonNullApi</strong> – to be used on the package level to declare that the default behavior for parameters and return values is to not accept or produce null values.</li>
+<li><strong>@NonNull</strong> – to be used on a parameter or return value that must not be null (not needed on parameter and return value where @NonNullApi applies).</li>
+<li><strong>@Nullable</strong> – to be used on a parameter or return value that can be null.</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-java">**************************************interface MyBaseRepository****************************
+// Make sure you add that annotation to all repository interfaces 
+// that Spring Data should not create instances for at runtime.
+@NoRepositoryBean
+interface MyBaseRepository&lt;T, ID extends Serializable&gt; extends Repository&lt;T, ID&gt; {
+  // Java 8 Optinal refering http://www.importnew.com/6675.html
+  // 也可以返回其他包装类型 
+  Optional&lt;T&gt; findById(ID id);
+
+  &lt;S extends T&gt; S save(S entity);
+}
+
+
+**************************************package-info.java**********************************
+@NonNullApi
+package tech.shunzi.repository;
+
+import org.springframework.lang.NonNullApi;
+
+**************************************interface UserRepository****************************
+package tech.shunzi.repository;                                                       
+
+import org.springframework.lang.Nullable;
+
+public interface UserRepository extends MyBaseRepository&lt;User, Long&gt; {
+  // test success
+  @Nullable
+  User findByEmailAddress(@Nullable EmailAddress emailAddress);
+}
+</code></pre>
+<ul>
+<li>关于 <strong>Repository</strong> 或 <strong>项目</strong> 中可能出现的 <strong>SpringData</strong> 多模块问题，所谓的 <strong>多模块</strong> 指的是在 <strong>classpath</strong> 中同时存在多个 <strong>Spring Data</strong> 模块，譬如 <strong>MongoDB</strong> 和 <strong>JPA</strong> 两个模块。
+<ul>
+<li>对于 <strong>仓库</strong> 中如果显式继承了模块的特定接口：JpaRepository，则不存在多模块的问题。</li>
+<li>对于 <strong>域对象domain</strong> 中如果显式使用了模块特定的注解，如JPA的@entity，如Spring Data MongoDB/Spring<br>
+Data Elasticsearch的@document注解，也不存在多模块的问题。</li>
+</ul>
+</li>
+<li>存在多模块的问题的情况有：
+<ul>
+<li>使用通用接口的仓库定义 <strong>Repository</strong></li>
+<li>使用有多个注解的域类型的仓库定义。 <strong>@Entity、@Document</strong> 同时修饰一个对象</li>
+</ul>
+</li>
+<li>用于区分仓库的方法是限制仓库的 <strong>base packages</strong></li>
+</ul>
+<pre><code class="language-java">@EnableJpaRepositories(basePackages = &quot;com.acme.repositories.jpa&quot;)
+@EnableMongoRepositories(basePackages = &quot;com.acme.repositories.mongo&quot;)
+interface Configuration { }
+</code></pre>
+<h5 id="2-jpa的基本使用-4-steps">2、JPA的基本使用: 4 steps</h5>
+<h6 id="1-建立相关接口-two-steps">1)、建立相关接口 two steps</h6>
+<pre><code class="language-java">// step 1：Declare an interface extending Repository or one of its subinterfaces and type it to the domain class and ID type that it will handle.
+interface PersonRepository extends Repository&lt;Person, Long&gt; {
+
+  // step 2: Declare query methods on the interface.
+  List&lt;Person&gt; findByLastname(String lastname);
+}
+</code></pre>
+<ul>
+<li>其中定义相应的查询方法主要有两种方式：It can derive the query from the method name directly, or by using a manually defined query.
+<ul>
+<li><strong>direct name</strong>:</li>
+<li><strong>manual define</strong>:</li>
+</ul>
+</li>
+</ul>
+<h6 id="2-在-spring-中为定义好的接口创建代理实例">2)、在 Spring 中为定义好的接口创建代理实例</h6>
+<ul>
+<li>step 3：Set up Spring to create proxy instances for those interfaces.
+<ul>
+<li>use xml</li>
+</ul>
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+    xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+    xmlns:jpa=&quot;http://www.springframework.org/schema/data/jpa&quot;
+    xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/data/jpa
+    http://www.springframework.org/schema/data/jpa/spring-jpa.xsd&quot;&gt;
+
+    &lt;jpa:repositories base-package=&quot;com.acme.repositories&quot;/&gt;
+
+&lt;/beans&gt;
+</code></pre>
+<ul>
+<li>use java annotation to config</li>
+</ul>
+<pre><code class="language-java">import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+
+@EnableJpaRepositories
+class Config {}
+</code></pre>
+</li>
+</ul>
+<h6 id="3-获取-repository-实例并调用相关方法">3)、获取 Repository 实例并调用相关方法</h6>
+<ul>
+<li>step 4: Get the repository instance injected and use it.</li>
+</ul>
+<pre><code class="language-java">class SomeClient {
+
+  private final PersonRepository repository;
+
+  SomeClient(PersonRepository repository) {
+    this.repository = repository;
+  }
+
+  void doSomething() {
+    List&lt;Person&gt; persons = repository.findByLastname(&quot;Matthews&quot;);
+  }
+}
+</code></pre>
+<h5 id="3-定义查询方法">3、定义查询方法</h5>
+<h6 id="1-查询策略">1）、查询策略</h6>
+<ul>
+<li><code>CREATE</code>：根据查询方法名称构建，从方法名称中移除一组已知的前缀并解析该方法的其余部分。<code>find…By, read…By, query…By, count…By, get…By, And and Or.</code></li>
+<li><code>USE_DECLARED_QUERY</code>：试图找到一个声明的查询（注释或其他方式声明），如果未找到会抛出一个异常。</li>
+<li><code>CREATE_IF_NOT_FOUND</code>：default.它首先查找已声明的查询，并且如果未找到已声明的查询，则会创建一个基于自定义方法名称的查询。这是默认的查找策略，因此如果不明确配置任何内容，将会使用它。它允许通过方法名称快速查询定义，还可以根据需要引入已声明的查询来自定义这些查询。</li>
+</ul>
+<h6 id="2-属性表达式">2）、属性表达式</h6>
+<ul>
+<li>分辨算法会对findBy后的字段进行匹配。从右往左开始匹配。先匹配<code>AddressZipCode</code>，没有该属性，匹配失败，从右往左，匹配<code>Code</code>和<code>AddressZip</code>，匹配失败，继续匹配<code>Address</code>和<code>ZipCode</code>，匹配成功。对应的则为<code>Address.ZipCode</code>。</li>
+</ul>
+<pre><code class="language-Java">List&lt;Person&gt; findByAddressZipCode(ZipCode zipCode);
+</code></pre>
+<ul>
+<li><strong>注意</strong>：如果<code>Person</code>有<code>addressZip</code>属性，则会因为<code>addressZip</code>没有<code>code</code>属性匹配失败，此时需要使用下划线来消除歧义。<strong>--不推荐使用</strong></li>
+</ul>
+<pre><code class="language-Java">List&lt;Person&gt; findByAddress_ZipCode(ZipCode zipCode);
+</code></pre>
+<h6 id="3-特殊参数处理pageablesort">3）、特殊参数处理（Pageable,Sort）</h6>
+<pre><code class="language-java">// A Page knows about the total number of elements and pages available. 
+Page&lt;User&gt; findByLastname(String lastname, Pageable pageable);
+
+// A Slice only knows about whether there’s a next Slice available 
+// Slice is suitable for large result set.
+Slice&lt;User&gt; findByLastname(String lastname, Pageable pageable);
+
+// Can use sort parameter to sort data.
+List&lt;User&gt; findByLastname(String lastname, Sort sort);
+
+// List can avoid extra query for page instance,such as total amount.
+List&lt;User&gt; findByLastname(String lastname, Pageable pageable);
+</code></pre>
+<blockquote>
+<p>To find out how many pages you get for a query entirely you have to trigger an additional count query. By default this query will be derived from the query you actually trigger.</p>
+</blockquote>
+<h6 id="4-限制查询结果">4）、限制查询结果</h6>
+<ul>
+<li><strong>First/Top</strong> 关键字，可以追加数字进行结果集中结果数量的限制，默认为 1。</li>
+<li><strong>Distinct</strong> 关键字</li>
+<li>结合 <strong>Sort</strong> 和 <strong>First/Top</strong> 可实现寻找 <strong>第K大/小</strong>。</li>
+</ul>
+<pre><code class="language-java">User findFirstByOrderByLastnameAsc();
+
+User findTopByOrderByAgeDesc();
+
+Page&lt;User&gt; queryFirst10ByLastname(String lastname, Pageable pageable);
+
+Slice&lt;User&gt; findTop3ByLastname(String lastname, Pageable pageable);
+
+List&lt;User&gt; findFirst10ByLastname(String lastname, Sort sort);
+
+List&lt;User&gt; findTop10ByLastname(String lastname, Pageable pageable);
+</code></pre>
+<h6 id="5-流式查询结果">5）、流式查询结果</h6>
+<ul>
+<li>利用 <strong>Java8</strong> 的 <strong>Stream<T></strong> 作为返回结果，使用完对应的 <strong>stream</strong> 后需要 <strong>close</strong></li>
+</ul>
+<pre><code class="language-java">@Query(&quot;select u from User u&quot;)
+Stream&lt;User&gt; findAllByCustomQueryAndStream();
+
+Stream&lt;User&gt; readAllByFirstnameNotNull();
+
+@Query(&quot;select u from User u&quot;)
+Stream&lt;User&gt; streamAllPaged(Pageable pageable);
+
+try (Stream&lt;User&gt; stream = repository.findAllByCustomQueryAndStream()) {
+  stream.forEach(…);
+}
+</code></pre>
+<h6 id="6-异步查询结果">6）、异步查询结果</h6>
+<ul>
+<li>方法调用后立即返回结果，</li>
+</ul>
+<pre><code class="language-Java">// java.util.concurrent.Future
+@Async
+Future&lt;User&gt; findByFirstname(String firstname);               
+
+// Java 8 java.util.concurrent.CompletableFuture
+@Async
+CompletableFuture&lt;User&gt; findOneByFirstname(String firstname); 
+
+// org.springframework.util.concurrent.ListenableFuture
+@Async
+ListenableFuture&lt;User&gt; findOneByLastname(String lastname);    
+</code></pre>
+<h5 id="4-创建-repo-实例">4、创建 Repo 实例</h5>
+<h6 id="1-xml-配置">1、XML 配置</h6>
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans:beans xmlns:beans=&quot;http://www.springframework.org/schema/beans&quot;
+  xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+  xmlns=&quot;http://www.springframework.org/schema/data/jpa&quot;
+  xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/data/jpa
+    http://www.springframework.org/schema/data/jpa/spring-jpa.xsd&quot;&gt;
+
+  &lt;!-- Use filter to exclude some repo to from being instantiated. --&gt;
+  &lt;repositories base-package=&quot;com.acme.repositories&quot;&gt;
+     &lt;context:exclude-filter type=&quot;regex&quot; expression=&quot;.*SomeRepository&quot; /&gt;
+  &lt;/repositories&gt;
+
+&lt;/beans:beans&gt;
+</code></pre>
+<h6 id="2-java-config-recommend">2、Java Config (Recommend)</h6>
+<ul>
+<li>Annotation <strong>@Enable${store}Repositories</strong></li>
+</ul>
+<pre><code>@Configuration
+@EnableJpaRepositories(&quot;com.acme.repositories&quot;)
+class ApplicationConfiguration {
+
+  @Bean
+  EntityManagerFactory entityManagerFactory() {
+    // …
+  }
+}
+</code></pre>
+<h6 id="3-独立使用">3、独立使用</h6>
+<pre><code class="language-java">RepositoryFactorySupport factory = … // Instantiate factory here
+UserRepository repository = factory.getRepository(UserRepository.class);
+</code></pre>
+<h5 id="repo-的自定义实现">Repo 的自定义实现</h5>
+<h6 id="定制个人repo">定制个人Repo</h6>
+<ul>
+<li>1、定义接口和实现</li>
+</ul>
+<pre><code class="language-java">interface CustomizedUserRepository {
+  void someCustomMethod(User user);
+}
+
+class CustomizedUserRepositoryImpl implements CustomizedUserRepository {
+
+  public void someCustomMethod(User user) {
+    // Your custom implementation
+  }
+  
+  // you can add some beans according to your demand
+  @Autowired
+  private JdbcTemplate jdbcTemplate;
+  
+}
+
+// Doing so combines the CRUD and custom functionality 
+class UserRepository extends CrudRepository&lt;User, Long&gt;, CustomizedUserRepository {
+    // Declare query methods here
+}
+</code></pre>
+<blockquote>
+<p>注意： 当 <code>CustomRepo</code> 中包含和 <code>BaseRepo</code>（JPA自带Repo）相同的方法时，譬如如下例子的 <code>save</code>，<code>CustomRepo</code> 有更高的优先级，所以可以实现 自定义<code>Repo</code> 对原生的 <code>Repo</code> 的相关方法的重写。与此同时，可以结合 <strong>泛型</strong> 使得自定义 <code>Repo</code> 被更多的 <code>RepoImpl</code> 类继承实现。</p>
+</blockquote>
+<pre><code class="language-Java">interface CustomizedSave&lt;T&gt; {
+  &lt;S extends T&gt; S save(S entity);
+}
+
+class CustomizedSaveImpl&lt;T&gt; implements CustomizedSave&lt;T&gt; {
+
+  public &lt;S extends T&gt; S save(S entity) {
+    // Your custom implementation
+  }
+}
+
+interface UserRepository extends CrudRepository&lt;User, Long&gt;, CustomizedSave&lt;User&gt; {
+}
+
+interface PersonRepository extends CrudRepository&lt;Person, Long&gt;, CustomizedSave&lt;Person&gt; {
+}
+</code></pre>
+<ul>
+<li>对于自定义<code>Repo</code>的相关配置，如果使用 <code>namespace</code> 相关配置，会自动检测扫描指定包下 指定格式的自定义 <code>Repo</code>，默认后缀为 <code>Impl</code>，可以通过修改相关配置进行定制。</li>
+</ul>
+<pre><code class="language-Java">&lt;repositories base-package=&quot;com.acme.repository&quot; /&gt;
+
+&lt;repositories base-package=&quot;com.acme.repository&quot; repository-impl-postfix=&quot;FooBar&quot; /&gt;
+</code></pre>
+<ul>
+<li>当一个 <code>Repo</code> 接口有多个实现，且位于不同的包下时， Spring 将基于 <code>beanName</code> 对 <code>RepoImpl</code>进行扫描.接口未指定对应的 <code>beanName</code> 时，默认为 <strong>接口名 + Impl</strong>，指定了<code>Component</code> 时，则对应扫描 <code>Component</code> 对应的 <code>Repo</code>.</li>
+</ul>
+<blockquote>
+<p>注意：也可以在配置中自定义实例化相关 Bean</p>
+</blockquote>
+<pre><code class="language-Java">package com.acme.impl.one;
+
+class CustomizedUserRepositoryImpl implements CustomizedUserRepository {
+
+  // Your custom implementation
+}
+
+
+
+package com.acme.impl.two;
+
+@Component(&quot;specialCustomImpl&quot;)
+class CustomizedUserRepositoryImpl implements CustomizedUserRepository {
+
+  // Your custom implementation
+}
+
+
+interface UserRepository implements CustomizedUserRepository {
+    // default matches CustomizedUserRepositoryImpl
+    // if @Component(&quot;specialCustomImpl&quot;),matches CustomizedUserRepositoryImpl
+}
+</code></pre>
+<h6 id="2-自定义基础repo">2、自定义基础Repo</h6>
+<hr>
+<h6 id="未完待续">未完待续</h6>
+<h4 id="实体类-entity">实体类 Entity</h4>
+<blockquote>
+<p>结合文档官方文档 Version 2.0.4.RELEASE,<br>
+2018-02-19</p>
+</blockquote>
+<h5 id="1-entity-注解修饰实体类">1、@Entity 注解修饰实体类</h5>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/media/images/she-ji-mo-shi.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/design-pattern-factory/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2018-08-18">2018-08-18</time>
+                  <h4 class="title white no-margin">设计模式之工厂模式</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/media/images/spring.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/tinyspring-learnTwo-AOP/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2018-04-10">2018-04-10</time>
+                  <h4 class="title white no-margin">tinySpring学习笔记（二）-实现AOP</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

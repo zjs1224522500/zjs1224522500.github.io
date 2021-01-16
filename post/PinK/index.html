@@ -1,0 +1,868 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PinK: High-speed In-storage Key-value Store with Bounded Tails | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+该篇文章来自于 ATC2020 Best Paper PinK: High-speed In-storage Key-value Store with Bounded Tails
+论文其实是基于一种新的 KV 存储形式 KV-SSD 开..." />
+    <meta name="keywords" content="Paper,存储,LSM" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200808150414.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-08-07"><i class="fa fa-calendar"></i><span class="lately">5 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/PinK/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/PinK/"> </span>
+              </a>
+              <span id="/PinK/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-0 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-1 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-2 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">PinK: High-speed In-storage Key-value Store with Bounded Tails</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>该篇文章来自于 ATC2020 Best Paper PinK: High-speed In-storage Key-value Store with Bounded Tails</li>
+<li>论文其实是基于一种新的 KV 存储形式 KV-SSD 开展研究的，KV-SSD 近年来常被提及，未来可能作为一种新型存储器件在键值存储系统中使用。</li>
+<li>本文的工作主要实现了基于 LSM-Tree 的 KV-SSD，和基于哈希的 KV-SSD 进行了对比。</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li>KV 存储的实现主要有 LSM-tree 和 HASH 两种，但相关学术研究和工业应用中 LSM Tree 因为支持更多的操作以及更好的写性能，相比于 HASH 更受欢迎。但是，在资源有限的 KV-SSD 环境下，LSM-tree 很难实现，故 KV-SSD 的环境下常常使用 HASH 实现。</li>
+<li>我们提出了 <em>PinK</em>，一种基于 LSM-tree 实现的 KV-SSD，相比于基于 HASH 实现的 KV-SSD，99th 尾延迟降低了 73%，平均读延迟增加了 42% 但吞吐量提升了 37%。</li>
+<li>在资源受限的环境下提升 LSM-tree 的性能的核心思想是 <strong>避免使用 BloomFilter，使用少量的 DRAM 来 keep/pin LSM-tree 的顶层数据。</strong></li>
+</ul>
+<h2 id="introduction-background">Introduction &amp; Background</h2>
+<h3 id="kv-store">KV Store</h3>
+<ul>
+<li>应用广泛</li>
+</ul>
+<h4 id="现有的优化方案">现有的优化方案</h4>
+<ul>
+<li>Algorithm:
+<ul>
+<li>ATC19 Best Paper - SILK：通过调度 compaction 和带宽分配来集中优化 write 长尾延迟</li>
+<li>SIGMOD18 - Dostoevsky：控制 merge 频率在 tiering、leveling 和 lazying leveling 几种不同策略下转换以适应不同的workload</li>
+<li>SIGMOD17 - Monkey：对每一层的布隆过滤根据数据规模的大小分配不同的内存空间，从而最小化所有层布隆过滤的假阳率。</li>
+</ul>
+</li>
+<li>System:
+<ul>
+<li>VLDB10 - FlashStore：内存维护 HashTable 索引，使用签名代替 Key，CuckooHash 解决冲突，KV 以日志结构形式存储，使用 Flash Memory 作为非易失缓存</li>
+<li>FAST16 - WiscKey：KV 分离，Key 存 LSM-Tree，Value 存 Log</li>
+<li>Eurosys14 - LOCS：</li>
+</ul>
+</li>
+<li>Architecture:
+<ul>
+<li>VLDB16 - Bluecache：基于闪存的分布式KV Store系统，使用了 FPGA</li>
+</ul>
+</li>
+</ul>
+<h3 id="nand-flash-based-ssd">NAND Flash-based SSD</h3>
+<ul>
+<li>SSD 的具体结构请参考其他博文。<a href="https://blog.shunzi.tech/post/flashblox-achieving-both-performance-isolation-and-uniform-lifetime-for-virtualized-ssds/">eg.</a></li>
+<li>一个比较关键的点，也是本文涉及到的点：FTL 中维护了由 LBA 索引的映射表，对应地指向响应的 flash page。映射表保存在 SSD 控制器 DRAM 中，DRAM 大小通常为 SSD 容量的 0.1%。映射表需要持久化，所以会使用到 SSD 内置的电容来防止突然的断电故障。</li>
+</ul>
+<h3 id="kv-ssd">KV-SSD</h3>
+<ul>
+<li>近年来学术和工业界都在考虑将 KV 存储的相关功能从软件层面转移到硬件存储设备层面。</li>
+<li><strong>为什么要引入 KV-SSD</strong>？传统的 KV 存储不能完全发挥新型存储器件的性能，如很多支持 NVMe 的设备，结合之前 SOSP19 的一篇论文 <a href="https://dl.acm.org/doi/10.1145/3341301.3359628">[2]</a>，发现 KV Store 的 bound 已经从磁盘转移到了 CPU，故考虑引入 KV-SSD 来降低 KV 存储对 host 侧的 CPU 和 DRAM 的高占用率，同时减小 I/O 延迟并提高吞吐量。</li>
+<li>KV SSD 支持的接口对应的规范：全球网络存储工业协会发布的 https://www.snia.org/tech_activities/standards/curr_standards/kvsapi</li>
+<li>设计实现 KV-SSD 的两大挑战：有限的 DRAM 资源和有限的 CPU 资源</li>
+</ul>
+<h4 id="工业界">工业界</h4>
+<ul>
+<li><strong>Samsung KV-SSD</strong>：直接处理 KV 请求，参考文献 <a href="https://dl.acm.org/doi/pdf/10.1145/3319647.3325831">[1]</a>。通过简化软件存储堆栈和合并冗余，KV-SSD 提供了更好的可伸缩性和性能，从而降低了总体 CPU 使用量并将内存释放给用户应用程序。</li>
+</ul>
+<h4 id="学术界">学术界</h4>
+<ul>
+<li>ASPLOS19 <a href="https://dl.acm.org/doi/pdf/10.1145/3297858.3304022">LightStore: Software-defined Network-attached Key-value Drives</a>：使用 LSM-Tree 实现协议转换，并实现了和数据中心网络直连</li>
+<li>KAML: A Flexible, High-Performance Key-Value SSD 实现了内部事务处理、更细粒度的锁和和缓存层</li>
+<li>Towards Building a High-performance, Scale-in Keyvalue Storage System.</li>
+<li>NVMKV: A Scalable and Lightweight Flash Aware Key-value Store</li>
+<li>Bluecache: A Scalable Distributed Flash-based Key-value Store</li>
+</ul>
+<h4 id="hash-based-kv-ssd">HASH-Based KV-SSD</h4>
+<ul>
+<li>SSD DRAM 中维护一个 hashtable， hashtable 有很多个 buckets，每个 bucket 对应的保存了元数据（key 和指向 value 的指针）。假设 Key 为 32B，Value 为 1KB，假设 4TB 的 SSD 中的 bucket 数量为 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mn>32</mn></msup></mrow><annotation encoding="application/x-tex">2^{32}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141079999999999em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">3</span><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span></span>，即 4TB 全部用于存 1KB 的 Value，那么实际对应需要 DRAM 大小为 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>36</mn><mi>B</mi><mo>∗</mo><msup><mn>2</mn><mn>32</mn></msup><mo>=</mo><mn>144</mn><mi>G</mi><mi>B</mi></mrow><annotation encoding="application/x-tex">36B * 2^{32}=144 GB</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord">3</span><span class="mord">6</span><span class="mord mathdefault" style="margin-right:0.05017em;">B</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.8141079999999999em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">3</span><span class="mord mtight">2</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord">1</span><span class="mord">4</span><span class="mord">4</span><span class="mord mathdefault">G</span><span class="mord mathdefault" style="margin-right:0.05017em;">B</span></span></span></span> 才能装下对应的 HashTable，但是按照之前的 0.1% 的计算逻辑来看，最多提供 4GB DRAM。显然是不够的。</li>
+<li>为了降低 DRAM 使用率，可以使用哈希签名来代替 KEY，实际的 KEY 和 Value 一起存储在 flash 中，即便是使用 16bit 的签名还是需要 24GB 的 DRAM，且可能产生签名冲突。所以只能保存部分热数据索引到 DRAM 中，剩余部分需要保存在 flash 中，但是引入了额外的 flash 读取开销。</li>
+</ul>
+<h4 id="现在的-kv-ssd-存在的问题">现在的 KV-SSD 存在的问题</h4>
+<ul>
+<li>从现如今的 KV-SSD 表现出来的效果来看，在尾延迟和吞吐量方面表现都是 inconsistent （<strong>注：至于这个 incosistent 怎么理解，可以看后文的具体描述，大胆猜测一下应该是类似于 unpredictable 的意思</strong>）</li>
+<li>现在的 KV-SSD 主要都是基于 HASH 实现的，因为 HASH 实现起来相对容易，但是也就带来了一些局限。基于 HASH 实现的 KV-SSD 主要是在对应的磁盘控制器（DRAM）中维护了一个 HashTable，相应的操作本质就是查表以及对表的管理，但是由于 KV-SSD 的 DRAM 容量有限，数据量大的时候肯定会有部分数据需要放在 Flash 上，简单快速的 DRAM 内查表工作就可能退化成开销较大的访问 FLASH 的查表，同时还需要实现比较复杂的空间管理机制（何时访问 FLASH 进行空间置换，诸如此类）。如果产生了 HASH 冲突，可能就需要访问很多次 FLASH，导致长尾延迟以及吞吐量的下降。</li>
+<li>光纸上谈兵不行，做个实验：4TB KV-SSD prototype (KV-PM983)，KV pools 从 1GB 到 3TB，平均大小 Key-32B，Value-1KB，3TB 的池对应就可以有 30 亿个 KV。负载 KVBench 10 分钟随机 GET（期间无 GC）。对比测试，对照了使用 4TB Block SSD 和 FIO 测试。</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200807105934.png" alt="20200807105934" loading="lazy"></figure>
+<ul>
+<li>实验结论：在基于哈希的 KV-SSD 实现中，随着存储的 KV 对总数的增加，性能和尾延迟会变得更差，还不如 Block SSD 稳定。（分别测试了 CDF 累积分布函数和吞吐量）</li>
+<li>incosistent 的性能表现可能是因为低效的 HASH 冲突解决策略引起的。可以考虑使用最坏情况下常数级的查询的哈希冲突解决策略，如 Cuckoo Hash, Hopscotch 等，来避免长尾延迟，但是这种好处是以降低写入速度和/或频繁重复哈希为代价的。且 HASH 不支持 range query。</li>
+<li>性能随着容量的增加显著下降的原因主要是 DRAM 容量的限制导致索引数据太大，不得不频繁访问 Flash</li>
+</ul>
+<h4 id="解决方案">解决方案</h4>
+<ul>
+<li>从 DRAM 资源有限的角度来考虑，LSM-tree 提供了更好的性能。</li>
+<li>在 KV-SSD 中比较常用的 LSM-tree 实现为 LightStore [ [3]] 和 iLSM-SSD<a href="https://ieeexplore.ieee.org/document/8843040/"> [4]</a></li>
+<li>考虑使用 LSM-tree 替代 HASH，因为 LSM-tree 需要使用的 DRAM 更小，对范围查询的支持也较好。但是实验显示，使用了常见的 LSM-Tree 实现的 KV-SSD 并没有表现出预期的效果，在有些场景下甚至比 HASH 性能还差。</li>
+<li>测试结果，如图所示。
+<ul>
+<li>没有 BloomFilter，LSM-tree KV-SSD 显示出了比 BlockSSD 更高的延迟。</li>
+<li>使用 BloomFilter 会显著降低读的层级数，平均进行一次 flash 上的 page read 就可以读取到数据，读延迟比不带 BloomFilter 更好，但是尾延迟更严重（因为概率性的数据结构导致大约有 1.4% 的读操作会需要超过一次的 flash lookup）。</li>
+<li>YCSB-C 的负载下，吞吐量的表现上，带 BloomFilter 的 LSM-tree KV-SSD 不到 Block-SSD 的一半（因为为了获取KV索引来为GET()服务， Monkey 需要两次 flash 读取）。</li>
+<li>YCSB-Load 负载下，吞吐量严重下降，主要是因为 GC 产生了影响。我们发现为 GC 移动有效页面涉及到 LSM 树维护的 KV 索引的级联更新。</li>
+<li>CPU 的开销，重建 BloomFilter 的开销占据了很大的比重。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200807160924.png" alt="20200807160924" loading="lazy"></li>
+</ul>
+</li>
+</ul>
+<h5 id="通用的-lsm-tree-方案存在的问题">通用的 LSM-tree 方案存在的问题</h5>
+<ul>
+<li><strong>尾延迟：</strong> 虽然很多 LSM-tree 实现都使用了 BloomFilter 来改善平均读延迟，但因为 BloomFilter 是概率型数据结构，对于最差的情况下的尾延迟还是没有办法改善，就会出现和 HASH KV-SSD 一样的长尾延迟的情况。</li>
+<li><strong>严峻的写放大：</strong> LSM-tree 本身的问题（压缩会导致 GC，GC 导致更多的 I/O，加剧写放大），应用在 KV-SSD 中可能还会加剧 FTL 的 GC 开销。</li>
+<li><strong>CPU 占用率高：</strong> 这个也是 LSM-tree 本身存在的问题，现在用于 KV-SSD，本身存储设备的处理性能就有限，LSM-Tree 的 filter rebuild 以及 KV 对的压缩排序都需要花费大量的时钟周期，很容易导致 KV-SSD 的控制器处理单元过载，从而显著影响 I/O 性能</li>
+</ul>
+<h5 id="本文的方案">本文的方案</h5>
+<ul>
+<li><em>Pink</em>：核心思想为 <em>level pinning</em>，即通过将 top levels 的键值索引 pin 到 DRAM 中来代替 BloomFilter (<strong>注：看着是不是很懵，可能直接看设计部分好点，但就暂时理解为 DRAM 里放了个索引来代替了布隆过滤器吧</strong>)</li>
+<li>因为没了 BloomFilter，使用了 DRAM 内的索引，带来了两个直接的好处：延迟变得 predictable；减少了资源占用。</li>
+<li>其他优点主要体现在：
+<ul>
+<li>压缩过程减小了对 flash 的 I/O，因为 DRAM 索引排序不需要 I/O 操作，且该索引由内置的电容来保证持久性；</li>
+<li>可以批量延迟更新 DRAM 中的 LSM-tree 索引，从而减小 GC I/O 次数；</li>
+<li>添加硬件比较器来参与 sort 操作，而无需 CPU 介入，减小 CPU 开销。</li>
+</ul>
+</li>
+<li><strong>注：这儿可能看着还比较抽象，等着看下文的详细设计部分吧</strong></li>
+</ul>
+<h2 id="design">Design</h2>
+<h3 id="data-structure">Data Structure</h3>
+<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200807170301.png" alt="20200807170301" loading="lazy"></figure>
+<ul>
+<li><strong>DRAM</strong>：a skiplist 和 level lists （由 SSD 电容保护）
+<ul>
+<li>skiplist：类似于 write buffer，通常配置的很大以便充分利用 NAND channels 的并行性来向 Flash 刷入数据。对应包含数据 &lt;key size, key, value size, value&gt;</li>
+<li>level lists: 每一层被组织成为了具有确定大小指针对组成的数组，第一个指针指向 meta segment 在 flash 中的物理位置，第二个指针指向对应 meta segment 的开始 key。所以 meta segment 的起始 key 被单独存储在了 DRAM 中，</li>
+</ul>
+</li>
+<li><strong>FLASH</strong>：meta segments 和 data segments
+<ul>
+<li>skiplists 满了之后，元数据和数据分离，刷入到 Flash，元数据包含指向对应数据的指针，数据段中存储了 KEY 以及 Key Size 便于 GC。元数据段大小被固定为 flash page size，但数据段可以是任意大小</li>
+<li>meta segment: 由一组 &lt;key, pointer&gt; 组成，按 key 排序，加上一个 header，key 大小可变 16B-128B，，为了利用二分查找，所以维护了 &lt;key, pointer&gt; 的起始位置在 header 中。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200807163318.png" alt="20200807163318" loading="lazy"></li>
+</ul>
+</li>
+<li>和 HASH 相比，PinK 需要使用的 DRAM 更少</li>
+</ul>
+<h3 id="improving-io-speed-with-level-pinning">Improving I/O Speed with Level Pinning</h3>
+<ul>
+<li><strong>缓解读延迟</strong>：最差的情况下，PinK 需要 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>O</mi><mo>(</mo><mi>h</mi><mo>−</mo><mn>1</mn><mo>)</mo></mrow><annotation encoding="application/x-tex">O(h-1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathdefault">h</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span> 的 flash 查询，为了防止这种情况， PinK 采用了 <em>Level pinning</em> 来代替布隆过滤器，简单粗暴地可以理解如果 LSM-tree 有 h 层，PinK 直接把 top-k 层对应的 meta segments 给放在 DRAM 中。对于读操作，首先看 DRAM 中的 top-k 层有没有该 Key，没有再访问 flash。此时最糟糕的情况下的复杂度降低为 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>O</mi><mo>(</mo><mi>h</mi><mo>−</mo><mi>k</mi><mo>−</mo><mn>1</mn><mo>)</mo></mrow><annotation encoding="application/x-tex">O(h-k-1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathdefault">h</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.77777em;vertical-align:-0.08333em;"></span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span></li>
+<li><strong>Level-pinning 内存需求</strong>：假设 4TB SSD，共 5 层，可以根据 SSD 中 DRAM 的大小来考虑实际需要缓存多少层 meta segement。</li>
+<li><strong>减少压缩 I/O</strong>：因为 meta segment 被缓存在内存中，所以可以直接更新，且不用刷回，因为有电容保护。</li>
+</ul>
+<h4 id="理解">理解</h4>
+<figure data-type="image" tabindex="3"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200807163318.png" alt="20200807163318" loading="lazy"></figure>
+<ul>
+<li>图 5 表示了压缩后的数据布局。假设 L1 被固定到了 DRAM，在 L0 刷回之前，首先从 L1 中找到相应的 meta segments（<strong>读次数 - 1</strong>）。即图示中的 Page 0，然后进行归并排序，从而得到两个有序的 meta segments，这两个 meta segments 再相应地刷到 L1（<strong>写 - 2</strong>）（即图5 中的 Page 3 和 4）。相应地更新 level lists。然后发现 L1 层满了，那么需要刷回到 L2，这时候读取 L1 和 L2 的各自两个 meta segments（<strong>读 - 2</strong>）（即图 5 中的 Page 1~4，其中 Page 1 和 2 来自 L2，Page 3 和 4 来自 L1），归并排序后然后写到 L2，得到对应的 Page 5~7。</li>
+<li>因为 L1 被固定在 DRAM 上，所以省略了对 L1 的三次 flash 读和两次 flash 写<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200925110938.png" alt="20200925110938" loading="lazy"></li>
+</ul>
+<h3 id="optimizing-search-path">Optimizing Search Path</h3>
+<ul>
+<li>假设 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_{1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 层有 N 个 entries，层级之间容量比为 T，因此 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mrow><mi>h</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">L_{h-1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.891661em;vertical-align:-0.208331em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361079999999999em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">h</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.208331em;"><span></span></span></span></span></span></span></span></span></span> 有 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>N</mi><mo>∗</mo><msup><mi>T</mi><mrow><mi>h</mi><mo>−</mo><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">N * T ^{h-2}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.8491079999999999em;vertical-align:0em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">h</span><span class="mbin mtight">−</span><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span></span>。计算最坏的时间复杂度为 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>O</mi><mo>(</mo><msup><mi>h</mi><mn>2</mn></msup><mo>∗</mo><mi>l</mi><mi>o</mi><mi>g</mi><mo>(</mo><mi>T</mi><mo>)</mo><mo>)</mo></mrow><annotation encoding="application/x-tex">O(h^2 * log(T))</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.064108em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord"><span class="mord mathdefault">h</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">o</span><span class="mord mathdefault" style="margin-right:0.03588em;">g</span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="mclose">)</span><span class="mclose">)</span></span></span></span>. 带 BloomFilter 的 LSM-tree 实现对应的复杂度可能更小，因为能够跳过一些不必要的二分查找。</li>
+<li>为了减小查询的开销，PinK 使用了两个技术：
+<ul>
+<li>一个是减少字符串比较的开销，通过使用 key 的前缀，level list 的每个条目都有两个指针，每个指针指向一个 meta segment 和一个 start key string，我们还包含了前缀（即 start key 的前四个字节）。二分查找时，首先比较前缀，只有匹配了才会匹配整个字符串。</li>
+<li>通过借用分级级联技术来减少 level list 的搜索范围。level list 的每一个 entry 都会再有一个 4-byte 指针，称之为范围指针，该指针指向下一层的最大的起始 key 但是小于或等于当前 entry 的 key 的位置。例如，在 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">L_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 中找到了一个 entry <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msubsup><mi>e</mi><msub><mi>L</mi><mn>1</mn></msub><mi>i</mi></msubsup></mrow><annotation encoding="application/x-tex">e_{L_1}^i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.200095em;vertical-align:-0.37543099999999996em;"></span><span class="mord"><span class="mord mathdefault">e</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-2.424669em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathdefault mtight">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31731428571428577em;"><span style="top:-2.357em;margin-left:0em;margin-right:0.07142857142857144em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.143em;"><span></span></span></span></span></span></span></span></span></span><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.37543099999999996em;"><span></span></span></span></span></span></span></span></span></span>，如果该 entry 指向的 meta segment 不包含匹配的 KV index，那么将会寻找下一层，<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msubsup><mi>e</mi><msub><mi>L</mi><mn>1</mn></msub><mi>i</mi></msubsup></mrow><annotation encoding="application/x-tex">e_{L_1}^i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.200095em;vertical-align:-0.37543099999999996em;"></span><span class="mord"><span class="mord mathdefault">e</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-2.424669em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathdefault mtight">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31731428571428577em;"><span style="top:-2.357em;margin-left:0em;margin-right:0.07142857142857144em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.143em;"><span></span></span></span></span></span></span></span></span></span><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.37543099999999996em;"><span></span></span></span></span></span></span></span></span></span> 将成为 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">L_2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 层搜索的下界， 而 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msubsup><mi>e</mi><msub><mi>L</mi><mn>1</mn></msub><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msubsup></mrow><annotation encoding="application/x-tex">e_{L_1}^{i+1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.258426em;vertical-align:-0.39363099999999995em;"></span><span class="mord"><span class="mord mathdefault">e</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.864795em;"><span style="top:-2.406469em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathdefault mtight">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31731428571428577em;"><span style="top:-2.357em;margin-left:0em;margin-right:0.07142857142857144em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.143em;"><span></span></span></span></span></span></span></span></span></span><span style="top:-3.1031310000000003em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.39363099999999995em;"><span></span></span></span></span></span></span></span></span></span> 对应的 range pointer 将成为搜索的上界，从而缩小搜索的范围。复杂度变为 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>O</mi><mo>(</mo><mi>l</mi><mi>o</mi><mi>g</mi><mi>T</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">O(logT)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">o</span><span class="mord mathdefault" style="margin-right:0.03588em;">g</span><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="mclose">)</span></span></span></span>，因此平均时间复杂度降低为 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>O</mi><mo>(</mo><mi>h</mi><mo>∗</mo><mi>l</mi><mi>o</mi><mi>g</mi><mo>(</mo><mi>T</mi><mo>)</mo><mo>)</mo></mrow><annotation encoding="application/x-tex">O(h * log(T))</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathdefault">h</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">o</span><span class="mord mathdefault" style="margin-right:0.03588em;">g</span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="mclose">)</span><span class="mclose">)</span></span></span></span><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200807210308.png" alt="20200807210308" loading="lazy"></li>
+</ul>
+</li>
+</ul>
+<h3 id="speeding-up-compaction">Speeding up Compaction</h3>
+<ul>
+<li>虽然减少了压缩对应的 I/O 次数，但是在压缩过程中的排序操作仍然需要计算资源的开销。考虑使用 <strong>HW accelerator</strong>（硬件加速）来缓解主机端的压力。HW 加速器放置在闪存和主机数据总线之间，可以很容易地合并两个位于闪存的 level，因为两个 level 的 meta segment 能够从 flash 中以速度较快的流的形式进行传输。该加速器写合并后的 meta segments 时不需要 CPU 的介入。硬件加速器的引入不仅减小了计算的开销，同时提高了 I/O 总线的利用率，因为不再需要以前那样的 等待合并的以及合并后的数据传输。</li>
+<li>如图所示工作流程，PinK 软件首先请求加速器来执行压缩，并提供两个 level 的 meta segments 地址以及合并后写回的 mete segements 地址。flash request generator 会进行调度等待多个读请求以便充分利用 flash 带宽，由于不同 flash 通道的数据包是交错的，我们需要为每个 level 使用每个通道的 reorder buffer 来序列化 meta segment。序列化之后送入 compaction engine，本质是个比较器进行归并排序，将比较后的更小的数据以输出流的形式，使用了小的 write buffer，最终输出到写回地址中，当两个 key 相等的时候，上层对应的数据因为最新将取代另外的数据。操作完成后，将使用了的 meta segments 页号返回，从而由上层决定回收哪些未使用的空间。</li>
+<li>对于 pinned levels 的合并是有一个类似的机制，只是使用了 DMA 代替 flash request generator，以及交互的不是 flash 而是 DRAM。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200808111314.png" alt="20200808111314" loading="lazy"></li>
+</ul>
+<h3 id="optimizing-garbage-collection">Optimizing Garbage Collection</h3>
+<ul>
+<li>压缩会产生两种垃圾数据：
+<ul>
+<li>一种是老旧的 meta segment，当执行压缩时，PinK 写新的 meta segments 数据来替代老旧的数据，如下图所示的 pages 0,1,2。</li>
+<li>另一种是过期的 KV 对象，该对象被更新了或者被客户端删除了都变成过期对象，过期对象的索引在压缩过程中会被直接丢弃，所以将没有 meta segments 指向。但是数据部分仍然存储在 data segments 中。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200808113340.png" alt="20200808113340" loading="lazy"></li>
+</ul>
+</li>
+<li>为了擦除老旧的数据，PinK 将在空间接近枯竭的时候触发 GC，选择一个 flash block，将其中的有效数据拷贝到空闲空间，然后擦除整个块。因为冷热分离的原因，meta segment 通常和 data segment 位于不同的块，PinK 通常针对不同块类型采用不同的 GC 策略。</li>
+</ul>
+<h4 id="gc-for-meta-segment">GC for Meta Segment</h4>
+<ul>
+<li>读取页对应的起始键，然后查询 level list 中是否有 entry 指向该键，如果没有则说明是老旧的 segment，直接跳过，如果有则需要将该页迁移到空闲页，然后对该 entry 的更新也将定位到新的页。清理 meta segment 的开销较小，因为只涉及到有效页的拷贝以及 DRAM 中对 level list 的更新。</li>
+</ul>
+<h4 id="gc-for-data-segment">GC for Data Segment</h4>
+<ul>
+<li>从选出来的块中扫描一个 data segments，需要将 value 对应的键提取出来，利用 key 才能查询到 level lists 并找到 meta segments，才能检查该 value 的有效性，如果一个 meta segment 没有被 pin 到 DRAM 中，就必须从 flash 中去读，从而可以收集到很多的有效 values。</li>
+<li>最简单的方法就是 WiscKey 的垃圾回收思想，收集有效的然后拷贝，然后整块擦除，对应 value 的 meta segment 也需要更新并刷回，从而指向新的位置。如果被 pin 到 DRAM 里了，则不需要写 flash。这种方法会造成会多对 flash 上的元数据更新，其次就是对于一些很久以前写的数据，压缩之后，很有可能一个 meta segment 中包含的对象不在同一个 value segement 或者 block 中，即可能只有很少的 value 被拷贝，但是却要更新对应的 meta segment。</li>
+<li>所以 PinK 采用了延迟写的方式，把有效的 KV 再写到 L0，然后擦除整块。垃圾数据静待回收，但是对原有有效数据的访问将被更高 level 处理，即不进行元数据的更新，全部交给 GC，虽然增加了 compaction 开销，但是减少了 mete segment 的更新，因为有效的 KV 对应的元数据被重新整合到了一个 meta segment 中。</li>
+<li>GC 过程中会把有的数据放在 L0 层会一定程度上地影响读延迟。</li>
+</ul>
+<h3 id="durability-and-scalability-issues">Durability and Scalability Issues</h3>
+<h4 id="durability-with-limited-capacitor">Durability with Limited Capacitor</h4>
+<ul>
+<li>前面我们默认了使用 SSD 里的电容来保证 SSD DRAM 里的数据不丢，但其实很多 SSD 没有足够的电容来保证 DRAM 里的所有元数据，此时就会有持久性的问题。可以通过将 DRAM 中的数据结构写入 flash 中来解决。L0 的数据可以在处理请求之前写入日志，即写前日志；在执行压缩之后，level list 和 pinned levels 会变成脏数据，需要被持久化到 flash。</li>
+<li>无论是写前日志还是脏数据刷回，在 HASH-KV-SSD 中一样需要处理，但是在 LSM-tree-KV-SSD 中可能刷回操作的开销更小，因为写性能 LSM-tree 更好。</li>
+</ul>
+<h4 id="dram-scalability">DRAM Scalability</h4>
+<ul>
+<li>我们一开始就假设了 SSD 的 DRAM 容量会随着 flash 的容量的增加而增加，但是 DRAM 的容量增长速度比 flash 要慢，所以可能就没把所有的 levels 给 pin 在 DRAM 中，即只能 pin 部分 levels，相应地也就会增加最坏情况下的查询开销，但即便是最坏情况下，也比使用 HASH 的 KV-SSD 或者使用通用 LSM-tree 的 KV-SSD 表现要好。</li>
+<li>另外可以考虑减小树的高度，即让除了最后一层以外的上层结构都放在 DRAM 中，虽然会因为压缩开销的增大一定程度上牺牲写性能，但是能在最坏的情况下将查询复杂度限制在 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>O</mi><mo>(</mo><mn>1</mn><mo>)</mo></mrow><annotation encoding="application/x-tex">O(1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord">1</span><span class="mclose">)</span></span></span></span></li>
+</ul>
+<h2 id="evaluation">Evaluation</h2>
+<ul>
+<li>器件：FPGA-based SSD platform with quad-core ARM Cortex-A53 (Xilinx ZCU102)。即使用 FPGA 做硬件加速</li>
+<li>负载：YCSB</li>
+<li>对比：HASH-KV-SSD, LightStore-KV-SSD, W/O HW PinK</li>
+</ul>
+<h3 id="分析">分析</h3>
+<ul>
+<li>吞吐量显然 PinK 更高，以及 HW 的引入相应地带来了提升。对于有很多写操作的工作负载，PinK 的这些好处是显而易见的，对于读比较多的，就没什么提升。纯粹的 LSM-tree 相比于 HASH 在写敏感负载下表现更差，反而在读上表现更好。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200808143557.png" alt="20200808143557" loading="lazy"></li>
+<li>PinK 大幅减小了 flash 的读次数，压缩对应的 I/O 次数也比原始的 LSM-tree 小了很多<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200808143609.png" alt="20200808143609" loading="lazy"></li>
+<li>延迟测试情况<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200808144531.png" alt="20200808144531" loading="lazy"></li>
+<li>查询优化效果，ALL 是指既包含 range 指针又包含前缀匹配。效果比未优化的 PinK 肯定好很多，但比起 LSM-tree 其实只有尾延迟有一些改善。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200808144726.png" alt="20200808144726" loading="lazy"></li>
+<li>垃圾回收：优化之后效果比 PinK 好很多，甚至比 HASH 还要好<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200808145136.png" alt="20200808145136" loading="lazy"></li>
+<li>写延迟和高度的关系：PinK 的读延迟更稳定<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200808145333.png" alt="20200808145333" loading="lazy"></li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<ul>
+<li>PinK: 基于 LSM-tree 的 KV-SSD
+<ul>
+<li>pinning top level indices 改善了读延迟</li>
+<li>使用 HW accelerate 显著减少了压缩的 I/O 次数</li>
+</ul>
+</li>
+<li>未来考虑在 RocksDB 这种通用的 KVS 中贯彻 pinned levels 思想，但可能需要借助 Persistent Memory 来保证主机端的持久性。</li>
+</ul>
+<h2 id="references">References</h2>
+<ul>
+<li><a href="https://dl.acm.org/doi/pdf/10.1145/3319647.3325831">[1] Towards building a high-performance, scale-in key-value storage system</a></li>
+<li><a href="https://dl.acm.org/doi/10.1145/3341301.3359628">[2] KVell: the Design and Implementation of a Fast Persistent Key-Value Store</a></li>
+<li><a href="https://dl.acm.org/doi/pdf/10.1145/3297858.3304022">[3] LightStore: Software-defined Network-attached Key-value Drives</a></li>
+<li><a href="https://ieeexplore.ieee.org/document/8843040">[4] iLSM-SSD: An Intelligent LSM-tree based Key-Value SSD for Data Analytics</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201002161629.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/GearDB/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-08-13">2020-08-13</time>
+                  <h4 class="title white no-margin">GearDB: A GC-free Key-Value Store on HM-SMR Drives with Gear Compaction</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200804165314.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/KVell/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-08-02">2020-08-02</time>
+                  <h4 class="title white no-margin">KVell: the Design and Implementation of a Fast Persistent Key-Value Store</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

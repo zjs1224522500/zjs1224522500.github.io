@@ -1,0 +1,827 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>网络代理基础 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+源于师姐提到的一个问题：什么是反向代理？
+之前本科在自己建站以及做学校项目的时候其实有涉及到，但没进行总结
+趁此机会埋个坑，把代理的东西好好理一理，顺便讲讲 VPN 啥的
+未完待续~
+
+
+
+基本概念
+什么是代理？
+
+代理：顾名思义，根据..." />
+    <meta name="keywords" content="网络" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://www.ionos.ca/digitalguide/fileadmin/DigitalGuide/Teaser/proxy-t.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2019-07-27"><i class="fa fa-calendar"></i><span class="lately">1 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/proxy/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/proxy/"> </span>
+              </a>
+              <span id="/proxy/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-0 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">网络代理基础</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>源于师姐提到的一个问题：什么是反向代理？</li>
+<li>之前本科在自己建站以及做学校项目的时候其实有涉及到，但没进行总结</li>
+<li>趁此机会埋个坑，把代理的东西好好理一理，顺便讲讲 VPN 啥的</li>
+<li>未完待续~</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="基本概念">基本概念</h2>
+<h3 id="什么是代理">什么是代理？</h3>
+<ul>
+<li>代理：顾名思义，根据汉语拆词为字进行组词就很好理解。代，代表；理，处理。所以代理往往是描述了一个中间人所要做的工作，就是代表某一方进行某些事情的处理。</li>
+<li>对于商业场景中关于代理的故事就不再此处进行赘述，此处则主要探讨在计算机领域中主要涉及到的 <strong>网络代理</strong>。</li>
+</ul>
+<h3 id="网络代理">网络代理</h3>
+<ul>
+<li>一种特殊的网络服务，英文名做 Proxy，允许一个网络终端（一般为客户端）通过这个服务与另一个网络终端（一般为服务器）进行非直接的连接。一些网关、路由器等网络设备具备网络代理功能。一般认为代理服务有利于保障网络终端的隐私或安全，防止攻击。</li>
+<li>一个完整的代理请求过程为：客户端首先与代理服务器创建连接，接着根据代理服务器所使用的代理协议，请求对目标服务器创建连接、或者获得目标服务器的指定资源（如：文件）。在后一种情况中，代理服务器可能对目标服务器的资源下载至本地缓存，如果客户端所要获取的资源在代理服务器的缓存之中，则代理服务器并不会向目标服务器发送请求，而是直接传回已缓存的资源。</li>
+<li>一些代理协议允许代理服务器改变客户端的原始请求、目标服务器的原始响应，以满足代理协议的需要。代理服务器的选项和设置在计算机程序中，通常包括一个“防火墙”，允许用户输入代理地址，它会遮盖他们的网络活动，可以允许绕过互联网过滤实现网络访问。</li>
+</ul>
+<h2 id="常见类型">常见类型</h2>
+<h3 id="正向代理forward-proxy">正向代理（Forward Proxy）</h3>
+<h4 id="基本原理">基本原理</h4>
+<ul>
+<li>常见的场景中所提到的代理一般都是指 正向代理。</li>
+<li>正向代理是指 <strong>用户</strong> 利用 代理服务器 访问 目标服务器。</li>
+<li>主要目的：隐藏客户端，忽略客户端的差异。</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/Forward-Proxy.jpg?raw=true" alt="image" loading="lazy"></figure>
+<h4 id="使用场景">使用场景</h4>
+<ul>
+<li>访问本地无法访问的服务器；最简单的例子就是翻墙，还有针对部分只能内网访问的场景，往往需要借助代理服务器，才能进行相关资源的访问（譬如实验室的服务器）。</li>
+<li>缓存（Cahce）作用：cache技术与代理服务技术是紧密联系的，假设我们的电脑是用户A，我们想通过代理服务器X访问服务器A上的数据B，如果在这之前，有人通过代理服务器X访问过该数据，那么代理服务器X会把数据B保存一段时间，在这段时间内，如果我们想访问数据B，代理服务器会直接把缓存的数据B直接发给我们，而不会再去访问服务器A。</li>
+<li>权限控制：防火墙授权代理服务器访问权限，客户端通过正向代理可以通过防火墙；故部分内网的服务器会限制登录IP为代理服务器IP，从而保证只有在已知代理服务器的情况下才能访问内网服务器。</li>
+<li>隐藏访问者：通过配置，目标服务器无法获取真实客户端信息，只能获取到代理服务器的信息，针对部分安全性要求较高的业务，往往需要隐藏客户端。（BTW，但严格意义上仍是不安全的）</li>
+<li>针对某些限制 IP 访问次数的场景，常常使用 IP 代理池来进行代理访问，从而使用代理服务器的多个 IP 来进行相关访问。特别是某些数据爬取的场景。</li>
+</ul>
+<h4 id="实现方式">实现方式</h4>
+<ul>
+<li>利用 Nginx、Apache 等 Web 服务器来引入相关代理模块并进行配置，从而转发客户端传递来的 Web 请求。</li>
+<li>利用一些软件，进行相应协议的通信加密和转换，实现对应的功能。</li>
+</ul>
+<h4 id="延申">延申</h4>
+<ul>
+<li>正向代理根据协议划分主要有HTTP、HTTP over TLS(HTTPS)、Socks、Socks over TLS几种。其中，HTTP和Socks无法用于翻墙，HTTPS和Socks over TLS可以用于翻墙。</li>
+<li>四种代理协议都可以通过“用户先将数据发给代理服务器，再由代理服务器转发给目的服务器”的方法达到翻墙目的。但由于HTTP和Socks都是明文协议，GFW可以通过检查数据包内的内容得知用户的真实意图，进而拦截数据包。所以，HTTP和Socks一般只用作本地代理。而HTTPS协议是加密通讯，GFW无法得知数据包内的真实内容，类似于关键词过滤的手段无法施展。HTTPS代理的流量特征和我们平时访问网站时所产生的HTTPS流量几乎一模一样，GFW无法分辨，稳定性爆表。</li>
+</ul>
+<h3 id="反向代理">反向代理</h3>
+<h4 id="基本原理-2">基本原理</h4>
+<ul>
+<li>正向代理代理的是用户，而反向代理则相反，代理对象是目标服务器。</li>
+<li>反向代理：指 <strong>服务端</strong> 利用 代理服务器 给 用户 提供服务。</li>
+<li>主要目的：向客户端隐藏服务端的细节，由代理服务器统一接管，并根据适当的策略（负载均衡等）来分发相应的请求并最终通过代理服务器进行返回。</li>
+</ul>
+<figure data-type="image" tabindex="2"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/Reverse-Proxy.jpg?raw=true" alt="image" loading="lazy"></figure>
+<h4 id="使用场景-2">使用场景</h4>
+<ul>
+<li>保护和隐藏原始资源服务器；用户A始终认为它访问的是原始服务器B而不是代理服务器Z，但实用际上反向代理服务器接受用户A的应答，从原始资源服务器B中取得用户A的需求资源，然后发送给用户A。由于防火墙的作用，只允许代理服务器Z访问原始资源服务器B。尽管在这个虚拟的环境下，防火墙和反向代理的共同作用保护了原始资源服务器B，但用户A并不知情。</li>
+</ul>
+<figure data-type="image" tabindex="3"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/ReverseProxy-CL.jpg?raw=true" alt="image" loading="lazy"></figure>
+<ul>
+<li>负载均衡：当反向代理服务器不止一个的时候，我们甚至可以把它们做成集群，当更多的用户访问资源服务器B的时候，让不同的代理服务器Z（x）去应答不同的用户，然后发送不同用户需要的资源。当然反向代理服务器像正向代理服务器一样拥有CACHE的作用，它可以缓存原始资源服务器B的资源，而不是每次都要向原始资源服务器B请求数据，特别是一些静态的数据，比如图片和文件，如果这些反向代理服务器能够做到和用户X来自同一个网络，那么用户X访问反向代理服务器X，就会得到很高质量的速度。这正是CDN技术的核心。</li>
+</ul>
+<figure data-type="image" tabindex="4"><img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/LoadBalanceProxy.jpg?raw=true" alt="image" loading="lazy"></figure>
+<ul>
+<li>缓存作用：数据缓存在代理服务器上，如果客户端请求的内容在缓存中则不去访问目标主机；</li>
+</ul>
+<h4 id="延申-2">延申</h4>
+<ul>
+<li>利用反向代理实现内网穿透。通过使用SSH将内网服务器的22端口对应地转发到反向代理服务器上的某个端口，从而建立了从内网服务器到代理服务器的反向代理；接着在代理服务器上通过将本机的某个端口转发到反向代理服务端口来建立正向代理，从而使得在外网的任何一台服务器都可以通过代理服务器上提供的正向代理来对远程的内网服务器进行操作。</li>
+<li>常见的内网穿透工具可参考文献中的【7】。</li>
+</ul>
+<h5 id="ssh">ssh</h5>
+<ul>
+<li>ssh 参数解释：
+<ul>
+<li>-f 后台执行ssh指令</li>
+<li>-C 允许压缩数据</li>
+<li>-N 不执行远程指令</li>
+<li>-R 将远程主机(服务器)的某个端口转发到本地端指定机器的指定端口</li>
+<li>-L 将本地机(客户机)的某个端口转发到远端指定机器的指定端口</li>
+<li>-p 指定远程主机的端口</li>
+</ul>
+</li>
+<li>ssh 正向代理配置：<code>ssh -fCNL</code></li>
+<li>ssh 反向代理配置：<code>ssh -fCNR</code></li>
+</ul>
+<h6 id="场景">场景</h6>
+<ul>
+<li>内网服务器 I：192.168.3.126  | ssh 端口：22</li>
+<li>外网服务器 O：45.45.45.45    | ssh 端口：33</li>
+<li><strong>step1 在内网服务器 I 上建立 内网服务器 I 到 外网服务器 O 的反向代理</strong></li>
+</ul>
+<pre><code class="language-Bash"># 该命令将本地的ssh端口反向代理到了远程服务器的7777端口
+# 参数解释：ssh -fCNR 
+#   外网服务器对应的代理通信 IP:Port - 7777  (IP可省略)
+#   内网服务器对应的代理通信 IP:Port - localhost:22 （为了建立ssh连接使用了22端口）
+#   登陆远程服务器使用的信息 root@IP -p port - root@45.45.45.45 -p 33
+#
+[root@servermwd ~]# ssh -fCNR 7777:localhost:22 root@45.45.45.45 -p 33
+
+</code></pre>
+<ul>
+<li><strong>step2 在外网服务器 O 上建立 正向代理</strong></li>
+</ul>
+<pre><code class="language-Bash"># 该命令建立了本机端口 7776 到 7777 的正向代理
+# 参数解释：ssh -fCNR 
+#   服务器A 对应的代理通信 IP:Port - *:7776  (IP可省略,将会使用命令末尾的IP)
+#   服务器B 对应的代理通信 IP:Port - localhost:7777 (对应内网服务器反向代理的端口)
+#   登陆A 服务器使用的信息 IP -p port - localhost -p 33
+#
+[root@45 ~]# ssh -fCNL *:7776:localhost:7777 localhost -p 33
+</code></pre>
+<ul>
+<li><strong>step3 使用ssh连接内网服务器</strong></li>
+</ul>
+<pre><code class="language-Bash"># 该命令建立了到外网服务器指定端口的ssh连接
+# 1. 7776 端口对应地被正向代理转发到了 7777端口；
+# 2. 7777 端口对应地被反向代理代理到了 内网服务器的22端口
+# 3. 从而建立起了对内网服务器的 ssh 连接
+#
+&gt; ssh -p 7776 root@45.45.45.45
+</code></pre>
+<ul>
+<li><strong>(可选) step4 内网服务器配置ssh免密登陆并使用 autossh来进行自动重连</strong></li>
+</ul>
+<pre><code class="language-Bash"># 免密登录
+ssh-copy-id root@45.45.45.45
+
+# 安装autossh
+yum install autossh
+
+# 同 ssh 的参数一致
+# 多了一个 -M port的参数，主要用于外网服务器接受内网服务器的信息
+autossh -M 7775 -fCNR 7777:localhost:22 root@45.45.45.45 -p 33 
+</code></pre>
+<ul>
+<li><strong>(可选) step5 将autossh加入内网服务器开机启动项，并使配置生效</strong></li>
+</ul>
+<pre><code class="language-Bash">vi /etc/rc.d/rc.local
+
+# 添加内容
+autossh -M 7775 -fCNR 7777:localhost:22 root@45.45.45.45 -p 33
+
+# 赋予权限
+chmod +x /etc/rc.d/rc.local
+</code></pre>
+<h4 id="last-but-not-least-猴子都能看懂的步骤">Last but not least (猴子都能看懂的步骤)</h4>
+<p>【Firstly】<br>
+先告诉憨憨们<br>
+xx.xx.xx.xx  =&gt;  你的跳板机IP<br>
+8111          =&gt;  跳板机对应的端口</p>
+<p>【SSH 公钥私钥生成】<br>
+ssh-keygen</p>
+<p>【ssh 免密登录：(免密失败检查公私钥和跳板机配置)】<br>
+ssh-copy-id root@xx.xx.xx.xx<br>
+ssh -vvv xx.xx.xx.xx // 查看日志错误信息</p>
+<p>【centos 安装 autossh】<br>
+yum install autossh<br>
+【安装失败使用 RPM 安装】<br>
+wget http://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/a/autossh-1.4g-1.el7.x86_64.rpm<br>
+rpm -i autossh-1.4g-1.el7.x86_64.rpm<br>
+【检查是否安装成功】<br>
+rpm -qa | grep autossh</p>
+<p>【autossh 反代命令】：<br>
+autossh -M 2222 -NfR 8111:localhost:22 root@xx.xx.xx.xx -p 22</p>
+<p>// -M 后的端口时 autossh 接收错误消息自动重连的，不用管<br>
+// -NfR 后的端口才是你最后会用的，你懂我意思吧~<br>
+// -p  22 列出来是怕有的憨憨默认ssh端口不是22的，专门写出来！！<br>
+//很清楚了吧~</p>
+<p>【连接时 connection refused，需要打开跳板机端口，重启ssh service】<br>
+vim /etc/ssh/sshd_config<br>
+...<br>
+GatewayPorts yes<br>
+AuthorizedKeysFile .ssh/authorized_keys<br>
+...</p>
+<p>sudo /etc/init.d/ssh restart</p>
+<p>【反代连接】<br>
+ssh root@xx.xx.xx.xx -p 8111</p>
+<h2 id="参考文献">参考文献</h2>
+<ul>
+<li><a href="https://zh.wikipedia.org/zh-cn/%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1%E5%99%A8">[1] 维基百科：代理服务器</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/56271931">[2] 知乎 - AntSworD：简单聊聊网络代理原理</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/27424255">[3] 知乎 - 不梦君：proxy代理基础<br>
+</a></li>
+<li><a href="https://medium.com/@thomas_summon/%E6%B5%85%E8%B0%88vpn-vps-proxy%E4%BB%A5%E5%8F%8Ashadowsocks%E4%B9%8B%E9%97%B4%E7%9A%84%E8%81%94%E7%B3%BB%E5%92%8C%E5%8C%BA%E5%88%AB-b0198f92db1b">[4] Google Blog : 浅谈vpn、vps、Proxy以及shadowsocks之间的联系和区别</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/68560128">[5] 知乎 - 波哥：彻底理解正向代理、反向代理、透明代理<br>
+</a></li>
+<li><a href="https://www.cnblogs.com/bubaya/p/7828817.html">[6] 博客园 - 不拨牙：ssh反向代理</a></li>
+<li><a href="https://www.jianshu.com/p/cdc446e51675">[7] 简书 - OSC开源社区：可以实现内网穿透的几款工具</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/file-and-charset.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/file-and-charset/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-07-31">2019-07-31</time>
+                  <h4 class="title white no-margin">字符编码与文件</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/diary/23-00-HUST.jpg?raw=true');"></div>
+                 <a href="https://blog.shunzi.tech/post/heelo-diary/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-07-25">2019-07-25</time>
+                  <h4 class="title white no-margin">Hello Diary</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

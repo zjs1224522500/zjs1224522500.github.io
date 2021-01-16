@@ -1,0 +1,1038 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>设计模式之工厂模式 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+代码不完全参照原书 , 借鉴书中相关例子和部分概念
+顺序部分参考原书，部分引用原书 UML 类图，会结合实际应用描述优缺点
+工厂模式（简单工厂模式，工厂方法模式，抽象工厂模式）
+
+
+
+工厂模式
+概念理解
+
+工厂：主要负责对象的创建。其中..." />
+    <meta name="keywords" content="设计模式" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('\media\images\custom-featureImage.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2018-08-18"><i class="fa fa-calendar"></i><span class="lately">2 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/design-pattern-factory/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/design-pattern-factory/"> </span>
+              </a>
+              <span id="/design-pattern-factory/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-0 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">设计模式之工厂模式</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>代码不完全参照原书 , 借鉴书中相关例子和部分概念</li>
+<li>顺序部分参考原书，部分引用原书 UML 类图，会结合实际应用描述优缺点</li>
+<li>工厂模式（简单工厂模式，工厂方法模式，抽象工厂模式）</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h3 id="工厂模式">工厂模式</h3>
+<h4 id="概念理解">概念理解</h4>
+<ul>
+<li><strong>工厂</strong>：主要负责对象的创建。其中涉及到的对象一般都继承自<strong>同一接口</strong>或<strong>同一父类</strong>，具有部分相似的性质。</li>
+</ul>
+<h4 id="实例讲解">实例讲解</h4>
+<h5 id="场景">场景：</h5>
+<ul>
+<li>目标：选择通讯方式实现发送消息的操作</li>
+<li>分析：发送消息的方式在我们日常生活中有很多种，比较常见的方式有
+<ul>
+<li>短信（Message,SMS）</li>
+<li>邮件（EMail）</li>
+<li>微信等网络即时通讯工具 （Wechat）</li>
+</ul>
+</li>
+</ul>
+<h5 id="常规实现">常规实现：</h5>
+<ul>
+<li>思路：通过用户选择的操作进行相关类型的传递，利用 If-Else 或者 Swicth-Case 语句来进行判断，针对每一种方式进行具体实现。</li>
+<li>代码实现：</li>
+</ul>
+<pre><code class="language-Java">import java.util.Scanner;
+
+public class SingleClassImpl {
+
+    public static void main(String[] args) {
+        Scanner in = new Scanner(System.in);
+        System.out.println(&quot;Please enter receiver name:&quot;);
+        String receiverName = in.next();
+        System.out.println(&quot;Please choose one type to send msg:[Enter numbers]&quot;);
+        System.out.println(&quot;1. Send by message app on your phone.&quot;);
+        System.out.println(&quot;2. Send by email&quot;);
+        System.out.println(&quot;3. Send by WeChat&quot;);
+        System.out.println();
+        int typeNo = 0;
+        try {
+            typeNo = in.nextInt();
+        } catch (Exception e) {
+            // handle exception
+            System.out.println(&quot;Invalid input!&quot;);
+        }
+        switch (typeNo) {
+            case 1:
+                System.out.println(String.format(&quot;Send to %s by message&quot;, receiverName));
+                break;
+            case 2:
+                System.out.println(String.format(&quot;Send to %s by email&quot;, receiverName));
+                break;
+            case 3:
+                System.out.println(String.format(&quot;Send to %s by WeChat&quot;, receiverName));
+                break;
+            default:
+                System.out.println(&quot;Invalid Input!&quot;);
+                break;
+        }
+    }
+}
+</code></pre>
+<ul>
+<li><strong>存在的问题</strong>：
+<ul>
+<li>
+<ol>
+<li>没有使用面向对象的特性。</li>
+</ol>
+</li>
+<li>
+<ol start="2">
+<li>如果我们需要添加新的发送消息的方式，则需要修改该类大量的业务逻辑，最主要的问题则是 和用户交互的逻辑同业务代码耦合度较高。修改代码增加了风险。</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="简单工厂模式">简单工厂模式：</h5>
+<ul>
+<li>思路：
+<ul>
+<li>
+<ol>
+<li>充分利用面向对象的特性，将所有发送消息的方式进行抽象，建立发送消息的接口类，定义共同的 <code>sendMsg()</code> 方法。</li>
+</ol>
+</li>
+<li>
+<ol start="2">
+<li>新建一个<code>Factory</code>类来管理各种信息发送方式。</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>代码实现（一）：<code>Common Interface</code> 和具体的 <code>Sender</code> 类</li>
+</ul>
+<pre><code class="language-Java">// common interface
+public interface CommonInterfaceSender {
+	void sendMsg(String receiver);
+}
+
+// SmsSender class(Message app in phone)
+public class SmsSender implements CommonInterfaceSender {
+    @Override
+    public void sendMsg(String receiver) {
+        System.out.println(String.format(&quot;Send to %s by message&quot;, receiver));
+    }
+}
+
+// MailSender class
+public class MailSender implements CommonInterfaceSender {
+    @Override
+    public void sendMsg(String receiver) {
+        System.out.println(String.format(&quot;Send to %s by email&quot;, receiver));
+    }
+}
+
+// WeChatSender class
+public class WechatSender implements CommonInterfaceSender {
+    @Override
+    public void sendMsg(String receiver) {
+        System.out.println(String.format(&quot;Send to %s by WeChat&quot;, receiver));
+    }
+}
+</code></pre>
+<ul>
+<li>代码实现（二）：<code>Factory Class</code> 和 <code>Main Class</code></li>
+</ul>
+<pre><code>// Create different sender class instance according to param
+public class OrdinaryFactory {
+    public CommonInterfaceSender sendMsg(int type) {
+        if (1 == type) {
+            return new SmsSender();
+        } else if (2 == type) {
+            return new MailSender();
+        } else if (3 == type) {
+            return new WechatSender();
+        } else {
+            System.out.println(&quot;Please check the input!&quot;);
+            return null;
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        OrdinaryFactory ordinaryFactory = new OrdinaryFactory();
+        Scanner in = new Scanner(System.in);
+        System.out.println(&quot;Please enter receiver name:&quot;);
+        String receiverName = in.next();
+        System.out.println(&quot;Please choose one type to send msg:[Enter numbers]&quot;);
+        System.out.println(&quot;1. Send by message app on your phone.&quot;);
+        System.out.println(&quot;2. Send by email&quot;);
+        System.out.println(&quot;3. Send by WeChat&quot;);
+        System.out.println();
+        int typeNo = 0;
+        try {
+            typeNo = in.nextInt();
+        } catch (Exception e) {
+            // handle exception
+            System.out.println(&quot;Invalid input!&quot;);
+        }
+        
+        // Use parent interface to point the object.
+        CommonInterfaceSender sender = ordinaryFactory.sendMsg(typeNo);
+        // invoke parent interface method.
+        sender.sendMsg(receiverName);
+    }
+}
+</code></pre>
+<ul>
+<li><strong>优点</strong>：充分发挥了面向对象的特点，使得具体的业务代码一定程度上和 <code>Main</code> 解耦，添加新的发送短信的方式时，只需要新建对应的 <code>Sender</code>，并简单调整对应的 <code>Factory</code>。</li>
+<li><strong>缺点</strong>：
+<ul>
+<li>严格意义上并没有实现完全解耦。客户端（<code>Main</code>）和业务逻辑代码中仍然存在依赖，<code>Factory</code>起了决定作用。同时对于传递的参数具有依赖性，参数的不合法导致程序运行的不合法。</li>
+<li>违反了 <strong>开放-封闭原则</strong>。需要调整 <code>Factory</code> 的判断逻辑，对<strong>修改</strong>开放。</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>开放-封闭原则：软件实体应该是可扩展，而不可修改的。也就是说，对扩展是开放的，而对修改是封闭的。</p>
+</blockquote>
+<h5 id="工厂方法模式">工厂方法模式</h5>
+<ul>
+<li>思路：通过为每一个<code>Sender Class</code>创建<code>Factory</code>类，来代替简单工厂模式中<code>Factory Class</code>的作用，将判断的逻辑（实例化子类的逻辑）由<code>Factory</code>转移到客户端。</li>
+<li>代码实现（一）：工厂类</li>
+</ul>
+<pre><code class="language-Java">// common factory
+public interface IMsgFactory {
+	CommonInterfaceSender sendMsg();
+}
+
+// Mail factory
+public class SendMailFactory implements IMsgFactory {
+	@Override
+	public CommonInterfaceSender sendMsg() {
+		return new MailSender();
+	}
+}
+
+// Sms factory
+public class SendSmsFactory implements IMsgFactory {
+	@Override
+	public CommonInterfaceSender sendMsg() {
+		return new SmsSender();
+	}
+}
+
+// WeChat factory
+public class WechatFactory implements IMsgFactory {
+    @Override
+    public CommonInterfaceSender sendMsg() {
+        return new WechatSender();
+    }
+}
+</code></pre>
+<ul>
+<li>代码实现（二）：客户端 Main</li>
+</ul>
+<pre><code class="language-Java">public class FactoryMethodMain {
+    public static void main(String[] args) {
+    
+        // Choose one specific class to create factory referring demand
+        IMsgFactory factory = new SendMailFactory();
+        //IMsgFactory factory = new SendSmsFactory();
+        //IMsgFactory factory = new WechatFactory();
+        CommonInterfaceSender sender = factory.createSender();
+        sender.sendMsg(&quot;Elvis&quot;);
+    }
+}
+</code></pre>
+<ul>
+<li><strong>优点</strong>：解决了简单工厂模式中的<strong>开放-封闭原则</strong>问题。通过客户端选择实例化哪一个具体的工厂类来达到最少修改代码的目的。同时保持了简单工厂模式面向对象的优点。</li>
+<li><strong>缺点</strong>：本质上仍然没有解决选择的问题，当有新的需求的时候，客户端的代码仍然需要修改。除此之外，增加了代码量，引进一个新的发送消息的方式时，还需要建立对应的工厂类。</li>
+<li><strong>Tips</strong>：反射解决分支判断的问题。类比于Spring IOC容器中根据 beanName 注入相应的实例</li>
+</ul>
+<h5 id="抽象工厂模式">抽象工厂模式</h5>
+<ul>
+<li>使用场景：多个属性形成一组属性（一套属性），需要对一组属性中的某一个属性进行消费时</li>
+<li>结合本例：各种通信方式可能还会有接受消息的功能。</li>
+<li>代码实现（一）：Receivers</li>
+</ul>
+<pre><code class="language-Java">public interface CommonInterfaceReceiver {
+    void receiveMsg(String from);
+}
+
+public class MailReceiver implements CommonInterfaceReceiver {
+    @Override
+    public void receiveMsg(String from) {
+        System.out.println(String.format(&quot;Receive message from %s by email&quot;, from));
+    }
+}
+
+public class SmsReceiver implements CommonInterfaceReceiver {
+    @Override
+    public void receiveMsg(String from) {
+        System.out.println(String.format(&quot;Receive message form %s by sms&quot;, from));
+    }
+}
+
+public class WechatReceiver implements CommonInterfaceReceiver {
+    @Override
+    public void receiveMsg(String from) {
+        System.out.println(String.format(&quot;Receive message from %s by wechat&quot;, from));
+    }
+}
+</code></pre>
+<ul>
+<li>代码实现（二）：建立抽象工厂类并根据功能提供各自的实现</li>
+</ul>
+<pre><code class="language-Java">public abstract class AbstractCommunicationFactory {
+    public abstract CommonInterfaceSender getSender(int typeNum);
+    public abstract CommonInterfaceReceiver getReceiver(int typeNum);
+}
+
+public class ReceiverFactory extends AbstractCommunicationFactory {
+    @Override
+    public CommonInterfaceSender getSender(int typeNum) {
+        return null;
+    }
+
+    @Override
+    public CommonInterfaceReceiver getReceiver(int typeNum) {
+        switch (typeNum) {
+            case 0:
+                return new SmsReceiver();
+            case 1:
+                return new MailReceiver();
+            case 2:
+                return new WechatReceiver();
+            default:
+                return null;
+        }
+    }
+}
+
+public class SenderFactory extends AbstractCommunicationFactory {
+
+    @Override
+    public CommonInterfaceSender getSender(int typeNum) {
+        switch (typeNum) {
+            case 0:
+                return new SmsSender();
+            case 1:
+                return new MailSender();
+            case 2:
+                return new WechatSender();
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public CommonInterfaceReceiver getReceiver(int typeNum) {
+        return null;
+    }
+}
+</code></pre>
+<ul>
+<li>代码实现（三）：利用简单工厂模式对具体的功能对应的工厂进行管理</li>
+</ul>
+<pre><code class="language-Java">ublic class FactoryProducer {
+
+    public static AbstractCommunicationFactory getFactory(String direction) {
+        if (&quot;Send&quot;.equals(direction)) {
+            return new SenderFactory();
+        } else if (&quot;Receive&quot;.equals(direction)) {
+            return new ReceiverFactory();
+        }
+        return null;
+    }
+}
+</code></pre>
+<ul>
+<li>代码实现（四）：Main</li>
+</ul>
+<pre><code class="language-Java">public class AbstractFactoryMain {
+
+    public static void main(String[] args) {
+        String to = &quot;Elvis&quot;;
+        String from  = &quot;Shunzi&quot;;
+        AbstractCommunicationFactory senderFactory = FactoryProducer.getFactory(&quot;Send&quot;);
+
+        // sms sender
+        CommonInterfaceSender smsSender = senderFactory.getSender(0);
+        smsSender.sendMsg(to);
+
+        // MailSender
+        CommonInterfaceSender mailSender = senderFactory.getSender(1);
+        smsSender.sendMsg(to);
+
+        // WeChat Sender
+        CommonInterfaceSender wechatSender = senderFactory.getSender(2);
+        wechatSender.sendMsg(to);
+
+        AbstractCommunicationFactory receiverFactory = FactoryProducer.getFactory(&quot;Receive&quot;);
+
+        // sms receiver
+        CommonInterfaceReceiver smsReceiver = receiverFactory.getReceiver(0);
+        smsReceiver.receiveMsg(from);
+
+        CommonInterfaceReceiver mailReceiver = receiverFactory.getReceiver(1);
+        mailReceiver.receiveMsg(from);
+
+        CommonInterfaceReceiver wechatReceiver = receiverFactory.getReceiver(2);
+        wechatReceiver.receiveMsg(from);
+
+    }
+}
+</code></pre>
+<ul>
+<li>输出结果：</li>
+</ul>
+<pre><code class="language-bash">&gt; Send to Elvis by message
+&gt; Send to Elvis by message
+&gt; Send to Elvis by WeChat
+&gt; Receive message form Shunzi by sms
+&gt; Receive message from Shunzi by email
+&gt; Receive message from Shunzi by wechat
+</code></pre>
+<ul>
+<li><strong>优点</strong>：便于修改对应的业务逻辑，具体的工厂类实现只需要一行代码，其余操作都是抽象工厂的继承，减少代码修改的成本。同时让创建具体对象的逻辑和客户端分离，通过实例化对应的抽象工厂类来实现。</li>
+<li><strong>缺点</strong>：
+<ul>
+<li>仍然不可避免地违反了<strong>开放-封闭原则</strong>，需要在客户端中根据不同的业务需求调整实例化工厂的代码。<strong>可以采用反射解决</strong>。</li>
+<li>抽象工厂在扩展相关功能的基础上成本较高，譬如新建拒收消息的功能，则需要按照接受和发送消息的类结构再次新建对应的类，并修改工厂中的部分逻辑。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<blockquote>
+<ul>
+<li>源码地址：<a href="https://github.com/zjs1224522500/data-structure-and-arithmetic/tree/master/design_patterns/src/me/elvis/common/design/creation/factory">Elvis Github</a></li>
+<li><a href="https://blog.csdn.net/xiaoddt/article/details/74937952">友情链接一（略有参考其他前辈的博客）</a></li>
+<li><a href="http://www.runoob.com/design-pattern/abstract-factory-pattern.html">友情链接二（菜鸟教程设计模式大汇总）</a></li>
+<li>UML 图（感觉不怎么需要，例子比较简单。觉得之后有必要的时候再画吧..）</li>
+<li>后续会结合实际开发以及相关框架中的应用进一步解释工厂模式带来的实际作用。留坑。。（逃</li>
+</ul>
+</blockquote>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('http://www.spring-event.com/wp-content/uploads/2017/11/logo.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/spring-event/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2018-11-01">2018-11-01</time>
+                  <h4 class="title white no-margin">Spring Event</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/media/images/spring.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/learn-spring-data-jpa/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2018-05-06">2018-05-06</time>
+                  <h4 class="title white no-margin">SpringData-JPA</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

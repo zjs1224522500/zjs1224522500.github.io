@@ -1,0 +1,1237 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cinder核心 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+OpenStack 存储调度管理基础设施 Cinder 组件介绍
+Cinder 核心流程和实现方式
+Cinder 高可用架构实现方式
+
+
+
+
+
+
+
+
+Cinder
+
+主要模块
+
+cinder-api
+
+核心思想
+核心流程
+细节
+CRUD..." />
+    <meta name="keywords" content="存储,云计算,OpenStack" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://docs.openstack.org/cinder/latest/_images/cinder.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2019-07-16"><i class="fa fa-calendar"></i><span class="lately">2 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/cinder/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/cinder/"> </span>
+              </a>
+              <span id="/cinder/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-1 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-2 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Cinder核心</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>OpenStack 存储调度管理基础设施 Cinder 组件介绍</li>
+<li>Cinder 核心流程和实现方式</li>
+<li>Cinder 高可用架构实现方式</li>
+</ul>
+</blockquote>
+<!-- more -->
+<p><ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#cinder">Cinder</a>
+<ul>
+<li><a href="#%E4%B8%BB%E8%A6%81%E6%A8%A1%E5%9D%97">主要模块</a>
+<ul>
+<li><a href="#cinder-api">cinder-api</a>
+<ul>
+<li><a href="#%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3">核心思想</a></li>
+<li><a href="#%E6%A0%B8%E5%BF%83%E6%B5%81%E7%A8%8B">核心流程</a></li>
+<li><a href="#%E7%BB%86%E8%8A%82">细节</a></li>
+<li><a href="#crud-of-cinder-volumn">CRUD of Cinder Volumn</a></li>
+<li><a href="#crud-of-cinder-volumn-metadata">CRUD of Cinder Volumn metadata</a></li>
+<li><a href="#volume-manage-extension-manageable_volumes">Volume manage extension (manageable_volumes)¶</a></li>
+<li><a href="#volume-transfer">Volume transfer</a></li>
+<li><a href="#services-os-services">Services (os-services)¶</a></li>
+<li><a href="#volume-actions-volumes-action">Volume actions (volumes, action)¶</a></li>
+<li><a href="#generic-volume-groups">Generic volume groups</a></li>
+</ul>
+</li>
+<li><a href="#cinder-scheduler">cinder-scheduler</a></li>
+<li><a href="#cinder-volume">cinder-volume</a>
+<ul>
+<li><a href="#cinder-volumn-driver">cinder-volumn Driver</a></li>
+</ul>
+</li>
+<li><a href="#cinder-volumn-plugin">cinder-volumn Plugin</a></li>
+<li><a href="#cinder-backup">cinder-backup</a></li>
+</ul>
+</li>
+<li><a href="#cinder-ha-cinder-%E9%AB%98%E5%8F%AF%E7%94%A8">Cinder HA (Cinder 高可用)</a></li>
+<li><a href="#cinder%E7%9A%84%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81">Cinder的分布式锁</a>
+<ul>
+<li><a href="#%E6%9C%AC%E5%9C%B0%E9%94%81">本地锁</a></li>
+<li><a href="#tooz">Tooz</a></li>
+</ul>
+</li>
+<li><a href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5">参考链接</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</p>
+<h3 id="cinder">Cinder</h3>
+<ul>
+<li>Cinder在OpenStack中为虚拟机实例提供volume的块存储服务，可将卷挂载到实例上，作为虚拟机实例的本地磁盘使用。
+<ul>
+<li><strong>组件化</strong>：便于添加新功能</li>
+<li><strong>高可用</strong>：能承受高负载</li>
+<li><strong>容错</strong>：隔离机制避免级联故障</li>
+<li><strong>可恢复</strong>：简便及时的故障检测与恢复</li>
+<li><strong>开放标准</strong>：提供标准实现，为社区提供参考</li>
+</ul>
+</li>
+</ul>
+<h4 id="主要模块">主要模块</h4>
+<figure data-type="image" tabindex="1"><img src="http://www.99cloud.net/wp-content/uploads/2019/04/7-1554090785.jpg" alt="image" loading="lazy"></figure>
+<pre><code>                                                 /- ( LDAP )
+                             [ Auth Manager ] ---
+                                    |            \- ( DB )
+                                    |
+                                    |
+                   cinderclient     |
+                  /             \   |                   /- [ scheduler ] -- [ volume ] -- ( iSCSI )
+[ Web Dashboard ]-               -[ api ] -- &lt; AMQP &gt; --
+                  \             /   |                   \- [ backup ]
+                   novaclient       |
+                                    |
+                                    |
+                                    |
+                                 &lt; REST &gt;
+</code></pre>
+<h5 id="cinder-api">cinder-api</h5>
+<ul>
+<li>对外提供稳定而统一的北向 RESTful API，cinder-api service 服务进程通常运行在控制节点，支持多 Workers 进程（通过配置项 osapivolumeworkers 设定）。接收到的合法请求会经由 MQ 传递到 cinder-volume 执行。Cinder API 现存 v2(DEPRECATED)、v3(CURRENT) 两个版本，可以通过配置文件来启用。</li>
+<li>官方API介绍：https://developer.openstack.org/api-ref/block-storage/</li>
+</ul>
+<h6 id="核心思想">核心思想</h6>
+<ul>
+<li><strong>TaskFlow</strong> : TaskFlow 能够控制应用程序中的长流程业务逻辑任务的暂停、重启、恢复以及回滚, 主要用于保证长流程任务执行的可靠性和一致性。应用场景主要为 <strong>面向任务</strong> 的工作场景。
+<ul>
+<li>Atom: Atom 是 TaskFlow 的最小单位, 其他的所有类, 包括 Task 类都是 Atom 类的子类.</li>
+<li>Task: 拥有执行和回滚功能额最小工作单元. 在 Task 类中开发者能够自定义 execute(执行) 和 revert(回滚) method。</li>
+<li>Flow：在 TaskFlow 中使用 flow(流) 来关联各个 Task, 并且规定这些 Task 之间的执行和回滚顺序. flow 中不仅能够包含 task 还能够嵌套 flow. 常见类型有以下几种：
+<ul>
+<li>Linear(linear_flow.Flow): 线性流, 该类型 flow 中的 task/flow 按照加入的顺序来依次执行, 按照加入的倒序依次回滚.</li>
+<li>Unordered(unordered_flow.Flow): 无序流, 该类型 flow 中的 task/flow 可能按照任意的顺序来执行和回滚.</li>
+<li>Graph(graph_flow.Flow): 图流, 该类型 flow 中的 task/flow 按照显式指定的依赖关系或通过其间的 provides/requires 属性的隐含依赖关系来执行和回滚.</li>
+</ul>
+</li>
+<li>Retry：一个控制当错误发生时, 如何进行重试的特殊工作单元, 而且当你需要的时候还能够以其他参数来重试执行别的 Atom 子类. 常见类型:
+<ul>
+<li>AlwaysRevert: 错误发生时, 回滚子流</li>
+<li>AlwaysRevertAll: 错误发生时, 回滚所有流</li>
+<li>Times: 错误发生时, 重试子流</li>
+<li>ForEach: 错误发生时, 为子流中的 Atom 提供一个新的值, 然后重试, 直到成功或 retry 中定义的值用完为止.</li>
+<li>ParameterizedForEach: 错误发生时, 从后台存储(由 store 参数提供)中获取重试的值, 然后重试, 直到成功或后台存储中的值用完为止.</li>
+</ul>
+</li>
+<li>Engine: Engines 才是真正运行 Atoms 的对象, 用于 load(载入) 一个 flow, 然后驱动这个 flow 中的 task/flow 开始运行. 我们可以通过 engine_conf 参数来指定不同的 engine 类型. 常见的 engine 类型如下:
+<ul>
+<li>serial: 所有的 task 都在调用了 engine.run 的线程中运行.</li>
+<li>parallel: task 可以被调度到不同的线程中运行.</li>
+<li>worker-based: task 可以被调度到不同的 woker 中运行.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h6 id="核心流程">核心流程</h6>
+<ul>
+<li>创建 Volume  的流程：
+<ul>
+<li>cinder-api 创建 volume_create_api 工作流（flow）
+<ul>
+<li>ExtractVolumeRequestTask：获取（Extract）、验证（Validates）create volume 在 cinder-api 阶段相关的信息</li>
+<li>QuotaReserverTask：预留配额</li>
+<li>EntryCreateTask：在数据库中创建 Volumn 条目</li>
+<li>QuotaCommitTask：确认配额</li>
+<li>VolumeCastTask：发出一个 Cast 异步请求，将创建请求丢到 MQ，最终被 cinder-scheduler service 接收</li>
+</ul>
+</li>
+<li>cinder-scheduler 启动一个 volume_create_scheduler flow
+<ul>
+<li>ExtractSchedulerSpecTask：将 request body 转换成为 Scheduler Filter 中通用的 RequestSpec 数据结构（实例对象）。</li>
+<li>SchedulerCreateVolumeTask：完成 Filter 和 Weight 的调度算法。</li>
+</ul>
+</li>
+<li>RPC 请求发送到 cinder-volume service 接收</li>
+<li>cinder-volume 启动工作流 volume_create_manager：
+<ul>
+<li>ExtractVolumeRefTask ： 解析请求体</li>
+<li>OnFailureRescheduleTask：</li>
+<li>ExtractVolumeSpecTask：将 request body 转换成为 Volume 模块中通用的 RequestSpec 数据结构（实例对象）</li>
+<li>NotifyVolumeActionTask：当对已有的卷采取措施的时候发送相应的通知</li>
+<li>CreateVolumeFromSpecTask：创建对应的卷</li>
+<li>CreateVolumeFromSpecTask：执行创建成功之后的后续操作</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>创建 Volume 的方式
+<ul>
+<li>建立raw格式的新卷</li>
+<li>从快照建立新卷</li>
+<li>从已有卷建立新卷</li>
+<li>从副本建立新卷</li>
+<li>从镜像建立新卷</li>
+</ul>
+</li>
+</ul>
+<h6 id="细节">细节</h6>
+<p>根据现在最新的<a href="https://developer.openstack.org/api-ref/block-storage/v3/index.html"> V3 </a>版本的 API总结如下:</p>
+<ul>
+<li><a href="https://github.com/openstack/cinder/blob/master/cinder/db/sqlalchemy/models.py">Github: Volume 资源模型</a></li>
+<li>Volumn Type 主要是针对多后端存储进行卷类型的管理</li>
+<li><img src="https://img-blog.csdnimg.cn/20190225183417599.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ptaWxr,size_16,color_FFFFFF,t_70" alt="image" loading="lazy"></li>
+<li>Volumes 针对 卷 来进行管理。其中一个卷（Volume）类似于一个如USB硬盘的可插拔的块存储设备，每一次可以将卷对应的挂载到实例上。
+<ul>
+<li>对 Volumes 设备进行 CRUD 时，对应的会有很多种状态，可以参考对应官方文档中的状态表。</li>
+<li>CRUD of Cinder Volumn</li>
+</ul>
+</li>
+</ul>
+<h6 id="crud-of-cinder-volumn">CRUD of Cinder Volumn</h6>
+<ul>
+<li>POST  <code>/v3/{project_id}/volumes</code> Request Body</li>
+</ul>
+<pre><code class="language-JSON">{
+    &quot;volume&quot;: {
+        &quot;size&quot;: 10,      //int The size of the volume, in gibibytes (GiB).
+        &quot;availability_zone&quot;: null, //The name of the availability zone.
+        &quot;source_volid&quot;: null, //The UUID of the source volume.
+        &quot;description&quot;: null, //The volume description.
+        &quot;multiattach&quot;: false, //To enable this volume to attach to more than one server, set this value to true. Default is false.
+        &quot;snapshot_id&quot;: null, //The UUID of the volume snapshot
+        &quot;backup_id&quot;: null, //The UUID of the backup.
+        &quot;name&quot;: null, //The volume name.
+        &quot;imageRef&quot;: null, //The UUID of the image from which you want to create the volume. 
+        &lt;!--&quot;volume_type&quot;: null, //The volume type (either name or ID). 
+        &quot;metadata&quot;: {}, //One or more metadata key and value pairs to be associated with the new volume.
+        &quot;consistencygroup_id&quot;: null //The UUID of the consistency group.
+    },
+    &quot;OS-SCH-HNT:scheduler_hints&quot;: { //The dictionary of data to send to the scheduler.
+        &quot;same_host&quot;: [
+            &quot;a0cf03a5-d921-4877-bb5c-86d26cf818e1&quot;,
+            &quot;8c19174f-4220-44f0-824a-cd1eeef10287&quot;
+        ]
+    }
+}
+</code></pre>
+<ul>
+<li>POST <code>/v3/{project_id}/volumes</code> Response Body</li>
+</ul>
+<pre><code class="language-JSON">{
+    &quot;volume&quot;: {
+        &quot;attachments&quot;: [], //Instance attachment information.(Server/Host/Device/Volume)
+        &quot;availability_zone&quot;: &quot;nova&quot;,//The name of the availability zone.
+        &quot;bootable&quot;: &quot;false&quot;,//Enables or disables the bootable attribute. You can boot an instance from a bootable volume.
+        &quot;consistencygroup_id&quot;: null,//The UUID of the consistency group.
+        &quot;created_at&quot;: &quot;2018-11-28T06:21:12.715987&quot;,//The date and time when the resource was created.CCYY-MM-DDThh:mm:ss±hh:mm
+        &quot;description&quot;: null, //The volume description.
+        &quot;encrypted&quot;: false, //If true, this volume is encrypted.
+        &quot;id&quot;: &quot;2b955850-f177-45f7-9f49-ecb2c256d161&quot;,//The UUID of the volume.
+        &quot;links&quot;: [ //The volume links.
+            {
+                &quot;href&quot;: &quot;http://127.0.0.1:33951/v3/89afd400-b646-4bbc-b12b-c0a4d63e5bd3/volumes/2b955850-f177-45f7-9f49-ecb2c256d161&quot;,
+                &quot;rel&quot;: &quot;self&quot;
+            },
+            {
+                &quot;href&quot;: &quot;http://127.0.0.1:33951/89afd400-b646-4bbc-b12b-c0a4d63e5bd3/volumes/2b955850-f177-45f7-9f49-ecb2c256d161&quot;,
+                &quot;rel&quot;: &quot;bookmark&quot;
+            }
+        ],
+        &quot;metadata&quot;: {},//A metadata object. Contains one or more metadata key and value pairs that are associated with the volume.
+        &quot;migration_status&quot;: null,
+        &quot;multiattach&quot;: false,//If true, this volume can attach to more than one instance.
+        &quot;name&quot;: null,//The volume name.
+        &quot;replication_status&quot;: null,//The volume replication status.
+        &quot;size&quot;: 10,//The size of the volume, in gibibytes (GiB).
+        &quot;snapshot_id&quot;: null,// The UUID of the volume snapshot
+        &quot;source_volid&quot;: null,//The UUID of the source volume.
+        &quot;status&quot;: &quot;creating&quot;,//The volume status.
+        &quot;updated_at&quot;: null, //The date and time when the resource was updated. CCYY-MM-DDThh:mm:ss±hh:mm
+        &quot;user_id&quot;: &quot;c853ca26-e8ea-4797-8a52-ee124a013d0e&quot;,//The UUID of the user.
+        &quot;volume_type&quot;: null //The associated volume type for the volume.
+    }
+</code></pre>
+<ul>
+<li>GET <code>/v3/{project_id}/volumes</code> (List accessible volumes) Response Body</li>
+</ul>
+<pre><code class="language-JSON">{
+    &quot;volumes&quot;: [
+        {
+            &quot;id&quot;: &quot;efa54464-8fab-47cd-a05a-be3e6b396188&quot;,
+            &quot;links&quot;: [
+                {
+                    &quot;href&quot;: &quot;http://127.0.0.1:37097/v3/89afd400-b646-4bbc-b12b-c0a4d63e5bd3/volumes/efa54464-8fab-47cd-a05a-be3e6b396188&quot;,
+                    &quot;rel&quot;: &quot;self&quot;
+                },
+                {
+                    &quot;href&quot;: &quot;http://127.0.0.1:37097/89afd400-b646-4bbc-b12b-c0a4d63e5bd3/volumes/efa54464-8fab-47cd-a05a-be3e6b396188&quot;,
+                    &quot;rel&quot;: &quot;bookmark&quot;
+                }
+            ],
+            &quot;name&quot;: null
+        }
+    ]
+}
+</code></pre>
+<ul>
+<li>GET <code>/v3/{project_id}/volumes/{volume_id}</code> Response Body</li>
+</ul>
+<pre><code class="language-JSON">{
+    &quot;volume&quot;: {
+        &quot;attachments&quot;: [],
+        &quot;availability_zone&quot;: &quot;nova&quot;,
+        &quot;bootable&quot;: &quot;false&quot;,
+        &quot;consistencygroup_id&quot;: null,
+        &quot;created_at&quot;: &quot;2018-11-29T06:50:07.770785&quot;,
+        &quot;description&quot;: null,
+        &quot;encrypted&quot;: false,
+        &quot;id&quot;: &quot;f7223234-1afc-4d19-bfa3-d19deb6235ef&quot;,
+        &quot;links&quot;: [
+            {
+                &quot;href&quot;: &quot;http://127.0.0.1:45839/v3/89afd400-b646-4bbc-b12b-c0a4d63e5bd3/volumes/f7223234-1afc-4d19-bfa3-d19deb6235ef&quot;,
+                &quot;rel&quot;: &quot;self&quot;
+            },
+            {
+                &quot;href&quot;: &quot;http://127.0.0.1:45839/89afd400-b646-4bbc-b12b-c0a4d63e5bd3/volumes/f7223234-1afc-4d19-bfa3-d19deb6235ef&quot;,
+                &quot;rel&quot;: &quot;bookmark&quot;
+            }
+        ],
+        &quot;metadata&quot;: {},
+        &quot;migration_status&quot;: null,
+        &quot;multiattach&quot;: false,
+        &quot;name&quot;: null,
+        &quot;os-vol-host-attr:host&quot;: null,//Current back-end of the volume. Host format is host@backend#pool.
+        &quot;os-vol-mig-status-attr:migstat&quot;: null,//The status of this volume migration (None means that a migration is not currently in progress).
+        &quot;os-vol-mig-status-attr:name_id&quot;: null,//The volume ID that this volume name on the back- end is based on.
+        &quot;os-vol-tenant-attr:tenant_id&quot;: &quot;89afd400-b646-4bbc-b12b-c0a4d63e5bd3&quot;,//The project ID which the volume belongs to.
+        &quot;replication_status&quot;: null,
+        &quot;size&quot;: 10,
+        &quot;snapshot_id&quot;: null,
+        &quot;source_volid&quot;: null,
+        &quot;status&quot;: &quot;creating&quot;,
+        &quot;updated_at&quot;: null,
+        &quot;user_id&quot;: &quot;c853ca26-e8ea-4797-8a52-ee124a013d0e&quot;,
+        &quot;volume_type&quot;: null
+    }
+}
+</code></pre>
+<ul>
+<li>PUT <code>/v3/{project_id}/volumes/{volume_id}</code> Request Body</li>
+</ul>
+<pre><code class="language-JSON">{
+    &quot;volume&quot;: {
+        &quot;name&quot;: &quot;vol-003&quot;,
+        &quot;description&quot;: &quot;This is yet, another volume.&quot;,
+        &quot;metadata&quot;: {
+            &quot;name&quot;: &quot;metadata0&quot;
+        }
+    }
+}
+</code></pre>
+<ul>
+<li>DELETE <code>/v3/{project_id}/volumes/{volume_id}</code>
+<ul>
+<li>Preconditions: status available, in-use, error, error_restoring, error_extending, error_managing.</li>
+<li>Async Postconditions: Delete index and volumn on storage node.</li>
+</ul>
+</li>
+</ul>
+<h6 id="crud-of-cinder-volumn-metadata">CRUD of Cinder Volumn metadata</h6>
+<ul>
+<li>POST <code>/v3/{project_id}/volumes/{volume_id}/metadata</code> Request Body (Same with response)</li>
+</ul>
+<pre><code class="language-JSON">{
+    &quot;metadata&quot;: {
+        &quot;name&quot;: &quot;metadata0&quot;
+    }
+}
+</code></pre>
+<ul>
+<li>GET <code>/v3/{project_id}/volumes/{volume_id}/metadata</code></li>
+<li>PUT <code>/v3/{project_id}/volumes/{volume_id}/metadata</code></li>
+<li>GET <code>/v3/{project_id}/volumes/{volume_id}/metadata/{key}</code> //Show a volume’s metadata for a specific key</li>
+<li>DELETE <code>/v3/{project_id}/volumes/{volume_id}/metadata/{key}</code></li>
+<li>PUT <code>/v3/{project_id}/volumes/{volume_id}/metadata/{key}</code></li>
+<li>GET <code>/v3/{project_id}/volumes/summary</code> Response Body //Get volumes summary</li>
+</ul>
+<pre><code class="language-JSON">{
+    &quot;volume-summary&quot;: {
+        &quot;total_size&quot;: 4,
+        &quot;total_count&quot;: 4,
+        &quot;metadata&quot;: {
+            &quot;key1&quot;: [&quot;value1&quot;, &quot;value2&quot;],
+            &quot;key2&quot;: [&quot;value2&quot;]
+        }
+    }
+}
+</code></pre>
+<h6 id="volume-manage-extension-manageable_volumes">Volume manage extension (manageable_volumes)¶</h6>
+<ul>
+<li>POST <code>/v3/{project_id}/manageable_volumes</code></li>
+<li>Creates a Block Storage volume by using existing storage rather than allocating new storage.</li>
+</ul>
+<pre><code class="language-JSON">Request
+{
+    &quot;volume&quot;: {
+        &quot;host&quot;: &quot;geraint-VirtualBox&quot;,
+        &quot;ref&quot;: {
+            &quot;source-name&quot;: &quot;existingLV&quot;,
+            &quot;source-id&quot;: &quot;1234&quot;
+        },
+        &quot;name&quot;: &quot;New Volume&quot;,
+        &quot;availability_zone&quot;: &quot;az2&quot;,
+        &quot;description&quot;: &quot;Volume imported from existingLV&quot;,
+        &quot;volume_type&quot;: null,
+        &quot;bootable&quot;: true,
+        &quot;metadata&quot;: {
+            &quot;key1&quot;: &quot;value1&quot;,
+            &quot;key2&quot;: &quot;value2&quot;
+        }
+    }
+}
+</code></pre>
+<ul>
+<li>GET <code>/v3/{project_id}/manageable_volumes</code> List summary of volumes available to manage</li>
+</ul>
+<pre><code class="language-JSON">Response
+{
+    &quot;manageable-volumes&quot;: [
+        {
+            &quot;safe_to_manage&quot;: false,
+            &quot;reference&quot;: {
+                &quot;source-name&quot;: &quot;volume-3a81fdac-e8ae-4e61-b6a2-2e14ff316f19&quot;
+            },
+            &quot;size&quot;: 1
+        },
+        {
+            &quot;safe_to_manage&quot;: true,
+            &quot;reference&quot;: {
+                &quot;source-name&quot;: &quot;lvol0&quot;
+            },
+            &quot;size&quot;: 1
+        }
+    ]
+}
+</code></pre>
+<ul>
+<li>GET <code>/v3/{project_id}/manageable_volumes/detail</code> List detail of volumes available to manage</li>
+</ul>
+<pre><code class="language-JSON">Response
+{
+    &quot;manageable-volumes&quot;: [
+        {
+            &quot;cinder_id&quot;: &quot;9ba5bb53-4a18-4b38-be06-992999da338d&quot;,
+            &quot;reason_not_safe&quot;: &quot;already managed&quot;,
+            &quot;reference&quot;: {
+                &quot;source-name&quot;: &quot;volume-9ba5bb53-4a18-4b38-be06-992999da338d&quot;
+            },
+            &quot;safe_to_manage&quot;: false,
+            &quot;size&quot;: 1,
+            &quot;extra_info&quot;: null
+        },
+        {
+            &quot;cinder_id&quot;: null,
+            &quot;reason_not_safe&quot;: null,
+            &quot;reference&quot;: {
+                &quot;source-name&quot;: &quot;lvol0&quot;
+            },
+            &quot;safe_to_manage&quot;: true,
+            &quot;size&quot;: 1,
+            &quot;extra_info&quot;: null
+        }
+    ]
+}
+</code></pre>
+<h6 id="volume-transfer">Volume transfer</h6>
+<ul>
+<li>Transfers a volume from one user to another user.</li>
+</ul>
+<h6 id="services-os-services">Services (os-services)¶</h6>
+<ul>
+<li>Administrator only. Lists all Cinder services, enables or disables a Cinder service, freeze or thaw the specified cinder-volume host, failover a replicating cinder-volume host.</li>
+</ul>
+<h6 id="volume-actions-volumes-action">Volume actions (volumes, action)¶</h6>
+<ul>
+<li>POST <code>/v3/{project_id}/volumes/{volume_id}/action</code></li>
+</ul>
+<pre><code class="language-JSON">{
+    // Extend the size
+    &quot;os-extend&quot;: {
+        &quot;new_size&quot;: 3
+    }
+    
+    // Reset a volume’s statuses
+    &quot;os-reset_status&quot;: {
+        &quot;status&quot;: &quot;available&quot;,
+        &quot;attach_status&quot;: &quot;detached&quot;,
+        &quot;migration_status&quot;: &quot;migrating&quot;
+    }
+    
+    // Revert volume to snapshot
+    &quot;revert&quot;: {
+        &quot;snapshot_id&quot;: &quot;5aa119a8-d25b-45a7-8d1b-88e127885635&quot;
+    }
+    
+    // Set image metadata for a volume
+    &quot;os-set_image_metadata&quot;: {
+        &quot;metadata&quot;: {
+            &quot;image_id&quot;: &quot;521752a6-acf6-4b2d-bc7a-119f9148cd8c&quot;,
+            &quot;image_name&quot;: &quot;image&quot;,
+            &quot;kernel_id&quot;: &quot;155d900f-4e14-4e4c-a73d-069cbf4541e6&quot;,
+            &quot;ramdisk_id&quot;: &quot;somedisk&quot;
+        }
+    }
+    
+    // Remove image metadata from a volume
+    &quot;os-unset_image_metadata&quot;: {
+        &quot;key&quot;: &quot;ramdisk_id&quot;
+    }
+    
+    // Show image metadata for a volume
+    &quot;os-show_image_metadata&quot;: {}
+
+    // Attach volume to a server
+    &quot;os-attach&quot;: {
+        &quot;instance_uuid&quot;: &quot;95D9EF50-507D-11E5-B970-0800200C9A66&quot;, //The UUID of the attaching instance.
+        &quot;mountpoint&quot;: &quot;/dev/vdc&quot; //The attaching mount point.
+    }
+    
+    // Detach volume from server
+    &quot;os-detach&quot;: {
+        &quot;attachment_id&quot;: &quot;d8777f54-84cf-4809-a679-468ffed56cf1&quot;
+    }
+    
+    // Unmanage a volume
+    &quot;os-unmanage&quot;: {}
+    
+    // Force detach a volume
+    &quot;os-force_detach&quot;: {
+        &quot;attachment_id&quot;: &quot;d8777f54-84cf-4809-a679-468ffed56cf1&quot;,
+        &quot;connector&quot;: {
+            &quot;initiator&quot;: &quot;iqn.2012-07.org.fake:01&quot;
+        }
+    }
+    
+    //Retype a volume
+    //Migrate a volume
+    //Complete migration of a volume
+    //Force delete a volume
+    //Update a volume’s bootable status
+    //Upload volume to image
+    //Reserve volume
+    //Unmark volume as reserved.
+    //Update volume status to detaching
+    //Roll back volume status to in-use
+    //Terminate volume attachment
+    //Initialize volume attachment
+    //Updates volume read-only access-mode flag
+    ...
+}
+</code></pre>
+<h6 id="generic-volume-groups">Generic volume groups</h6>
+<ul>
+<li>Generic volume groups enable you to create a group of volumes and manage them together.</li>
+</ul>
+<h5 id="cinder-scheduler">cinder-scheduler</h5>
+<ul>
+<li>
+<p>如果说 cinder-api 接收的是关于 “创建” 的请求（e.g. Create Volume），那么该请求就会通过 MQ 转发到 cinder-scheduler service 服务进程，cinder-scheduler 与 nova-scheduler 一般，顾名思义是调度的层面。通过 Filters 选择最 “合适” 的 Storage Provider Node 来对请求资源（e.g. Volume）进行创建。不同的 Filters 具有不同的过滤（调度）算法，所谓的 “合适” 就是达到客户预期的结果，用户还可以自定义 Filter Class 来实现符合自身需求的过滤器，让调度更加灵活。与 nova-scheduler 一般，cinder-scheduler 同样需要维护调度对象（存储节点）“实时” 状态，cinder-volume service 会定期的向 cinder-scheduler service 上报存储节点状态（注：这实际上是通过后端存储设备的驱动程序上报了该设备的状态）。</p>
+<ul>
+<li>首先判断存储节点状态，只有状态为 up 的存储节点才会被考虑。</li>
+<li>创建 Volume 时，根据 Filter 和 Weight 算法选出最优存储节点。</li>
+<li>迁移 Volume 时，根据 Filter 和 Weight 算法来判断目的存储节点是否符合要求。</li>
+</ul>
+</li>
+</ul>
+<h5 id="cinder-volume">cinder-volume</h5>
+<ul>
+<li>cinder-volume service 是 Cinder 的核心服务进程，运行该服务进程的节点都可以被称之为存储节点。cinder-volume 通过抽象出统一的 Back-end Storage Driver 层，让不同存储厂商得以通过提供各自的驱动程序来对接自己的后端存储设备，实现即插即用（通过配置文件指定），多个这样的存储节点共同构成了一个庞大而复杂多样的存储资源池系统。</li>
+</ul>
+<h6 id="cinder-volumn-driver">cinder-volumn Driver</h6>
+<ul>
+<li>OpenStack 作为开放的 Infrastracture as a Service 云操作系统，支持业界各种优秀的技术，这些技术可能是开源免费的，也可能是商业收费的。 这种开放的架构使得 OpenStack 保持技术上的先进性，具有很强的竞争力，同时又不会造成厂商锁定（Lock-in）。</li>
+<li>以 Cinder 为例，存储节点支持多种 Volume Provider，包括 LVM、NFS、Ceph、GlusterFS 以及 EMC、IBM 等商业存储系统。 cinder-volume 为这些 Volume Provider 抽象了统一的 Driver 接口，Volume Provider 只需要实现这些接口，就可以以 Driver 的形式即插即（volume_driver 配置项）用到 OpenStack 中。下面是 Cinder Driver 的架构示意图：<br>
+<img src="http://www.99cloud.net/wp-content/uploads/2019/04/4-1554090785.jpg" alt="image" loading="lazy"></li>
+</ul>
+<h5 id="cinder-volumn-plugin">cinder-volumn Plugin</h5>
+<ul>
+<li>Driver 和 Plugin 通常不会分家，Driver 是由各存储厂商提供的，那么 Plugins（插槽）就应该有 Cinder 的提供。 根据 FileSystem Storage 和 Block Storage 两个不同类型的外部存储系统，Cinder Plugins 也提供了 FileSystem based 和 Block based 两种不同类型 Plugin。除此之外，Cinder Plugins 还提供了 iSCSC、FC、NFS 等常用的数据传输协议 Plugin 框架，上传逻辑得以根据实际情况来使用（Attached/Dettached）存储资源。</li>
+</ul>
+<h5 id="cinder-backup">cinder-backup</h5>
+<ul>
+<li>提供 Volume 的备份功能，支持将 Volume 备份到对象存储中（e.g. Swift、Ceph、IBM TSM、NFS），也支持从备份 Restore 成为 Volume。</li>
+</ul>
+<h4 id="cinder-ha-cinder-高可用">Cinder HA (Cinder 高可用)</h4>
+<ul>
+<li>无状态服务（cinder-api、cinder-scheduler、cinder-volume）使用多活（无状态服务利于横向扩展，高并发）：Active/Active（A/A）</li>
+<li>有状态服务使用主备：Active/Passive（A/P）</li>
+<li>cinder-api + cinder-scheduler 都部署在 Controller，多个 Controller 同时共享同一个 VIP 实现多活<br>
+一个存储设备可以对应多个 cinder-volume，结合 cinder-volume 分布式锁实现多活，分布式锁可以避免不同的 cinder-scheduler 同时调用到同一个 cinder-volume，从而避免多活部署的 cinder-volume 同时操作后端存储设备，简而言之就是避免并发操作带来（cinder-volume 与后端存储设备之间的）数据不一致性。锁是为了通过互斥访问来保证共享资源在并发环境中的数据一致性。分布式锁主要解决的是分布式资源访问冲突的问题，保证数据的一致性（Etcd、Zookeeper）。<br>
+<img src="https://searchcloudcomputing.techtarget.com.cn/wp-content/uploads/res/cloudcomputing/article/2017/3/15133526_7492.jpg" alt="image" loading="lazy"></li>
+</ul>
+<h4 id="cinder的分布式锁">Cinder的分布式锁</h4>
+<h5 id="本地锁">本地锁</h5>
+<ul>
+<li>Volume 资源本身也是一种共享资源，也需要处理并发访问冲突的问题，比如：删除一个 Volume 时，另一个线程正在基于该 Volume 创建快照；又或者同时有两个线程都在执行 Volume 挂载操作。cinder-volume 也是使用锁机制来实现 Volume 资源的并发访问的，Volume 的删除、挂载、卸载等操作都会对 Volume 上锁。在 Newton 版本以前，cinder-volume 的锁实现是基于本地文件实现的，使用了 Linux 的 flock 工具进行锁的管理。Cinder 执行加锁操作默认会从配置指定的 lockpath 目录下创建一个命名为 cinder-volume_uuid-{action} 的空文件，并对该文件使用 flock 加锁。flock 只能作用于同一个操作系统的文件锁。即使使用共享存储，另一个操作系统也不能通过 flock 工具判断该空文件是否有锁。</li>
+<li>本地锁的局限，只能够保证同一个 cinder-volume 下的共享资源（e.g. Volume）的数据一致性，也就只能使用 A/P 主备的模式进行高可用，不能管理分布式 cinder-volume 下共享资源，导致了 cinder-volume 不支持多实例高可用的问题。所以为了避免 cinder-volume 服务宕机，就需要引入自动恢复机制来进行管理。比如： Pacemaker，Pacemaker 轮询判断 cinder-volume 的存活状态，一旦发现挂了，Pacemaker 会尝试重启服务。如果 Pacemaker 依然重启失败，则尝试在另一台主机启动该服务，实现故障的自动恢复。</li>
+</ul>
+<h5 id="tooz">Tooz</h5>
+<ul>
+<li>用户不需要分布式锁时，只需要指定后端为本地文件即可，此时不需要部署任何 DLM，和引入分布式锁之前的方式保持一致，基本不需要执行大的变更。当用户需要 cinder-volume 支持 AA 时，可以选择部署一种 DLM，比如 Zookeeper 服务。Cinder 对 Tooz 又封装了一个单独的 coordination 模块，其源码位于 cinder/coordination.py，当代码需要使用同步锁时，只需要在函数名前面加上 @coordination.synchronized 装饰器即可，方便易用，并且非常统一。</li>
+<li>社区为了解决项目中的分布式问题，开发了一个非常灵活的通用框架，项目名为 Tooz，它是一个 Python 库，提供了标准的 coordination API，其主要目标是解决分布式系统的通用问题，比如节点管理、主节点选举以及分布式锁等。简而言之，Tooz 实现了非常易用的分布式锁接口。</li>
+<li>Tooz 封装了一套锁管理的库或者框架，只需要简单调用 lock、trylock、unlock 即可完成实现，不用关心底层细节，也不用了解后端到底使用的是 Zookeeper、Redis 还是 Etcd。使用 Tooz 非常方便，只需要三步：
+<ol>
+<li>与后端 DLM 建立连接，获取 coordination 实例。</li>
+<li>声明锁名称，创建锁实例。</li>
+<li>使用锁。</li>
+</ol>
+</li>
+</ul>
+<h4 id="参考链接">参考链接</h4>
+<ul>
+<li><a href="https://docs.openstack.org/cinder/latest/">[1] OpenStack: Cinder官方文档</a></li>
+<li><a href="https://www.cnblogs.com/luohaixian/p/8134967.html">[2] 博客园：Cinder 组件解析</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/34634620">[3] ZhiHu: OpenStack-Cinder </a></li>
+<li><a href="https://github.com/openstack/cinder">[4] Github Repo: OpenStack/Cinder</a></li>
+<li><a href="http://www.99cloud.net/10758.html%EF%BC%8F">[5] 九州云：CINDER 架构分析、高可用部署与核心功能解析</a></li>
+<li><a href="https://www.cnblogs.com/jmilkfan-fanguiju/p/10589720.html">[6] 博客园：Cinder 架构分析、高可用部署与核心功能解析</a></li>
+<li><a href="https://blog.csdn.net/Jmilk/article/details/60496748">[7] CSDN：Openstack 实现技术分解 (4) 通用技术 — TaskFlow</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/TCMU-LIO.png?raw=true');"></div>
+                 <a href="https://blog.shunzi.tech/post/tcmu/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-07-17">2019-07-17</time>
+                  <h4 class="title white no-margin">TCMU学习笔记</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/rabbitmq-cover.png?raw=true');"></div>
+                 <a href="https://blog.shunzi.tech/post/rabbitmq/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-07-14">2019-07-14</time>
+                  <h4 class="title white no-margin">RabbitMQ</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

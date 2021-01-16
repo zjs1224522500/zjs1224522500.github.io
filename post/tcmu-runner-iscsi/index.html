@@ -1,0 +1,2473 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>tcmu-runner/iscsi | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+Use tcmu-runner to implement the iSCSI Server.
+Server: tcmu-runner + targetcli
+Client: iscsiadm
+
+
+
+iscsi
+
+[1] CSDN：iSC..." />
+    <meta name="keywords" content="存储,iscsi" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://blog.shunzi.tech/post-images/tcmu-runner-iscsi.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-04-20"><i class="fa fa-calendar"></i><span class="lately">9 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/tcmu-runner-iscsi/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/tcmu-runner-iscsi/"> </span>
+              </a>
+              <span id="/tcmu-runner-iscsi/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-1 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">tcmu-runner/iscsi</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>Use tcmu-runner to implement the iSCSI Server.</li>
+<li>Server: tcmu-runner + targetcli</li>
+<li>Client: iscsiadm</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="iscsi">iscsi</h2>
+<ul>
+<li><a href="https://blog.csdn.net/Celeste7777/article/details/48783385?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.nonecase&amp;depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.nonecase">[1] CSDN：iSCSI全解</a></li>
+<li><a href="https://wenku.baidu.com/view/094527b2a5e9856a5712600a.html">[2] 百度文库：iscsi 总结</a></li>
+<li><a href="http://linux-iscsi.org/wiki/Targetcli">[3] linux-org Wiki Targetcli</a></li>
+<li><a href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html-single/storage_administration_guide/index#online-storage-management">[4] Online storage management</a></li>
+<li><a href="https://www.thegeekdiary.com/how-to-configure-iscsi-target-and-initiator-using-targetcli-in-centos-rhel-7/">[5] How to configure iSCSI target using targetcli in CentOS / RHEL 7</a></li>
+</ul>
+<h3 id="install-open-iscsi">Install open-iscsi</h3>
+<ul>
+<li>Debian/Ubuntu: <code>sudo apt-get install open-iscsi</code></li>
+<li>Redhat/Centos/Suse: <code>yum install iscsi-initiator-utils</code></li>
+</ul>
+<h2 id="tcmu-runner">tcmu-runner</h2>
+<h3 id="download">Download</h3>
+<ul>
+<li>Download the tcmu-runner from github.  open-iscsi/tcmu-runner</li>
+</ul>
+<h3 id="user-define-dependencies">User define Dependencies</h3>
+<ul>
+<li>Build <code>libhcs_obj_util.so</code> and copy to <code>/usr/lib64/</code></li>
+</ul>
+<pre><code class="language-shell">cp /c++/DistBlock/hik_obj/lib/libhcs_obj_util.so /usr/lib64/
+</code></pre>
+<h3 id="install-tcmu-runner">install tcmu-runner</h3>
+<ul>
+<li><code>./extra/install_dep.sh</code> // Install dependencies</li>
+<li><code>cd ./extra &amp;&amp; ./make_runnerrpms.sh</code>  // rpm install</li>
+<li><code>cmake . -DSUPPORT_SYSTEMD=ON -DCMAKE_INSTALL_PREFIX=/usr</code></li>
+<li><code>make</code></li>
+<li><code>make install</code></li>
+<li><code>xargs rm &lt; install_manifest.txt</code></li>
+<li><code>cp tcmu-runner.conf /etc/dbus-1/system.d/</code></li>
+<li><code>cp org.kernel.TCMUService1.service /usr/share/dbus-1/system-services/</code></li>
+<li><code>cp tcmu-runner.service /lib/systemd/system</code></li>
+</ul>
+<h3 id="run">Run</h3>
+<ul>
+<li>Start tcmu-runner：<code>systemctl start tcmu-runner</code></li>
+<li>Stop tcmu-runner：<code>systemctl stop tcmu-runner</code></li>
+<li>View the tcmu-runner log: <code>cat /var/log/tcmu-runner.log</code></li>
+<li>Clear the tcmu-runner log: <code>echo &gt; /var/log/tcmu-runner.log</code></li>
+<li>Sometimes, you may need to restart <code>targetcli</code> by using <code>systemctl start/stop target</code></li>
+</ul>
+<h4 id="qa">QA</h4>
+<ul>
+<li>Permission Denied:
+<ul>
+<li>chmod 777 extra/install_dep.sh
+<ul>
+<li>chmod 777 make_runnerrpms.sh</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Cannot start tcmu-runner with <code>systemctl start tcmu-runner</code>
+<ul>
+<li>View the error info by <code>journalctl -xe</code></li>
+<li>Copy binary file <code>cp tcmu-runner.service /usr/bin/</code></li>
+<li><code>cp tcmu-runner /usr/bin/</code></li>
+<li><code>cp tcmu.conf /etc/tcmu/</code></li>
+</ul>
+</li>
+<li>Sometimes, the modification of CMakeLists.txt will not take effect immediately, only after you commit some files. I have  no clues about this appearance.</li>
+<li>Cannot find xxx.so built by developers. You must copy the xxx.so to /usr/lib64/. And rebuild.</li>
+</ul>
+<pre><code class="language-shell"># eg. Copy the libs3sharedC.so to /usr/lib64
+cp /c++/C-Example/linux/s3-c/test/lib/libs3sharedC.so /usr/lib64/
+cp /c++/DistBlock/hik_obj/lib/libhcs_obj_util.so /usr/lib64/
+cp /c++/DistBlock/hik_obj/logutil/lib/liblog_util.so /usr/lib64/
+</code></pre>
+<h3 id="targetcli">targetcli</h3>
+<h4 id="install">Install</h4>
+<ul>
+<li><code>yum -y install targetcli</code></li>
+<li><code>targetcli</code> // Run targetcli</li>
+</ul>
+<h4 id="create-backstores">create backstores</h4>
+<ul>
+<li><strong>Select backend storage type.</strong></li>
+<li>Ceph RBD：<code>create cfgstring=iscsi/img-0 name=diak0 size=10G</code></li>
+<li>self-define backend : <code>create name size cfgString</code></li>
+</ul>
+<pre><code class="language-shell">create shunzi 50MB /iqn.2019-07.com.viptest.tcmu.target/shunzi/50MB
+create shunzi 50MB /iqn.2019-07.com.viptest.tcmu.target/shunzi/2MB
+create MYSQL 40MB /iqn.2019-07.com.viptest.tcmu.target/shunzi/2MB
+create shunzi 200MB /iqn.2019-07.com.viptest.tcmu.target/shunzi/1MB
+
+# hcs object bucket forbid &quot;.&quot;
+create shunzi 1GB /iqn-2020-com-tcmu-target/shunzi/2MB
+create file 1GB /iqn-2020-com-tcmu-target/file/2MB
+
+</code></pre>
+<h4 id="create-iscsi-target">create iscsi target</h4>
+<ul>
+<li><code>cd iscsi</code></li>
+<li><code>create {iqn}</code></li>
+</ul>
+<pre><code class="language-shell">create iqn.2019-07.com.viptest.tcmu.target
+create iqn-2020-com-tcmu-target
+
+</code></pre>
+<h4 id="change-the-portal">change the portal</h4>
+<ul>
+<li><code>delete 0.0.0.0 3260</code> (this ip 0.0.0.0 is used for private network env.(<strong>注意：弹性 IP 的 ECS 也许需要使用 0.0.0.0，因为弹性 IP 实例无对应公网 IP 的网卡。</strong>)</li>
+<li><code>create 192.168.3.126 3260</code> (this is used for private etwork env.)</li>
+</ul>
+<h4 id="add-the-acls">add the acls</h4>
+<ul>
+<li><code>cat /etc/iscsi/initiatorname.iscsi</code></li>
+</ul>
+<pre><code class="language-shell">[root@45 ~]# cat /etc/iscsi/initiatorname.iscsi
+InitiatorName=iqn.1994-05.com.redhat:73f6b33526c
+</code></pre>
+<ul>
+<li><code>create client-iqn-name</code></li>
+</ul>
+<pre><code class="language-shell">iqn.1994-05.com.redhat:94bb267bc3
+create iqn.1994-05.com.redhat:73f6b33526c
+</code></pre>
+<h4 id="create-the-lun-relation">create the lun relation</h4>
+<ul>
+<li><code>create lun-name</code></li>
+</ul>
+<pre><code class="language-shell">create /backstores/user:hcs_obj/shunzi
+</code></pre>
+<h3 id="iscsiadm">iscsiadm</h3>
+<h4 id="check-the-iqn-name">Check the iqn name</h4>
+<ul>
+<li><code>vim /etc/iscsi/initiatorname.iscsi</code></li>
+</ul>
+<h4 id="discovery">discovery</h4>
+<ul>
+<li><code>iscsiadm -m discovery -t sendtargets -p [ip:port]</code></li>
+</ul>
+<pre><code class="language-bash">iscsiadm -m discovery -t sendtargets -p 192.168.1.1:3260
+iscsiadm -m discovery -t sendtargets -p 192.168.3.126:3260
+iscsiadm -m discovery -t sendtargets -p 192.168.3.36:3260
+iscsiadm -m discovery -t sendtargets -p 114.116.234.136:3260
+</code></pre>
+<h4 id="login">login</h4>
+<ul>
+<li><code>iscsiadm -m node –T [iqn] -p [ip:port] -l</code></li>
+<li><code>iscsiadm -m node –T [iqn] --login</code></li>
+</ul>
+<pre><code class="language-bash">iscsiadm -m node –T iqn.2019-07.com.viptest.tcmu.target -p 192.168.3.126:3260 -l
+iscsiadm -m node –T iqn.2019-07.com.viptest.tcmu.target -p 192.168.3.36:3260 -l 
+iscsiadm -m node –T iqn.2019-07.com.viptest.tcmu.target -p 114.116.234.136:3260 -l
+
+iscsiadm -m node -T iqn.2019-07.com.viptest.tcmu.target --login
+iscsiadm -m node -T iqn-2020-com-tcmu-target --login
+
+</code></pre>
+<h5 id="login-failure">login failure</h5>
+<ul>
+<li>Connection failed, please check if the eth exists by using <code>ifconfig</code></li>
+<li>If you use cloud ECS with elastic IP, you must use create 0.0.0.0 in portal. (As a result of NAT developed by you cloud infrastructure)</li>
+<li>In client, after discovery action, you must change the ip address.(As NAT will map the public IP to private IP)</li>
+</ul>
+<pre><code>cd /var/lib/iscsi/nodes/iqn.2019-07.com.viptest.tcmu.target/
+mv 192.168.0.18,3260,1/ 114.116.234.136,3260,1/
+vi 114.116.234.136,3260,1/default
+
+# Modify connection address
+node.conn[0].address = 114.116.234.136
+
+# Remove old targets
+cd /var/lib/iscsi/send_targets/114.116.234.136,3260/
+rm iqn.2019-07.com.viptest.tcmu.target,192.168.0.18,3260,1,default
+
+# link
+ln -s /var/lib/iscsi/nodes/iqn.2019-07.com.viptest.tcmu.target/114.116.234.136,3260,1 iqn.2019-07.com.viptest.tcmu.target,114.116.234.136,3260,1,default
+</code></pre>
+<ul>
+<li>For hcs object storage</li>
+</ul>
+<pre><code>cd /var/lib/iscsi/nodes/iqn.2019-07.com.viptest.tcmu.target/
+mv 192.168.0.18,3260,1/ 114.116.234.136,3260,1/
+vi 114.116.234.136,3260,1/default
+
+# Modify connection address
+node.conn[0].address = 114.116.234.136
+
+# Remove old targets
+cd /var/lib/iscsi/send_targets/114.116.234.136,3260/
+rm iqn-2020-com-tcmu-target,192.168.0.18,3260,1,default
+
+# link
+ln -s /var/lib/iscsi/nodes/iqn-2020-com-tcmu-target/114.116.234.136,3260,1 iqn-2020-com-tcmu-target,114.116.234.136,3260,1,default
+</code></pre>
+<h4 id="session">session</h4>
+<ul>
+<li><code>iscsiadm -m session</code>  // show sessions</li>
+<li><code>iscsiadm -m session -R</code> // Refresh session</li>
+</ul>
+<pre><code>iscsiadm -m session
+</code></pre>
+<h4 id="logout">logout</h4>
+<ul>
+<li><code>iscsiadm -m node –T [iqn] -p [ip:port] -u</code></li>
+</ul>
+<pre><code class="language-bash">iscsiadm -m node –T iqn.2019-07.com.viptest.tcmu.target -p 192.168.3.126 -u
+iscsiadm -m node –T iqn.2019-07.com.viptest.tcmu.target -p 192.168.3.36 -u
+iscsiadm -m node –T iqn.2019-07.com.viptest.tcmu.target -p 114.116.234.136 -u
+
+iscsiadm -m node –T iqn-2020-com-tcmu-target -p 114.116.234.136 -u
+
+</code></pre>
+<ul>
+<li>If logout failed, you may need to <code>umount</code> the directory firstly.</li>
+</ul>
+<h4 id="iscsiadm-reccord">iscsiadm reccord</h4>
+<ul>
+<li>Delete node:</li>
+</ul>
+<pre><code>iscsiadm -m node -o delete -T iqn.2019-07.com.viptest.tcmu.target -p 192.168.0.18:3260
+iscsiadm -m node -o delete -T iqn.2019-07.com.viptest.tcmu.target -p 192.168.3.36:3260
+</code></pre>
+<ul>
+<li>View nodes: <code>iscsiadm -m node</code></li>
+</ul>
+<h3 id="check-disks">Check disks</h3>
+<h4 id="fdisk">fdisk</h4>
+<ul>
+<li><code>fdisk -l</code>    // Show all disks (including unmounted)</li>
+</ul>
+<h4 id="df">df</h4>
+<ul>
+<li>Before mount, verify the disks.</li>
+<li><code>df</code>          // Show all mounted disks.</li>
+</ul>
+<h4 id="format-the-disk-with-file-system-ext4">Format the disk with file system ext4</h4>
+<ul>
+<li><code>mkfs.ext4 /disk-path</code></li>
+</ul>
+<pre><code class="language-bash">mkfs.ext4 /dev/sdd
+mkfs.ext4 /dev/sdb
+</code></pre>
+<h4 id="mount">mount</h4>
+<ul>
+<li><code>mount [disk_path] [mapping_path]</code></li>
+</ul>
+<pre><code class="language-bash">mount /dev/sdd /tcmu-test
+mount /dev/sdb /tcmu-test
+mount /dev/sdd /home/testuser/shunzitest
+
+sudo mount /dev/sdb /home/keke/Downloads/test/newdisk/
+
+</code></pre>
+<ul>
+<li><code>umount [mapping_path]</code></li>
+</ul>
+<pre><code class="language-bash">umount /tcmu-test
+</code></pre>
+<h2 id="error">Error</h2>
+<h3 id="hcs">hcs</h3>
+<h4 id="mkfs">mkfs</h4>
+<pre><code>[root@45 ~]# mkfs.ext4 -vv /dev/sdb
+mke2fs 1.42.9 (28-Dec-2013)
+/dev/sdb is entire device, not just one partition!
+Proceed anyway? (y,n) y
+fs_types for mke2fs.conf resolution: 'ext4'
+Warning: could not erase sector 2: Attempt to write block to filesystem resulted in short write
+Filesystem label=
+OS type: Linux
+Block size=4096 (log=2)
+Fragment size=4096 (log=2)
+Stride=0 blocks, Stripe width=16 blocks
+65536 inodes, 262144 blocks
+13107 blocks (5.00%) reserved for the super user
+First data block=0
+Maximum filesystem blocks=268435456
+8 block groups
+32768 blocks per group, 32768 fragments per group
+8192 inodes per group
+Superblock backups stored on blocks: 
+	32768, 98304, 163840, 229376
+
+Allocating group tables: done                            
+Warning: could not read block 0: Attempt to read block from filesystem resulted in short read
+Warning: could not erase sector 0: Attempt to write block to filesystem resulted in short write
+Writing inode tables: done                            
+Creating journal (8192 blocks): done
+Writing superblocks and filesystem accounting information: 0/8
+Warning, had trouble writing out superblocks.
+
+
+</code></pre>
+<h4 id="output-file">output file</h4>
+<ul>
+<li>With 1M bandwith</li>
+</ul>
+<pre><code>-rw-r--r-- 1 root root 2097152 May 26 17:50 iqn-2020-com-tcmu-target_0
+-rw-r--r-- 1 root root 2097152 May 26 17:53 iqn-2020-com-tcmu-target_192
+-rw-r--r-- 1 root root 2097152 May 26 17:53 iqn-2020-com-tcmu-target_256
+-rw-r--r-- 1 root root 2097152 May 26 18:01 iqn-2020-com-tcmu-target_257
+-rw-r--r-- 1 root root 2097152 May 26 18:08 iqn-2020-com-tcmu-target_258
+-rw-r--r-- 1 root root 2097152 May 26 18:17 iqn-2020-com-tcmu-target_259
+-rw-r--r-- 1 root root 2097152 May 26 18:25 iqn-2020-com-tcmu-target_260
+-rw-r--r-- 1 root root 2097152 May 26 17:53 iqn-2020-com-tcmu-target_64
+-rw-r--r-- 1 root root 2097152 May 26 17:53 iqn-2020-com-tcmu-target_8
+</code></pre>
+<ul>
+<li>With 10M bandwith</li>
+</ul>
+<pre><code>List Objects with param [iqn-2020-com-tcmu-target] succeed!
+key: iqn-2020-com-tcmu-target_0, size: 2097152
+key: iqn-2020-com-tcmu-target_192, size: 2097152
+key: iqn-2020-com-tcmu-target_256, size: 2097152
+key: iqn-2020-com-tcmu-target_257, size: 2097152
+key: iqn-2020-com-tcmu-target_258, size: 2097152
+key: iqn-2020-com-tcmu-target_259, size: 2097152
+key: iqn-2020-com-tcmu-target_260, size: 2097152
+key: iqn-2020-com-tcmu-target_261, size: 2097152
+key: iqn-2020-com-tcmu-target_262, size: 2097152
+key: iqn-2020-com-tcmu-target_263, size: 2097152
+key: iqn-2020-com-tcmu-target_264, size: 2097152
+key: iqn-2020-com-tcmu-target_265, size: 2097152
+key: iqn-2020-com-tcmu-target_266, size: 2097152
+key: iqn-2020-com-tcmu-target_267, size: 2097152
+key: iqn-2020-com-tcmu-target_268, size: 2097152
+key: iqn-2020-com-tcmu-target_269, size: 2097152
+key: iqn-2020-com-tcmu-target_270, size: 2097152
+key: iqn-2020-com-tcmu-target_271, size: 2097152
+key: iqn-2020-com-tcmu-target_320, size: 2097152
+key: iqn-2020-com-tcmu-target_448, size: 2097152
+key: iqn-2020-com-tcmu-target_64, size: 2097152
+key: iqn-2020-com-tcmu-target_8, size: 2097152
+free client with param [] succeed!
+</code></pre>
+<ul>
+<li>With 1M block</li>
+</ul>
+<pre><code>key: iqn-2020-com-tcmu-target_0, size: 1048576
+key: iqn-2020-com-tcmu-target_128, size: 1048576
+key: iqn-2020-com-tcmu-target_16, size: 1048576
+key: iqn-2020-com-tcmu-target_384, size: 1048576
+key: iqn-2020-com-tcmu-target_512, size: 1048576
+key: iqn-2020-com-tcmu-target_513, size: 1048576
+key: iqn-2020-com-tcmu-target_514, size: 1048576
+key: iqn-2020-com-tcmu-target_515, size: 1048576
+key: iqn-2020-com-tcmu-target_516, size: 1048576
+key: iqn-2020-com-tcmu-target_517, size: 1048576
+key: iqn-2020-com-tcmu-target_518, size: 1048576
+key: iqn-2020-com-tcmu-target_519, size: 1048576
+key: iqn-2020-com-tcmu-target_520, size: 1048576
+key: iqn-2020-com-tcmu-target_521, size: 1048576
+key: iqn-2020-com-tcmu-target_522, size: 1048576
+key: iqn-2020-com-tcmu-target_523, size: 1048576
+key: iqn-2020-com-tcmu-target_524, size: 1048576
+key: iqn-2020-com-tcmu-target_525, size: 1048576
+key: iqn-2020-com-tcmu-target_526, size: 1048576
+key: iqn-2020-com-tcmu-target_527, size: 1048576
+key: iqn-2020-com-tcmu-target_528, size: 1048576
+key: iqn-2020-com-tcmu-target_529, size: 1048576
+
+
+key: iqn-2020-com-tcmu-target_0, size: 1048576
+key: iqn-2020-com-tcmu-target_1023, size: 1048576
+key: iqn-2020-com-tcmu-target_128, size: 1048576
+key: iqn-2020-com-tcmu-target_16, size: 1048576
+key: iqn-2020-com-tcmu-target_384, size: 1048576
+key: iqn-2020-com-tcmu-target_512, size: 1048576
+key: iqn-2020-com-tcmu-target_513, size: 1048576
+key: iqn-2020-com-tcmu-target_514, size: 1048576
+key: iqn-2020-com-tcmu-target_515, size: 1048576
+key: iqn-2020-com-tcmu-target_516, size: 1048576
+key: iqn-2020-com-tcmu-target_517, size: 1048576
+key: iqn-2020-com-tcmu-target_518, size: 1048576
+key: iqn-2020-com-tcmu-target_519, size: 1048576
+key: iqn-2020-com-tcmu-target_520, size: 1048576
+key: iqn-2020-com-tcmu-target_521, size: 1048576
+key: iqn-2020-com-tcmu-target_522, size: 1048576
+key: iqn-2020-com-tcmu-target_523, size: 1048576
+key: iqn-2020-com-tcmu-target_524, size: 1048576
+key: iqn-2020-com-tcmu-target_525, size: 1048576
+key: iqn-2020-com-tcmu-target_526, size: 1048576
+key: iqn-2020-com-tcmu-target_527, size: 1048576
+key: iqn-2020-com-tcmu-target_528, size: 1048576
+key: iqn-2020-com-tcmu-target_529, size: 1048576
+key: iqn-2020-com-tcmu-target_530, size: 1048576
+key: iqn-2020-com-tcmu-target_531, size: 1048576
+key: iqn-2020-com-tcmu-target_532, size: 1048576
+key: iqn-2020-com-tcmu-target_533, size: 1048576
+key: iqn-2020-com-tcmu-target_534, size: 1048576
+key: iqn-2020-com-tcmu-target_535, size: 1048576
+key: iqn-2020-com-tcmu-target_536, size: 1048576
+key: iqn-2020-com-tcmu-target_537, size: 1048576
+key: iqn-2020-com-tcmu-target_538, size: 1048576
+key: iqn-2020-com-tcmu-target_539, size: 1048576
+key: iqn-2020-com-tcmu-target_540, size: 1048576
+key: iqn-2020-com-tcmu-target_541, size: 1048576
+key: iqn-2020-com-tcmu-target_542, size: 1048576
+key: iqn-2020-com-tcmu-target_543, size: 1048576
+key: iqn-2020-com-tcmu-target_640, size: 1048576
+key: iqn-2020-com-tcmu-target_896, size: 1048576
+
+key: iqn-2020-com-tcmu-target_0, size: 1048576
+key: iqn-2020-com-tcmu-target_1023, size: 1048576
+key: iqn-2020-com-tcmu-target_128, size: 1048576
+key: iqn-2020-com-tcmu-target_16, size: 1048576
+key: iqn-2020-com-tcmu-target_384, size: 1048576
+key: iqn-2020-com-tcmu-target_512, size: 1048576
+key: iqn-2020-com-tcmu-target_513, size: 1048576
+key: iqn-2020-com-tcmu-target_514, size: 1048576
+key: iqn-2020-com-tcmu-target_515, size: 1048576
+key: iqn-2020-com-tcmu-target_516, size: 1048576
+key: iqn-2020-com-tcmu-target_517, size: 1048576
+key: iqn-2020-com-tcmu-target_518, size: 1048576
+key: iqn-2020-com-tcmu-target_519, size: 1048576
+key: iqn-2020-com-tcmu-target_520, size: 1048576
+key: iqn-2020-com-tcmu-target_521, size: 1048576
+key: iqn-2020-com-tcmu-target_522, size: 1048576
+key: iqn-2020-com-tcmu-target_523, size: 1048576
+key: iqn-2020-com-tcmu-target_524, size: 1048576
+key: iqn-2020-com-tcmu-target_525, size: 1048576
+key: iqn-2020-com-tcmu-target_526, size: 1048576
+key: iqn-2020-com-tcmu-target_527, size: 1048576
+key: iqn-2020-com-tcmu-target_528, size: 1048576
+key: iqn-2020-com-tcmu-target_529, size: 1048576
+key: iqn-2020-com-tcmu-target_530, size: 1048576
+key: iqn-2020-com-tcmu-target_531, size: 1048576
+key: iqn-2020-com-tcmu-target_532, size: 1048576
+key: iqn-2020-com-tcmu-target_533, size: 1048576
+key: iqn-2020-com-tcmu-target_534, size: 1048576
+key: iqn-2020-com-tcmu-target_535, size: 1048576
+key: iqn-2020-com-tcmu-target_536, size: 1048576
+key: iqn-2020-com-tcmu-target_537, size: 1048576
+key: iqn-2020-com-tcmu-target_538, size: 1048576
+key: iqn-2020-com-tcmu-target_539, size: 1048576
+key: iqn-2020-com-tcmu-target_540, size: 1048576
+key: iqn-2020-com-tcmu-target_541, size: 1048576
+key: iqn-2020-com-tcmu-target_542, size: 1048576
+key: iqn-2020-com-tcmu-target_543, size: 1048576
+key: iqn-2020-com-tcmu-target_640, size: 1048576
+key: iqn-2020-com-tcmu-target_896, size: 1048576
+</code></pre>
+<h4 id="detail">Detail</h4>
+<ul>
+<li>错误的直接原因：mkfs 命令执行超时</li>
+<li>而导致 mkfs 超时的原因有：
+<ul>
+<li>tcmu-runner 运行过程中崩溃（内存占用率较高）</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-shell"># 查看内存使用情况
+free -m
+# 查看内存使用比例最多的程序
+ps aux|head -1;ps aux|grep -v PID|sort -rn -k +4|head
+# CPU 使用比例最高的程序
+ps aux|head -1;ps aux|grep -v PID|sort -rn -k +3|head
+
+</code></pre>
+<ul>
+<li>对象存储处理的时间过长:
+<ul>
+<li>hcs_error
+<ul>
+<li>报文丢失 https://gist.github.com/zjs1224522500/02e973fffa5f1163cff42e0948ed1c94</li>
+<li>bucket 容量不足：对同一个对象的重复写操作，海康云存储的容量依然会减小。</li>
+</ul>
+</li>
+<li>单个 iscsi 命令执行超时。（文件系统格式化操作可能涉及到了大量的 iscsi 命令，其中部分命令需要进行较多的 IO 操作，由于使用了网络对象存储，导致某些 iscsi 命令的 IO 操作耗时较长，达到超时时间）</li>
+</ul>
+</li>
+</ul>
+<pre><code>iscsiadm -m node -T iqn.2019-07.com.viptest.tcmu.target -p 192.168.3.36:3260 -o update -n node.session.timeo.replacement_timeout -v 86400
+iscsiadm -m node -T iqn.2019-07.com.viptest.tcmu.target -p 192.168.3.36:3260 -o update -n node.session.err_timeo.abort_timeout -v 15000
+iscsiadm -m node -T iqn.2019-07.com.viptest.tcmu.target -p 192.168.3.36:3260 -o update -n node.session.err_timeo.lu_reset_timeout -v 30000
+iscsiadm -m node -T iqn.2019-07.com.viptest.tcmu.target -p 192.168.3.36:3260 -o update -n node.session.err_timeo.tgt_reset_timeout -v 30000
+# 磁盘超时设置
+echo -n 120 &gt; /sys/block/sdc/device/timeout
+</code></pre>
+<h5 id="timeout-config">Timeout Config</h5>
+<pre><code># ********
+# Timeouts
+# ********
+#
+# See the iSCSI README's Advanced Configuration section for tips
+# on setting timeouts when using multipath or doing root over iSCSI.
+#
+# To specify the length of time to wait for session re-establishment
+# before failing SCSI commands back to the application when running
+# the Linux SCSI Layer error handler, edit the line.
+# The value is in seconds and the default is 120 seconds.
+# Special values:
+# - If the value is 0, IO will be failed immediately.
+# - If the value is less than 0, IO will remain queued until the session
+# is logged back in, or until the user runs the logout command.
+node.session.timeo.replacement_timeout = 120
+
+# To specify the time to wait for login to complete, edit the line.
+# The value is in seconds and the default is 15 seconds.
+node.conn[0].timeo.login_timeout = 15
+
+# To specify the time to wait for logout to complete, edit the line.
+# The value is in seconds and the default is 15 seconds.
+node.conn[0].timeo.logout_timeout = 15
+
+# Time interval to wait for on connection before sending a ping.
+node.conn[0].timeo.noop_out_interval = 5
+
+# To specify the time to wait for a Nop-out response before failing
+# the connection, edit this line. Failing the connection will
+# cause IO to be failed back to the SCSI layer. If using dm-multipath
+# this will cause the IO to be failed to the multipath layer.
+node.conn[0].timeo.noop_out_timeout = 5
+
+# To specify the time to wait for abort response before
+# failing the operation and trying a logical unit reset edit the line.
+# The value is in seconds and the default is 15 seconds.
+node.session.err_timeo.abort_timeout = 15
+
+# To specify the time to wait for a logical unit response
+# before failing the operation and trying session re-establishment
+# edit the line.
+# The value is in seconds and the default is 30 seconds.
+node.session.err_timeo.lu_reset_timeout = 30
+
+# To specify the time to wait for a target response
+# before failing the operation and trying session re-establishment
+# edit the line.
+# The value is in seconds and the default is 30 seconds.
+node.session.err_timeo.tgt_reset_timeout = 30
+
+</code></pre>
+<h5 id="dd">dd</h5>
+<ul>
+<li>dd: Test Raw Device</li>
+</ul>
+<pre><code>dd if=/dev/zero of=/dev/sdc bs=1M count=1
+dd if=/dev/zero of=/dev/sdc bs=1M count=10
+
+# file data and metedata all sync to disks
+dd if=/dev/zero of=/dev/sdd bs=1M count=10 conv=fsync
+# file data sync to disks
+dd if=/dev/zero of=/dev/sdd bs=1M count=10 conv=fdatasync
+
+
+dd if=/dev/zero of=test bs=1M count=100
+</code></pre>
+<h4 id="log">log</h4>
+<ul>
+<li>https://gist.github.com/zjs1224522500/7f5a4198ed46945f007f93492741076e</li>
+</ul>
+<h4 id="temp-files">temp files</h4>
+<ul>
+<li>https://gist.github.com/zjs1224522500/5e733252d7422e5e2994c48b124668a2</li>
+</ul>
+<h3 id="file">file</h3>
+<h4 id="mkfs-2">mkfs</h4>
+<pre><code>[root@45 ~]# mkfs.ext4 -vv /dev/sdb
+mke2fs 1.42.9 (28-Dec-2013)
+/dev/sdb is entire device, not just one partition!
+Proceed anyway? (y,n) y
+fs_types for mke2fs.conf resolution: 'ext4'
+Filesystem label=
+OS type: Linux
+Block size=4096 (log=2)
+Fragment size=4096 (log=2)
+Stride=0 blocks, Stripe width=16 blocks
+65536 inodes, 262144 blocks
+13107 blocks (5.00%) reserved for the super user
+First data block=0
+Maximum filesystem blocks=268435456
+8 block groups
+32768 blocks per group, 32768 fragments per group
+8192 inodes per group
+Superblock backups stored on blocks: 
+	32768, 98304, 163840, 229376
+
+Allocating group tables: done                            
+Writing inode tables: done                            
+Creating journal (8192 blocks): done
+Writing superblocks and filesystem accounting information: done
+
+
+</code></pre>
+<h4 id="output-file-2">output file</h4>
+<ul>
+<li>With 1M block</li>
+</ul>
+<pre><code>-rw------- 1 root root 1048576 Jun  2 21:40 iqn-2020-com-tcmu-target_0
+-rw------- 1 root root       0 Jun  2 21:40 iqn-2020-com-tcmu-target_1
+-rw------- 1 root root       0 Jun  2 21:40 iqn-2020-com-tcmu-target_1022
+-rw------- 1 root root 1048576 Jun  2 21:40 iqn-2020-com-tcmu-target_1023
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_128
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_16
+-rw------- 1 root root       0 Jun  2 21:40 iqn-2020-com-tcmu-target_2
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_384
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_512
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_513
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_514
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_515
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_516
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_517
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_518
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_519
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_520
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_521
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_522
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_523
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_524
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_525
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_526
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_527
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_528
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_529
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_530
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_531
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_532
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_533
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_534
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_535
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_536
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_537
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_538
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_539
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_540
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_541
+-rw------- 1 root root 1048576 Jun  2 21:39 iqn-2020-com-tcmu-target_542
+-rw------- 1 root root 1048576 Jun  2 21:40 iqn-2020-com-tcmu-target_543
+-rw------- 1 root root 1048576 Jun  2 21:40 iqn-2020-com-tcmu-target_640
+-rw------- 1 root root 1048576 Jun  2 21:40 iqn-2020-com-tcmu-target_896
+</code></pre>
+<ul>
+<li>With 2M block</li>
+</ul>
+<pre><code>-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_0
+-rw------- 1 root root       0 May 26 18:38 iqn-2020-com-tcmu-target_1
+-rw------- 1 root root 2097152 May 26 18:39 iqn-2020-com-tcmu-target_192
+-rw------- 1 root root 2097152 May 26 18:39 iqn-2020-com-tcmu-target_256
+-rw------- 1 root root 2097152 May 26 18:39 iqn-2020-com-tcmu-target_257
+-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_258
+-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_259
+-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_260
+-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_261
+-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_262
+-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_263
+-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_264
+-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_265
+-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_266
+-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_267
+-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_268
+-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_269
+-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_270
+-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_271
+-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_320
+-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_448
+-rw------- 1 root root 2097152 May 26 18:40 iqn-2020-com-tcmu-target_511
+-rw------- 1 root root 2097152 May 26 18:39 iqn-2020-com-tcmu-target_64
+-rw------- 1 root root 2097152 May 26 18:39 iqn-2020-com-tcmu-target_8
+</code></pre>
+<h2 id="bug-fix">Bug Fix</h2>
+<h3 id="filter-invalid-request">Filter Invalid Request</h3>
+<ul>
+<li>We use hash collection to record keys.</li>
+<li>We use ELFHash to calculate the hashcode of string because of the better performance for long and short strings.</li>
+</ul>
+<pre><code class="language-C">static int hash_code(char key[]){
+    char* k = (char*) malloc(strlen(key) * sizeof(char));
+    char* temp = k;
+    unsigned long h = 0;
+    unsigned long g;
+    strcpy(k, key);
+    while (*k) {
+        h = (h &lt;&lt; 4) + *k++;
+        g = h &amp; 0xF0000000L;
+        if (g) {
+            h ^= g &gt;&gt; 24;
+        }
+        h &amp;= ~g;
+    }
+    if(temp != NULL) {
+        free(temp);
+        temp = NULL;
+    }
+    return h;
+}
+</code></pre>
+<ul>
+<li>HashFilter Running Process:
+<ul>
+<li>Create hash collection when <code>open()</code>.
+<ul>
+<li>The capacity is calculated by <code>keyCount = block device capacity / fragment_size;</code></li>
+</ul>
+</li>
+<li>Add the key to hash collection when <code>write()</code></li>
+<li>Decide to access the hcs or return ret directly by visiting the hash collection when <code>read()</code></li>
+<li>Destory and clear hash collection when <code>close()</code></li>
+</ul>
+</li>
+</ul>
+<h4 id="furthermore">Furthermore</h4>
+<ul>
+<li>Try to use BloomFilter which is more space-efficient than HashFilter.</li>
+</ul>
+<h3 id="control-experiment">Control Experiment</h3>
+<h4 id="same-backend">Same backend</h4>
+<ul>
+<li>Group 1: <code>OBJ_read_file_with_set</code> and <code>OBJ_write_file_with_set</code> // file <strong>[Success]</strong></li>
+<li>Group 2: <code>OBJ_read_hcs_file_with_set</code> and <code>OBJ_write_hcs_file_with_set</code> // hcs and file <strong>[Success]</strong></li>
+<li>Group 3: <code>OBJ_read_hcs_with_set</code> and <code>OBJ_write_hcs_with_set</code> // hcs <strong>[Fail]</strong></li>
+</ul>
+<h4 id="different-backend">Different Backend</h4>
+<ul>
+<li>Group 4: <code>OBJ_write_hcs_file_with_set</code> and <code>OBJ_read_file_with_set</code> <strong>[Success]</strong></li>
+<li>Group 5: <code>OBJ_write_hcs_with_set</code> and <code>OBJ_read_hcs_file_with_set</code> <strong>[Succss]</strong></li>
+</ul>
+<h4 id="conclusion">Conclusion</h4>
+<ul>
+<li>The error may happen in <code>OBJ_read_hcs_with_set</code> method. So we try to compare the differences between <code>OBJ_read_hcs_with_set</code> and <code>OBJ_read_hcs_file_with_set</code>.</li>
+<li>The major differences:</li>
+</ul>
+<pre><code class="language-C++">int OBJ_read_hcs_file_with_set(..) {
+  ...
+  getObjectResult = getObjectToFile(client, BucketName, key, path, fragment_size);
+  fd = open(path, O_CREAT | O_RDONLY, S_IRUSR | S_IWUSR);
+  ret = read(fd, value, fragment_size);
+}
+
+int OBJ_read_hcs_with_set(..) {
+  ...
+  buffer = getObjectToBuffer(client, BucketName, key, fragment_size);
+  value = buffer-&gt;data;
+  ret = buffer-&gt;data_len;
+}
+</code></pre>
+<ul>
+<li>Change the <code>OBJ_read_hcs_with_set</code></li>
+</ul>
+<pre><code class="language-C++">int OBJ_read_hcs_with_set(..) {
+  ...
+  buffer = getObjectToBuffer(client, BucketName, key, fragment_size);
+  memcpy(value, buffer-&gt;data, buffer-&gt;data_len);
+  ret = buffer-&gt;data_len;
+  free(keyCopy);
+  freeFileBuffer(buffer);
+}
+</code></pre>
+<h3 id="partial-success">Partial Success</h3>
+<ul>
+<li>Server end: 1MB frag, 1GB cap.</li>
+<li>Client end:</li>
+</ul>
+<pre><code>[root@ca11 shun]# ./login.sh 
+=====================Check sessions======================
+iscsiadm: No active sessions.
+=====================Session Login=======================
+Logging in to [iface: default, target: iqn.2019-07.com.viptest.tcmu.target, portal: 192.168.3.36,3260] (multiple)
+Login to [iface: default, target: iqn.2019-07.com.viptest.tcmu.target, portal: 192.168.3.36,3260] successful.
+[root@ca11 shun]# fdisk -l
+
+Disk /dev/sda: 599.0 GB, 598999040000 bytes, 1169920000 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk label type: dos
+Disk identifier: 0x00099d95
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1            2048   564144127   282071040   8e  Linux LVM
+
+Disk /dev/sdc: 599.0 GB, 598999040000 bytes, 1169920000 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk label type: dos
+Disk identifier: 0x0004de4e
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdc1   *        2048    20973567    10485760   83  Linux
+/dev/sdc2        20973568   585115647   282071040   8e  Linux LVM
+
+Disk /dev/sdb: 1199.0 GB, 1198999470080 bytes, 2341795840 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+Disk /dev/mapper/cl-root: 214.7 GB, 214748364800 bytes, 419430400 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+Disk /dev/mapper/cl-swap: 137.4 GB, 137438953472 bytes, 268435456 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+Disk /dev/mapper/cl-home: 214.7 GB, 214748364800 bytes, 419430400 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+Disk /dev/mapper/cl-var: 10.7 GB, 10737418240 bytes, 20971520 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+Disk /dev/sdd: 1073 MB, 1073741824 bytes, 2097152 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 65536 bytes
+
+[root@ca11 shun]# mkfs.ext4 /dev/sdd 
+mke2fs 1.42.13.wc6 (05-Feb-2017)
+Creating filesystem with 262144 4k blocks and 65536 inodes
+Filesystem UUID: 3e633add-0cb9-4ee3-a5ea-fc9d73f22495
+Superblock backups stored on blocks: 
+	32768, 98304, 163840, 229376
+
+Allocating group tables: done                            
+Writing inode tables: done                            
+Creating journal (8192 blocks): done
+Writing superblocks and filesystem accounting information: done
+
+[root@ca11 shun]# mount /dev/sdd /home/testuser/shunzitest/
+[root@ca11 shun]# cd ..
+[root@ca11 ~]# cd shunzitest/
+[root@ca11 shunzitest]# ls
+lost+found
+[root@ca11 shunzitest]# vi nihao.txt
+[root@ca11 shunzitest]# ls
+lost+found  nihao.txt
+[root@ca11 shunzitest]# cat nihao.txt 
+nihaomawozhnedehenhaoobaby
+[root@ca11 shunzitest]# vi nihao.txt 
+[root@ca11 shunzitest]# cat nihao.txt 
+nihaomawonihaomawohenhaoaaaaaaaazhnedehenhaoobaby
+
+[root@ca11 shunzitest]# df -h
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/cl-root  200G  159G   42G  80% /
+devtmpfs              63G     0   63G   0% /dev
+tmpfs                 63G     0   63G   0% /dev/shm
+tmpfs                 63G  9.9M   63G   1% /run
+tmpfs                 63G     0   63G   0% /sys/fs/cgroup
+/dev/sdc1             10G  232M  9.8G   3% /boot
+/dev/mapper/cl-var    10G  1.3G  8.8G  13% /var
+/dev/mapper/cl-home  200G  5.8G  195G   3% /home
+tmpfs                 13G  4.0K   13G   1% /run/user/986
+tmpfs                 13G     0   13G   0% /run/user/0
+/dev/sdd             976M  1.3M  908M   1% /home/testuser/shunzitest
+
+</code></pre>
+<h3 id="new-error">New Error</h3>
+<ul>
+<li><a href="https://gist.github.com/zjs1224522500/d35d6b8109ebd78960d2eff21e3353e7">dmesg details</a></li>
+<li><a href="https://www.cyberciti.biz/tips/linux-filesytem-goes-read-only.html">Why my Linux server ext3 filesystem go read-only?</a>
+<ul>
+<li>a) Hardware problem / hard disk problem, check harddisk for errors.</li>
+<li>b) High disk I/O aka busy I/O retry error can mark low level disk call as failed. This will force ext3 to go into read only mode.</li>
+<li>c) High disk I/O on SAN</li>
+<li>d) SAN is not configured properly for the path failover.</li>
+</ul>
+</li>
+</ul>
+<h4 id="solution">Solution</h4>
+<ul>
+<li><code>fsck -t ext4 /dev/sdd</code></li>
+</ul>
+<h3 id="anaylyze-io-of-tcmu-runner">Anaylyze IO of tcmu-runner</h3>
+<ul>
+<li>We use <code>tcmu_err</code> to log the parameters of read/write methods in tcmu.</li>
+</ul>
+<pre><code class="language-C">static int hcs_obj_read(struct tcmu_device *dev, struct tcmur_cmd *cmd,struct iovec *iov, size_t iov_cnt, size_t length, off_t offset)
+{
+  tcmu_dbg(&quot;[Parameter] Read with length %zu, offset %ld, iov_cnt %zu.\n&quot;, length, offset, iov_cnt);
+  ...
+}
+
+static int hcs_obj_write(struct tcmu_device *dev, struct tcmur_cmd *cmd,struct iovec *iov, size_t iov_cnt, size_t length, off_t offset)
+{
+  tcmu_dbg(&quot;[Parameter] Write with length %zu, offset %ld, iov_cnt %zu.\n&quot;, length, offset, iov_cnt);
+  ...
+}
+</code></pre>
+<ul>
+<li>And we get the log file. <code>tcmu-runner.log</code>. And we use python to record the length of every I/O operation.</li>
+</ul>
+<pre><code class="language-Python">def search_param(file_name):
+    length_dict = {}
+    file = open(file_name, 'r')
+    lines = file.readlines()
+    for line in lines:
+        line = line.strip().replace('\n', '')
+        length = search_length(line)
+        if length is not None:
+            counter = length_dict.get(length, 0)
+            length_dict[length] = 1 + counter
+    return length_dict
+
+
+def sort_dict_with_value(dict_data):
+    return sorted(dict_data.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
+
+
+def search_length(line):
+    if line.__contains__('[Parameter]'):
+        start = line.index(&quot;length&quot;)
+        end = line.index(&quot;, offset&quot;)
+        return str(int(int(line[start + 6:end]) / 1024))
+    else:
+        return None
+
+
+def print_length_dict(dict_data):
+    for (k, v) in dict_data:
+        print(str(k) + &quot;KB : &quot; + str(v))
+
+
+if __name__ == '__main__':
+    path = &quot;C://Users/lyh/Desktop/tcmu-runner.log&quot;
+    print_length_dict(sort_dict_with_value(search_param(path)))
+
+
+</code></pre>
+<ul>
+<li>We get the result: (key, value) - (size, count)</li>
+</ul>
+<pre><code class="language-shell">[
+ ('64KB', 1449), 
+ ('4KB', 319), 
+ ('8KB', 51), 
+ ('1024KB', 28), 
+ ('16KB', 27), 
+ ('28KB', 16), 
+ ('56KB', 15), 
+ ('24KB', 13), 
+ ('60KB', 8), 
+ ('40KB', 8), 
+ ('36KB', 8), 
+ ('20KB', 8), 
+ ('12KB', 7), 
+ ('52KB', 2), 
+ ('1KB', 2), 
+ ('1020KB', 2)
+]
+</code></pre>
+<ul>
+<li>And we calculate the average size of I/O. Average Size: 122. So we try to set the fragment size as 128KB. <code>./create_hcs_block_.sh 128KB</code></li>
+</ul>
+<pre><code class="language-shell">echo &quot;======================Enter targetcli======================&quot;
+
+echo &quot;=====================Create Backstore======================&quot;
+targetcli cd /backstores/user:hcs_obj 
+targetcli /backstores/user:hcs_obj create shunzi 1GB cfgstring=/iqn-2020-com-tcmu-target/shunzi/$frag_size;tcmur_cmd_timeout=20
+
+echo &quot;=====================Create lun relation==================&quot;
+targetcli cd /iscsi/iqn.2019-07.com.viptest.tcmu.target/tpg1/luns
+targetcli /iscsi/iqn.2019-07.com.viptest.tcmu.target/tpg1/luns create /backstores/user:hcs_obj/shunzi
+</code></pre>
+<h3 id="simple-test">Simple Test</h3>
+<ul>
+<li>dd without fdatasync. (IO on client end finished immediately, and running on server end)</li>
+</ul>
+<pre><code>[root@ca11 shunzitest]# dd if=/dev/zero of=file bs=1M count=10
+10+0 records in
+10+0 records out
+10485760 bytes (10 MB) copied, 0.0172291 s, 609 MB/s
+
+
+[root@ca11 shunzitest]# dd if=/dev/zero of=file3 bs=1M count=10 conv=fdatasync
+10+0 records in
+10+0 records out
+10485760 bytes (10 MB) copied, 49.446 s, 212 kB/s
+
+
+</code></pre>
+<ul>
+<li>dd with fdatasync. (If without, the memory cache may make effect)</li>
+</ul>
+<pre><code>[root@ca11 shunzitest]# dd if=/dev/zero of=file3 bs=1M count=10 conv=fdatasync
+10+0 records in
+10+0 records out
+10485760 bytes (10 MB) copied, 54.2307 s, 193 kB/s
+
+[root@ca11 shunzitest]# dd if=/dev/zero of=file4 bs=10M count=1 conv=fdatasync
+1+0 records in
+1+0 records out
+10485760 bytes (10 MB) copied, 83.9696 s, 125 kB/s
+</code></pre>
+<h3 id="other-issues">Other issues</h3>
+<ul>
+<li>Performance issues.</li>
+<li>Targetcli configuration needs to be persistent.</li>
+<li>How to get the block device capacity of block device in tcmu-runner.</li>
+<li>The whole system may be inconsistent.</li>
+<li>The space collect strategy of HCS bucket. (Version strategy.)</li>
+</ul>
+<h2 id="track-issues">Track issues</h2>
+<h3 id="mount-automatically-when-boot">mount automatically when boot</h3>
+<ul>
+<li><a href="https://blog.csdn.net/jiyiyun/article/details/103798730">CSDN：iscsi磁盘挂载并设置为开机自动挂载</a></li>
+<li>iscsi 开机自动登录： <code>iscsiadm -m node –T iqn.2019-07.com.viptest.tcmu.target -p 192.168.3.36:3260 --op update -n node.startup -v automatic</code></li>
+<li>Process:</li>
+</ul>
+<pre><code>fdisk -l                       # 查看可挂载的磁盘
+df -h                          # 查看已经挂载的磁盘
+mkfs.ext4 /dev/vdb             # 初始化磁盘,格式是ext4,注意这里会格式化可挂载磁盘
+mount /dev/vdb /u01            # mount 磁盘到/u01，保证/u01为空
+blkid                          # 获取磁盘的uuid和属性，用uuid来进行开机mount
+vim /etc/fstab                 # 开机mount，模板是UUID=********** /u01  ext4  defaults  1 1
+</code></pre>
+<ul>
+<li>Output: <strong>defaults,_netdev</strong></li>
+</ul>
+<pre><code>[root@ca11 shunzitest]# blkid
+/dev/sda1: UUID=&quot;DcfK7s-VhK6-cayC-UvMv-bBgX-F51E-bdWame&quot; TYPE=&quot;LVM2_member&quot; 
+/dev/sdc1: UUID=&quot;80de8fd4-6167-425a-bda0-17c18988fdec&quot; TYPE=&quot;xfs&quot; 
+/dev/sdc2: UUID=&quot;tKSEcQ-d2hk-H3C6-21a4-6ogi-3SU3-U2dhdQ&quot; TYPE=&quot;LVM2_member&quot; 
+/dev/mapper/cl-root: UUID=&quot;dacf0c11-5cc7-4b39-925d-87aa7f3918f2&quot; TYPE=&quot;xfs&quot; 
+/dev/mapper/cl-swap: UUID=&quot;8102781f-7a77-445e-801f-770f0b1a1cca&quot; TYPE=&quot;swap&quot; 
+/dev/mapper/cl-home: UUID=&quot;16a25475-9839-4590-9374-1cd0d95df868&quot; TYPE=&quot;xfs&quot; 
+/dev/mapper/cl-var: UUID=&quot;56471221-f6b7-4a6a-8d9e-b2ca818a06ba&quot; TYPE=&quot;xfs&quot; 
+/dev/sdd: UUID=&quot;72d4d7f6-f3d0-449c-9965-c19a10bef458&quot; TYPE=&quot;ext4&quot; 
+
+[root@ca11 shunzitest]# vim /etc/fstab
+UUID=72d4d7f6-f3d0-449c-9965-c19a10bef458 /home/testuser/shunzitest/ ext4 defaults 0 0
+
+/dev/sdd   /home/testuser/shunzitest/  ext4  defaults,_netdev  0 0
+</code></pre>
+<h3 id="performance-issues">Performance issues</h3>
+<h4 id="filter">Filter</h4>
+<ul>
+<li><strong>HashFilter</strong> versus <strong>BloomFilter</strong> versus <strong>BitMap</strong></li>
+<li>Recovery and Persistency.
+<ul>
+<li>Recovery: Target Service failover, we must rebuild filter with some data.
+<ul>
+<li>List all objects when open block device and rebuild from list results. (<strong>Poor performance</strong>)</li>
+<li>Recover from persistent data. (<strong>Consider consistency and single point of failure</strong>)</li>
+</ul>
+</li>
+<li>Persistent: It means the filter data need to be persistened in somewhere. And we must consider flush strategy, such as flush periodly.
+<ul>
+<li>Local file (<strong>Single point</strong>)</li>
+<li>Database (<strong>Performance and backup db</strong>)</li>
+<li>Object storage (<strong>Crash Consistency</strong>)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Following original pattern of filter, the performance is poor and will involve complexity for persistence. So we try to change the pattern.</li>
+</ul>
+<h5 id="hashfilter">HashFilter</h5>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Hash_table">Wikipedia: HashTable</a></li>
+<li>In fact, we are talking about the specific data structure <strong>HashTable</strong>, not only hash function. Besides, we must pay attention to hash collisions.</li>
+<li><strong>Hash function</strong>: A basic requirement is that the function should provide a uniform distribution of hash values. A non-uniform distribution increases the number of collisions and the cost of resolving them.
+<ul>
+<li>cryptographic hash function: Compared with non-crypto hash function, the biggest difference is security. Crypto hash means more secure, more cost, less probability of collision, such <code>~~MD5~~</code>, <code>SHA(SHA-1, SHA-2, SHA-3)</code>, <code>HMAC</code>, <code>RSA-SHA</code>, <code>DSA-SHA</code></li>
+<li>non-crypto hash function: Mostly used for query operation, such as <code>lookup3</code>, <code>MurmurHash</code>, <code>FNV</code>, <code>CityHash</code>, <code>SpookyHash</code>, <code>FarmHash</code>, <code>xxhash</code>.
+<ul>
+<li>For string: <code>DJB Hash</code>, <code>ELFHash</code> and etc.</li>
+<li>https://softwareengineering.stackexchange.com/questions/49550/which-hashing-algorithm-is-best-for-uniqueness-and-speed</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>Hash collisions</strong>: Hash collisions are practically unavoidable when hashing a random subset of a large set of possible keys. For example, if 2,450 keys are hashed into a million buckets, even with a perfectly uniform random distribution, according to the birthday problem there is approximately a 95% chance of at least two of the keys being hashed to the same slot.
+<ul>
+<li>http://www.srcmini.com/1507.html</li>
+<li>Separe Chaining: Bucket -&gt; Linked List/Other data structure/Mixed structures, such as HashMap in Java (list -&gt; tree).</li>
+<li>Open addressing:
+<ul>
+<li>Linear probing: hi(x)=(hash(x) + f(i))%m. Origin hash(x), collision hash(x) + f(i)</li>
+<li>Quadratic probing: hi(x)=(hash(x) + i^2)%m.</li>
+<li>Double Hashing: hi(x)=(hash(x) + f(i)* hash2(x))%m.</li>
+<li>Coalesced hashing</li>
+<li>Cuckoo hashing</li>
+<li>Hopscotch hashing</li>
+<li>Robin Hood hashing</li>
+</ul>
+</li>
+<li>Rehashing: Resize the container and rehash.</li>
+<li>2-choice hashing</li>
+</ul>
+</li>
+</ul>
+<h5 id="bloomfilter">BloomFilter</h5>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200726133942.png" alt="20200726133942" loading="lazy"></figure>
+<ul>
+<li>A limitation of standard Bloom filters is that one cannot remove existing items without rebuilding the entire filter (or possibly introducing generally less desirable false negatives). Several approaches extend standard Bloom filters to support deletion, but with significant space or performance overhead.</li>
+</ul>
+<h5 id="bitmap">BitMap</h5>
+<ul>
+<li>
+<p>Original Pattern: We must rebuild the filter when open device for second time.</p>
+<ul>
+<li>FIlter State Change: No-&gt;Yes</li>
+<li>In this pattern, every data structure can take effect.</li>
+<li>Better per request performance, but need rebuild.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200726135700.png" alt="20200726135700" loading="lazy"></li>
+</ul>
+</li>
+<li>
+<p>New Pattern: It may introduce extra invalid network request to hcs.</p>
+<ul>
+<li>Filter State Change: Yes -&gt; No; No -&gt; Yes</li>
+<li>No need for rebuild, but some invalid request may happen especially when new device is used.</li>
+<li>In this pattern, BloomFilter can't take effect because of delete operation. And if we use HashFilter, we would better to store invalid key in hashset. The bitset/bitmap is the most suitable structure for this pattern.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200726140946.png" alt="20200726140946" loading="lazy"></li>
+</ul>
+</li>
+<li>
+<p><a href="https://github.com/zjs1224522500/DistBlock/blob/master/tcmu-runner/bitset.c">Simple Bitset</a></p>
+</li>
+<li>
+<p><a href="https://github.com/RoaringBitmap/CRoaring">Roaring bitmaps</a> can compress bitset/bitmap to make space usage more effectively, but with poor performance compared with simple bitset.</p>
+</li>
+</ul>
+<h4 id="bandwith">Bandwith</h4>
+<ul>
+<li>Future work</li>
+<li>Random read/write (depend New version hcs)</li>
+<li>Local file system cache. (depend Promote/Flush strategy)</li>
+</ul>
+<h3 id="targetcli-configuration-needs-to-be-persistent">Targetcli configuration needs to be persistent</h3>
+<ul>
+<li>Command <code>saveconfig</code> can save the configuation to a <code>.json</code> file.</li>
+</ul>
+<pre><code class="language-shell"># backup
+targetcli saveconfig backup_target.json
+
+# recover
+targetcli restoreconfig backup_target.json false
+</code></pre>
+<ul>
+<li>Help info:</li>
+</ul>
+<pre><code class="language-shell">AVAILABLE COMMANDS
+==================
+The following commands are available in the
+current path:
+
+  - bookmarks action [bookmark] 
+  - cd [path] 
+  - clearconfig [confirm] 
+  - exit 
+  - get [group] [parameter...] 
+  - help [topic] 
+  - ls [path] [depth] 
+  - pwd 
+  - refresh 
+  - restoreconfig [savefile] [clear_existing] 
+  - saveconfig [savefile] 
+  - sessions [action] [sid] 
+  - set [group] [parameter=value...] 
+  - status 
+  - version 
+</code></pre>
+<ul>
+<li>And we can recover from the backup file or store the block device info in the DB(mysql).</li>
+</ul>
+<h3 id="how-to-get-the-block-device-capacity-of-block-device-in-tcmu-runner">How to get the block device capacity of block device in tcmu-runner</h3>
+<ul>
+<li>function <code>tcmu_cfgfs_dev_get_info_u64</code></li>
+</ul>
+<pre><code class="language-C">	size = tcmu_cfgfs_dev_get_info_u64(dev, &quot;Size&quot;, &amp;fn_ret);
+	tcmu_dbg(&quot;Init key set [Bitset].\n&quot;);
+	keyCount = size / state-&gt;fragment_size;
+	state-&gt;bitset = InitBitSet((keyCount / 8) + 1, 0xFF);
+</code></pre>
+<h3 id="consistency">Consistency</h3>
+<ul>
+<li>Hard Disk versus Object Storage
+<ul>
+<li>Hard Disk can keep atomic sector r/w.</li>
+<li>Object Storage can keep atomic object r/w.</li>
+</ul>
+</li>
+<li>The crash consitency is maintained by file system. Such as journal.</li>
+<li><a href="https://blog.shunzi.tech/post/dist-block-consistency/">Storage System Crash Consistency</a></li>
+<li><a href="https://computing.ece.vt.edu/~changwoo/ECE-LKP-2019F/l/lec21-fs.pdf">Slides for Ext4 file system and crash consistency</a></li>
+<li><a href="https://www.kernel.org/doc/Documentation/filesystems/ext4.txt">Kernel Doc Ext4</a></li>
+</ul>
+<pre><code>Data Mode
+=========
+There are 3 different data modes:
+
+* writeback mode
+In data=writeback mode, ext4 does not journal data at all.  This mode provides
+a similar level of journaling as that of XFS, JFS, and ReiserFS in its default
+mode - metadata journaling.  A crash+recovery can cause incorrect data to
+appear in files which were written shortly before the crash.  This mode will
+typically provide the best ext4 performance.
+
+* ordered mode
+In data=ordered mode, ext4 only officially journals metadata, but it logically
+groups metadata information related to data changes with the data blocks into a
+single unit called a transaction.  When it's time to write the new metadata
+out to disk, the associated data blocks are written first.  In general,
+this mode performs slightly slower than writeback but significantly faster than journal mode.
+
+* journal mode
+data=journal mode provides full data and metadata journaling.  All new data is
+written to the journal first, and then to its final location.
+In the event of a crash, the journal can be replayed, bringing both data and
+metadata into a consistent state.  This mode is the slowest except when data
+needs to be read from and written to disk at the same time where it
+outperforms all others modes.  Enabling this mode will disable delayed
+allocation and O_DIRECT support.
+</code></pre>
+<h4 id="data-journaling">Data journaling</h4>
+<ul>
+<li><strong>journal</strong> mode</li>
+<li>data structure<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200716160837.png" alt="Journal" loading="lazy"></li>
+<li>timeline<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200716161613.png" alt="" loading="lazy"></li>
+</ul>
+<h4 id="metadata-journaling">Metadata Journaling</h4>
+<ul>
+<li><strong>writeback/ordered</strong> mode
+<ul>
+<li>The difference between writeback and ordered is the order requirement for data and metadata journaling.</li>
+</ul>
+</li>
+<li>data structure<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200716164320.png" alt="" loading="lazy"></li>
+<li>timeline<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200716164849.png" alt="" loading="lazy"></li>
+</ul>
+<h2 id="stripe">Stripe</h2>
+<h3 id="evaluation">Evaluation</h3>
+<h4 id="open-tcmu">open tcmu</h4>
+<ul>
+<li><a href="https://gist.github.com/zjs1224522500/dce356a63a62c4ed7155b274ef6756b3#file-open-tcmu-log">open-tcmu.log</a></li>
+<li>run tcmu-runner (No I/O)</li>
+<li>create iscsi target and block device (No I/O)</li>
+<li>iscsi login (Read)</li>
+</ul>
+<pre><code>**************Read Dict:*****************
+4.0KB : 27
+64.0KB : 8
+16.0KB : 3
+8.0KB : 2
+56.0KB : 2
+28.0KB : 2
+60.0KB : 1
+40.0KB : 1
+36.0KB : 1
+24.0KB : 1
+20.0KB : 1
+12.0KB : 1
+1.0KB : 1
+Total count： 51, Average Size: 20.490196 KB
+</code></pre>
+<h4 id="fdisk-l">fdisk -l</h4>
+<ul>
+<li><a href="https://gist.github.com/zjs1224522500/dce356a63a62c4ed7155b274ef6756b3#file-fdisk-l-tcmu-log">fdisk-l-tcmu.log</a></li>
+<li><code>fdisk -l</code> (Read)</li>
+</ul>
+<pre><code>**************Read Dict:*****************
+4.0KB : 2
+Total count： 2, Average Size: 4.000000 KB
+</code></pre>
+<h4 id="format-ext4">format ext4</h4>
+<ul>
+<li><a href="https://gist.github.com/zjs1224522500/dce356a63a62c4ed7155b274ef6756b3#file-mkfs-tcmu-log">tcmu-runner.log</a></li>
+<li><code>mkfs.ext4 /dev/sdd</code> (I/O)</li>
+</ul>
+<pre><code>**************Read Dict:*****************
+4.0KB : 60
+64.0KB : 16
+16.0KB : 7
+8.0KB : 4
+56.0KB : 4
+28.0KB : 4
+60.0KB : 2
+40.0KB : 2
+36.0KB : 2
+24.0KB : 2
+20.0KB : 2
+12.0KB : 2
+Total count： 107, Average Size: 19.887850 KB
+**************Write Dict:****************
+64.0KB : 517
+8.0KB : 6
+4.0KB : 3
+24.0KB : 1
+Total count： 527, Average Size: 62.944972 KB
+</code></pre>
+<h4 id="mount-2">mount</h4>
+<ul>
+<li><a href="https://gist.github.com/zjs1224522500/dce356a63a62c4ed7155b274ef6756b3#file-mount-tcmu-log">mount-tcmu.log</a></li>
+<li><code>mount /dev/sdd /home/testuser/shunzitest</code>:</li>
+</ul>
+<pre><code>**************Read Dict:*****************
+4.0KB : 29
+64.0KB : 8
+16.0KB : 3
+8.0KB : 2
+56.0KB : 2
+28.0KB : 2
+60.0KB : 1
+40.0KB : 1
+36.0KB : 1
+24.0KB : 1
+20.0KB : 1
+12.0KB : 1
+1.0KB : 1
+Total count： 53, Average Size: 19.867925 KB
+**************Write Dict:****************
+1024.0KB : 15
+4.0KB : 4
+8.0KB : 1
+1020.0KB : 1
+Total count： 21, Average Size: 781.142857 KB
+</code></pre>
+<h4 id="leveldb-db_bench">LevelDB   db_bench</h4>
+<ul>
+<li><code>./db_bench --benchmarks=&quot;fillseq&quot; --db=/home/testuser/shunzitest</code></li>
+</ul>
+<pre><code>**************Write Dict:****************
+64.0KB : 1799
+4.0KB : 128
+36.0KB : 36
+32.0KB : 35
+16.0KB : 24
+12.0KB : 17
+28.0KB : 6
+8.0KB : 3
+24.0KB : 2
+56.0KB : 1
+Total count： 2051, Average Size: 57.995124 KB
+</code></pre>
+<ul>
+<li><code>./db_bench --benchmarks=&quot;fillrandom&quot; --db=/home/testuser/shunzitest</code></li>
+</ul>
+<pre><code>**************Read Dict:*****************
+**************Write Dict:****************
+64.0KB : 4821
+4.0KB : 266
+32.0KB : 87
+20.0KB : 71
+60.0KB : 37
+12.0KB : 33
+28.0KB : 27
+16.0KB : 27
+24.0KB : 22
+36.0KB : 19
+44.0KB : 7
+8.0KB : 6
+48.0KB : 5
+40.0KB : 5
+56.0KB : 1
+52.0KB : 1
+Total count： 5435, Average Size: 58.828335 KB
+</code></pre>
+<ul>
+<li><code>./db_bench --benchmarks=&quot;fillsync&quot; --db=/home/testuser/shunzitest</code></li>
+</ul>
+<pre><code>**************Read Dict:*****************
+**************Write Dict:****************
+4.0KB : 1988
+8.0KB : 1000
+16.0KB : 35
+32.0KB : 3
+28.0KB : 2
+24.0KB : 2
+12.0KB : 2
+Total count： 3032, Average Size: 5.519789 KB
+</code></pre>
+<ul>
+<li><code>./db_bench --benchmarks=&quot;overwrite&quot; --db=/home/testuser/shunzitest</code></li>
+</ul>
+<pre><code>**************Read Dict:*****************
+**************Write Dict:****************
+64.0KB : 4821
+4.0KB : 261
+32.0KB : 85
+20.0KB : 70
+60.0KB : 36
+12.0KB : 34
+28.0KB : 27
+16.0KB : 26
+24.0KB : 21
+36.0KB : 19
+44.0KB : 8
+8.0KB : 6
+40.0KB : 5
+48.0KB : 4
+52.0KB : 2
+56.0KB : 1
+Total count： 5426, Average Size: 58.899373 KB
+</code></pre>
+<ul>
+<li><code>./db_bench --benchmarks=&quot;fillseq,readseq&quot; --db=/home/testuser/shunzitest</code></li>
+</ul>
+<pre><code>**************Read Dict:*****************
+64.0KB : 1568
+4.0KB : 34
+28.0KB : 32
+Total count： 1634, Average Size: 62.046512 KB
+**************Write Dict:****************
+64.0KB : 1833
+4.0KB : 133
+36.0KB : 45
+32.0KB : 27
+16.0KB : 22
+12.0KB : 15
+28.0KB : 6
+8.0KB : 4
+24.0KB : 2
+44.0KB : 1
+40.0KB : 1
+Total count： 2089, Average Size: 58.014361 KB
+</code></pre>
+<h5 id="why-64kb">Why 64KB?</h5>
+<ul>
+<li>From pervious simple test, we can find that 64KB is most frequent size in these I/O behaviors. In fact, we use the db_bench default options like as follows.</li>
+</ul>
+<pre><code>Write buffer size: 4194304
+Block size: 4096
+Cache size: -1
+LevelDB:    version 1.22
+Date:       Thu Aug  6 17:23:16 2020
+CPU:        24 * Intel(R) Xeon(R) CPU E5-2620 0 @ 2.00GHz
+CPUCache:   15360 KB
+Keys:       16 bytes each
+Values:     100 bytes each (50 bytes after compression)
+Entries:    1000000
+RawSize:    110.6 MB (estimated)
+FileSize:   62.9 MB (estimated)
+WARNING: Snappy compression is not enabled
+</code></pre>
+<ul>
+<li>We try to use <code>blktrace</code> to analyze. We can find that 128 sectors.
+<ul>
+<li><code>blktrace -d /dev/sdd -o - | blkparse -i -</code></li>
+<li><code>./db_bench --benchmarks=&quot;fillseq&quot; --db=/home/testuser/shunzitest</code></li>
+</ul>
+</li>
+</ul>
+<pre><code>  8,48   9     5898     9.141912336 26101  G  WS 1016832 + 128 [db_bench]
+  8,48   9     5899     9.141923103 26101  Q  WS 1016960 + 128 [db_bench]
+  8,48   9     5900     9.141924213 26101  G  WS 1016960 + 128 [db_bench]
+  8,48   9     5901     9.141944512 26101  Q  WS 1017088 + 128 [db_bench]
+  8,48   9     5902     9.141945725 26101  G  WS 1017088 + 128 [db_bench]
+  8,48   9     5903     9.141956649 26101  Q  WS 1017216 + 128 [db_bench]
+  8,48   9     5904     9.141957427 26101  G  WS 1017216 + 128 [db_bench]
+  8,48   9     5905     9.141968409 26101  Q  WS 1017344 + 128 [db_bench]
+  8,48   9     5906     9.141969094 26101  G  WS 1017344 + 128 [db_bench]
+  8,48   9     5907     9.141980343 26101  Q  WS 1017472 + 128 [db_bench]
+  8,48   9     5908     9.141981171 26101  G  WS 1017472 + 128 [db_bench]
+  8,48   9     5909     9.142013347 26101  Q  WS 1017600 + 128 [db_bench]
+  8,48   9     5910     9.142014970 26101  G  WS 1017600 + 128 [db_bench]
+  8,48   9     5911     9.142025912 26101  Q  WS 1017728 + 128 [db_bench]
+  8,48   9     5912     9.142026789 26101  G  WS 1017728 + 128 [db_bench]
+  8,48   9     5913     9.142038291 26101  Q  WS 1017856 + 128 [db_bench]
+  8,48   9     5914     9.142039096 26101  G  WS 1017856 + 128 [db_bench]
+  8,48   9     5915     9.142041571 26101  I  WS 1015808 + 128 [db_bench]
+  8,48   9     5916     9.142042013 26101  I  WS 1015936 + 128 [db_bench]
+  8,48   9     5917     9.142042316 26101  I  WS 1016064 + 128 [db_bench]
+  8,48   9     5918     9.142042713 26101  I  WS 1016192 + 128 [db_bench]
+</code></pre>
+<ul>
+<li>We try to use <code>dd</code> to analyze. And we can find that averge size is also similar to 64KB.
+<ul>
+<li><code>dd if=/dev/zero of=file2 bs=1M count=100</code></li>
+</ul>
+</li>
+</ul>
+<pre><code>**************Write Dict:****************
+64.0KB : 1600
+4.0KB : 9
+8.0KB : 1
+28.0KB : 1
+20.0KB : 1
+16.0KB : 1
+Total count： 1613, Average Size: 63.551147 KB
+</code></pre>
+<ul>
+<li>We found that 64KB is the <code>optimal_io_size</code> of /dev/sdd. As for <code>I/O size (minimum/optimal)</code>, there are some introductions:
+<ul>
+<li><a href="https://access.redhat.com/solutions/2150101">How does the kernel determine minimum_io_size and optimal_io_size?</a></li>
+<li><a href="https://access.redhat.com/articles/3911611">[Engineering Notes] I/O Limits: block sizes, alignment and I/O hints</a></li>
+</ul>
+</li>
+</ul>
+<pre><code>Disk /dev/sdd: 1073 MB, 1073741824 bytes, 2097152 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 65536 bytes
+</code></pre>
+<ul>
+<li>In <code>tcmu-runner</code>, we can config the <code>hw_max_sectors</code> and <code>hw_block_size</code> when we create the block device.  <code>hw_block_size/(hw_max_sectors*hw_block_size)</code> eq <code>minimum/optimal</code>
+<ul>
+<li>eg. <code>create file 1GB /iqn-2020-com-tcmu-target/file/1MB hw_max_sectors=128 hw_block_size=512</code></li>
+</ul>
+</li>
+<li>The default value of <code>hw_max_sectors</code> is 128, and <code>hw_block_size = 512Bytes</code>.
+<ul>
+<li><a href="https://elixir.bootlin.com/linux/latest/source/drivers/target/target_core_user.c#L1910">target_core_user.c</a></li>
+</ul>
+<pre><code>    /* Other attributes can be configured in userspace */
+    if (!dev-&gt;dev_attrib.hw_max_sectors)
+  	  dev-&gt;dev_attrib.hw_max_sectors = 128;
+</code></pre>
+<ul>
+<li><a href="https://elixir.bootlin.com/linux/latest/source/drivers/target/target_core_device.c#L953">target_core_device.c</a></li>
+</ul>
+<pre><code>dev-&gt;dev_attrib.optimal_sectors = dev-&gt;dev_attrib.hw_max_sectors;
+</code></pre>
+</li>
+</ul>
+<h4 id="config-optimal_io_size">Config optimal_io_size</h4>
+<ul>
+<li>We try to config  <code>hw_max_sectors</code> with different values and we evaluate again.
+<ul>
+<li>In fact, the <code>MTU</code> for ip network is 64KB. So we guess the size is decided by <code>min(MTU, optimal_io_size)</code></li>
+<li>Set <code>hw_max_sectors=256</code>. The most common io size is 256KB for different-size I/Os.</li>
+<li>Set <code>hw_max_sectors=64</code>. The most common io size is 32KB for different-size I/Os.</li>
+</ul>
+</li>
+</ul>
+<h5 id="hw_max_sectors64">hw_max_sectors=64</h5>
+<pre><code class="language-shell">/backstores/u...ion_File/file&gt; info
+config: Hikvision_File//iqn-2020-com-tcmu-target/file/1MB
+control: max_data_area_mb=1024
+hw_max_sectors: 64
+name: file
+plugin: user
+size: 1073741824
+wwn: a1edc0f3-2bf5-4ed9-91b6-80b39fad1972
+</code></pre>
+<ul>
+<li><code>./db_bench --benchmarks=&quot;fillseq&quot; --db=/home/testuser/shunzitest</code></li>
+<li><code>blktrace -d /dev/sdd -o - | blkparse -i -</code></li>
+</ul>
+<pre><code class="language-shell">...
+  8,48   5    15926    40.471130025     0  C   W 691528 + 64 [0]
+  8,48   5    15927    40.471154514     0  D   W 693640 + 48 [swapper/5]
+  8,48   5    15928    40.474090736     0  C   W 691592 + 64 [0]
+  8,48   5    15929    40.476744412     0  C   W 691656 + 64 [0]
+  8,48   5    15930    40.479476030     0  C   W 691720 + 64 [0]
+  8,48   5    15931    40.482402274     0  C   W 691784 + 64 [0]
+  8,48   5    15932    40.485353891     0  C   W 691848 + 64 [0]
+  8,48   5    15933    40.488078916     0  C   W 691912 + 64 [0]
+  8,48   5    15934    40.490732927     0  C   W 691976 + 64 [0]
+  8,48   5    15935    40.493712762     0  C   W 692040 + 64 [0]
+  8,48   5    15936    40.496363297     0  C   W 692104 + 64 [0]
+...
+</code></pre>
+<ul>
+<li><code>dd if=/dev/zero of=file5 bs=1M count=100 conv=fdatasync</code> // 32KB most common (64 sectors)</li>
+<li><code>dd if=/dev/zero of=file5 bs=16KB count=100 conv=fdatasync</code> // 32KB most common</li>
+</ul>
+<pre><code>...
+  8,48   5       76   150.464020126     0  C  WS 796672 + 64 [0]
+  8,48   5       77   150.466732161     0  C  WS 796736 + 64 [0]
+  8,48   5       78   150.469389733     0  C  WS 796800 + 64 [0]
+  8,48   5       79   150.472012662     0  C  WS 796864 + 64 [0]
+  8,48   5       80   150.474962228     0  C  WS 796928 + 64 [0]
+  8,48   5       81   150.477890736     0  C  WS 796992 + 64 [0]
+  8,48   0        1   150.508205113 10153  Q  WS 1053392 + 8 [jbd2/sdd-8]
+...
+=========================================================================
+
+**************Read Dict:*****************
+**************Write Dict:****************
+32.0KB : 48
+4.0KB : 1
+28.0KB : 1
+20.0KB : 1
+Total count： 51, Average Size: 31.137255 KB
+</code></pre>
+<h5 id="hw_max_sectors256">hw_max_sectors=256</h5>
+<ul>
+<li><code>./create_file_backend_with_op_size.sh 128KB 256</code></li>
+<li>Without fs. <code>dd if=/dev/zero of=/dev/sdd bs=1M count=100 conv=fdatasync</code></li>
+</ul>
+<pre><code>**************Read Dict:*****************
+4.0KB : 24
+16.0KB : 3
+28.0KB : 2
+128.0KB : 2
+8.0KB : 1
+72.0KB : 1
+68.0KB : 1
+64.0KB : 1
+60.0KB : 1
+56.0KB : 1
+40.0KB : 1
+36.0KB : 1
+24.0KB : 1
+20.0KB : 1
+120.0KB : 1
+12.0KB : 1
+Total count： 43, Average Size: 24.093023 KB
+**************Write Dict:****************
+128.0KB : 800
+Total count： 800, Average Size: 128.000000 KB
+</code></pre>
+<ul>
+<li>mkfs.ext4 /dev/sdd</li>
+<li>With fs: <code>dd if=/dev/zero of=file bs=1M count=100 conv=fdatasync</code></li>
+</ul>
+<pre><code>**************Read Dict:*****************
+4.0KB : 3
+Total count： 3, Average Size: 4.000000 KB
+**************Write Dict:****************
+128.0KB : 800
+4.0KB : 2
+28.0KB : 1
+16.0KB : 1
+Total count： 804, Average Size: 127.427861 KB
+</code></pre>
+<ul>
+<li><code>dd if=/dev/zero of=file bs=16KB count=100 conv=fdatasync</code></li>
+</ul>
+<pre><code>**************Read Dict:*****************
+**************Write Dict:****************
+128.0KB : 12
+4.0KB : 1
+28.0KB : 1
+20.0KB : 1
+Total count： 15, Average Size: 105.866667 KB
+</code></pre>
+<ul>
+<li><code>./db_bench --benchmarks=&quot;fillseq&quot; --db=/home/testuser/shunzitest</code></li>
+</ul>
+<pre><code>**************Read Dict:*****************
+**************Write Dict:****************
+128.0KB : 840
+4.0KB : 122
+100.0KB : 35
+32.0KB : 26
+16.0KB : 22
+12.0KB : 15
+36.0KB : 9
+28.0KB : 6
+24.0KB : 2
+Total count： 1077, Average Size: 105.303621 KB
+</code></pre>
+<ul>
+<li><code>./db_bench --db=/home/testuser/shunzitest</code></li>
+</ul>
+<pre><code>**************Read Dict:*****************
+4.0KB : 2
+Total count： 2, Average Size: 4.000000 KB
+**************Write Dict:****************
+128.0KB : 9914
+4.0KB : 3071
+8.0KB : 1054
+32.0KB : 285
+20.0KB : 185
+16.0KB : 179
+24.0KB : 171
+28.0KB : 155
+12.0KB : 100
+36.0KB : 83
+124.0KB : 76
+100.0KB : 35
+48.0KB : 29
+40.0KB : 28
+44.0KB : 27
+52.0KB : 16
+92.0KB : 6
+56.0KB : 6
+104.0KB : 6
+88.0KB : 5
+76.0KB : 4
+112.0KB : 4
+64.0KB : 3
+108.0KB : 3
+96.0KB : 2
+80.0KB : 2
+72.0KB : 2
+68.0KB : 2
+60.0KB : 2
+120.0KB : 2
+116.0KB : 1
+Total count： 15458, Average Size: 86.674085 KB
+</code></pre>
+<h3 id="best-stripe-size-for-hcs">Best stripe size for hcs</h3>
+<ul>
+<li>TODO</li>
+</ul>
+<h2 id="multithread-in-tcmu-runner">Multithread in tcmu-runner</h2>
+<ul>
+<li>In tcmu_handler, <code>nr_threads</code> help to enable the generic aio framework of tcmu-runner. And this parameter describles the number of threads which are used for iscsi cmd handle.</li>
+</ul>
+<h3 id="nr_threads-1">.nr_threads = 1</h3>
+<ul>
+<li>configuration
+<ul>
+<li>frag_size: 128KB</li>
+<li>hw_max_sectors: 256 (128KB)</li>
+<li>size: 5GB</li>
+</ul>
+</li>
+</ul>
+<h4 id="without-filesystem">Without filesystem</h4>
+<ul>
+<li><code>dd if=/dev/zero of=/dev/sdd bs=1M count=10 conv=fdatasync</code></li>
+</ul>
+<pre><code>[root@ca11 shun]# dd if=/dev/zero of=/dev/sdd bs=1M count=10 conv=fdatasync
+10+0 records in
+10+0 records out
+10485760 bytes (10 MB) copied, 24.8272 s, 422 kB/s
+</code></pre>
+<ul>
+<li><code>dd if=/dev/zero of=/dev/sdd bs=128KB count=100 conv=fdatasync</code></li>
+</ul>
+<pre><code>[root@ca11 shun]# dd if=/dev/zero of=/dev/sdd bs=128KB count=100 conv=fdatasync
+100+0 records in
+100+0 records out
+12800000 bytes (13 MB) copied, 25.2099 s, 508 kB/s
+</code></pre>
+<ul>
+<li>If hcs bucket is not empty, the performance will drop down compared with empty bucket. And sometimes, some errors may happen.</li>
+</ul>
+<pre><code>[root@ca11 shun]# dd if=/dev/zero of=/dev/sdd bs=128KB count=100 conv=fdatasync
+100+0 records in
+100+0 records out
+12800000 bytes (13 MB) copied, 25.2099 s, 508 kB/s
+[root@ca11 shun]# dd if=/dev/zero of=/dev/sdd bs=1M count=10 conv=fdatasync
+10+0 records in
+10+0 records out
+10485760 bytes (10 MB) copied, 39.7349 s, 264 kB/s
+[root@ca11 shun]# dd if=/dev/zero of=/dev/sdd bs=1M count=10 conv=fdatasync
+10+0 records in
+10+0 records out
+10485760 bytes (10 MB) copied, 49.2227 s, 213 kB/s
+[root@ca11 shun]# dd if=/dev/zero of=/dev/sdd bs=1M count=10 conv=fdatasync
+10+0 records in
+10+0 records out
+10485760 bytes (10 MB) copied, 49.9696 s, 210 kB/s
+[root@ca11 shun]# dd if=/dev/zero of=/dev/sdd bs=1M count=100 conv=fdatasync
+dd: fdatasync failed for ‘/dev/sdd’: Input/output error
+100+0 records in
+100+0 records out
+104857600 bytes (105 MB) copied, 690.694 s, 152 kB/s
+</code></pre>
+<ul>
+<li><code>dd if=/dev/zero of=/dev/sdd bs=32KB count=100 conv=fdatasync</code></li>
+</ul>
+<pre><code>[root@ca11 shun]# dd if=/dev/zero of=/dev/sdd bs=32KB count=100 conv=fdatasync
+100+0 records in
+100+0 records out
+3200000 bytes (3.2 MB) copied, 8.6223 s, 371 kB/s
+</code></pre>
+<ul>
+<li><code>dd if=/dev/zero of=/dev/sdd bs=64KB count=100 conv=fdatasync</code></li>
+</ul>
+<pre><code>[root@ca11 shun]# dd if=/dev/zero of=/dev/sdd bs=64KB count=100 conv=fdatasync
+100+0 records in
+100+0 records out
+6400000 bytes (6.4 MB) copied, 21.5278 s, 297 kB/s
+</code></pre>
+<h4 id="with-filesystem">With filesystem</h4>
+<ul>
+<li><code>dd if=/dev/zero of=file1 bs=1M count=10 conv=fdatasync</code></li>
+</ul>
+<pre><code>
+</code></pre>
+<ul>
+<li><code>dd if=/dev/zero of=file2 bs=128KB count=100 conv=fdatasync</code></li>
+</ul>
+<h3 id="nr_threads-2">.nr_threads = 2</h3>
+<ul>
+<li>configuration
+<ul>
+<li>frag_size: 128KB</li>
+<li>hw_max_sectors: 256 (128KB)</li>
+<li>size: 5GB</li>
+</ul>
+</li>
+</ul>
+<h3 id="nr_threads-2-2">.nr_threads = 2</h3>
+<ul>
+<li>configuration
+<ul>
+<li>frag_size: 64KB</li>
+<li>hw_max_sectors: 128 (64KB)</li>
+<li>size: 1GB</li>
+</ul>
+</li>
+</ul>
+<h4 id="without-filesystem-2">Without filesystem</h4>
+<ul>
+<li><code>dd if=/dev/zero of=/dev/sdd bs=1M count=10 conv=fdatasync</code></li>
+</ul>
+<pre><code>
+</code></pre>
+<h4 id="with-filesystem-2">With filesystem</h4>
+<ul>
+<li><code>dd if=/dev/zero of=file1 bs=1M count=10 conv=fdatasync</code></li>
+</ul>
+<pre><code>[root@ca11 shunzitest]# dd if=/dev/zero of=file1 bs=1M count=10 conv=fdatasync
+10+0 records in
+10+0 records out
+10485760 bytes (10 MB) copied, 20.79 s, 504 kB/s
+
+
+</code></pre>
+<ul>
+<li><code>dd if=/dev/zero of=file2 bs=128KB count=100 conv=fdatasync</code></li>
+</ul>
+<pre><code>[root@ca11 shunzitest]# dd if=/dev/zero of=file2 bs=128KB count=100 conv=fdatasync
+100+0 records in
+100+0 records out
+12800000 bytes (13 MB) copied, 24.278 s, 527 kB/s
+</code></pre>
+<ul>
+<li><code>dd if=/dev/zero of=file3 bs=64KB count=100 conv=fdatasync</code></li>
+</ul>
+<pre><code>[root@ca11 shunzitest]# dd if=/dev/zero of=file3 bs=64KB count=100 conv=fdatasync
+100+0 records in
+100+0 records out
+6400000 bytes (6.4 MB) copied, 11.7722 s, 544 kB/s
+</code></pre>
+<ul>
+<li><code>dd if=/dev/zero of=file4 bs=32KB count=100 conv=fdatasync</code></li>
+</ul>
+<pre><code>[root@ca11 shunzitest]# dd if=/dev/zero of=file2 bs=32KB count=100 conv=fdatasync
+100+0 records in
+100+0 records out
+3200000 bytes (3.2 MB) copied, 7.65888 s, 418 kB/s
+</code></pre>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/distcache-provable-load-balancing-for-largescale-storage-systems-with-distributed-caching.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/distcache-provable-load-balancing-for-largescale-storage-systems-with-distributed-caching/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-05-05">2020-05-05</time>
+                  <h4 class="title white no-margin">DistCache: Provable Load Balancing for LargeScale Storage Systems with Distributed Caching</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/cpp-basic.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/cpp-basic/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-04-06">2020-04-06</time>
+                  <h4 class="title white no-margin">C++基础快速入门</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

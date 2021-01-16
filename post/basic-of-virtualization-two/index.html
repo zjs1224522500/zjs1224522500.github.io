@@ -1,0 +1,753 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Series Two of Basic of Virtulization - Mechanism and Policy Part.1 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+今天阅读到项目代码时候，涉及到了 Python 协程的概念，由于才疏学浅一时半会儿未能参透协程的实际意义。查阅了很多资料，都是和线程、进程对照着一起阐述，理解起来实在有难度，有了比较浅薄的了解之后决定还是先继续了解进程这一块的知识。
+威..." />
+    <meta name="keywords" content="存储,读书笔记,OS" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-08-19"><i class="fa fa-calendar"></i><span class="lately">5 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/basic-of-virtualization-two/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/basic-of-virtualization-two/"> </span>
+              </a>
+              <span id="/basic-of-virtualization-two/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-1 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-2 ctag-os" aria-label="">OS</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Series Two of Basic of Virtulization - Mechanism and Policy Part.1</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>今天阅读到项目代码时候，涉及到了 Python 协程的概念，由于才疏学浅一时半会儿未能参透协程的实际意义。查阅了很多资料，都是和线程、进程对照着一起阐述，理解起来实在有难度，有了比较浅薄的了解之后决定还是先继续了解进程这一块的知识。</li>
+<li>威斯康辛州大学操作系统书籍《Operating Systems: Three Easy Pieces》读书笔记系列之 Virtulization（虚拟化）。本篇为虚拟化技术的基础篇系列第二篇（Mechanism and Policy），机制和策略。（结合第一篇给出的虚拟化两层实现）</li>
+<li>CPU 虚拟化被分为两篇，此篇是第一篇，Mechanism</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="chapter-index">Chapter Index</h2>
+<ul>
+<li>TODO</li>
+</ul>
+<h2 id="mechanism-limited-direct-execution">Mechanism: Limited Direct Execution</h2>
+<ul>
+<li>实现 CPU 虚拟化的主要思想为运行一个进程一段时间，然后运行另一个进程，轮流执行。即时分共享的方式来利用 CPU。这样的方式也就存在着一列问题：
+<ul>
+<li>Performance: 如何在不引入特别多的开销的情况实现虚拟化？</li>
+<li>Control: 当持有 CPU 的执行（控制）权时，如何高效运行当前进程？</li>
+</ul>
+</li>
+<li>CRUX：如何高效、可控地虚拟化 CPU？</li>
+</ul>
+<h3 id="basic-technique-limited-direct-execution">Basic Technique: Limited Direct Execution</h3>
+<ul>
+<li>Direct Execution：是指在 CPU 上直接运行程序。即当操作系统希望启动程序运行时，会在进程列表中为其创建一个进程条目，为其分配一些内存，将程序代码（从磁盘）加载到内存中，找到入口点（main()函数或类似的），跳转到那里，并开始运行用户的代码。协议如下：<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200817223139.png" alt="20200817223139" loading="lazy"></li>
+<li>这种直接的方式衍生了一些问题：
+<ul>
+<li>操作系统如何保证这个程序只做规定范围内的事情（即我们在代码里描述的事情），还要很高效地去执行？</li>
+<li>在程序运行过程中，操作系统如何暂停这个程序切换到另一个进程上去执行，从而实现时分复用 CPU？</li>
+</ul>
+</li>
+<li>因此需要为这种直接执行的机制引入一定的限制</li>
+</ul>
+<h3 id="problem-1-restricted-operations">Problem #1: Restricted Operations</h3>
+<ul>
+<li>上述机制的优点在于执行很快，因为直接在 CPU 上运行。但是如果进程希望执行一些其他受限的操作，比如发起磁盘 I/O 或者申请更多的内存和 CPU 等，则需要进行一定的限制和处理。</li>
+<li>针对 I/O 类型的操作，如果放任进程做任何事情，就无法构建许多我们想要构建的系统。比如构建一个带权限控制和访问的文件系统。针对进程的 I/O 操作需要进行权限的校验，放任进程的话就可能导致进程读写整个磁盘，就完全失去了权限的保护。</li>
+<li>实际上采用的方法是引入一个新的处理器模式，即 <strong>User Mode</strong>。该模式下的代码运行中会受到限制。比如，在该模式下，进程不能发起 I/O 请求，如果发起将引发异常然后操作系统可能终止进程。与用户模式对应的模式叫做 <strong>Kernel Mode</strong>，操作系统（或内核）就以这种模式运行，该模式下，运行的代码可以做任何事情，即该模式下无限制。</li>
+<li>如果进程确实需要执行某些限制的指令，譬如发起 I/O，那么此时就引入了新的概念 <strong>System call</strong>。系统调用其实是内核向用户暴露的某些关键功能，譬如文件系统的相关操作，进程的创建销毁通信等，内存的分配回收等。程序为了执行系统调用，需要首先执行 <strong>trap</strong> 指令，该指令将进入到内核中并将权限级别提升到内核模式，一旦在内核中，程序就可以执行想要执行的受限制的操作，当执行结束后，操作系统会调用 <strong>return-from-trap</strong> 指令，回到发起调用的用户程序并将权限级别调整回用户模式。</li>
+<li>在执行 <strong>trap</strong> 指令时有一些硬件上的细节需要注意，即为了保证之后操作系统发起 <strong>return-from-trap</strong> 指令后能够正确地回到原来的程序，需要保存原有的用户程序的寄存器数据，即原有进程的上下文。在 x86 上，处理器将会把 PC，flags 以及其他寄存器压栈到每个进程对应的内核栈上，return from trap 的时候才出栈恢复用户态下的程序执行。其他平台可能使用了不同的实现，但基本原理大体如此。</li>
+<li><strong>trap</strong> 指令如何知道运行操作系统中哪部分的代码？借助系统启动时构建的 <strong>trap table</strong>，由于启动时处于内核态，很容易配置机器硬件的行为，操作系统需要在 trap table 中维护当发生某些异常事件时对应的硬件需要执行什么样的操作，从而告诉硬件这些 <strong>trap handlers</strong> 的位置，然后硬件会记住对应的处理程序的位置直到下次系统启动。为了指定准确的系统调用，通常为每个系统调用分配一个系统调用号。因此，用户代码负责将所需的系统调用号放入寄存器或堆栈上的指定位置;当操作系统在trap handler 中处理系统调用时，检查这个数字，确保它是有效的，如果是，就执行相应的代码。这种间接性可以作为一种保护形式;用户代码不能指定要跳转到的确切地址，但必须通过号码请求特定的服务。</li>
+<li>如下就是 Limited Direct Execution 的协议，被分成了两个阶段。
+<ul>
+<li>第一阶段即启动阶段，初始化 trap table，每个硬件对应的记住系统调用处理程序的位置。</li>
+<li>第二阶段即进程运行阶段，首先需要设置一些内容，分配内存等操作，返回用户态执行程序，当程序需要进行系统调用的时候再次进入内核态，执行对应的系统调用处理程序，执行完后返回主程序，直到程序执行完再次进入内核态释放内存。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200818101241.png" alt="20200818101241" loading="lazy"></li>
+</ul>
+</li>
+</ul>
+<h3 id="problem-2-switching-between-processes">Problem #2: Switching Between Processes</h3>
+<ul>
+<li>假设只有一个 CPU，如果一个进程在运行，那就意味着操作系统此时不在运行，那这时候操作系统就不能做很多事情，也就引出了关键问题 CRUX: 操作系统如何重新获得控制权以便在进程间切换？</li>
+</ul>
+<h4 id="a-cooperative-approach-wait-for-system-calls">A Cooperative Approach: Wait For System Calls</h4>
+<ul>
+<li>早期的一些操作系统采用的方式是协作式，等待系统调用。即相信进程会合理运行，并且假设进程运行太长时间的话会定时地放弃 CPU 的使用并由操作系统决定运行别的进程。</li>
+<li>友好的进程如何放弃 CPU 的执行权？大多数进程通常都是通过系统调用将 CPU 的执行权转给操作系统，比如打开文件后读取文件，或者向另一台机器发送数据，又或者创建新进程，这样的系统通常显式地包含了一个 <strong>yield</strong> 系统调用，它什么都不干，只是将控制权交给操作系统，以便系统可以运行其他进程。</li>
+<li>如果应用程序进行了一些非法的操作也会把 CPU 的控制权转移给操作系统，比如除以 0 或者访问不能被访问的内存空间，都会导致 <strong>trap</strong> 的执行，然后操作系统就获取到了 CPU 的执行权，并可能终止这样的违规进程。</li>
+<li>因此，在协作调度系统中，操作系统通过等待系统调用或某种非法操作的发生来重新获得对 CPU 的控制。但是这样太过理想，即对进程太过自信，假设一个进程有很多问题，且是个死循环，但是从不进行系统调用，这个时候操作系统就永远都拿不到 CPU 了。</li>
+</ul>
+<h4 id="a-non-cooperative-approach-the-os-takes-control">A Non-Cooperative Approach: The OS Takes Control</h4>
+<ul>
+<li>如上所述，如果没有硬件的额外帮助，进程不进行系统调用，也不出错的话，CPU 控制权根本无法交给操作系统，要是程序死循环执行，就只能重启了。所以这时候的 CRUX：即使进程不协作，操作系统如何获得 CPU 的控制权？操作系统可以做什么来确保流氓进程不会占用机器？</li>
+<li><strong>timer interrupt</strong> 时钟中断是指每隔几毫秒发生一次中断，产生中断时当前正在运行的进程停止，执行操作系统中预先定义的中断处理程序，此时操作系统重新获得了 CPU 的执行权，这时候就可按照逻辑执行，譬如停止当前进程，运行另一个进程。</li>
+<li>时钟中断程序和前面讨论的系统调用一样，需要在系统启动时就通知硬件哪些代码在发生中断时执行。除此以外系统还需要启动时钟，从而保证操作系统最终能够获取到 CPU 的执行权。时钟当然也可以关闭。时钟的启动和关闭都是一些权限极高的操作。</li>
+<li>中断操作发生时对硬件也会有一定的要求，跟系统调用时对硬件的要求类似，即需要保存原有的用户程序所对应的寄存器数据，也就是所谓的进程上下文。</li>
+</ul>
+<h4 id="saving-and-restoring-context">Saving and Restoring Context</h4>
+<ul>
+<li>既然操作系统已经重新获得了控制权，无论是通过系统调用协作，还是通过时钟中断更强制执行，都必须决定：是继续运行当前正在运行的进程，还是切换到另一个进程。这个决定是由调度程序（scheduler）做出的，它是操作系统的一部分，即调度策略。</li>
+<li>进程的切换其实就是我们常常说的上下文切换 <strong>context switch</strong>，就是指操作系统要做的就是为当前正在执行的进程保存一些寄存器的值（例如，到它的内核栈），并为即将执行的进程恢复一些寄存器的值（从它的内核栈）。这样一来，操作系统就可以确保最后执行从陷阱返回指令时，不是返回到之前运行的进程，而是继续执行另一个进程。</li>
+<li>为了保存当前正在运行的进程的上下文，操作系统会执行一些底层汇编代码，来保存通用寄存器、程序计数器，以及当前正在运行的进程的内核栈指针，然后恢复寄存器、程序计数器，并切换内核栈，供即将运行的进程使用。通过切换栈，内核在进入切换代码调用时，是一个进程（被中断的进程）的上下文，在返回时，是另一进程（即将执行的进程）的上下文。当操作系统最终执行从return-from-trap 指令时，即将执行的进程变成了当前运行的进程。至此上下文切换完成。</li>
+<li>如下所示，进程 A 运行时被中断时钟中断，硬件保存寄存器数据到内核栈中，进入内核模式，时钟中断处理程序中，操作系统决定从正在运行的进程 A 切换到进程 B。此时，它调用 switch()例程，该例程仔细保存当前寄存器的值（保存到 A 的进程结构），恢复寄存器进程 B（从它的进程结构），然后切换上下文（switch context），具体来说是通过改变栈指针来使用 B 的内核栈（而不是 A 的）。最后，操作系统从 trap 返回，恢复 B 的寄存器并开始运行它。</li>
+<li>图中涉及到了两种类型的寄存器的保存和恢复。
+<ul>
+<li>第一种是时钟中断时，硬件隐式地保存了 <em>user registers</em> 到进程的内核栈中</li>
+<li>第二种是内核中上下文切换的时候，操作系统显式地保存了 <em>kernel registers</em> 到进程的内存数据结构中<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200818111835.png" alt="20200818111835" loading="lazy"></li>
+</ul>
+</li>
+<li>如下给出了 xv6 的上下文切换代码</li>
+</ul>
+<pre><code class="language-C">1 # void swtch(struct context **old, struct context *new);
+2 #
+3 # Save current register context in old
+4 # and then load register context from new.
+5 .globl swtch
+6 swtch:
+7   # Save old registers
+8   movl 4(%esp), %eax # put old ptr into eax
+9   popl 0(%eax) # save the old IP
+10  movl %esp, 4(%eax) # and stack
+11  movl %ebx, 8(%eax) # and other registers
+12  movl %ecx, 12(%eax)
+13  movl %edx, 16(%eax)
+14  movl %esi, 20(%eax)
+15  movl %edi, 24(%eax)
+16  movl %ebp, 28(%eax)
+17
+18  # Load new registers
+19  movl 4(%esp), %eax # put new ptr into eax
+20  movl 28(%eax), %ebp # restore other registers
+21  movl 24(%eax), %edi
+22  movl 20(%eax), %esi
+23  movl 16(%eax), %edx
+24  movl 12(%eax), %ecx
+25  movl 8(%eax), %ebx
+26  movl 4(%eax), %esp # stack is switched here
+27  pushl 0(%eax) # return addr put in place
+28  ret # finally return into new ctxt
+
+</code></pre>
+<h3 id="worried-about-concurrency">Worried About Concurrency?</h3>
+<ul>
+<li>CRUX：在系统调用期间发生了时钟中断的话会怎么样？以及在处理一个中断的时候发生了另一个中断又会怎么样？</li>
+<li>具体的细节会在并发部分进行详细阐释，简单地讲 操作系统会在中断期间禁止中断，即保证在一个中断处理过程中不会交出 CPU，但是需要保证其他中断不会因为等待时间过长而丢失。除此以外还有一些加锁的方案，以保护共享的数据结构的并发访问。</li>
+</ul>
+<h3 id="summary">Summary</h3>
+<ul>
+<li>limited direct execution：让你想运行的程序在 CPU 上运行，但首先确保设置好硬件，以便在没有操作系统帮助的情况下限制进程可以执行的操作。</li>
+<li>操作系统会在启动时加载 trap 处理程序并启动时钟中断，仅在受限模式下运行进程，从而保证进程高效执行，只有在需要执行高级别的操作如系统调用或者占用 CPU 时间过长的时候，才会由操作系统接管 CPU 进行干预。</li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/basic-of-virtualization-three/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-08-20">2020-08-20</time>
+                  <h4 class="title white no-margin">Series Three of Basic of Virtulization - Mechanism and Policy Part.2</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/basic-of-virtualization-one/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-08-15">2020-08-15</time>
+                  <h4 class="title white no-margin">Series One of Basic of Virtulization - Processes and API</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

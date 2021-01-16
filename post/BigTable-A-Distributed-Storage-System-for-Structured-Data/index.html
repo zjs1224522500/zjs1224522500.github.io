@@ -1,0 +1,951 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bigtable: A Distributed Storage System for Structured Data | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+2006 年 Google 发表的 Bigtable (Google 三大论文 GFS/MapReduce/BigTable 之一). 原文链接见参考链接【1】
+BigTable 的理论模型之一即为 LSM Tree，BigTable ..." />
+    <meta name="keywords" content="存储,LSM,对象存储" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/BigTable_database_large.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-05-19"><i class="fa fa-calendar"></i><span class="lately">8 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/BigTable-A-Distributed-Storage-System-for-Structured-Data/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/BigTable-A-Distributed-Storage-System-for-Structured-Data/"> </span>
+              </a>
+              <span id="/BigTable-A-Distributed-Storage-System-for-Structured-Data/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-1 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-2 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Bigtable: A Distributed Storage System for Structured Data</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>2006 年 Google 发表的 Bigtable (Google 三大论文 GFS/MapReduce/BigTable 之一). 原文链接见参考链接【1】</li>
+<li>BigTable 的理论模型之一即为 LSM Tree，BigTable 和底层 GFS 进行了结合</li>
+<li>如今的 LSM Tree 的相关实现主要参考了 BigTable。</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li>BigTable 是一个分布式的结构化数据存储系统，它被设计用来处理海量数据：通常是分布在数千台普通服务器上的 PB 级的数据。Google 的很多项目使用Bigtable 存储数据，包括 Web 索引、Google Earth、 Google Finance。这些应用对 Bigtable 提出的要求差异非常大，无论是在数据量上（从URL到网页到卫星图像）还是在响应速度上（从后端的批量处理到实时数据服务）均如此。尽管应用需求差异很大，但是，针对 Google 的这些产品，Bigtable 还是成功的提供了一个灵活的、高性能的解决方案。</li>
+<li>BigTable 实现了多个目标：广泛的适用性，可伸缩性，高性能和高可用性</li>
+</ul>
+<h2 id="data-model">Data Model</h2>
+<ul>
+<li>使用一个三元组来作为索引 (row:string, column:string, time:int64)，对应的 value 也为 string.</li>
+<li>图示中，则是一个 WebTable 表，用于存储不同网站的所有页面及其相关信息，URL 作为 row key,然后根据信息的类型进行列的区分，如 内容列， 引用了该页面的 anchor 文本列（对应有两个引用者，则对应两列信息）。而 Content 列又对应了多个版本的内容，用不同的时间戳表示版本的不同。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200519172529.png" alt="20200519172529" loading="lazy"></li>
+</ul>
+<h3 id="rows">Rows</h3>
+<ul>
+<li>表中的行键是任意字符串（当前大小最大为64KB，尽管对于大多数用户而言，大小通常是10-100字节）。 单个行键下的每次数据读取或写入都是原子性的（无论该行中读取或写入的不同列的数量如何），该设计决策使客户端在出现并发更新到同一行时更容易推断系统行为。</li>
+<li>Bigtable 按行键的字典顺序维护数据。表的行区间是动态分区的。每个行区间称为一个Tablet，它是分配和负载均衡的单位。因此对于行的小范围读取只需要与少部分机器通信。</li>
+</ul>
+<h4 id="eg">eg.</h4>
+<ul>
+<li>例如在 Webtable 中，通过反转 URL 的主机名部分，可以将同一域中的页面分组为连续的行，使得相同域名的页面可以存储在比较靠近的位置，从而便于访问。</li>
+</ul>
+<h3 id="column-families">Column Families</h3>
+<ul>
+<li>列键被分组成称为列族的集合，这些集合构成访问控制的基本单元。 列族中存储的所有数据通常都是同一类型（同一列族中的数据会被压缩在一起）。 必须先创建一个列族，然后才能将数据存储在该族中的任何列键下。 创建族后，可以使用族中的任何列键。</li>
+<li>Column Key 由 family:qualifier 的形式组成，列族（ column family）名称必须是可打印的，但限定词（qualifier）可以是任意字符串。</li>
+<li>访问控制以及磁盘和内存统计均在列族层次执行.</li>
+</ul>
+<h4 id="eg-2">eg.</h4>
+<ul>
+<li>Webtable的一个示例列族是 language，它存储编写网页所用的语言。我们在语言族中仅使用一个列键，并且它存储每个网页的语言 ID。此表的另一个有用的列族是锚； 该族中的每个列键都代表一个锚。限定符是引用站点的名称。单元格内容是链接文本。</li>
+</ul>
+<h3 id="timestamps">Timestamps</h3>
+<ul>
+<li>Bigtable 中的每个单元格可以包含同一数据的多个版本；这些版本通过时间戳索引。</li>
+<li>Bigtable 时间戳是64位整数。它们可以由 Bigtable 分配，在这种情况下，它们以微秒为单位表示“真实时间”，也可以由客户端应用程序明确分配。需要避免冲突的应用程序必须自己生成唯一的时间戳。单元格 Cell 的不同版本以时间戳的降序存储，因此可以首先读取到最新版本的数据。</li>
+<li>为了减少版本化数据的管理工作，我们支持每个列族的两个设置，这些设置告诉Bigtable自动垃圾回收单元格版本。 客户端可以指定仅保留单元格的最后n个版本，或者仅保留足够新的版本（例如，仅保留最近7天写入的值）。</li>
+</ul>
+<h4 id="eg-3">eg.</h4>
+<ul>
+<li>在我们的Webtable示例中，我们将 content: 列中存储的爬虫网页的时间戳设置为实际爬虫这些页面版本的时间。 上述的垃圾收集机制使我们仅保留每个页面的最新三个版本。</li>
+</ul>
+<h3 id="数据示例">数据示例</h3>
+<ul>
+<li>数据结构：</li>
+</ul>
+<pre><code class="language-JSON">table{
+  // ...
+  &quot;aaaaa&quot; : { //一行
+    &quot;A:foo&quot; : { //一列
+        15 : &quot;y&quot;, //一个版本
+        4 : &quot;m&quot;
+      },
+    &quot;A:bar&quot; : { //一列
+        15 : &quot;d&quot;,
+      },
+    &quot;B:&quot; : { //一列
+        6 : &quot;w&quot;
+        3 : &quot;o&quot;
+        1 : &quot;w&quot;
+      }
+  },
+  // ...
+}
+</code></pre>
+<ul>
+<li>查询时，如果只给出行列，那么返回的是最新版本的数据；如果给出了行列时间戳，那么返回的是时间小于或等于时间戳的数据。比如，我们查询&quot;aaaaa&quot;/&quot;A:foo&quot;，返回的值是&quot;y&quot;；查询&quot;aaaaa&quot;/&quot;A:foo&quot;/10，返回的结果就是&quot;m&quot;；查询&quot;aaaaa&quot;/&quot;A:foo&quot;/2，返回的结果是空。</li>
+</ul>
+<h2 id="api">API</h2>
+<ul>
+<li>Bigtable API 提供了用于创建和删除表和列族的功能。它还提供了用于更改集群，表和列族元数据的功能，例如访问控制权限。</li>
+</ul>
+<h3 id="eg1">eg.1</h3>
+<ul>
+<li>客户端应用程序可以在 Bigtable 中写入或删除值，可以从各个行中查找值，也可以遍历表中的数据子集。</li>
+<li>如下代码显示了使用 RowMutation 抽象（对象）来执行一系列更新的 C++ 代码。（省略了详细信息，以使示例简短）通过调用 Apply 对 Webtable 进行了原子修改：它将一个锚点（列）添加到 www.cnn.com 并删除另一个锚点（列）。</li>
+</ul>
+<pre><code class="language-C++">// Open the table
+Table *T = OpenOrDie(&quot;/bigtable/web/webtable&quot;);
+// Write a new anchor and delete an old anchor
+RowMutation r1(T, &quot;com.cnn.www&quot;);
+r1.Set(&quot;anchor:www.c-span.org&quot;, &quot;CNN&quot;);
+r1.Delete(&quot;anchor:www.abc.com&quot;);
+Operation op;
+Apply(&amp;op, &amp;r1);
+</code></pre>
+<h3 id="eg2">eg.2</h3>
+<ul>
+<li>显示了使用Scanner抽象（对象）对特定行中的所有锚点进行迭代的C ++代码。客户端可以迭代多个列族，并且有几种机制可以限制扫描产生的行，列和时间戳。</li>
+<li>例如，我们可以将上面的扫描限制为仅生成其列与正则表达式 anchor:*.cnn.com 匹配的锚，或者仅生成其时间戳在当前时间的十天内之内的锚。</li>
+</ul>
+<pre><code class="language-C++">Scanner scanner(T);
+ScanStream *stream;
+stream = scanner.FetchColumnFamily(&quot;anchor&quot;);
+stream-&gt;SetReturnAllVersions();
+scanner.Lookup(&quot;com.cnn.www&quot;);
+for (; !stream-&gt;Done(); stream-&gt;Next()) {
+    printf(&quot;%s %s %lld %s\n&quot;,
+    scanner.RowName(),
+    stream-&gt;ColumnName(),
+    stream-&gt;MicroTimestamp(),
+    stream-&gt;Value());
+}
+</code></pre>
+<h3 id="eg3">eg.3</h3>
+<ul>
+<li>Bigtable支持其他几种功能，这些功能允许用户以更复杂的方式操作数据。
+<ul>
+<li>首先，Bigtable 支持单行事务（single-row transaction），该事务可用于对存储在单个行键下的数据执行原子的 “读-修改-写”（read-modify-write） 序列。 Bigtable目前不支持跨行键的常规事务，尽管它提供了用于在客户端跨行键批处理写入的接口。</li>
+<li>其次，Bigtable 允许将单元格用作整数计数器。</li>
+<li>最后，Bigtable 支持在服务器的地址空间中执行客户端提供的脚本。</li>
+</ul>
+</li>
+<li>可以和 MapReduce 结合。</li>
+</ul>
+<h2 id="building-blocks">Building Blocks</h2>
+<ul>
+<li>Bigtable 建立在 Google 其他几个基础架构之上。
+<ul>
+<li>Bigtable 使用分布式 Google 文件系统（GFS）存储日志和数据文件。</li>
+<li>Bigtable 集群通常运行在与多种其他分布式应用程序共享的服务器池中，并且Bigtable进程通常与其他应用程序的进程共享同一台计算机。</li>
+<li>Bigtable 依靠集群管理系统来调度作业、来管理共享计算机上的资源、来处理计算机故障以及监视计算机状态。</li>
+</ul>
+</li>
+</ul>
+<h3 id="sstable-存储-bigtable-数据">SSTable 存储 BigTable 数据</h3>
+<ul>
+<li>SSTable 提供了从键到值都可以持久化、有序的、不可变的映射表（map），其中键和值都是任意字节字符串。提供操作以查找与指定键相关联的值，并遍历指定键范围内的所有键/值对。</li>
+<li>在内部，每个 SSTable 包含一系列块（通常每个块的大小为 64KB，但这是可配置的）；块的索引（存储在 SSTable 的末尾）用于定位块。</li>
+</ul>
+<h4 id="读">读</h4>
+<ul>
+<li>打开 SSTable 时，索引将加载到内存中。可以使用单次磁盘寻址（ disk seek）执行一次查找：首先对内存中的索引执行二分搜索来找到对应的块索引，然后从磁盘读取相应的块。</li>
+<li>可选项是可以将一个 SSTable 全部映射到内存中，这使我们无需与磁盘进行 io 即可执行查找和扫描。</li>
+</ul>
+<h3 id="分布式锁-chubby">分布式锁 Chubby</h3>
+<ul>
+<li>提供粗粒度的分布式锁，比如 leader 选举、服务发现。</li>
+<li>提供小数据的可靠存储</li>
+<li>重点关注可靠性、一致性、扩展性而不是性能，一致性依靠 paxos 解决。</li>
+<li>提供简单的语义</li>
+</ul>
+<h4 id="参考链接">参考链接</h4>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/64554506">[1] 知乎：Chubby 分布式锁服务总结</a></li>
+<li><a href="https://link.zhihu.com/?target=https%3A//static.googleusercontent.com/media/research.google.com/zh-CN//archive/chubby-osdi06.pdf">[2] OSDI06 Google Research: The Chubby lock service for loosely-coupled distributed systems</a></li>
+</ul>
+<h4 id="bigtable-with-chubby">BigTable With Chubby</h4>
+<ul>
+<li>确保任何时候最多一个活跃的 master（active master）；</li>
+<li>存储 Bigtable 数据的引导位置（bootstrap location）；</li>
+<li>发现 Tablet 服务器并确定 Tablet 服务器的死机；</li>
+<li>存储 Bigtable 模式（schema）信息（每个表的列族信息）；</li>
+<li>存储用于访问控制的信息而组成的列表</li>
+</ul>
+<h2 id="implementation">Implementation</h2>
+<h3 id="components">Components</h3>
+<h4 id="master-server">Master Server</h4>
+<ul>
+<li>Master 负责检测集群中的 Tablet Server 组成以及它们的加入和退出事件，会将 Tablet 分配至 Tablet Server，并负责均衡 Tablet Server 间的存储负载以及从 GFS 上回收无用的文件。除外，Master 还负责管理如 Table、Column Family 的创建和删除等 Schema 修改操作。</li>
+</ul>
+<h4 id="tablet-server">Tablet Server</h4>
+<ul>
+<li>每个 Tablet Server 会负责管理若干个由 Master 指定的 Tablet，负责处理针对这些 Tablet 的读写请求，并负责在 Tablet 变得过大时对其进行切分。</li>
+<li>客户端数据不会传输到主服务器（master）：客户端直接与Tablet服务器通信以进行读取和写入数据。由于Bigtable客户端不依赖主服务器（master）获取 Tablet 的位置信息，所以大多数客户端从不与主服务器（master）通信。结果，在实践中主服务器（master）是低负载的。</li>
+</ul>
+<h5 id="tablet-server-table">Tablet Server &amp; Table</h5>
+<ul>
+<li>Bigtable 集群会管理若干个 Table，每个 Table 由若干个 Tablet 组成，每个 Tablet 都会关联一个指定的 Row Key 范围，那么这个 Tablet 就包含了该 Table 在该范围内的所有数据。初始时，Table 会只有一个 Tablet，随着 Tablet 增大被 Tablet Server 自动切分，Table 就会包含越来越多的 Tablet。</li>
+<li>默认情况下每个Tablet的大小约为100-200 MB。</li>
+</ul>
+<h3 id="tablet-location">Tablet Location</h3>
+<ul>
+<li>使用类似于 B+ 树的三级层次结构来存储 Tablet 位置信息。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200520103609.png" alt="20200520103609" loading="lazy"></li>
+<li>第一级是存储在 Chubby 中的文件，它包含 Root Tablet 的位置。 Root Tablet 包含特殊的 METADATA table 中所有Tablet的位置。 每个 METADATA Tablet 都包含一组 User Tablets 的位置。 Root Tablet 只是 METADATA table 中的第一个 Tablet，但经过特殊处理（从不切分），以确保 Tablet 位置层次结构不超过三个级别。
+<ul>
+<li>第一级：Chubby 中的一个文件</li>
+<li>第二级：METADATA tables（第一个 METADATA table 比较特殊，所以在图中单独画出 (Root Tablet)，但它其实和其他 METADATA table 都属于第二级，即 METADATA tables = 图示中的 1st METADATA Tablet (Root Tablet) + Other METADATA Tablets）</li>
+<li>第三级：User Tables</li>
+</ul>
+</li>
+<li>客户端库缓存 Tablet 的位置信息。
+<ul>
+<li>如果客户端不知道Tablet的位置，或者发现缓存的位置信息不正确，则它将在Tablet位置层级中向上递归（查找想要的位置信息）。
+<ul>
+<li>如果客户的缓存为空，则定位算法需要进行三次网络往返，包括从Chubby中读取一次。</li>
+<li>如果客户的缓存过时，则定位算法最多可能需要进行六次往返，因为过时的缓存项仅在未命中时才被发现（假设METADATA Tablet的移动频率不高）。</li>
+</ul>
+</li>
+<li>尽管Tablet位置存储在内存中，所以不需要GFS访问，但在常见情况下，我们通过让客户端库预取Tablet位置来进一步降低了此成本：每当读取METADATA表时，它都会读取一个以上Tablet的元数据。</li>
+</ul>
+</li>
+</ul>
+<h3 id="tablet-assignment">Tablet Assignment</h3>
+<ul>
+<li>Bigtable Master 利用了 Chubby 来探测 Tablet Server 加入和离开集群的事件。每个 Tablet Server 在 Chubby 上都会有一个对应的唯一文件，Tablet Server 在启动时便会拿到该文件在 Chubby 上的互斥锁，Master 则通过监听这些文件的父目录来检测 Tablet Server 的加入。如果 Tablet Server 失去了互斥锁，那么 Master 就会认为 Tablet Server 已退出集群。尽管如此，只要该文件仍然存在，Tablet Server 就会不断地尝试再次获取它的互斥锁；如果该文件已被删除（见下文），那么 Tablet Server 就会自行关闭。</li>
+<li>在了解了集群中有哪些 Tablet Server 后，Master 便需要将 Tablet 分配给 Tablet Server。同一时间，一个 Tablet 只能被分配给一个 Tablet Server。Master 会通过向 Tablet Server 发送 Tablet 载入请求来分配 Tablet。除非该载入请求在 Master 失效前仍未被 Tablet Server 接收到，那么就可以认为此次 Tablet 分配操作已成功：Tablet Server 只会接受来自当前 Master 的节点的请求。当 Tablet Server 决定不再负责某个 Tablet 时，它也会发送请求通知 Master。</li>
+<li>Master 在检测到 Tablet Server 失效（互斥锁丢失）后，便会将其负责的 Tablet 重新分配。为此，Master 会尝试在 Chubby 上获取该 Tablet Server 对应的文件的互斥锁，并在成功获取后删除该文件，确保 Tablet Server 能够正确下线。之后，Master 便可顺利将 Tablet 分配至其他 Tablet Server。</li>
+<li>如果 Master 与 Chubby 之间的通信连接断开，那么 Master 便会认为自己已经失效并自动关闭。Master 失效后，新 Master 恢复的过程如下：
+<ul>
+<li>在 Chubby 上获取 Master 独有的锁，确保不会有另一个 Master 同时启动</li>
+<li>利用 Chubby 获取仍有效的 Tablet Server</li>
+<li>从各个 Tablet Server 处获取其所负责的 Tablet 列表，并向其表明自己作为新 Master 的身份，确保 Tablet Server 的后续通信能发往这个新 Master</li>
+<li>Master 确保 Root Tablet 及 METADATA 表的 Tablet 已完成分配</li>
+<li>Master 扫描 METADATA 表获取集群中的所有 Tablet，并对未分配的 Tablet 重新进行分配</li>
+</ul>
+</li>
+<li>在开始此扫描（步骤4）之前，如果在步骤3中未找到针对Root Tablet的分配，则主服务器会将Root Tablet添加到未分配Tablet的集合中。此添加操作确保了将对Root Tablet进行分配。由于Root Tablet包含所有METADATA Tablet的名称，因此主服务器在扫描了Root Tablet之后便知道了所有这些名称。</li>
+</ul>
+<h3 id="tablet-serving">Tablet Serving</h3>
+<ul>
+<li>Tablet的持久化状态存储在GFS中，如图所示。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200520140621.png" alt="20200520140621" loading="lazy"></li>
+<li>更新被提交（commit）到一个提交日志（commit log），这些日志存储着重做的记录（redo records）。在这些更新当中，最近提交的更新被存储到内存当中的一个被称为 Memtable 的排序缓冲区，比较老的更新被存储在一系列 SSTable 中。</li>
+<li>为了恢复 Tablet，Tablet 服务器从 METADATA table 读取其元数据。该元数据包含 SSTables 列表，该 SSTables 包含一个 Tablet 和一个重做点（redo point）的集合 ，这些重做点（redo point）是指向任何可能包含该 Tablet 数据的提交日志的指针。服务器将 SSTables 的索引读入内存，并通过应用自重做点以来已提交的所有更新来重建 Memtable。</li>
+<li>Tablet Server 在载入 Tablet 时，首先需要从 METADATA 表中获取 Tablet 对应的 SSTable 文件及 Commit Log 的日志，并利用 Commit Log 中的条目恢复出 Tablet 的 MemTable。</li>
+</ul>
+<h4 id="write">Write</h4>
+<ul>
+<li>当写操作到达 Tablet 服务器时，服务器将检查其格式是否正确，以及发送方是否有权执行这个更改（mutation）。通过从 Chubby 文件中读取允许的作者列表来执行授权（这在Chubby客户端缓存中几乎总是命中）。有效的更改（mutation）将写入提交日志（commit log）。整组提交（group commit）用于提高许多小更改的吞吐量。提交写入后，其内容将插入到 memtable 中。其中 MemTable 保持其内部的数据有序。而对于那些已经持久化的数据则会作为一个个 SSTable 文件保存在 GFS 中。</li>
+</ul>
+<h4 id="read">Read</h4>
+<ul>
+<li>当读操作到达 Tablet 服务器时，同样会检查其格式是否正确以及是否获得适当的授权。在 SSTables 和memtable 序列的合并视图上执行有效的读取操作。由于 SSTables 和 memtable 是按字典顺序排序的数据结构，因此可以有效地形成合并视图。切分和合并 Tablet 时，传入的读写操作可以继续。</li>
+<li>首先尝试从 MemTable 中获取所需的最新数据，如果无法查得再从 SSTable 中进行查找。</li>
+</ul>
+<h3 id="compactions">Compactions</h3>
+<h4 id="minor-compaction">Minor Compaction</h4>
+<ul>
+<li>随着写操作的执行，memtable 的大小增加。 当 memtable 大小达到阈值时，该 memtable 被冻结，创建新的 memtable，并将冻结的 memtable (Immutable Memtable)转换为 SSTable 并写入 GFS。</li>
+<li>Immutable Memtable 到 SSTable 的这个过程是一个压缩过程，称为 Minor Compaction。有两个目标：
+<ul>
+<li>减少 Tablet 服务器的内存使用量；</li>
+<li>如果该服务器死机，那么在恢复期间，压缩将减少必须从提交日志中读取的数据量。</li>
+</ul>
+</li>
+<li>发生压缩时，传入的读取和写入操作可以继续。</li>
+</ul>
+<h4 id="merging-compaction">Merging Compaction</h4>
+<ul>
+<li>每一次 Minor Compaction 都会产生一个新的 SSTable 文件，而过多的 SSTable 文件会导致后续的读操作需要扫描更多的 SSTable 文件以获得最新的正确数据。为了限制 SSTable 文件数，Bigtable 会周期地进行 Merging Compaction，将若干个 SSTable 和 MemTable 中的数据原样地合并成一个 SSTable。</li>
+</ul>
+<h4 id="major-compaction">Major Compaction</h4>
+<ul>
+<li>Bigtable 还会周期地执行一种被称为 Major Compaction 的特殊 Merging Compaction 操作：在这个过程中，Bigtable 除了会将若干个 SSTable 合并为一个 SSTable，同时将 SSTable 中那些应后续变更或删除操作而被标记为无效的条目移除。</li>
+<li>由 non-major compaction（非大型压缩）产生的SSTable可以包含特殊的删除条目（这里删除条目视为存储着：起到删除功能的指令，然而执行指令在：major compaction阶段），这些条目用于删除掉仍然存在于旧SSTable中逻辑上视为已删除的数据（逻辑上视为已删除的数据：客户端无法读取这些数据，即对客户端不可见，然而磁盘上这些数据还在。逻辑上已经不存在，物理上还存在）。 另一方面，major compaction（大型压缩）会产生一个SSTable，该表不包含删除信息或已删除的数据。 Bigtable会遍历其所有Tablet，并定期对其应用major compaction（大型压缩）。 这些major compaction（大型压缩）使Bigtable可以回收已删除数据所使用的资源，还可以确保Bigtable及时地从系统中删除已删除的数据，这对于存储敏感数据的服务很重要。</li>
+</ul>
+<h2 id="refinements">Refinements</h2>
+<h3 id="locality-group">Locality Group</h3>
+<ul>
+<li>Bigtable 允许客户端为 Column Family 指定一个 Locality Group，并以 Locality Group 为基础指定其实际的文件存储格式以及压缩方式。</li>
+<li>首先，在进行上面我们提到的 Compaction 操作时，Bigtable 会为 Tablet 中的每个 Locality Group 生成独立的 SSTable 文件。由此，用户便可将那些很少同时访问的 Column Famliy 放入到不同的 Locality Group 中，以提高查询效率。除外 Bigtable 也提供了其他基于 Locality Group 的调优参数设置，如设置某个 Locality Group 为 in-memory 等。</li>
+<li>在压缩方面，Bigtable 允许用户指定某个 Locality Group 是否要对数据进行压缩以及使用何种格式进行压缩。值得注意的是，Bigtable 对 SSTable 的压缩是基于 SSTable 文件的 Block 进行的，而不是对整个文件直接进行压缩。尽管这会让压缩的效率下降，但这也使得用户在读取数据时 Bigtable 只需要对 SSTable 的某些 Block 进行解压。</li>
+</ul>
+<h4 id="eg-4">eg.</h4>
+<ul>
+<li>Webtable 中的页面元数据（例如语言以及校验和）可以在一个 locality group 中，而页面的内容可以在另一个组中：想要读取元数据的应用程序不需要通读所有页面内容。</li>
+<li>主要是根据数据访问的局部性原理与在操作系统中内存页的缓存算法是同理。</li>
+</ul>
+<h3 id="compression">Compression</h3>
+<ul>
+<li>客户端可以控制是否压缩 locality group 的 SSTable，以及如果压缩，则使用哪种压缩格式。用户指定的压缩格式将应用于每个SSTable块（其大小可通过 locality group 的特定的调整参数来控制）。尽管我们通过分别压缩每个块而损失了一些空间，但我们的好处是因为：可以读取SSTable的一小部分而无需解压缩整个文件。</li>
+<li>许多客户端使用两阶段自定义压缩方案。第一阶段使用Bentley和McIlroy的方案，该方案在一个大窗口中压缩长的公共字符串。第二阶段使用快速压缩算法，该算法在一个小的16 KB数据窗口中查找重复项。两种压缩过程都非常快——在现代机器上，它们的编码速度为100-200 MB/s，解码速度为 400-1000 MB/s。尽管在选择压缩算法时我们强调速度而不是减少空间，但这种两阶段压缩方案的效果出奇地好。</li>
+</ul>
+<h4 id="eg-5">eg.</h4>
+<ul>
+<li>例如，在Webtable中，我们使用这种压缩方案来存储Web页面内容。在一个实验中，我们将大量文档存储在一个压缩的 locality group 中。为了进行实验，我们将自己限制为每个文档的一个版本，而不是存储所有可用的版本。该方案使空间减少了10比1。由于Webtable行的布局方式，这比HTML页面上通常的Gzip压缩（3比1或4比1）要好得多：来自单个主机的所有页面都存储得彼此靠近。这使Bentley-McIlroy算法可以识别来自同一主机的页面中的大量共享样板。许多应用程序（不仅是Webtable）都选择其行名致使相似的数据最终聚集在一起，因此实现了很好的压缩率。当我们在Bigtable中存储相同值的多个版本时，压缩率甚至会更高。</li>
+</ul>
+<h3 id="caching-for-read-performance-bloom-filter">Caching for read performance &amp; Bloom Filter</h3>
+<ul>
+<li>了解过 LSM Tree 的读者可能已经意识到，Bigtable 使用的存储方式正是 LSM Tree：这种存储方式可以将对磁盘的随机写转换为顺序写，代价则是读取性能的下降。LSM Tree 被应用在 Bigtable 上是合情合理的，毕竟 Bigtable 的文件实际上存储在 GFS 中，而 GFS 主要针对顺序写进行优化，对随机写的支持可以说是极差。那么 Bigtable 在使用 LSM Tree 确保了写入性能后，当然就要通过其他的方式来确保自己的读性能了。</li>
+</ul>
+<h4 id="cache">Cache</h4>
+<ul>
+<li>为了提高读取性能，Tablet服务器使用两个级别的缓存。
+<ul>
+<li>Scan Cache是一个更高层次的缓存，它将SSTable接口返回的键值对缓存到Tablet服务器。</li>
+<li>Block Cache是较低层次的缓存，它缓存从GFS读取的SSTables块。</li>
+</ul>
+</li>
+<li>Scan Cache对于倾向于重复读取相同数据的应用程序最有用。 对于倾向于读取与其最近读取的数据接近的数据的应用程序（例如，顺序读取或对热点行中同一个 locality group 中不同列的随机读取），Block Cache非常有用。</li>
+</ul>
+<h4 id="bloom-filter">Bloom Filter</h4>
+<ul>
+<li>读取操作必须从构成Tablet状态的所有SSTable中读取。如果这些SSTable不在内存中，我们可能最终会进行许多磁盘访问。通过允许客户端指定应为特定 locality group 中的SSTable创建Bloom过滤器，我们减少了访问次数。 布隆过滤器允许我们询问SSTable是否可以包含指定行/列对的任何数据。对于某些应用程序，用于存储布隆过滤器的少量Tablet服务器的内存会大大减少读取操作所需的磁盘搜寻次数。 我们对Bloom过滤器的使用还意味着对于不存在的行或列的大多数查找都不需要接触磁盘。</li>
+</ul>
+<h3 id="commit-log-implementation">Commit-log implementation</h3>
+<ul>
+<li>Bigtable 使用了 Write-Ahead Log 的做法来确保数据高可用，那么便涉及了大量对 Commit Log 的写入，因此这也是个值得优化的地方。</li>
+<li>首先，如果 Bigtable 为不同的 Tablet 使用不同的 Commit Log，那么系统就会有大量的 Commit Log 文件同时写入，提高了底层磁盘寻址的时间消耗。为此，Tablet Server 会把其接收到的所有 Tablet 写入操作写入到同一个 Commit Log 文件中。</li>
+<li>这样的设计带来了另一个问题：如果该 Tablet Server 下线，其所负责的 Tablet 可能会被重新分配到其他若干个 Tablet Server 上，它们在恢复 Tablet MemTable 的过程中会重复读取上一个 Tablet Server 产生的 Commit Log。为了解决该问题，Tablet Server 在读取 Commit Log 前会向 Master 发送信号，Master 就会发起一次对原 Commit Log 的排序操作：原 Commit Log 会按 64 MB 切分为若干部分，每个部分并发地按照 (table, row name, log sequence number) 进行排序。完成排序后，Tablet Server 读取 Commit Log 时便可只读取自己需要的那一部分，减少重复读取。</li>
+<li>为了保护变化免受GFS延迟高峰的影响，每个Tablet服务器实际上都有两个日志写入线程（一个是被激活也就是正在使用的线程，一个是备用线程），每个线程都写入自己的日志文件。一次仅积极使用这两个线程之一。如果对激活的（active 有些人翻译：活跃的）日志文件的写入性能不佳，则日志文件的写入将切换到另一个线程，并且提交日志队列中的数据变化记录将由新激活的日志写线程进行写入。日志条目包含序列号，以允许恢复过程清除此日志切换过程产生的重复条目。</li>
+</ul>
+<h3 id="speeding-up-tablet-recovery">Speeding up tablet recovery</h3>
+<ul>
+<li>如果主服务器（master）将 Tablet 从一台 Tablet 服务器移动到另一台 Tablet 服务器，则源 Tablet 服务器首先对该 Tablet 进行 minor compaction（小型压缩）。 这种压缩通过减少 Tablet 服务器的提交日志中未压缩状态的数量来减少恢复时间。 完成这次压缩后，Tablet 服务器将停止为 Tablet 提供服务。 在实际卸载 Tablet 之前，Tablet 服务器会进行另一次（通常非常快） minor compaction（小型压缩）来消除执行第一次 minor compaction（小型压缩）时到达 Tablet 服务器的日志当中任何剩余的未压缩状态。 在完成第二次 minor compaction（小型压缩）后，可将 Tablet 加载到另一台 Tablet 服务器上，而无需恢复日志条目。</li>
+</ul>
+<h3 id="exploiting-immutability">Exploiting immutability</h3>
+<ul>
+<li>除了SSTable缓存外，我们生成的所有SSTable都是不可变的，从而简化了Bigtable系统的其他各个部分。例如，当从SSTables读取数据时，我们不需要对文件系统的访问进行任何同步。结果，可以非常有效地实现对行的并发控制。读取和写入均访问的唯一可变数据结构是memtable。为了减少在读取memtable期间的竞争，我们使每个 memtable 的行使用写时复制 CoW 的策略，并允许读取和写入并行进行。</li>
+<li>由于SSTable是不可变的，因此永久删除已删除数据（前面讲过的发出删除指令，但未被执行的数据）的问题被转换为垃圾收集过期的SSTable。每个Tablet的SSTables都注册在 METADATA table 中。主服务器（master）删除过时的SSTables作为SSTables集合上的标记再清除式的垃圾收集[25]，其中 METADATA table 包含根集合（按照前文：METADATA table 记录了这些 SSTable 的对应的 tablet 的 root）。最后，SSTables的不变性使我们能够快速拆分Tablet。我们不必为每个子 Tablet 生成一组新的SSTable，而是让子 Tablet 共享 Tablet 的SSTable。</li>
+</ul>
+<h2 id="evaluation">Evaluation</h2>
+<ul>
+<li>见论文</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200520173300.png" alt="20200520173300" loading="lazy"></figure>
+<h3 id="reference">Reference</h3>
+<ul>
+<li><a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/bigtable-osdi06.pdf">[1] Google Research: BigTable</a></li>
+<li><a href="https://snaildove.github.io/2019/12/31/Paper-Google-Bigtable_translation-and-summary_online/">[2] Paper Google Bigtable 翻译与总结</a></li>
+<li><a href="https://mr-dai.github.io/bigtable/">[3] Bigtable 论文详述</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200522175313.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/s3fs/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-05-22">2020-05-22</time>
+                  <h4 class="title white no-margin">S3FS</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/hcs-obj-storage.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/hcs-obj-storage/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-05-17">2020-05-17</time>
+                  <h4 class="title white no-margin">hcs-obj-storage</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

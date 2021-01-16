@@ -1,0 +1,1033 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KVell: the Design and Implementation of a Fast Persistent Key-Value Store | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+该篇文章来自于 SOSP2019 的论文 KVell: the Design and Implementation of a Fast Persistent Key-Value Store
+论文提到了一个比较犀利的观点：KV 存储不再像..." />
+    <meta name="keywords" content="Paper,存储,LSM" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200804165314.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-08-02"><i class="fa fa-calendar"></i><span class="lately">5 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/KVell/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/KVell/"> </span>
+              </a>
+              <span id="/KVell/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-0 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-1 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-2 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">KVell: the Design and Implementation of a Fast Persistent Key-Value Store</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>该篇文章来自于 SOSP2019 的论文 KVell: the Design and Implementation of a Fast Persistent Key-Value Store</li>
+<li>论文提到了一个比较犀利的观点：KV 存储不再像以往主要受限于存储设备，而是逐渐更多的受 CPU 的性能影响。即 storage device bound 转移到了 CPU bound</li>
+<li>其实别的文章也略有提及现阶段 KV 存储存在的问题，但这篇文章更多是提出了新的设计范式来指导后续 KVS 的设计，值得一读。</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li>按块寻址的 NVMe SSD 相比以前的块设备提供了更高的带宽和更相近的随机和顺序读写的性能。持久化的 KV 存储是为早期的存储设备设计的，使用 LSM-tree 或者 B-tree，没有充分利用新型设备的优势。起初设计中为了避免随机访问的逻辑导致了保持磁盘上数据排序这样的开销巨大的操作以及同步操作，这些操作使得这些 KVs 在NVMe SSD 上受到 CPU 限制，成为新的瓶颈。</li>
+<li>我们提出了一种新的持久性 KV 设计，与早期设计不同的是，不再追求顺序访问，数据存储在磁盘上时无序。采用无共享的理念来避免同步开销，与设备访问的批处理一起，这些设计决策使读写性能接近设备带宽，最后，在内存中维护一个开销较小的的部分有序可以产生足够的扫描性能。</li>
+<li>我们设计了 KVell 作为第一个能充分利用现代 NVMe SSD 最大带宽的持久性 KV 存储系统。和最先进的 LSM-tree KV 和 B tree KV 进行了对比，KVell 在以读为主的工作负载上比其他类型的 KV 吞吐量至少高了 2x，以写为主的工作负载上高了 5x。对于以 scan 为主的负载，KVell 和其他类型相比性能接近甚至更好。KVell 的最大延迟也是最低的。</li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<ul>
+<li>KVS 应用广泛，缓存、元数据管理、消息通信、在线购物等场景。本文针对的是基于提供持久化保证的以块为单位寻址的存储设备上构建的 KVS，且数据集不能全部装在内存中的情况。</li>
+<li>传统意义上，存储设备与 CPU 设备之间的速度差距是很大的，因此充分利用 CPU 周期来优化存储设备的访问是一个很有效的的 tradeoff。所以，一些 KV 存储包含了复杂的索引结构，如 B+ tree，LSM KV 强制顺序写，因为顺序写通常比随机写更高效。所有的 KV 一般都包含了某种形式的缓存，为了支持检索给定键范围内的所有项的高效扫描，KVs 在内存和磁盘上有序地维护了相应的索引。尽管所有这些优化都需要花费一些 CPU 周期，但存储设备仍然是瓶颈，而这些优化被证明是有益的，因为它们缓解了瓶颈。</li>
+<li>当我们测量在按块寻地址的 NVMe SSD 设备上运行的最先进的 KVs 的性能时，我们发现 CPU 是瓶颈，而不再是存储设备，这证实了之前的定性观察。NVMe SSD 在随机和顺序访问方面表现出非常高的带宽和相当的性能，因此，许多为传统存储设备开发的优化不再有用，甚至可能适得其反，因为它们在 CPU 周期方面的成本加剧了 CPU 瓶颈。例如 LSM KV 现如今对于顺序写的要求的优化不再像以往那么带来特别大的好处，反而是一些维护过程的操作如压缩等加剧了 CPU 的资源使用，对性能产生了影响。一个更令人惊讶的例子是，在共享(内存中)数据结构上进行同步以进行缓存和维护顺序会导致 CPU 成为瓶颈。</li>
+<li>我们的结论是 <strong>存储设备的特性的变化和发展迫使 KVs 的设计思想和范式必须发生转变，需要更多地聚焦在 CPU 的流水线式的使用上</strong>。为此总结了四条设计原则：
+<ul>
+<li>Shared-nothing：所有的数据结构都在 CPU 核之间分区，这样每个 core 几乎可以完全独立运行而不需要任何同步。</li>
+<li>Items 不在磁盘上排序。每个分区都维护一个内存中有序的索引，以便进行高效扫描。</li>
+<li>不用强制顺序访问存储设备，但是 I/O 操作需要进行批处理来减小系统调用的次数。批处理同时为设备等待队列的提供了较好的控制，从而可以采用一些策略进行任务的调度来实现低延迟和高吞吐量。</li>
+<li>无需 commit log：只有在更新操作被持久化到磁盘上的最终位置后，操作才相应地得到确认。</li>
+</ul>
+</li>
+<li>这些原则消除了很多复杂的维护过程，除了提高平均吞吐量以外，还实现了吞吐量和延迟的可预测性。一些设计决策也做了相应的权衡，比如 Shared-nothing 会有负载不均衡的风险；不保证有序会影响 scan 的性能。我们的测试结果显示，对于主要由大中型键值对组成的工作负载，精简的 CPU 操作带来的好处超过了这些缺点。我们和四种最先进的 KVs 做了对比：分别是 LSM tree 的代表 RocksDB 和 PebblesDB；B tree 的代表 TokuMX 和 WiredTiger。</li>
+<li>Contributions：
+<ul>
+<li>对传统的 LSM 和 B 树型 KVs 进行了分析，指出 NVMe SSD 场景下的 CPU 瓶颈问题</li>
+<li>持久 KVs 利用 NVMe SSD 的属性的新范例，重点关注 CPU 的流水线使用。</li>
+<li>将 KVell 与最新的 LSM 和 B 树 KVs 在合成基准和生产工作负载上进行深入对比测试。</li>
+</ul>
+</li>
+</ul>
+<h2 id="evolution-of-ssd-performance">Evolution of SSD Performance</h2>
+<h3 id="ssd-性能测试">SSD 性能测试</h3>
+<ul>
+<li><strong>Hardware</strong>：
+<ul>
+<li><strong>Config-SSD</strong>：32-core 2.4GHz Intel Xeon，128GB of RAM, and a 480GB Intel DC S3500 SSD (2013).</li>
+<li><strong>Config-Amazon-8NVMe</strong>：An AWS i3.metal instance, with 36 CPUs (72 cores) running at 2.3GHz, 488GB of RAM, and 8 NVMe SSD drives of 1.9TB each (brand unknown, 2016 technology).</li>
+<li><strong>Config-Optane</strong>：A 4-core 4.2GHz Intel i7, 60GB of RAM, and a 480GB Intel Optane 905P (2018).</li>
+</ul>
+</li>
+<li><strong>IOPS</strong>：表1 显示了这三种设备的最大读写 IOPS 数以及随机和顺序带宽。读写性能提升迅猛，顺序和随机之间的差距越来越小，混合随机读写不再会像老式设备那样导致性能低下<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200802132332.png" alt="20200802132332" loading="lazy"></li>
+<li><strong>Latency and bandwidth</strong>：表2 展示了三个设备的延迟和带宽测量值，它们是设备队列深度的函数，一个核心执行随机写操作。可以发现以前的存储设备只有在请求数较小的时候才能保证较低的延迟，新的存储设备因为并行性更好往往在较多请求情况下仍然能保证毫秒级别的延迟，通过和上面的测试数据对比，发现在请求数较少的时候但其实完全没有跑满存储设备的实际带宽。所以即便是在现代设备的应用中，也需要做一个请求等待处理时间（延迟）和并发处理请求数（充分利用带宽）之间的 tradeoff。（请求太少带宽有余，请求太多延迟较高）<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200802133451.png" alt="20200802133451" loading="lazy"></li>
+<li><strong>Throughput degradation</strong>：图 1 显示了这三种设备上的 IOPS 随时间的变化。Config-SSD 可以维持大约 40min 的 50K IOPS，随后性能下降到 11K IOPS，而新的存储设备基本不会有这个问题，可以进行长时间的持续的 IO<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200802134131.png" alt="20200802134131" loading="lazy"></li>
+<li><strong>Latency spikes</strong>：图 2 展示了 4K 写的延迟，队列深度为 64。在写密集的负载下，老一代的 SSD 常常受到 latency spike 的影响（正常写延迟通常为 1.5ms，五小时后延迟将变成 100ms）。Config-Amazon-8NVMe 驱动器也会受到周期性 Latency spikes 的影响。最大观察到的延迟是 15ms。在 Config-Optane 驱动器上，潜伏期峰值不规则地发生，它们的幅度通常小于1毫秒，最大可观测到3.6毫秒<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200802165928.png" alt="20200802165928" loading="lazy"></li>
+</ul>
+<h2 id="nvme-ssd-上当前-kvs-的问题">NVMe SSD 上当前 KVs 的问题</h2>
+<ul>
+<li>在持久性 KV 存储中有两个主流的思想：
+<ul>
+<li>LSM KVs 被视为写密集负载的最好的解决方案，即对写更友好，如 RocksDB，Cassandra</li>
+<li>B tree KVs 被视为读密集负载的最好的解决方案，即对读更友好，如 MongoDB</li>
+</ul>
+</li>
+<li>但其实这两种设计在 NVMe SSD 上都会逐渐变为 CPU 瓶颈，并遭受严重的性能波动。</li>
+</ul>
+<h3 id="cpu-is-the-bottleneck">CPU is the bottleneck</h3>
+<ul>
+<li>图 3 显示了在 Config-Optane 上构建的 RocksDB 和 Wired Tiger 在负载为 YCSB-A（写密集）请求分布为 uniform 下的磁盘利用率和 CPU 利用率。两种方案都几乎榨干了 CPU，但是都还是没有完全发挥出设备实际的最大带宽。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200802171939.png" alt="20200802171939" loading="lazy"></li>
+</ul>
+<h4 id="cpu-is-the-bottleneck-in-lsm-kvs">CPU is the bottleneck in LSM KVs</h4>
+<ul>
+<li>LSM KVs 通过使用内存缓冲区吸收更新操作，主要针对写密集型负载进行了优化。缓冲区满了之后，刷入到磁盘，然后由后台线程将刷回的数据维护在一个持久性存储设备中的树状结构中。磁盘上的数据结构包含了很多层，随着层数的增加，容量也在增加，每一层都包含多个 immutable sorted files，每一层中的每个 file 包含不同的键范围，除了第一层。为了维护这样的数据结构，LSM KVs 实现了压缩机制，该机制对 CPU 和 I/O 都比较敏感，即是比较占据 CPU 时钟周期和磁盘带宽的。</li>
+<li>压缩操作在以前老的设备上主要是占据磁盘带宽，但是合并/索引/内核代码等也会占据一定的 CPU 时钟周期，但是在新设备上，CPU 成为了主要瓶颈。</li>
+<li>研究分析表明 RocksDB 大概会占据 60% 的 CPU 时钟周期，其中 28% 数据合并，15% 索引构建，剩下的主要是数据传输过程（对磁盘进行数据的读写）中的 CPU 时钟周期占用。压缩需求源于 LSM 的设计要求，即顺序磁盘访问和在磁盘上保持数据排序，这种设计对于以前的存储设备是有益的，即在以往的存储设备上花费时钟周期来保证顺序执行提升存储设备的访问性能是值得的。</li>
+</ul>
+<h4 id="cpu-is-the-bottleneck-in-lsm-kvs-2">CPU is the bottleneck in LSM KVs</h4>
+<ul>
+<li>针对持久化存储的 B Tree 有两种变体 B+ tree 和 Bϵ tree。</li>
+<li>B+ tree 在叶子节点中存储 KV 对，中间节点只包含用于路由的 Key，通常中间节点会被保存在内存中加速访问，叶子节点常常会被放在持久化的存储设备中。每一个叶子节点通常是以一个页的大小，存储了一个范围内的 KV 对。有的 B+ Tree 还会将每一个叶子节点使用指针链接起来，形成一个链表，从而提供较好的 scan 性能。WiredTiger 依赖内存缓存以实现更好的性能，更新操作首先写入到每一个线程对应的 commit log 中然后写入内存缓存，当更新的数据从缓存中被逐出时，树将使用新信息更新。更新使用序列号，这是扫描所必需的。读操作遍历缓存，只有在 KV 对未被缓存时才访问树。</li>
+<li>将数据持久化到树中，主要有两种操作：checkpointing 和 eviction。
+<ul>
+<li>Checkpointing 周期性进行，或者当日志中数据大小到达一个阈值时就执行，从而确保日志文件不会过大。</li>
+<li>Eviction 将脏数据从缓存写入到树中，当缓存中的脏数据达到一定的比例就执行 Eviction</li>
+</ul>
+</li>
+<li>Bϵ trees 是 B+ tree 的一个变种，增加缓冲区，临时存储每个节点上的键和值，最终，当缓冲区满了时，KV 对沿着树结构向下延伸，并被写入持久存储。</li>
+<li>B 树的设计容易产生同步开销，根据对 WiredTiger 的分析发现花费总时间的大约 47% 等待日志中的 slots。这个问题源于不能足够快地推进序列号进行更新。在更新的主代码路径中，不包括内核所花费的时间，WiredTiger 只花费18% 的时间来执行客户端请求逻辑，其余时间用于等待。WiredTiger 还需要执行后台操作: 从页面缓存中清除脏数据占总时间的 12%，管理提交日志占总时间的 5%。内核中只有 25% 的时间用于读写调用，而其余的时间用于 <code>futex</code> 和 <code>yield</code> 函数。</li>
+<li>Bϵ trees 也受同步性能开销的严重影响。因为 Bϵ trees 需要保证磁盘上的数据有序，工作线程最终会修改共享的数据结构，从而导致争用。对 TokuMX 的分析表明线程将 30% 的时间花费在锁或用于保护共享页面的原子操作上。缓冲也是 Bϵ trees 的一个比较大的开销来源, TokuMX 在工作负载为 YCSB-A 时花费了大约 20% 的时间从缓冲区向正确的叶子节点的正确位置传输数据。这些同步开销大大超过了其他开销。</li>
+<li>在现代的 NVMe SSD 的条件下，为了避免与同步相关的 CPU 开销，尽可能减少共享是比较好的方式。以前用于提供快速持久性保证的日志最终成为主要的瓶颈，对内存中 KVs 的观察发现缓冲也引入了开销，对于持久性存储也是一样。</li>
+</ul>
+<h4 id="performance-fluctuations-in-lsm-and-b-tree-kvs">Performance fluctuations in LSM and B tree KVs</h4>
+<ul>
+<li>除了受制于 CPU 外，LSM 和 B树 KVs 都有显著的性能波动。如图所示，展示了性能波动的情况，每秒记录一次吞吐量，在 LSM RocksDB 和 B 树 WiredTiger KVs 中，基本问题是相似的: 客户端更新会因为数据结构的维护操作而停止<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200803162332.png" alt="20200803162332" loading="lazy"></li>
+<li>LSM KVs 中，吞吐量下降更多地是因为有时更新需要等待压缩完成。当 LSM tree 的第一层满了之后，更新需要等待，直到压缩后空间可用。但是，当 LSM KVs 在现代驱动器上运行时，压缩会遇到 CPU 瓶颈，随着时间的推移，吞吐量方面的性能差异会上升一个数量级，RocksDB 的平均请求数为 63K /s，但在写入停止时下降到 1.5K /s，分析显示，写线程大约有 22% 的时间被搁置，等待内存组件被刷回。因为压缩无法跟上更新的速度，所以内存组件的刷回被延迟。</li>
+<li>为了减小压缩过程中对性能产生的影响，大致有延迟压缩（SOSP17-PebblesDB）或者在系统空闲的时候进行压缩（ATC19-SILK）两种方案，但是这两种方案都不适用于高端 SSD。例如 Optane 刷新内存组件的速度为 2GB/s，延迟压缩超过几秒钟会导致大量请求积压和空间浪费。</li>
+<li>B tree 中性能也会受到用户负载的停顿的影响，因为 evictions 不能足够快地进行导致用户写入被延迟，Stalls 导致吞吐量下降了一个数量级，从 120 Kops/s 下降到 8.5 Kops/s。</li>
+<li>我们的结论是，在这两种情况下，压缩和驱逐等数据结构的维护操作严重干扰用户的工作负载，造成的停顿可能会持续数几秒。因此，<strong>新的 KV 设计应避免数据结构的维护操作</strong>。</li>
+</ul>
+<h2 id="kvell-design-principles">KVell design principles</h2>
+<ul>
+<li>为了有效地利用现代的持久存储设备，KVs 现在需要重视 CPU 开销。如下原则将是在现代存储设备上实现高性能 KVs 的关键：
+<ol>
+<li>Share nothing.
+<ul>
+<li>在 KVell 中，是指支持并行性和最小化 KV 工作线程之间的共享状态，以减少 CPU 开销。</li>
+</ul>
+</li>
+<li>Do not sort on disk, but keep indexes in memory.
+<ul>
+<li>KVell 将未排序的数据保存在磁盘的最终位置，避免了昂贵的重新排序操作</li>
+</ul>
+</li>
+<li>Aim for fewer syscalls, not for sequential I/O.
+<ul>
+<li>KVell 的目标不再是追求顺序访问，因为顺序 IO 的优势不再明显，目标转变为通过批量执行 I/O 来最小化系统调用带来的 CPU 开销</li>
+</ul>
+</li>
+<li>No commit log.
+<ul>
+<li>KVell 不缓冲更新，因此不需要依赖于提交日志，避免了不必要的 I/O。</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<h3 id="share-nothing">Share nothing</h3>
+<ul>
+<li>无论是读还是写，工作线程处理请求时无需和其他线程进行同步，每一个线程处理给定子集的键，并在线程中维护一个私有的数据集合对应管理该子集的键。键的数据结构：
+<ul>
+<li>一个轻量级的内存 B 树索引，用于跟踪键在持久存储中的位置</li>
+<li>I/O 队列，负责高效地存储和检索来自持久化存储设备中的信息</li>
+<li>空闲列表，部分在内存中的磁盘块列表，其中包含用于存储 items 的空闲位置</li>
+<li>页缓存，KVell 使用自己的内部页面缓存，不依赖于 os 级结构。</li>
+</ul>
+</li>
+<li>Scan 是在内存中的 B 树索引上需要最小同步的唯一操作。</li>
+<li>与传统 KV 设计相比，这种无共享方法是一个关键的区别，在传统 KV 设计中，所有或大多数主要数据结构都由所有工作线程共享，传统的方法需要对每个请求进行同步，这是 KVell 完全避免的。分区请求可能会导致负载不平衡，但我们发现，如果使用合适的分区，这种影响很小。</li>
+</ul>
+<h3 id="do-not-sort-on-disk-but-keep-indexes-in-memory">Do not sort on disk, but keep indexes in memory</h3>
+<ul>
+<li>KVell 不会对工作线程的工作集中的数据进行排序，因此可以直接将数据存储在磁盘上，且该位置不会发生改变。因为不要求有序，插入 KV 对的开销相对减小，因为不需要找到对应的位置来执行插入操作，同时能消除为了维护磁盘上的数据结构有序对应的开销，无序情况下，对写操作的性能优化效果很好，可以帮助实现较低的尾延迟。</li>
+<li>在 scan 操作时，连续的 keys 可能不再位于同一个磁盘块中，scan 的性能似乎会有所下降。但实际上对于中等大小的键值对的负载，以及单个键值对大小较大的情况下，scan 的性能并未受到严重的影响。</li>
+</ul>
+<h3 id="aim-for-fewer-syscalls-not-for-sequential-io">Aim for fewer syscalls, not for sequential I/O</h3>
+<ul>
+<li>在 KVell 中所有操作包括 scan 都对磁盘执行随机访问，因为随机访问和顺序访问一样高效，KVell 不会浪费 CPU 周期来强制执行顺序 I/O。</li>
+<li>和 LSM 相似的是，KVell 将请求批处理写到磁盘，不同的是 LSM KVs 批量执行 I/O 且把 KV 对排序是为了利用顺序的磁盘访问能力，而 KVell 批量执行 I/O 的目的是为了减少系统调用的次数，从而减少 CPU 开销。</li>
+<li>批处理其实也是做了一种权衡，在 Introduction 部分中已经简单提及，磁盘需要长时间的保持运行忙碌的状态以实现最大的 IOPS，但是只有在硬件队列中包含的请求少于给定数量时，才会以亚毫秒级的延迟响应（如 Optane 要求 256 个 I/O 请求）。一个高效的系统需要把足够的请求发送给磁盘以充分利用磁盘的带宽，但是不能超过队列的最大服务请求数太多，否则可能将导致较高的尾延迟。</li>
+<li>在具有多个磁盘的配置中，每个 worker 只在一个磁盘上存储文件，这种设计决策对于限制每个磁盘挂起的请求数量非常关键。事实上，因为 worker 彼此之间不会进行通信，所以他们不知道其他 workers 已经发送给磁盘多少个请求。如果 workers 都在一个磁盘上存储数据，然后一个磁盘对应的请求数量将被限制为 （batch size * 每个磁盘的 workers 数量）。如果 workers 可以访问所有磁盘，然后一个磁盘可能最多处理 （batch size * 所有 workers 的数量）</li>
+<li>因为请求是根据它们的键分配给 worker 的，而且 worker 只访问一个磁盘，所以可以设计一个工作负载，主要访问一个磁盘上的数据，而让其他磁盘空闲。在表现出倾斜行为的工作负载中，数据倾斜被内部页面缓存吸收。因此，大多数负载不平衡不会导致磁盘I/O。</li>
+</ul>
+<h3 id="no-commit-log">No commit log</h3>
+<ul>
+<li>KVell 只有在更新操作被持久化到磁盘上的最终位置才确认更新完成，而不依赖于 commit log。一旦更新被提交给工作线程，它将在下一个 I/O 批处理中持久化到磁盘上。移除 commit log 允许 KVell 仅将磁盘带宽用于有用的客户机请求处理。</li>
+</ul>
+<h2 id="kvell-implementation">KVell implementation</h2>
+<ul>
+<li>尽管 KVell 的设计看起来很简单粗暴，但其实实现起来还是很复杂的。</li>
+<li>源码地址：https://github.com/BLepers/KVell</li>
+</ul>
+<h3 id="client-operations-interface">Client operations interface</h3>
+<ul>
+<li>实现了和 LSM KVs 一样的核心接口，
+<ul>
+<li>写 <code>Update(k, v)</code>。Value 和 Key 是组合在一起的，只有 Value 持久化到了磁盘上才会返回操作成功。</li>
+<li>读 <code>Get(k)</code></li>
+<li>扫描(范围查询) <code>scan(k1, k2)</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="on-disk-data-structures">On-disk data structures</h3>
+<ul>
+<li>为了避免碎片化，在相同大小范围内的 KV 对会被存储在相同的文件中，这些文件称之为 <em>slab</em>。KVell 以块的粒度访问 slabs，在论文中的机器上使用 4KB 大小的页。</li>
+<li>如果 KV 对比页小（即好几个 KV 对才能填充满一个页），KVell 用时间戳、键大小和值大小作为 slab 中的 KV 项的前缀。如果比页大，在磁盘上每个块的开头都有一个时间戳头。</li>
+<li>对于小于页面大小的项，将在适当的位置进行就地更新。大于页面的项的更新，会把更新操作追加到 slab 然后写一个 tombstone 来标识原有的项所在的位置。当改变 KV 项的大小，KVell 首先将更新的项写入到新的 slab，然后删除旧的 slab 里对应的项。</li>
+</ul>
+<h3 id="in-memory-data-structures">In-memory data structures</h3>
+<h4 id="index">Index</h4>
+<ul>
+<li>KVell 依赖于快速而轻量级的内存索引，这些索引具有可预测的插入和查找时间来查找磁盘上项的位置。KVell 为每个 worker 使用一个内存中的 B 树来存储磁盘上键值对的位置。Items 根据其键(前缀)建立索引。我们使用前缀而不是哈希来保持范围扫描的键的顺序。B-tree 在磁盘上存储比较大的 items 性能较差，但是如果 item 较小且数据大多都能装在内存中的话性能就很好。KVell 利用这个特性，就只使用 B 树存储查找信息(前缀和位置信息占13B)</li>
+<li>KVell 树实现平均每个 KV 项大约使用 19B 的空间，存储对应的前缀/地址信息/B tree 结构，1.7G RAM 可以存储 100M 项。YCSB 负载（1KB 大小的项）下，索引大概占据数据库总大小的 1.7%，这样的比例是可以接受的。KVell 目前不显式地支持将 B 树的一部分刷回到磁盘，但是 B 树数据是从 mmap-ed 文件中分配的，可以由内核以页的形式置换出去。</li>
+</ul>
+<h4 id="page-cache">Page Cache</h4>
+<ul>
+<li>KVell 维护自己的内部页面缓存，以避免从持久存储中获取频繁访问的页面。缓存的页面大小是一个系统参数。页面缓存会记住哪些页面缓存在索引中，并按照 LRU 顺序从缓存中回收页面。</li>
+<li>确保索引中的查找和插入具有最小的 CPU 开销对于获得良好的性能至关重要。我们的第一个页面缓存实现使用快速<code>uthash</code> 哈希表作为索引。但是，当页面缓存很大时，散列中的插入可能会花费高达 100ms 的时间(增长散列表的时间)，从而提高了尾部延迟。切换到 B 树可以消除这些延迟峰值。</li>
+</ul>
+<h4 id="free-list">Free list</h4>
+<ul>
+<li>当从一个 slab 中删除一个项时，它在该 slab 中的位置将插入到每个 slab 的内存堆栈中，我们称之为 slab 的空闲列表。然后在磁盘上的 item 位置写入一个 tombstone。为了限制内存的使用，内存中只保留最近 N 个空闲的位置，在本文的例子中 N 被设置为 64。其目标是限制内存使用，同时保持在不需要额外磁盘访问的情况下重用每批 I/O 的多个空闲 spots 的能力。</li>
+<li>当第 N+1 项被释放了，KVell 使其磁盘 tombstone 指向第一个释放的位置，然后 KVell 从内存堆栈中删除第一个被释放的位置，并插入第 N + 1 个被释放的位置，当第 N + 2 个项被释放，磁盘 tombstone 指向第二个空闲位置。简而言之，KVell 维护 N 个独立的栈，这些栈的头驻留在内存中，剩余部分驻留在磁盘上。允许 KVell 重用每批 I/O 最多 N 个空闲点，如果只有一个栈，KVell 就必须从磁盘上依次读取 N 个 tombstone，以找到下一个被释放的 N 个位置。</li>
+</ul>
+<h3 id="efficiently-performing-io">Efficiently performing I/O</h3>
+<ul>
+<li>KVell 依赖 Linux AIO 提供的异步 I/O API 来发送请求到磁盘，最多批量处理 64 requests。通过批处理，KVell 能平摊多个客户端请求对应的系统调用的开销。我们选择使用 Linux AIO 是因为其提供了在一个系统调用里执行多个 I/Os 的方法。我们估计，如果这样的调用在同步 I/O API中可用，性能将大致相同</li>
+<li>我们没有采用两种常用的执行 I/O 的方法：
+<ul>
+<li>依赖于操作系统页缓存的 mmap （RocksDB 采用的）</li>
+<li>通过 direct I/O 标识的读写系统调用来执行 （如 TokuMX 采用的）</li>
+</ul>
+</li>
+<li>这两种技术的效率都不如使用 AIO 接口， 如下表所示，展示了在 Optane 上的不同系统调用对应随机写 4K 的块（对设备 read-modify-write）的最大 IOPS，访问的数据集是 RAM 大小的三倍。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200804112115.png" alt="20200804112115" loading="lazy"></li>
+<li>表中所示第一种方式依赖于操作系统级别的页缓存，在单线程的情况下，这种方法的性能不是最优的，因为当发生页中断时，它一次只能发出一个磁盘读取，此外，脏页只定期刷新到磁盘，这在大多数情况下会导致次优化的队列深度，然后是 I/Os 的爆发，当数据集不能完全装入内存时，内核就不得不从进程的虚拟地址空间中对置换出的页进行 map 和 unmap，将导致严峻的 CPU 开销。对于多线程，在刷新 LRU 时，页面缓存会受到 locking 开销以及系统使远程核的 TLB 项失效的速度的影响。实际上，当一个页面从虚拟地址空间中取消映射时，需要在所有访问过该页面的核上使虚拟到物理的映射失效，从而导致 IPI 通信的巨大开销。</li>
+<li>第二种方式是使用 direct I/O。但是，当请求以同步方式完成时，direct I/O 读/写系统调用不会填满磁盘队列，因为没有必要处理复杂的从虚拟地址空间映射和取消映射页面的逻辑，该技术的性能优于 mmap 方法。</li>
+<li>相反，批处理 I/O 每个批处理只需要一个系统调用，并允许 KVell 控制设备队列长度，以实现低延迟和高带宽。</li>
+<li>尽管理论上 I/O 批处理技术可以应用于 LSM 和 B 树 KVs，但实现将需要很大的努力。在 B 树中，不同的操作可能会对 I/O 产生冲突的影响(例如，由插入引起的叶的分裂，然后是两个叶的合并)。此外，数据可能由于重新排序而在磁盘上移动，这也使得异步批处理请求难以实现。写请求的批处理已经通过内存组件在 LSM KVs 中实现，然而，批处理略微增加了读取路径的复杂性，因为 workers 必须确保所有要读的文件没有被压缩线程删除。</li>
+</ul>
+<h3 id="client-operation-implementation">Client operation implementation</h3>
+<ul>
+<li>如图所示算法展示了单页 KV 对的处理。当一个请求访问该系统时，首先根据其 Key 分配给一个 worker。Worker 线程执行磁盘 I/O 并处理客户端请求的逻辑。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200804151249.png" alt="20200804151249" loading="lazy"></li>
+</ul>
+<h4 id="getk">Get(k)</h4>
+<ul>
+<li>Get 操作主要包含从索引中读取到对应的磁盘上的地址和读取到对应的页。如果页已经被缓存，没有必要访问持久的存储，直接同步的返回对应的 value。如果未被缓存，则相应地由 worker 将请求入队到 I/O 请求队列中异步执行。</li>
+</ul>
+<pre><code class="language-C">17 case GET :
+18   if (!location || page. contains_data)
+19     callback (..., page) // synchronous call
+20   else
+21     read_async (page , callback ) // enqueue I/O
+22   break;
+</code></pre>
+<h4 id="updatekv">Update(k,v)</h4>
+<ul>
+<li>更新一个 KV 对的操作主要包含：首先读取到对应的页（即 key 存储在的页），修改值，然后将页写回磁盘。删除一个 KV 对其实就是将一个 tombstone 写入并将该项对应的位置添加到 slab 空闲列表中。当写入新的 KV 对时，空闲的位置得以重用，如果没有空闲位置则进行追加写。KVell 只在更新的项完全持久化到磁盘后确认更新已经完成（<code>io_getevents</code> 系统调用通知我们，与更新对应的磁盘写操作已经完成）脏数据会被立即刷新到磁盘，因为 KVell 的页面缓存不用于缓冲区更新，因此 KVell 比起其他 KVs 提供了更强的持久性保证。比如，RocksDB 只在 commit log 同步到磁盘的粒度上保证持久性，且通常同步操作只会在一定数量的更新之后才执行。</li>
+</ul>
+<pre><code class="language-C">24 case UPDATE :
+25   file = get_file_based_on_size ((k,v))
+26   if (!location)
+27     ... // asynchronously add item in file
+28   else if(location. file != file) // size changed
+29     ... // delete from old slab , add in new slab
+30   else if (!page. contains_data) // page is not cached
+31     // read data asynchronously first...
+32     get ({ (k,v), UPDATE , callback });
+33   else // ...then update &amp; flush page asynchronously
+34     update cached page
+35     write_async (location , callback )
+36
+37 events = get processes I/O (io_getevents async I/O)
+38 foreach ( e in events)
+39 callback (..., e.page)
+</code></pre>
+<h4 id="scank1k2">Scan(k1,k2)</h4>
+<ul>
+<li>范围查询操作只要包含：从索引中获取 keys 的位置，然后读取到对应的页。为了得到 keys list，需要扫描整个索引（线程依次锁定、扫描和解锁所有 workers 的索引，最后合并结果以获得一个要从 KV 读取的键列表）。读取到键后使用 <code>Get()</code> 命令直接根据索引中存储的物理位置访问磁盘进行查询。</li>
+<li>范围查询是唯一要求线程间共享的操作，KVell 返回与扫描触及的每个键相关联的最新值。相比之下，RocksDB 和WiredTiger 都在 KV 快照上执行扫描。</li>
+</ul>
+<h3 id="failure-model-and-recovery">Failure model and recovery</h3>
+<ul>
+<li>KVell 的当前实现为无故障操作进行了优化。当 crash 时，所有的 slabs 会被扫描并重建内存中的索引。即使扫描使顺序磁盘带宽最大化，在非常大的数据集上恢复仍然需要几分钟。</li>
+<li>如果某一项在磁盘上出现了两次（故障发生在了将某个 KV 对从一个 slab 迁移到另一个 slab 时），只有最新的项被保存在了内存索引中，且另一项对应的位置也已经被插入到空闲列表中。如果该项大于块大小，KVell 使用时间戳来丢弃只被部分更新了的项。</li>
+<li>KVell 是针对于可以支持 4KB 页的原子写入的设备设计的。通过避免对页面进行就地修改，在新页面中写入新值，然后在第一次写入操作完成后在 slab 的空闲列表中添加旧位置，可以解除该约束。</li>
+</ul>
+<h2 id="evaluation">Evaluation</h2>
+<h3 id="goals">Goals</h3>
+<ul>
+<li>我们用各种生产和合成工作负载来评估 KVell，并将其与最先进的 KVs 进行比较。评估开始回答以下问题：
+<ul>
+<li>KVell 对比现有的运行在现代 SSD 上的 KVs 在读写以及是扫描的吞吐量、性能波动和尾延迟情况表现如何？</li>
+<li>KVell 在大型数据库和生产环境中的工作负载下表现如何？</li>
+<li>在超出其设计范围的工作负载中使用 KVell 的利弊和限制是什么(小型项目、内存限制极端的环境和较旧的驱动器)？</li>
+</ul>
+</li>
+</ul>
+<h3 id="experimental-setting">Experimental setting</h3>
+<ul>
+<li><strong>Hardware</strong>：
+<ul>
+<li><strong>Config-SSD</strong>：32-core 2.4GHz Intel Xeon，128GB of RAM, and a 480GB Intel DC S3500 SSD (2013).</li>
+<li><strong>Config-Amazon-8NVMe</strong>：An AWS i3.metal instance, with 36 CPUs (72 cores) running at 2.3GHz, 488GB of RAM, and 8 NVMe SSD drives of 1.9TB each (brand unknown, 2016 technology).</li>
+<li><strong>Config-Optane</strong>：A 4-core 4.2GHz Intel i7, 60GB of RAM, and a 480GB Intel Optane 905P (2018).</li>
+</ul>
+</li>
+<li><strong>Workloads</strong>:
+<ul>
+<li>YCSB：测试使用了 uniform 和 zipfian 的请求分布。KV 项大小为 1024B，总的数据集大小分别为 100GB（小规模）和 5TB（大规模）<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201202172113.png" alt="20201202172113" loading="lazy"></li>
+<li>two production workloads from Nutanix：两个写敏感负载，write:read:scan 57:41:2，KV 项大小在 250B 到 1K 之间，中位数为 400B。数据集大小总的为 256GB，两个负载之间的区别在于数据的倾斜。Production Workload 1 更接近于 uniform 的分布， Production Workload 2 更倾斜。</li>
+</ul>
+</li>
+<li><strong>Existing KVs</strong>：
+<ul>
+<li>LSM：RocksDB 和 PebblesDB</li>
+<li>B+ tree: TokuMX 和 WiredTiger</li>
+</ul>
+</li>
+<li><strong>System configuration</strong>：使用 cgroups 为所有的系统限制了相同大小的内存，即数据集大小的三分之一，确保从内存和持久存储同时为请求提供服务。当数据库大于 RAM 大小的三倍的时候，将不再使用 cgroups。
+<ul>
+<li>对于 B Tree，块大小设置为 4KB</li>
+<li>LSM：5 levels 和两个 128MB 的内存组件，WAL Buffer 1MB</li>
+</ul>
+</li>
+</ul>
+<h3 id="results-in-the-main-experimental-setting">Results in the main experimental setting</h3>
+<h4 id="throughput">Throughput</h4>
+<ul>
+<li><strong>Write-intensive workload (YCSB A and F)</strong>：
+<ul>
+<li>TokuMX 15x WiredTiger and RocksDB by 8× and PebblesDB by 5.8× on the YCSB A workload。
+<ul>
+<li>该负载下未缓存的 read 导致一次 I/O，缓存了的读导致 0 次 I/O，未缓存的写导致 2 次I/O（1 read + 1 write），缓存了的写导致一次 I/O。因为页缓存大约未数据集的 1/3，所以平均一次请求大约需要 1.17 I/Os，意味着最大理论吞吐量为 500K IOPS/1.17 = 428K requests/s。而 KVell 的平均吞吐量约为 420K，因此利用了纯设备带宽的 98%，且没有被 CPU 限制住。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200804155129.png" alt="20200804155129" loading="lazy"></li>
+<li>在这个工作负载中，KVell 将 20% 的时间花在由页面缓存和内存中索引完成的 B树查找上，20% 的时间花在 I/O 函数上，60% 的时间花在等待上。</li>
+</ul>
+</li>
+<li>LSM KVs 被压缩的开销给限制住，WiredTiger 被日志的争用给限制住（大约消耗 50% 的时钟周期），TokuMX 被共享数据结构的争用和不必要的 buffering 给限制住（大约消耗 50% 的时钟周期）</li>
+</ul>
+</li>
+<li><strong>Read-intensive workloads (YCSB B, C, D)</strong>
+<ul>
+<li>KVell outperforms existing KVs by 2.2× on YCSB B and 2.7× on YCSB C。接近完全利用磁盘的 IOPS。</li>
+<li>YCSB-C KVell 花费 40% 的时间查询，20% 的时间执行 I/O，40% 的时间等待。</li>
+<li>在这些工作负载中，现有 KVs 的执行不是最优的，因为它们共享缓存，或者因为它们没有将读请求批处理到磁盘(每个读一个系统调用)。例如，RocksDB 将 41% 的时间花费在 pread() 系统调用上，并且是受 CPU 限制的。</li>
+</ul>
+</li>
+<li><strong>Scan workloads (YCSB E)</strong>
+<ul>
+<li>KVell 在扫描密集型工作负载中表现良好，在 uniform 和 Zipfian key 的分布中都是如此。注意，为了公平起见，我们修改了 YCSB 工作负载，以便它在 KVell 中以随机顺序插入键。默认情况下，YCSB 按顺序插入键。</li>
+<li>Zipfian 下 KVell 领先至少 25%，因为负载是倾斜的，热数据被缓存在 KVell 的缓存中。shared-nothing 和低开销的缓存实现都给予了 KVell 优势。</li>
+<li>uniform 下，KVell 由于 PebblesDB 5x，WiredTiger by 33%，和 RocksDB 相近。因为 KVell 数据在磁盘上并非有序，每个扫描项平均就要访问一个页面。相反 RocksDB 下数据有序存储，大概访问每页上的三个条目（页大小为 4K，每个 KV 项为 1024B）。因此，RocksDB 的最大吞吐量大约是 KVell 的三倍，如图 7 显示了吞吐量的时间线上的变化。RocksDB 最大吞吐量约为 55Kops/s，对比 KVell 的 18Kops/s。然而，RocksDB 的维护操作会干扰客户端负载，导致大的波动，而 KVell 的吞吐量保持稳定在 15Kops/s 左右。因此，平均而言，RocksDB 和 KVell 的表现相似。</li>
+</ul>
+</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200804155059.png" alt="20200804155059" loading="lazy"></figure>
+<h4 id="throughput-over-time">Throughput over time</h4>
+<ul>
+<li>下图展示了各种系统吞吐量随着时间的变化，每秒测一次吞吐量，KVell 除了提供更高的平均吞吐量以外，还不会遭受因为维护数据结构带来的性能波动。对于其他存储系统，性能下降的都很频繁。</li>
+<li>相比之下，KVell 的性能在一个短暂的爬升阶段(页面缓存被填满的时间)之后保持不变。KVell 在 YCSB A 上至少保持 400K/s 的请求，在过渡阶段之后保持 15K/s 的扫描。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200804155146.png" alt="20200804155146" loading="lazy"></li>
+</ul>
+<h4 id="tail-latency">Tail latency</h4>
+<ul>
+<li>下表展示了最大 99th 尾延迟，LSM 最大尾延迟 9s，B Tree 3s，这是由于维护操作直接影响了LSM和B树KVs的尾部延迟。相比之下，KVell提供了较低的最大延迟(3.9ms)，同时提供了强大的持久性保证。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201202223036.png" alt="20201202223036" loading="lazy"></li>
+</ul>
+<h4 id="alternative-configurations-and-workloads">Alternative configurations and workloads</h4>
+<ul>
+<li>下图展示了对于 uniform 负载下在 NVMe SSD 上的 YCSB 平均吞吐量，所有的系统都配备了一个 30G 的缓存，大约占 1/3 的数据库大小
+<ul>
+<li>KVell outperforms RocksDB by 6.7× and PebblesDB by 8×, TokuMX by 13× and WiredTiger by 9.3× on average on YCSB A</li>
+<li>对于 YCSB-E，KVell 略优于 RocksDB，但比其他系统更快，虽然结果和 Optane 是类似的，但是我们可以看到 KVell 和竞争对手之间的性能差距是如何拉大的，因为与其他受 CPU 限制的系统相比，KVell能够更好地利用磁盘。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201202231220.png" alt="20201202231220" loading="lazy"></li>
+</ul>
+</li>
+<li>下图展示了两个生产环境中的真实负载下的性能表现，结果和 YCSB 其实都是类似的</li>
+<li>图 B 显示了使用更大数据量的 YCSB 负载下的性能表现<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200804155335.png" alt="20200804155335" loading="lazy"></li>
+</ul>
+<h3 id="trade-offs-and-limitations">Trade-offs and Limitations</h3>
+<h4 id="average-latency">Average latency</h4>
+<ul>
+<li>KVell 分批提交 I/O 请求。在饱和 IOPS(大批次)和最小化平均延迟(小批次)之间进行权衡。</li>
+</ul>
+<h4 id="impact-of-item-size">Impact of item size</h4>
+<ul>
+<li>项的大小不会影响 Get() 和 Update()请求未缓存的项的性能。但是，对于保持条目有序的 KVs，条目大小会影响扫描速度。</li>
+<li>图10 显示了 RocksDB 的平均吞吐量，RocksDB 在执行压缩时，KVell 在 YCSB E 上改变项目大小(扫描为主)。</li>
+<li>由于KVell不对磁盘上的项进行排序，因此无论项的大小如何，它平均为每个扫描项读取一个4KB的页面，并且性能稳定。对于小条目，RocksDB优于KVell，因为它读取的页面比KVell少(64B条目少64倍)。随着条目大小的增长，保持条目排序的好处就会减少。</li>
+<li>在运行compactions时，对于所有的项大小，RocksDB只能维持其吞吐量的一小部分。KVell 没有专门针对小 KV 设计，在所有配置下提供了可预测的性能。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200804155352.png" alt="20200804155352" loading="lazy"></li>
+</ul>
+<h4 id="memory-size-impact">Memory size impact</h4>
+<ul>
+<li>当索引无法装入RAM时，就会成为瓶颈</li>
+<li>KVell只支持将索引部分刷新到磁盘，以避免索引超过可用RAM时崩溃，但没有优化到在这种情况下工作。在实践中，索引的内存开销非常低，因此它们可以在RAM中满足大多数工作负载(例如，对于YCSB来说，100GB数据集的索引为1.7GB)。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201202233119.png" alt="20201202233119" loading="lazy"></li>
+</ul>
+<h4 id="older-drives-config-ssd">Older drives (Config-SSD)</h4>
+<ul>
+<li>在Config-SSD上，KVell在读写方面与LSM KVs相当，但是在扫描方面提供了相对较低的平均性能。在旧的驱动器上，花费用于优化磁盘访问的 CPU 周期平均来说是有益的，而且没有系统此时是受 CPU 限制的。压缩仍然会争夺磁盘资源，造成延迟峰值(18s以上)和吞吐量波动。KVell 的延迟仅受磁盘本身延迟的限制。因此，在旧的驱动器上使用KVell和LSM KVs是一种权衡:如果稳定性和延迟的可预测性很重要，那么KVell是比LSM更好的选择，但是对于扫描为主的工作负载，LSM KVs在旧驱动器上提供了更高的平均性能。</li>
+</ul>
+<h4 id="recovery-time">Recovery time</h4>
+<ul>
+<li>KVell的恢复时间取决于数据库的大小，而其他系统的恢复时间主要取决于提交日志的最大大小。对于所有系统，我们都使用默认的提交日志配置，并测量YCSB数据库上的恢复时间(100M Key，100GB)。我们通过在YCSB A工作负载中间终止数据库来模拟崩溃，并测量Config-Amazon-8NVMe上数据库的恢复时间。</li>
+<li>KVell 需要 6.6 秒扫描数据库并从崩溃中恢复，最大限度地提高磁盘带宽。RocksDB和WiredTiger平均恢复时间分别为18s和24s。这两个系统主要花费时间回放来自提交日志的查询和重新构建索引。尽管KVell为无故障操作进行了优化，必须扫描整个数据库才能从崩溃中恢复，它的恢复时间比现有系统的恢复时间要短。</li>
+</ul>
+<h2 id="related-work">Related Work</h2>
+<h3 id="kvs-for-ssds">KVs for SSDs</h3>
+<ul>
+<li>WiscKey, HashKV</li>
+<li>PebblesDB, TRIAD</li>
+<li>SlimDB, NoveLSM, PapyrusKV, NVMRocks</li>
+<li>BetrFS, TokuMX</li>
+<li>SILT, Udepot, Tucana, Kreon</li>
+<li>LOCS, BlueCache, NVMKV</li>
+</ul>
+<h3 id="kvs-for-byte-addressable-persistent-memory">KVs for byte-addressable persistent memory</h3>
+<ul>
+<li>HiKV, Bullet, SLM-DB</li>
+</ul>
+<h3 id="kvs-for-in-memory-data-stores">KVs for in-memory data stores</h3>
+<ul>
+<li>MICA, Minos, Masstree, RAMCloud</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<ul>
+<li>现有的 KV 存储设计在老一代 SSD 上是有效的，但在现代 SSD 上执行不是最优的。我们已经展示了一种依赖于 share nothing 架构、磁盘上未排序的数据和随机 I/Os 批处理的流线化方法在快速驱动器上的性能优于现有的 KVs，甚至对于扫描工作负载也是如此。我们已经在 KVell 中建立了这些想法的原型。KVell 提供了高且可预测的性能和强大的延迟保证。</li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200808150414.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/PinK/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-08-07">2020-08-07</time>
+                  <h4 class="title white no-margin">PinK: High-speed In-storage Key-value Store with Bounded Tails</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/the-log-structured-merge-tree-lsm-tree.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/tiny-kv-tutorial/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-07-30">2020-07-30</time>
+                  <h4 class="title white no-margin">TinyKV 学习笔记</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

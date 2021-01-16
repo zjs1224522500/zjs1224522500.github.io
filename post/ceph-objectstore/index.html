@@ -1,0 +1,2068 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ceph ObjectStore | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+Ceph OSD 后端存储实现架构和源码分析
+结合 Ceph 已经实现的存储引擎，考虑实现新的后端存储
+理解 ObjectStore 和 Ceph IO 流的调用关系
+
+
+
+Review
+
+源码目录结构
+
+
+IO 流
+
+librados..." />
+    <meta name="keywords" content="Ceph" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://blog.shunzi.tech/post-images/ceph-objectstore.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-02-25"><i class="fa fa-calendar"></i><span class="lately">1 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/ceph-objectstore/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/ceph-objectstore/"> </span>
+              </a>
+              <span id="/ceph-objectstore/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-0 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Ceph ObjectStore</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>Ceph OSD 后端存储实现架构和源码分析</li>
+<li>结合 Ceph 已经实现的存储引擎，考虑实现新的后端存储</li>
+<li>理解 ObjectStore 和 Ceph IO 流的调用关系</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="review">Review</h2>
+<ul>
+<li>源码目录结构<br>
+<img src="https://blog.shunzi.tech/post-images/1582686979801.png" alt="" loading="lazy"></li>
+</ul>
+<h3 id="io-流">IO 流</h3>
+<ul>
+<li>librados -&gt; OSDC -&gt; OSD -&gt; OS -&gt; ObjectStore</li>
+<li>PrimayLogPG 中使用 Objecter 发送 Operation 消息来执行对应的操作</li>
+<li>PrimaryLogPG 执行构造函数时创建了相应的 PGBackend.</li>
+</ul>
+<pre><code>PrimaryLogPG::PrimaryLogPG(OSDService *o, OSDMapRef curmap,
+			   const PGPool &amp;_pool,
+			   const map&lt;string,string&gt;&amp; ec_profile, spg_t p) :
+  PG(o, curmap, _pool, p),
+  pgbackend(
+    PGBackend::build_pg_backend(
+      _pool.info, ec_profile, this, coll_t(p), ch, o-&gt;store, cct)),
+  object_contexts(o-&gt;cct, o-&gt;cct-&gt;_conf-&gt;osd_pg_object_context_cache_count),
+  new_backfill(false),
+  temp_seq(0),
+  snap_trimmer_machine(this)
+{ 
+  recovery_state.set_backend_predicates(
+    pgbackend-&gt;get_is_readable_predicate(),
+    pgbackend-&gt;get_is_recoverable_predicate());
+  snap_trimmer_machine.initiate();
+}
+</code></pre>
+<ul>
+<li>构建 PGBackend 时会根据系统配置的后端存储类型，进行相应的实例化。Ceph 中的后端存储又主要分成 ECBackend 和 ReplicatedBackend，分别使用了纠删码和多副本来保证数据的一致性。在构造 PGBackend 时又相应地指定了 ObjectStore 的存储类型。此处以 ReplicatedBackend 为例。</li>
+<li>读操作直接执行相关函数调用，写操作相应地使用事务进行封装提交</li>
+</ul>
+<pre><code class="language-C++">int ReplicatedBackend::objects_read_sync(
+  const hobject_t &amp;hoid,
+  uint64_t off,
+  uint64_t len,
+  uint32_t op_flags,
+  bufferlist *bl)
+{
+  return store-&gt;read(ch, ghobject_t(hoid), off, len, *bl, op_flags);
+}
+
+int ReplicatedBackend::objects_readv_sync(
+  const hobject_t &amp;hoid,
+  map&lt;uint64_t, uint64_t&gt;&amp;&amp; m,
+  uint32_t op_flags,
+  bufferlist *bl)
+{
+  interval_set&lt;uint64_t&gt; im(std::move(m));
+  auto r = store-&gt;readv(ch, ghobject_t(hoid), im, *bl, op_flags);
+  if (r &gt;= 0) {
+    m = std::move(im).detach();
+  }
+  return r;
+}
+
+void ReplicatedBackend::submit_transaction(
+  const hobject_t &amp;soid,
+  const object_stat_sum_t &amp;delta_stats,
+  const eversion_t &amp;at_version,
+  PGTransactionUPtr &amp;&amp;_t,
+  const eversion_t &amp;trim_to,
+  const eversion_t &amp;min_last_complete_ondisk,
+  const vector&lt;pg_log_entry_t&gt; &amp;_log_entries,
+  std::optional&lt;pg_hit_set_history_t&gt; &amp;hset_history,
+  Context *on_all_commit,
+  ceph_tid_t tid,
+  osd_reqid_t reqid,
+  OpRequestRef orig_op)
+{
+  parent-&gt;apply_stats(
+    soid,
+    delta_stats);
+
+  vector&lt;pg_log_entry_t&gt; log_entries(_log_entries);
+  ObjectStore::Transaction op_t;
+  PGTransactionUPtr t(std::move(_t));
+  set&lt;hobject_t&gt; added, removed;
+  generate_transaction(
+    t,
+    coll,
+    log_entries,
+    &amp;op_t,
+    &amp;added,
+    &amp;removed,
+    get_osdmap()-&gt;require_osd_release);
+  ceph_assert(added.size() &lt;= 1);
+  ceph_assert(removed.size() &lt;= 1);
+
+  auto insert_res = in_progress_ops.insert(
+    make_pair(
+      tid,
+      ceph::make_ref&lt;InProgressOp&gt;(
+	tid, on_all_commit,
+	orig_op, at_version)
+      )
+    );
+  ceph_assert(insert_res.second);
+  InProgressOp &amp;op = *insert_res.first-&gt;second;
+
+  op.waiting_for_commit.insert(
+    parent-&gt;get_acting_recovery_backfill_shards().begin(),
+    parent-&gt;get_acting_recovery_backfill_shards().end());
+
+  issue_op(
+    soid,
+    at_version,
+    tid,
+    reqid,
+    trim_to,
+    min_last_complete_ondisk,
+    added.size() ? *(added.begin()) : hobject_t(),
+    removed.size() ? *(removed.begin()) : hobject_t(),
+    log_entries,
+    hset_history,
+    &amp;op,
+    op_t);
+
+  add_temp_objs(added);
+  clear_temp_objs(removed);
+
+  parent-&gt;log_operation(
+    log_entries,
+    hset_history,
+    trim_to,
+    at_version,
+    min_last_complete_ondisk,
+    true,
+    op_t);
+  
+  op_t.register_on_commit(
+    parent-&gt;bless_context(
+      new C_OSD_OnOpCommit(this, &amp;op)));
+
+  vector&lt;ObjectStore::Transaction&gt; tls;
+  tls.push_back(std::move(op_t));
+
+  parent-&gt;queue_transactions(tls, op.op);
+  if (at_version != eversion_t()) {
+    parent-&gt;op_applied(at_version);
+  }
+}
+</code></pre>
+<h2 id="architecture">Architecture</h2>
+<figure data-type="image" tabindex="1"><img src="https://blog.shunzi.tech/post-images/1582597770208.png" alt="" loading="lazy"></figure>
+<ul>
+<li>无论是哪种后端存储，都主要是通过实现 ObjectStore 所定义的相关接口来实现 IO</li>
+<li>ObjectStore 在现阶段的 Ceph 中主要有两种实现：FileStore，BlueStore</li>
+<li>其中 FileStore 又主要提供了三种文件系统的实现：btrfs，ext4，xfs，（zfs）</li>
+<li>其中 BlueStore 的主要实现又包括 RocksDB 和 BlueFS</li>
+</ul>
+<h2 id="objectstore">ObjectStore</h2>
+<ul>
+<li><code>ObjectStore.h</code> 中定义了相关方法，具体的实现由具体的存储引擎来决定，主要涉及到的方法如下：read、readv、queue_transactions （其中我们将重点关注 read、queue_transactions）</li>
+</ul>
+<pre><code class="language-C++">class ObjectStore {
+protected:
+  std::string path;
+
+public:
+  using Transaction = ceph::os::Transaction;
+
+  CephContext* cct;
+  /**
+   * create - create an ObjectStore instance.
+   * This is invoked once at initialization time.
+   * @param type type of store. This is a std::string from the configuration file.
+   * @param data path (or other descriptor) for data
+   * @param journal path (or other descriptor) for journal (optional)
+   * @param flags which filestores should check if applicable
+   */
+  static ObjectStore *create(CephContext *cct,
+			     const std::string&amp; type,
+			     const std::string&amp; data,
+			     const std::string&amp; journal,
+			     osflagbits_t flags = 0);
+
+  /**
+   * probe a block device to learn the uuid of the owning OSD
+   * @param cct cct
+   * @param path path to device
+   * @param fsid [out] osd uuid
+   */
+  static int probe_block_device_fsid(
+    CephContext *cct,
+    const std::string&amp; path,
+    uuid_d *fsid);
+
+  //...
+  // Transactions Collections. 
+  // Transactions in one collection will be applied in sequence.
+  // Transactions in different collections will be applied in parallel.
+  struct CollectionImpl : public RefCountedObject {
+    const coll_t cid;
+    virtual void flush() = 0;
+    virtual bool flush_commit(Context *c) = 0;
+    //...
+  }
+
+  int queue_transaction(CollectionHandle&amp; ch,
+			Transaction&amp;&amp; t,
+			TrackedOpRef op = TrackedOpRef(),
+			ThreadPool::TPHandle *handle = NULL) {
+    std::vector&lt;Transaction&gt; tls;
+    tls.push_back(std::move(t));
+    return queue_transactions(ch, tls, op, handle);
+  }
+
+  virtual int queue_transactions(
+    CollectionHandle&amp; ch, std::vector&lt;Transaction&gt;&amp; tls,
+    TrackedOpRef op = TrackedOpRef(),
+    ThreadPool::TPHandle *handle = NULL) = 0;
+
+  /**
+   * read_meta - read a simple configuration key out-of-band
+   *
+   * Read a simple key value to an unopened/mounted store.
+   *
+   * Trailing whitespace is stripped off.
+   *
+   * @param key key name
+   * @param value pointer to value std::string
+   * @returns 0 for success, or an error code
+   */
+  virtual int read_meta(const std::string&amp; key,
+			std::string *value);
+
+  /**
+   * read -- read a byte range of data from an object
+   *
+   * Note: if reading from an offset past the end of the object, we
+   * return 0 (not, say, -EINVAL).
+   *
+   * @param cid collection for object
+   * @param oid oid of object
+   * @param offset location offset of first byte to be read
+   * @param len number of bytes to be read
+   * @param bl output ceph::buffer::list
+   * @param op_flags is CEPH_OSD_OP_FLAG_*
+   * @returns number of bytes read on success, or negative error code on failure.
+   */
+   virtual int read(
+     CollectionHandle &amp;c,
+     const ghobject_t&amp; oid,
+     uint64_t offset,
+     size_t len,
+     ceph::buffer::list&amp; bl,
+     uint32_t op_flags = 0) = 0;
+
+  /**
+   * readv -- read specfic intervals from an object;
+   * caller must call fiemap to fill in the extent-map first.
+   *
+   * Note: if reading from an offset past the end of the object, we
+   * return 0 (not, say, -EINVAL). Also the default version of readv
+   * reads each extent separately synchronously, which can become horribly
+   * inefficient if the physical layout of the pushing object get massively
+   * fragmented and hence should be overridden by any real os that
+   * cares about the performance..
+   *
+   * @param cid collection for object
+   * @param oid oid of object
+   * @param m intervals to be read
+   * @param bl output ceph::buffer::list
+   * @param op_flags is CEPH_OSD_OP_FLAG_*
+   * @returns number of bytes read on success, or negative error code on failure.
+   */
+   virtual int readv(
+     CollectionHandle &amp;c,
+     const ghobject_t&amp; oid,
+     interval_set&lt;uint64_t&gt;&amp; m,
+     ceph::buffer::list&amp; bl,
+     uint32_t op_flags = 0) {
+     int total = 0;
+     for (auto p = m.begin(); p != m.end(); p++) {
+       bufferlist t;
+       int r = read(c, oid, p.get_start(), p.get_len(), t, op_flags);
+       if (r &lt; 0)
+         return r;
+       total += r;
+       // prune fiemap, if necessary
+       if (p.get_len() != t.length()) {
+          auto save = p++;
+          if (t.length() == 0) {
+            m.erase(save); // Remove this empty interval
+          } else {
+            save.set_len(t.length()); // fix interval length
+            bl.claim_append(t);
+          }
+          // Remove any other follow-up intervals present too
+          while (p != m.end()) {
+            save = p++;
+            m.erase(save);
+          }
+          break;
+       }
+       bl.claim_append(t);
+     }
+     return total;
+   }
+</code></pre>
+<h3 id="filestore">FileStore</h3>
+<ul>
+<li>PGBackend 端的操作同 BlueStore 一样，区别只在于 FileStore 对相关读写方法实现的区别。</li>
+<li>FileStore 由于支持了多种文件系统作为存储后端，所以又提供了 FileStoreBackend 相关接口，便于各种文件系统提供基于该接口的实现。</li>
+</ul>
+<h4 id="写操作">写操作</h4>
+<ul>
+<li>写操作流程：</li>
+</ul>
+<pre><code class="language-C++">FileStore::queue_transactions
+    do_transactions(tls, op);
+    _op_journal_transactions(tbl, orig_len, op, ondisk, osd_op);
+    FileStore::_do_transaction
+        _write(cid, oid, off, len, bl, fadvise_flags);
+            lfn_open(cid, oid, true, &amp;fd);
+            bl.write_fd(**fd, offset);
+            lfn_close(fd);
+</code></pre>
+<ul>
+<li>写操作实现：</li>
+</ul>
+<pre><code class="language-C++">int FileStore::queue_transactions(CollectionHandle&amp; ch, vector&lt;Transaction&gt;&amp; tls,
+				  TrackedOpRef osd_op,
+				  ThreadPool::TPHandle *handle)
+{
+  Context *onreadable;
+  Context *ondisk;
+  Context *onreadable_sync;
+  ObjectStore::Transaction::collect_contexts(
+    tls, &amp;onreadable, &amp;ondisk, &amp;onreadable_sync);
+
+  if (cct-&gt;_conf-&gt;objectstore_blackhole) {
+    dout(0) &lt;&lt; __FUNC__ &lt;&lt; &quot;: objectstore_blackhole = TRUE, dropping transaction&quot;
+	    &lt;&lt; dendl;
+    delete ondisk;
+    ondisk = nullptr;
+    delete onreadable;
+    onreadable = nullptr;
+    delete onreadable_sync;
+    onreadable_sync = nullptr;
+    return 0;
+  }
+
+  utime_t start = ceph_clock_now();
+
+  OpSequencer *osr = static_cast&lt;OpSequencer*&gt;(ch.get());
+  dout(5) &lt;&lt; __FUNC__ &lt;&lt; &quot;: osr &quot; &lt;&lt; osr &lt;&lt; &quot; &quot; &lt;&lt; *osr &lt;&lt; dendl;
+
+  ZTracer::Trace trace;
+  if (osd_op &amp;&amp; osd_op-&gt;pg_trace) {
+    osd_op-&gt;store_trace.init(&quot;filestore op&quot;, &amp;trace_endpoint, &amp;osd_op-&gt;pg_trace);
+    trace = osd_op-&gt;store_trace;
+  }
+
+  if (journal &amp;&amp; journal-&gt;is_writeable() &amp;&amp; !m_filestore_journal_trailing) {
+    Op *o = build_op(tls, onreadable, onreadable_sync, osd_op);
+
+    //prepare and encode transactions data out of lock
+    bufferlist tbl;
+    int orig_len = journal-&gt;prepare_entry(o-&gt;tls, &amp;tbl);
+
+    if (handle)
+      handle-&gt;suspend_tp_timeout();
+
+    op_queue_reserve_throttle(o);
+    journal-&gt;reserve_throttle_and_backoff(tbl.length());
+
+    if (handle)
+      handle-&gt;reset_tp_timeout();
+
+    uint64_t op_num = submit_manager.op_submit_start();
+    o-&gt;op = op_num;
+    trace.keyval(&quot;opnum&quot;, op_num);
+
+    if (m_filestore_do_dump)
+      dump_transactions(o-&gt;tls, o-&gt;op, osr);
+
+    if (m_filestore_journal_parallel) {
+      dout(5) &lt;&lt; __FUNC__ &lt;&lt; &quot;: (parallel) &quot; &lt;&lt; o-&gt;op &lt;&lt; &quot; &quot; &lt;&lt; o-&gt;tls &lt;&lt; dendl;
+
+      trace.keyval(&quot;journal mode&quot;, &quot;parallel&quot;);
+      trace.event(&quot;journal started&quot;);
+      _op_journal_transactions(tbl, orig_len, o-&gt;op, ondisk, osd_op);
+
+      // queue inside submit_manager op submission lock
+      queue_op(osr, o);
+      trace.event(&quot;op queued&quot;);
+    } else if (m_filestore_journal_writeahead) {
+      dout(5) &lt;&lt; __FUNC__ &lt;&lt; &quot;: (writeahead) &quot; &lt;&lt; o-&gt;op &lt;&lt; &quot; &quot; &lt;&lt; o-&gt;tls &lt;&lt; dendl;
+
+      osr-&gt;queue_journal(o);
+
+      trace.keyval(&quot;journal mode&quot;, &quot;writeahead&quot;);
+      trace.event(&quot;journal started&quot;);
+      _op_journal_transactions(tbl, orig_len, o-&gt;op,
+			       new C_JournaledAhead(this, osr, o, ondisk),
+			       osd_op);
+    } else {
+      ceph_abort();
+    }
+    submit_manager.op_submit_finish(op_num);
+    utime_t end = ceph_clock_now();
+    logger-&gt;tinc(l_filestore_queue_transaction_latency_avg, end - start);
+    return 0;
+  }
+
+  if (!journal) {
+    Op *o = build_op(tls, onreadable, onreadable_sync, osd_op);
+    dout(5) &lt;&lt; __FUNC__ &lt;&lt; &quot;: (no journal) &quot; &lt;&lt; o &lt;&lt; &quot; &quot; &lt;&lt; tls &lt;&lt; dendl;
+
+    if (handle)
+      handle-&gt;suspend_tp_timeout();
+
+    op_queue_reserve_throttle(o);
+
+    if (handle)
+      handle-&gt;reset_tp_timeout();
+
+    uint64_t op_num = submit_manager.op_submit_start();
+    o-&gt;op = op_num;
+
+    if (m_filestore_do_dump)
+      dump_transactions(o-&gt;tls, o-&gt;op, osr);
+
+    queue_op(osr, o);
+    trace.keyval(&quot;opnum&quot;, op_num);
+    trace.keyval(&quot;journal mode&quot;, &quot;none&quot;);
+    trace.event(&quot;op queued&quot;);
+
+    if (ondisk)
+      apply_manager.add_waiter(op_num, ondisk);
+    submit_manager.op_submit_finish(op_num);
+    utime_t end = ceph_clock_now();
+    logger-&gt;tinc(l_filestore_queue_transaction_latency_avg, end - start);
+    return 0;
+  }
+
+  ceph_assert(journal);
+  //prepare and encode transactions data out of lock
+  bufferlist tbl;
+  int orig_len = -1;
+  if (journal-&gt;is_writeable()) {
+    orig_len = journal-&gt;prepare_entry(tls, &amp;tbl);
+  }
+  uint64_t op = submit_manager.op_submit_start();
+  dout(5) &lt;&lt; __FUNC__ &lt;&lt; &quot;: (trailing journal) &quot; &lt;&lt; op &lt;&lt; &quot; &quot; &lt;&lt; tls &lt;&lt; dendl;
+
+  if (m_filestore_do_dump)
+    dump_transactions(tls, op, osr);
+
+  trace.event(&quot;op_apply_start&quot;);
+  trace.keyval(&quot;opnum&quot;, op);
+  trace.keyval(&quot;journal mode&quot;, &quot;trailing&quot;);
+  apply_manager.op_apply_start(op);
+  trace.event(&quot;do_transactions&quot;);
+  int r = do_transactions(tls, op);
+
+  if (r &gt;= 0) {
+    trace.event(&quot;journal started&quot;);
+    _op_journal_transactions(tbl, orig_len, op, ondisk, osd_op);
+  } else {
+    delete ondisk;
+    ondisk = nullptr;
+  }
+
+  // start on_readable finisher after we queue journal item, as on_readable callback
+  // is allowed to delete the Transaction
+  if (onreadable_sync) {
+    onreadable_sync-&gt;complete(r);
+  }
+  apply_finishers[osr-&gt;id % m_apply_finisher_num]-&gt;queue(onreadable, r);
+
+  submit_manager.op_submit_finish(op);
+  trace.event(&quot;op_apply_finish&quot;);
+  apply_manager.op_apply_finish(op);
+
+  utime_t end = ceph_clock_now();
+  logger-&gt;tinc(l_filestore_queue_transaction_latency_avg, end - start);
+  return r;
+}
+</code></pre>
+<h4 id="读操作">读操作</h4>
+<ul>
+<li>读操作流程：</li>
+</ul>
+<pre><code> FileStore::read
+     lfn_open(cid, oid, false, &amp;fd);
+     safe_pread(**fd, bptr.c_str(), len, offset);
+     lfn_close(fd);
+</code></pre>
+<ul>
+<li>Read 函数实现如下：其中 lfnopen 是从文件句柄缓冲池中拿句柄信息，对应 POSIX 接口中的 open 系统调用，safe_pread 则是对 pread 系统调用的封装。</li>
+</ul>
+<pre><code class="language-C++">int FileStore::read(
+  CollectionHandle&amp; ch,
+  const ghobject_t&amp; oid,
+  uint64_t offset,
+  size_t len,
+  bufferlist&amp; bl,
+  uint32_t op_flags)
+{
+  int got;
+  tracepoint(objectstore, read_enter, ch-&gt;cid.c_str(), offset, len);
+  const coll_t&amp; cid = !_need_temp_object_collection(ch-&gt;cid, oid) ? ch-&gt;cid : ch-&gt;cid.get_temp();
+
+  dout(15) &lt;&lt; __FUNC__ &lt;&lt; &quot;: &quot; &lt;&lt; cid &lt;&lt; &quot;/&quot; &lt;&lt; oid &lt;&lt; &quot; &quot; &lt;&lt; offset &lt;&lt; &quot;~&quot; &lt;&lt; len &lt;&lt; dendl;
+
+  auto osr = static_cast&lt;OpSequencer*&gt;(ch.get());
+  osr-&gt;wait_for_apply(oid);
+
+  FDRef fd;
+  int r = lfn_open(cid, oid, false, &amp;fd);
+  if (r &lt; 0) {
+    dout(10) &lt;&lt; __FUNC__ &lt;&lt; &quot;: (&quot; &lt;&lt; cid &lt;&lt; &quot;/&quot; &lt;&lt; oid &lt;&lt; &quot;) open error: &quot;
+	     &lt;&lt; cpp_strerror(r) &lt;&lt; dendl;
+    return r;
+  }
+
+  if (offset == 0 &amp;&amp; len == 0) {
+    struct stat st;
+    memset(&amp;st, 0, sizeof(struct stat));
+    int r = ::fstat(**fd, &amp;st);
+    ceph_assert(r == 0);
+    len = st.st_size;
+  }
+
+#ifdef HAVE_POSIX_FADVISE
+  if (op_flags &amp; CEPH_OSD_OP_FLAG_FADVISE_RANDOM)
+    posix_fadvise(**fd, offset, len, POSIX_FADV_RANDOM);
+  if (op_flags &amp; CEPH_OSD_OP_FLAG_FADVISE_SEQUENTIAL)
+    posix_fadvise(**fd, offset, len, POSIX_FADV_SEQUENTIAL);
+#endif
+
+  bufferptr bptr(len);  // prealloc space for entire read
+  got = safe_pread(**fd, bptr.c_str(), len, offset);
+  if (got &lt; 0) {
+    dout(10) &lt;&lt; __FUNC__ &lt;&lt; &quot;: (&quot; &lt;&lt; cid &lt;&lt; &quot;/&quot; &lt;&lt; oid &lt;&lt; &quot;) pread error: &quot; &lt;&lt; cpp_strerror(got) &lt;&lt; dendl;
+    lfn_close(fd);
+    return got;
+  }
+  bptr.set_length(got);   // properly size the buffer
+  bl.clear();
+  bl.push_back(std::move(bptr));   // put it in the target bufferlist
+
+#ifdef HAVE_POSIX_FADVISE
+  if (op_flags &amp; CEPH_OSD_OP_FLAG_FADVISE_DONTNEED)
+    posix_fadvise(**fd, offset, len, POSIX_FADV_DONTNEED);
+  if (op_flags &amp; (CEPH_OSD_OP_FLAG_FADVISE_RANDOM | CEPH_OSD_OP_FLAG_FADVISE_SEQUENTIAL))
+    posix_fadvise(**fd, offset, len, POSIX_FADV_NORMAL);
+#endif
+
+  if (m_filestore_sloppy_crc &amp;&amp; (!replaying || backend-&gt;can_checkpoint())) {
+    ostringstream ss;
+    int errors = backend-&gt;_crc_verify_read(**fd, offset, got, bl, &amp;ss);
+    if (errors != 0) {
+      dout(0) &lt;&lt; __FUNC__ &lt;&lt; &quot;: &quot; &lt;&lt; cid &lt;&lt; &quot;/&quot; &lt;&lt; oid &lt;&lt; &quot; &quot; &lt;&lt; offset &lt;&lt; &quot;~&quot;
+	      &lt;&lt; got &lt;&lt; &quot; ... BAD CRC:\n&quot; &lt;&lt; ss.str() &lt;&lt; dendl;
+      ceph_abort_msg(&quot;bad crc on read&quot;);
+    }
+  }
+
+  lfn_close(fd);
+
+  dout(10) &lt;&lt; __FUNC__ &lt;&lt; &quot;: &quot; &lt;&lt; cid &lt;&lt; &quot;/&quot; &lt;&lt; oid &lt;&lt; &quot; &quot; &lt;&lt; offset &lt;&lt; &quot;~&quot;
+	   &lt;&lt; got &lt;&lt; &quot;/&quot; &lt;&lt; len &lt;&lt; dendl;
+  if (cct-&gt;_conf-&gt;filestore_debug_inject_read_err &amp;&amp;
+      debug_data_eio(oid)) {
+    return -EIO;
+  } else if (oid.hobj.pool &gt; 0 &amp;&amp;  /* FIXME, see #23029 */
+	     cct-&gt;_conf-&gt;filestore_debug_random_read_err &amp;&amp;
+	     (rand() % (int)(cct-&gt;_conf-&gt;filestore_debug_random_read_err *
+			     100.0)) == 0) {
+    dout(0) &lt;&lt; __func__ &lt;&lt; &quot;: inject random EIO&quot; &lt;&lt; dendl;
+    return -EIO;
+  } else {
+    tracepoint(objectstore, read_exit, got);
+    return got;
+  }
+}
+</code></pre>
+<h3 id="bluestore">BlueStore</h3>
+<h4 id="msst17-测试数据">MSST17 测试数据</h4>
+<ul>
+<li>硬件环境：
+<ul>
+<li>Admin Server x1
+<ul>
+<li>CPU：Intel® Xeon® CPU E5-2640 v3</li>
+<li>Mem：128GB</li>
+</ul>
+</li>
+<li>OSD Server x4
+<ul>
+<li>CPU：Intel® Xeon® CPU E5-2640 v3</li>
+<li>Mem：32 GB</li>
+<li>Storage：
+<ul>
+<li>HGST UCTSSC600 600 GB x4</li>
+<li>Samsung PM1633 960 GB x4</li>
+<li>Intel® 750 series 400 GB x2</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>软件环境：Linux 4.4.43 kernel，Ceph Jewel LTS version (v10.2.5)</li>
+<li>工具：ftrace（可能引入开销导致 Ceph 性能下降），或者修改内核记录写入的扇区数来测试写放大</li>
+<li>负载解释
+<ul>
+<li>Microbenchmark
+<ul>
+<li>首先，我们分析在不同情况下，当我们向RBD发出一个写请求时，WAF如何变化。在默认情况下，整个RBD空间被划分为一组4MiB对象。
+<ul>
+<li>1st write：there is a write to an empty object</li>
+<li>2nd write：there is a write next to the 1ST WRITE</li>
+<li>3rd write：there is a write to the middle of the object leaving a hole between the 2ND WRITE and the current write。（即从 2MB 的位置开始写）</li>
+<li>overwrite：there is an overwrite to the location written by the 1ST WRITE</li>
+</ul>
+</li>
+<li>通过将请求大小从4KiB翻倍到4KiB来重复相同的实验</li>
+</ul>
+</li>
+<li>Long-Term EXPERIMENT
+<ul>
+<li>使用 FIO 生成随机 4K 写到 RBD，周期性地测试 IOPS 和 WAF，对于每个存储后端，我们将所有写请求分类为几个类别，并计算每个类别的 WAF，因为 RBD 常用于虚拟桌面基础设施 VDI，所以写请求通常是随机的，大小从 4K 到 8K 不等，所以我们测试了 4K 写，我们修改内核来记录写入的扇区数来测试写放大
+<ul>
+<li>step1. 安装 ceph，创建 64GB 的 krbd</li>
+<li>step2. 删除页面缓存，调用同步并等待600秒将所有脏数据刷新到磁盘</li>
+<li>step3. 执行 4KiB 随机写操作，队列深度为 128 (QD=128)对 krbd 分区使用 fio，直到总写量达到容量的 90%（即 57.6GB）</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>注意：所有的实验都是先使用 16 HDDs 测试，然后使用 16 SSDs 测试，对于 HDD 队列深度设置为 128 ，使用单个写线程即可让 OSD 饱和，但是对于 SSD 不行，所以使用了 2 个写线程和 128 的队列深度。</li>
+</ul>
+<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201104213144.png" alt="20201104213144" loading="lazy"></figure>
+<h5 id="测试结果">测试结果</h5>
+<p><strong>MicroBenchmark</strong></p>
+<ul>
+<li>基于 XFS 的 FileStore，CephJournal 放在 NVMe SSD 上，数据被分类为：
+<ul>
+<li>Ceph data</li>
+<li>Ceph metadata：因为 Ceph data 和 Ceph metadata 不好区分，所以这里采用的方式是写入 XFS 之前的数据总量减去 Ceph data 的数量（Ceph data 的数量则是在客户端处统计 * 副本数），所以此处的 Ceph metadata 包括了写入 LevelDB 的数据量（即 Metadata Attributes）</li>
+<li>Ceph journal</li>
+<li>File system metadata</li>
+<li>File system journal<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201104214321.png" alt="20201104214321" loading="lazy"></li>
+</ul>
+</li>
+<li>随着请求大小的增大，WAF 下降明显，因为对象的元数据、KV 对、文件系统日志和元数据相对于写入的数据变得更小了，到 4MB 的时候收敛到了大约 6 倍，6 则主要是 3 副本和写前日志 Ceph Journal 引入的双写叠加起来的。
+<ul>
+<li>下表所示的 2nd write 和 3rd write 对应在 2M 和 4M 大小的统计 WAF 系数为空
+<ul>
+<li>是因为对于单个请求大小为 2M 时，1st 写入就已经写入了 2M，2nd 写入和 3rd 写入是等价的，所以此处只记录了 3rd 从 2MB 开始写入。</li>
+<li>而对于单个请求大小为 4MB 时，1st 就已经写满了 4MB 的 RBD 对象大小，所以 2nd 和 3rd 写入无法继续进行，故统计为空。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201104212904.png" alt="20201104212904" loading="lazy"></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>BlueStore 数据被划分为以下类型：
+<ul>
+<li>Ceph data</li>
+<li>Ceph metadata：写到 RocksDB 以及 RocksDB WAL 的数据</li>
+<li>Compaction：RocksDB Compaction 引入的写入</li>
+<li>Zero-filled data：Data filled with zeroes by Ceph OSD daemons。即当写入的 chunk 小于最小分配大小，chunk 中会有空白的部分也就是所说的 holes，使用 0 填充<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201102113703.png" alt="20201102113703" loading="lazy"></li>
+</ul>
+</li>
+<li>3rd write 相比另外两种写操作的写放大更为严重，特别是在小 IO 的时候（小于16KB），因为 BlueStore 默认的最小分配 chunk 大小设置为了 64KB，小 IO 的话对应就需要进行填充（1st 和 2nd 小 IO 之后进行 3rd IO 需要填充前两次 IO 对应的 chunk），当请求大小达到 32KB 的时候，整个 chunk 因为第一次和第二次写入就已经被写满了（32+32），所以就不需要填充数据了，此时填充带来的写放大影响就是最小的。</li>
+<li>当请求大小小于 64KB 的时候，overwrite 的写放大比 1st write 要严重，这是因为如果请求需要部分覆盖现有块，BlueStore 会尝试通过将数据写入 WAL 设备来维护数据一致性，以防止突然断电，如果直接对现有块执行部分覆盖，在写操作被中断的情况下，我们将无法恢复原始数据。</li>
+<li>BlueStore 相比于其他存储后端的写放大表现相对更好是因为没有使用本地文件系统来存储对象数据，减少了写流量，和其他存储后端不一样的是，只要不是部分覆盖写操作的话 BlueStore 就不会有双写的问题，当请求大小大于或等于块（chunk）大小时，这使得 BlueStore 中的 WAF 收敛为3。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201104212928.png" alt="20201104212928" loading="lazy"></li>
+</ul>
+<p><strong>Long-Term EXPERIMENT</strong></p>
+<ul>
+<li>
+<p>FileStore 的 IOPS 曲线和 Ceph Journal 的写流量是比较相近的，因为对于 FIleStore 下的客户端而言，需要等待三个写入请求都被封装成事务写入到日志中才会确认该请求成功写入。</p>
+</li>
+<li>
+<p>HDD 和 SSD 的表现完全不同，HDD 下，IOPS 保持在接近 4000 ops/秒，持续约 1000 秒，但之后会降到 3000 ops/秒以下，直到实验结束。这种性能下降主要是由于 HDD 的速度较慢和文件存储中使用的节流（throttling）机制，开始写入的时候，无其他数据，Ceph 日志首先吸收传入的写事务，所以能够很快确认写入完成，由于 FileStore 一直以只追加的方式将 Ceph 日志写入NVMe SSD，<strong>所以对 HDD 的重写速度赶不上 Ceph 日志的速度</strong>，为了防止延迟骤降，FileStore 会检查日志项中还未刷入 HDD 的数量是否达到阈值然后来决定是否限制来自上层的事务写入（journal_throttle_low_threshold, journal_throttle_high_threshold），当向 HDD 写入了一定的事务之后，取消限制，高性能 Ceph 日志再次快速吸收写请求，直到它又达到阈值，所以会产生周期性的性能波动，写事务经常被限制，IOPS 曲线也会波动。</p>
+</li>
+<li>
+<p>SSD 下的性能表现就相对稳定，实验开始时所写的Ceph日志与实验结束时所写的基本相同，在整个实验过程中，在数量上几乎没有变化。这意味着，装载 XFS 文件系统的底层 SSD 处理排队事务的速度与 Ceph 日志写入的速度一样快<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201104222956.png" alt="20201104222956" loading="lazy"></p>
+</li>
+<li>
+<p>BlueStore 与 FileStore 的一个显著区别是，在实验开始时，会有大量零填充的数据流量。当前 chunk 大小小于最小分配的单元大小时就需要进行填充，零填充的数据量会随着时间的推移而减少，因为对每个块只执行一次零填充操作。</p>
+</li>
+<li>
+<p>因为 BlueStore 按顺序将块分配给原始块设备，在实验开始时零填充的数据将会很快写入完成，即便是在较慢的 HDD 上。但是对于已经分配好的 chunk 进行连续的 4KiB 随机写操作会导致对 HDD 的随机访问，就会让 HDD 的 IOPS 降低，但是相比于 FileStore，IOPS 表现更为稳定。当在 SSD 上运行的时候，实验开始阶段 IOPS 还略有上升，这是因为不像 HDD 那样，初始阶段之后的随机写不会成为 SSD 的瓶颈，因为 SSD 有更好的随机写性能相比于 HDD，IOPS 会随着由零填充数据引起的额外写操作的减少而增加一点</p>
+</li>
+<li>
+<p>当使用 SAS SSD 作为 BlueStore 的主存储时，我们发现作为 RocksDB 和 RocksDB WAL 使用的 NVMe SSD 设备可能会出现瓶颈，因为 SAS SSD 和 NVMe SSD 的性能差异不显著。其中 RocksDB WAL 尤为明显，因为大部分随机的 4K 写将被转换成对于现有的存在的 chunk 的部分覆盖写，此时就需要 BlueStore 将数据保存在 RocksDB WAL 中来保证数据的一致性。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201104223009.png" alt="20201104223009" loading="lazy"></p>
+</li>
+<li>
+<p>由于 FileStore 依赖于外部 Ceph 日志记录，传统的看法是，由于冗余的数据写入 Ceph 日志，它会使 WAF 翻倍，但是下表所示无论是 HDD 还是 SSD，不只是翻倍，而是三倍，这是因为 FileStore 不仅将数据写入日志，还把元数据和其他属性写入了日志。除此以外还会有 journaling of journal 问题，写放大增加了约 4 倍，这意味着文件系统元数据和文件系统日志的数量甚至大于每个OSD服务器中的实际数据大小。</p>
+</li>
+<li>
+<p>对于 BlueStore 无论是 SSD 还是 HDD，由 RocksDB + RocksDB WAL + Compaction 造成的总流量很大，占据了写放大因子的 65.7~69.3%。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201104212249.png" alt="20201104212249" loading="lazy"></p>
+</li>
+<li>
+<p>如下表所示，无论哪种存储后端，对于 HDD，Ceph 的 WAF 很高，从 14.56 到 71.03，考虑到使用了三副本，对于单个 4KB 的写入实质放大为 4.85x ∼ 23.68x，其中 FileStore 的 IOPS 和平均延迟上表现最好，但是尾延迟最差，但 BlueStore 的尾延迟最低，BlueStore 的写放大更大是因为虽然避免了 Ceph Journal 但还是需要对小写进行写前日志的操作来保证一致性。</p>
+</li>
+<li>
+<p>SSD 上 FileStore 仍然表现最好，尾延迟也是如此，主要是因为主要存储变成 SSD 后速度也足够快能够赶上 Ceph Journal 的写入速度，大多数场景下，客户端在写入 Ceph Journal 后就能确认当前操作完成，也一定程度上减小了延迟。</p>
+</li>
+<li>
+<p>BlueStore 似乎是在延迟敏感情况下最有前途的存储后端，特别是在 HDD 用作主存储介质时。SSD 上仍然是 FileStore 表现更好，但是 BlueStore 差距也不大。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201104212705.png" alt="20201104212705" loading="lazy"></p>
+</li>
+</ul>
+<h4 id="sosp19-测试数据">SOSP19 测试数据</h4>
+<ul>
+<li>硬件环境：
+<ul>
+<li>16-node Ceph cluster</li>
+<li>16-core Intel E5-2698Bv3 Xeon 2GHz CPU</li>
+<li>64GiB RAM</li>
+<li>400GB Intel P3600 NVMe SSD</li>
+<li>4TB 7200RPM Seagate ST4000NM0023 HDD</li>
+</ul>
+</li>
+<li>软件环境：
+<ul>
+<li>Linux kernel 4.15 on Ubuntu 18.04</li>
+<li>Ceph Luminous release (v12.2.11)</li>
+</ul>
+</li>
+</ul>
+<h5 id="测试结果-2">测试结果</h5>
+<p><strong>Bare RADOS Benchmarks</strong></p>
+<ul>
+<li>如图所示以队列深度 128 写入的不同对象大小的吞吐量。在稳定状态下，BlueStore的吞吐量比FileStore大50-100%，因为 BlueStore 避免了双写和一致性开销<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201105144753.png" alt="20201105144753" loading="lazy"></li>
+<li>如图显示了对象写入RADOS的95%以上的延迟。BlueStore 的尾部延迟比 FileStore 低一个数量级。此外，正如预期的那样，使用 BlueStore 时，尾部延迟会随着对象大小的增加而增加，而使用 FileStore 时，即使是很小的对象写操作也可能有很高的尾部延迟，这是由于缺乏对写操作的控制</li>
+<li>读取性能在 BlueStore(没有显示)是类似或更好的相比于 FileStore 当 I/O 大小大于 128 KiB;对于较小的 I/O大小，FileStore 更好，因为内核提前读取，BlueStore 无意实现预读。预期在RADOS上实现的应用程序将执行它们自己的预读。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201105145222.png" alt="20201105145222" loading="lazy"></li>
+</ul>
+<p><strong>RADOS Block Device Benchmarks</strong></p>
+<ul>
+<li>对于 I/O 大小大于 BlueStore 的 512 KiB、顺序写和随机写吞吐量平均分别高出 1.7 倍和 2 倍，同样主要是由于避免了重复写，BlueStore 还显示了一个显著更低的吞吐量差异，因为它可以确定地将数据推送到磁盘，另一方面，在 FileStore 中，任意触发的回写与前台对 WAL 的写入冲突，并引入了长请求延迟</li>
+<li>对于中等 I/O 大小(128 512 KiB)，顺序写操作的吞吐量差异会减小，因为XFS在文件存储中屏蔽了重复写操作的部分成本。对于中等 I/O 大小，对 WAL 的写操作不会完全利用磁盘，这样就留下了足够的带宽让另一个写入流通过，并且不会对前台对 WAL 的写入产生很大影响。将数据同步写入到 WAL 后，FileStore 再将其异步写入文件系统。XFS 缓冲这些异步写操作，并在将它们发送到磁盘之前将它们转换为一个大的顺序写操作。XFS 不能对随机写操作执行同样的操作，这就是为什么即使对于中等大小的随机写操作，高吞吐量的差异仍然存在。</li>
+<li>对于小于 64KiB(未显示)的 I/O 大小，BlueStore 的吞吐量比 FileStore 高 20%。对于这些 I/O 大小，BlueStore 执行延迟写操作，首先将数据插入 RocksDB，然后异步覆盖对象数据以避免碎片。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201105145620.png" alt="20201105145620" loading="lazy"></li>
+</ul>
+<h4 id="为什么使用-bluestore">为什么使用 BlueStore</h4>
+<ul>
+<li><strong>I/O 放大严峻</strong>：放大主要包括两个方面：在 FileStore 实现事务带来的放大 和 文件系统本身的放大
+<ul>
+<li>由于有的文件系统不支持事务，或者部分支持内部事务的文件系统如 btrfs（但实践表明事务中途发生故障的时候可能出现事务部分提交的情况），故 FileStore 需要实现一套 WAL 机制来实现事务（FileJournal），相应地也就引入了放大</li>
+<li>许多文件系统后端本身就是日志文件系统，内部保证数据一致性也实现了写前日志，因此也存在一定的写放大<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201104205950.png" alt="20201104205950" loading="lazy"></li>
+</ul>
+</li>
+<li><strong>本地文件系统的元数据性能可能严重影响分布式系统的整体性能</strong>：Ceph 面对的一个很大的挑战就是“如何快速地枚举文件夹中数百万项的内容，如何保证返回的结果有序”。基于 Btrfs 和 XFS 的后端存储往往都会有这样的问题，同时用于分配元数据负载的目录分割操作与系统策略其实是有一定冲突的，整个系统的性能会受到元数据性能的影响。</li>
+<li><strong>新型存储器件向文件系统提出了挑战</strong>：文件系统日趋成熟带来的影响就是显得更加的保守和死板，不能较好地适配现在很多摒弃了块接口的新型存储器件。面向数据中心的新型存储器件往往都需要在原有应用程序接口层面做较大的修改。诸如为了提升容量， HDD 正在向 SMR 过渡，同时支持 Zone Interface；为了减小 SSD 中由于 FTL 造成的 IO 尾延迟，引入了 Zoned Namespace SSD 技术，支持 Zone Interface；云计算和云存储供应商也在调整他们的软件栈来适配 Zone 设备。分布式文件系统在这方面目前缺乏较好的支持。</li>
+</ul>
+<h4 id="架构">架构</h4>
+<figure data-type="image" tabindex="3"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201105162713.png" alt="20201105162713" loading="lazy"></figure>
+<ul>
+<li>BlueStore 整体架构分为三个部分：BlockDevice、BlueFS 和 RocksDB
+<ul>
+<li>BlockDevice 为最底层的块设备，通常为 HDD 或者 SSD ， BlueStore 直接操作块设备，抛弃了 XFS 等本地文件系统。 BlockDevice 在用户态直接以 linux 系统实现的 AIO 直接操作块设备，由于操作系统支持的 aio 操作只支持 directIO，所以对 BlockDevice 的写操作直接写入磁盘，并且需要按照 page 对齐。</li>
+<li>RocksDB 是 Facebook 在 leveldb 上开发并优化的 KV 存储系统。本身是基于文件系统的，不是直接操作裸设备。它将系统相关的处理抽象成 Env，用户可实现相应的接口。BlueFS 的主要的目的，就是支持 RocksDB Env 接口，保证 RocksDB 的正常运行。</li>
+<li>BlueFS 是一个小的文件系统，其文件系统的文件和目录的元数据都保存在全部缓存在内存中，持久化保存在文件系统的日志文件中， 当文件系统重新 mount 时，重新 replay 该日志文件中保存的操作，就可以加载所有的元数据到内存中。其数据和日志文件都直接保存在依赖底层的 BlockDevice 中。主要还实现了<code>RocksDB::Env</code>所需要的接口。BlueFS 在设计上支持把 <code>.log</code> 和 <code>.sst</code> 分开存储，<code>.log</code> 使用速度更快的存储介质(NVME等)，从而提高 WAL 日志的性能。(<strong>即可以在 OSD 的配置中指定 wal/db path</strong>)</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-shell">bluestore block db path =/dev/sdb2
+bluestore block wal path =/dev/ram0
+bluestore block path = /dev/sdb4
+</code></pre>
+<ul>
+<li>BlueStore 是最终基于 RocksDB 和 BlockDevice 实现的 Ceph 的对象存储，其所有的元数据都保存在 RocksDB 这个KV存储系统中，包括对象的集合，对象，存储池的 omap 信息，磁盘空间分配记录等都保存 RocksDB 里, 其对象的数据直接保存在 BlockDevice 上，不使用本地文件系统，直接接管裸设备，并且只使用一个原始分区。</li>
+<li>Allocator: 最新的实现中有 AvlAllocator, BitmapAllocator, StupidAllocator, ZonedAllocator</li>
+</ul>
+<h4 id="bluefs-数据结构">BlueFS 数据结构</h4>
+<ul>
+<li>BlueFS 会为每一个文件维护一个 inode，包括分配给该文件的区段列表也会维护相应的 inode。超级块存储在确定的物理地址上，且包含了日志的 inode 信息，其文件系统的文件和目录的元数据都保存在全部缓存在内存中，持久化保存在文件系统的日志文件中， 当文件系统重新 mount 时，重新 replay 该日志文件中保存的操作，就可以加载所有的元数据到内存中。当日志大小达到阈值时，日志文件将被压缩并写到一个新的日志文件中，同时将日志的新地址信息记录到超级块中<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201102113744.png" alt="20201102113744" loading="lazy"></li>
+<li>WAL 对于提升RocksDB的性能至关重要，所以 BlueFS 在设计上支持把 <code>.log</code> 和 <code>.sst</code> 分开存储，<code>.log</code> 使用速度更快的存储介质(NVME等)。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201105163053.png" alt="20201105163053" loading="lazy"></li>
+<li>BlueFS 与传统文件系统不同另外一个地方是并没有设计单独存储fnode的存储空间，而是将其存储在WAL（Write Ahead Log）日志当中。当文件系统挂载的时候通过回放该日志实现内存数据结构的构建。这样，在内存中就可以查到磁盘中的目录和文件信息，从而可以实现对文件的读写。BlueFS本身就是一个功能阉割的，迷你文件系统。BlueFS可以这么实现得益于其只服务于RocksDB，其文件数量非常有限，使用场景也非常有限。</li>
+</ul>
+<pre><code class="language-C++">class BlueFS {
+public:
+  CephContext* cct;
+  // 支持不同种类的块设备
+  static constexpr unsigned MAX_BDEV = 5;
+  static constexpr unsigned BDEV_WAL = 0;
+  static constexpr unsigned BDEV_DB = 1;
+  static constexpr unsigned BDEV_SLOW = 2;
+  static constexpr unsigned BDEV_NEWWAL = 3;
+  static constexpr unsigned BDEV_NEWDB = 4;
+
+  enum {
+    WRITER_UNKNOWN,
+    WRITER_WAL, // RocksDB的log文件
+    WRITER_SST, // RocksDB的sst文件
+  };
+
+  // 文件
+  struct File : public RefCountedObject {
+    MEMPOOL_CLASS_HELPERS();
+
+    bluefs_fnode_t fnode; // 文件inode
+    int refs;  // 引用计数
+    uint64_t dirty_seq; // dirty序列号
+    bool locked;
+    bool deleted;
+    boost::intrusive::list_member_hook&lt;&gt; dirty_item;
+
+    // 读写计数
+    std::atomic_int num_readers, num_writers;
+    std::atomic_int num_reading;
+
+    void* vselector_hint = nullptr;
+    ...
+</code></pre>
+<h4 id="写操作-2">写操作</h4>
+<ul>
+<li>针对具体的存储引擎的实现，由于数据都是先写后读，此处将从写操作入手，再到读操作。</li>
+<li>写操作的调用关系如下：</li>
+</ul>
+<pre><code class="language-C++">ReplicatedBackend::submit_transaction
+    parent-&gt;queue_transactions(tls, op.op); //调用PrimaryLogPG::queue_transactions
+        osd-&gt;store-&gt;queue_transactions(ch, tls, op, NULL); //调用BlueStore::queue_transactions
+</code></pre>
+<ul>
+<li>而在 BlueStore 中具体的 queue_transactions 中：</li>
+</ul>
+<pre><code class="language-C++">int BlueStore::queue_transactions(
+  CollectionHandle&amp; ch,
+  vector&lt;Transaction&gt;&amp; tls,
+  TrackedOpRef op,
+  ThreadPool::TPHandle *handle)
+{
+  FUNCTRACE(cct);
+  
+  /**
+   * Collect contexts 
+   * on_applied: will queue it in queue transactions, it's readable but we can callback in async way
+   * on_applied_sync: will call back in queue_transactions, because it's readable immediately in bluestore.
+   * on_commit: will call it when kvdb transactions committed.
+   **/
+  list&lt;Context *&gt; on_applied, on_commit, on_applied_sync;
+  ObjectStore::Transaction::collect_contexts(
+    tls, &amp;on_applied, &amp;on_commit, &amp;on_applied_sync);
+
+  auto start = mono_clock::now();
+
+  Collection *c = static_cast&lt;Collection*&gt;(ch.get());
+  OpSequencer *osr = c-&gt;osr.get();
+  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; ch &quot; &lt;&lt; c &lt;&lt; &quot; &quot; &lt;&lt; c-&gt;cid &lt;&lt; dendl;
+
+  // Create transaction context 
+  // 创建 KVDB 的事务同时获取PG对应的OpSequencer(每个PG有一个OpSequencer)用来保证PG上的IO串行执行
+  // prepare
+  TransContext *txc = _txc_create(static_cast&lt;Collection*&gt;(ch.get()), osr,
+				  &amp;on_commit);
+
+  // 遍历收集到的 list&lt;Context *&gt; 根据事务对应的操作码分别进行处理
+  // Collection Ops：remove_collection、create_collection、split_collection、merge_collection、collection hint objects
+  // Object Ops：OP_CREATE、OP_TOUCH（修改时间属性）、OP_WRITE、OP_ZERO、OP_TRUNCATE、OP_REMOVE、OP_SETATTR、OP_RMATTR(remove attributes)、OP_CLONE
+  // OMap Ops
+  for (vector&lt;Transaction&gt;::iterator p = tls.begin(); p != tls.end(); ++p) {
+    txc-&gt;bytes += (*p).get_num_bytes();
+    _txc_add_transaction(txc, &amp;(*p));
+  }
+  // 计算事务开销
+  _txc_calc_cost(txc);
+
+  // 写 ONode 数据 （ONode 是常驻内存的数据结构，主要用于管理对象元数据）
+  // 持久化时，ONode 数据将被写入到 RocksDB 中
+  _txc_write_nodes(txc, txc-&gt;t);
+
+  // journal deferred items
+  if (txc-&gt;deferred_txn) {
+    txc-&gt;deferred_txn-&gt;seq = ++deferred_seq;
+    bufferlist bl;
+    encode(*txc-&gt;deferred_txn, bl);
+    string key;
+    get_deferred_key(txc-&gt;deferred_txn-&gt;seq, &amp;key);
+    txc-&gt;t-&gt;set(PREFIX_DEFERRED, key, bl);
+  }
+
+  _txc_finalize_kv(txc, txc-&gt;t);
+  if (handle)
+    handle-&gt;suspend_tp_timeout();
+
+  auto tstart = mono_clock::now();
+
+  if (!throttle.try_start_transaction(
+	*db,
+	*txc,
+	tstart)) {
+    // ensure we do not block here because of deferred writes
+    dout(10) &lt;&lt; __func__ &lt;&lt; &quot; failed get throttle_deferred_bytes, aggressive&quot;
+	     &lt;&lt; dendl;
+    ++deferred_aggressive;
+    deferred_try_submit();
+    {
+      // wake up any previously finished deferred events
+      std::lock_guard l(kv_lock);
+      if (!kv_sync_in_progress) {
+	kv_sync_in_progress = true;
+	kv_cond.notify_one();
+      }
+    }
+    throttle.finish_start_transaction(*db, *txc, tstart);
+    --deferred_aggressive;
+  }
+  auto tend = mono_clock::now();
+
+  if (handle)
+    handle-&gt;reset_tp_timeout();
+
+  logger-&gt;inc(l_bluestore_txc);
+
+  // execute (start)
+  _txc_state_proc(txc);
+
+  // we're immediately readable (unlike FileStore)
+  for (auto c : on_applied_sync) {
+    c-&gt;complete(0);
+  }
+  if (!on_applied.empty()) {
+    if (c-&gt;commit_queue) {
+      c-&gt;commit_queue-&gt;queue(on_applied);
+    } else {
+      finisher.queue(on_applied);
+    }
+  }
+
+  log_latency(&quot;submit_transact&quot;,
+    l_bluestore_submit_lat,
+    mono_clock::now() - start,
+    cct-&gt;_conf-&gt;bluestore_log_op_age);
+  log_latency(&quot;throttle_transact&quot;,
+    l_bluestore_throttle_lat,
+    tend - tstart,
+    cct-&gt;_conf-&gt;bluestore_log_op_age);
+  return 0;
+}
+</code></pre>
+<ul>
+<li>写操作调用关系：</li>
+</ul>
+<pre><code class="language-C++">BlueStore::queue_transactions
+    _txc_add_transaction(txc, &amp;(*p)); //调用
+BlueStore::_txc_add_transaction(TransContext *txc, Transaction *t)
+        _write(txc, c, o, off, len, bl, fadvise_flags); //调用BlueStore::_write
+            _do_write(txc, c, o, offset, length, bl, fadvise_flags);
+            txc-&gt;write_onode(o);
+BlueStore::_do_write
+                _choose_write_options(c, o, fadvise_flags, &amp;wctx);
+                o-&gt;extent_map.fault_range(db, offset, length);
+                _do_write_data(txc, c, o, offset, length, bl, &amp;wctx);
+                r = _do_alloc_write(txc, c, o, &amp;wctx);
+</code></pre>
+<ul>
+<li>写操作的函数流程：</li>
+</ul>
+<pre><code class="language-C++">int BlueStore::_write(TransContext *txc,
+		      CollectionRef&amp; c,
+		      OnodeRef&amp; o,
+		      uint64_t offset, size_t length,
+		      bufferlist&amp; bl,
+		      uint32_t fadvise_flags)
+{
+  dout(15) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; c-&gt;cid &lt;&lt; &quot; &quot; &lt;&lt; o-&gt;oid
+	   &lt;&lt; &quot; 0x&quot; &lt;&lt; std::hex &lt;&lt; offset &lt;&lt; &quot;~&quot; &lt;&lt; length &lt;&lt; std::dec
+	   &lt;&lt; dendl;
+  int r = 0;
+  if (offset + length &gt;= OBJECT_MAX_SIZE) {
+    r = -E2BIG;
+  } else {
+    _assign_nid(txc, o);
+    r = _do_write(txc, c, o, offset, length, bl, fadvise_flags);
+    txc-&gt;write_onode(o);
+  }
+  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; c-&gt;cid &lt;&lt; &quot; &quot; &lt;&lt; o-&gt;oid
+	   &lt;&lt; &quot; 0x&quot; &lt;&lt; std::hex &lt;&lt; offset &lt;&lt; &quot;~&quot; &lt;&lt; length &lt;&lt; std::dec
+	   &lt;&lt; &quot; = &quot; &lt;&lt; r &lt;&lt; dendl;
+  return r;
+}
+
+int BlueStore::_do_write(
+  TransContext *txc,
+  CollectionRef&amp; c,
+  OnodeRef o,
+  uint64_t offset,
+  uint64_t length,
+  bufferlist&amp; bl,
+  uint32_t fadvise_flags)
+{
+  int r = 0;
+
+  dout(20) &lt;&lt; __func__
+	   &lt;&lt; &quot; &quot; &lt;&lt; o-&gt;oid
+	   &lt;&lt; &quot; 0x&quot; &lt;&lt; std::hex &lt;&lt; offset &lt;&lt; &quot;~&quot; &lt;&lt; length
+	   &lt;&lt; &quot; - have 0x&quot; &lt;&lt; o-&gt;onode.size
+	   &lt;&lt; &quot; (&quot; &lt;&lt; std::dec &lt;&lt; o-&gt;onode.size &lt;&lt; &quot;)&quot;
+	   &lt;&lt; &quot; bytes&quot;
+	   &lt;&lt; &quot; fadvise_flags 0x&quot; &lt;&lt; std::hex &lt;&lt; fadvise_flags &lt;&lt; std::dec
+	   &lt;&lt; dendl;
+  _dump_onode&lt;30&gt;(cct, *o);
+
+  if (length == 0) {
+    return 0;
+  }
+
+  uint64_t end = offset + length;
+
+  GarbageCollector gc(c-&gt;store-&gt;cct);
+  int64_t benefit = 0;
+  auto dirty_start = offset;
+  auto dirty_end = end;
+
+  WriteContext wctx;
+  _choose_write_options(c, o, fadvise_flags, &amp;wctx);
+  o-&gt;extent_map.fault_range(db, offset, length);
+  
+  //*****************************************************
+  // 执行真正的数据写入的操作
+  _do_write_data(txc, c, o, offset, length, bl, &amp;wctx);
+  //*****************************************************
+
+  r = _do_alloc_write(txc, c, o, &amp;wctx);
+  if (r &lt; 0) {
+    derr &lt;&lt; __func__ &lt;&lt; &quot; _do_alloc_write failed with &quot; &lt;&lt; cpp_strerror(r)
+	 &lt;&lt; dendl;
+    goto out;
+  }
+
+  if (wctx.extents_to_gc.empty() ||
+      wctx.extents_to_gc.range_start() &gt; offset ||
+      wctx.extents_to_gc.range_end() &lt; offset + length) {
+    benefit = gc.estimate(offset,
+			  length,
+			  o-&gt;extent_map,
+			  wctx.old_extents,
+			  min_alloc_size);
+  }
+
+  // NB: _wctx_finish() will empty old_extents
+  // so we must do gc estimation before that
+  _wctx_finish(txc, c, o, &amp;wctx);
+  if (end &gt; o-&gt;onode.size) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; extending size to 0x&quot; &lt;&lt; std::hex &lt;&lt; end
+             &lt;&lt; std::dec &lt;&lt; dendl;
+    o-&gt;onode.size = end;
+  }
+
+  if (benefit &gt;= g_conf()-&gt;bluestore_gc_enable_total_threshold) {
+    wctx.extents_to_gc.union_of(gc.get_extents_to_collect());
+    dout(20) &lt;&lt; __func__
+             &lt;&lt; &quot; perform garbage collection for compressed extents, &quot;
+             &lt;&lt; &quot;expected benefit = &quot; &lt;&lt; benefit &lt;&lt; &quot; AUs&quot; &lt;&lt; dendl;
+  }
+  if (!wctx.extents_to_gc.empty()) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; perform garbage collection&quot; &lt;&lt; dendl;
+
+    r = _do_gc(txc, c, o,
+      wctx,
+      &amp;dirty_start, &amp;dirty_end);
+    if (r &lt; 0) {
+      derr &lt;&lt; __func__ &lt;&lt; &quot; _do_gc failed with &quot; &lt;&lt; cpp_strerror(r)
+            &lt;&lt; dendl;
+      goto out;
+    }
+    dout(20)&lt;&lt;__func__&lt;&lt;&quot; gc range is &quot; &lt;&lt; std::hex &lt;&lt; dirty_start
+	    &lt;&lt; &quot;~&quot; &lt;&lt; dirty_end - dirty_start &lt;&lt; std::dec &lt;&lt; dendl;
+  }
+  o-&gt;extent_map.compress_extent_map(dirty_start, dirty_end - dirty_start);
+  o-&gt;extent_map.dirty_range(dirty_start, dirty_end - dirty_start);
+
+  r = 0;
+
+ out:
+  return r;
+}
+</code></pre>
+<ul>
+<li>真正执行数据写入的函数 _do_write_data：</li>
+</ul>
+<pre><code class="language-C++">void BlueStore::_do_write_data(
+  TransContext *txc,
+  CollectionRef&amp; c,
+  OnodeRef o,
+  uint64_t offset,
+  uint64_t length,
+  bufferlist&amp; bl,
+  WriteContext *wctx)
+{
+  uint64_t end = offset + length;
+  bufferlist::iterator p = bl.begin();
+  
+  // 判断写入的数据大小是否处于一个 min_alloc_size 大小中
+  // min_alloc_size 通常为 block_size 大小的整数倍
+  if (offset / min_alloc_size == (end - 1) / min_alloc_size &amp;&amp;
+      (length != min_alloc_size)) {
+    // 执行小写
+    // we fall within the same block
+    _do_write_small(txc, c, o, offset, length, p, wctx);
+  } else {
+
+    // 如果写入的数据大小超过 min_alloc_size，则会进行划分
+    // 一部分进行大写，一部分进行小写
+    uint64_t head_offset, head_length;
+    uint64_t middle_offset, middle_length;
+    uint64_t tail_offset, tail_length;
+
+    head_offset = offset;
+    head_length = p2nphase(offset, min_alloc_size);
+
+    tail_offset = p2align(end, min_alloc_size);
+    tail_length = p2phase(end, min_alloc_size);
+
+    middle_offset = head_offset + head_length;
+    middle_length = length - head_length - tail_length;
+
+    if (head_length) {
+      _do_write_small(txc, c, o, head_offset, head_length, p, wctx);
+    }
+
+    if (middle_length) {
+      // 执行大写
+      _do_write_big(txc, c, o, middle_offset, middle_length, p, wctx);
+    }
+
+    if (tail_length) {
+      _do_write_small(txc, c, o, tail_offset, tail_length, p, wctx);
+    }
+  }
+}
+</code></pre>
+<ul>
+<li>当一个写请求按照min_alloc_size进行拆分后，就会分为对齐写，对应到do_write_big，非对齐写（即落到某一个min_alloc_size区间的写I/O（对应到do_write_small）<br>
+<img src="https://blog.shunzi.tech/post-images/1582880518167.png" alt="" loading="lazy"></li>
+<li><strong>do_write_big</strong>: 对齐到min_alloc_size的写请求处理起来比较简单，有可能是多个min_alloc_size的大小，在处理时会根据实际大小新生成lextent和blob，这个lextent跨越的区域是min_alloc_size的整数倍，如果这段区间是之前写过的，会将之前的lextent记录下来便于后续的空间回收。</li>
+<li><strong>do_write_small</strong>: 在处理落到某个min_alloc_size区间的写请求时，会首先根据offset去查找有没有可以复用的blob，因为最小分配单元是min_alloc_size，默认64KB，如果一个4KB的写I/O就只会用到blob的一部分，blob里剩余的还能放其他的。<br>
+<img src="https://blog.shunzi.tech/post-images/1582880888167.png" alt="" loading="lazy"></li>
+</ul>
+<h4 id="读操作-2">读操作</h4>
+<ul>
+<li>读操作的流程：</li>
+</ul>
+<pre><code class="language-c++">ReplicatedBackend::objects_read_sync
+    store-&gt;read(ch, ghobject_t(hoid), off, len, *bl, op_flags)
+    BlueStore::read
+        _do_read(c, o, offset, length, bl, op_flags);
+        BlueStore::_do_read
+
+ReplicatedBackend::objects_readv_sync
+    store-&gt;readv(ch, ghobject_t(hoid), im, *bl, op_flags);
+    BlueStore::readv
+        _do_readv(c, o, m, bl, op_flags);
+        BlueStore::_do_readv
+</code></pre>
+<ul>
+<li>真正执行读操作的 _do_read 和 _do_readv</li>
+<li>通过libaio的方式进行读写操作。实现的时候抽象出BlockDevice基类类型，统一管理各种类型的设备，如Kernel, NVME和NVRAM等，为裸盘的使用者(BlueFS/BlueStore)提供统一的操作接口</li>
+</ul>
+<pre><code class="language-C++">int BlueStore::_do_read(
+  Collection *c,
+  OnodeRef o,
+  uint64_t offset,
+  size_t length,
+  bufferlist&amp; bl,
+  uint32_t op_flags,
+  uint64_t retry_count)
+{
+  FUNCTRACE(cct);
+  int r = 0;
+  int read_cache_policy = 0; // do not bypass clean or dirty cache
+
+  dout(20) &lt;&lt; __func__ &lt;&lt; &quot; 0x&quot; &lt;&lt; std::hex &lt;&lt; offset &lt;&lt; &quot;~&quot; &lt;&lt; length
+           &lt;&lt; &quot; size 0x&quot; &lt;&lt; o-&gt;onode.size &lt;&lt; &quot; (&quot; &lt;&lt; std::dec
+           &lt;&lt; o-&gt;onode.size &lt;&lt; &quot;)&quot; &lt;&lt; dendl;
+  bl.clear();
+
+  if (offset &gt;= o-&gt;onode.size) {
+    return r;
+  }
+
+  // generally, don't buffer anything, unless the client explicitly requests
+  // it.
+  bool buffered = false;
+  if (op_flags &amp; CEPH_OSD_OP_FLAG_FADVISE_WILLNEED) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; will do buffered read&quot; &lt;&lt; dendl;
+    buffered = true;
+  } else if (cct-&gt;_conf-&gt;bluestore_default_buffered_read &amp;&amp;
+	     (op_flags &amp; (CEPH_OSD_OP_FLAG_FADVISE_DONTNEED |
+			  CEPH_OSD_OP_FLAG_FADVISE_NOCACHE)) == 0) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; defaulting to buffered read&quot; &lt;&lt; dendl;
+    buffered = true;
+  }
+
+  if (offset + length &gt; o-&gt;onode.size) {
+    length = o-&gt;onode.size - offset;
+  }
+
+  auto start = mono_clock::now();
+  o-&gt;extent_map.fault_range(db, offset, length);
+  log_latency(__func__,
+    l_bluestore_read_onode_meta_lat,
+    mono_clock::now() - start,
+    cct-&gt;_conf-&gt;bluestore_log_op_age);
+  _dump_onode&lt;30&gt;(cct, *o);
+
+  // for deep-scrub, we only read dirty cache and bypass clean cache in
+  // order to read underlying block device in case there are silent disk errors.
+  if (op_flags &amp; CEPH_OSD_OP_FLAG_BYPASS_CLEAN_CACHE) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; will bypass cache and do direct read&quot; &lt;&lt; dendl;
+    read_cache_policy = BufferSpace::BYPASS_CLEAN_CACHE;
+  }
+
+  // build blob-wise list to of stuff read (that isn't cached)
+  ready_regions_t ready_regions;
+  blobs2read_t blobs2read;
+  _read_cache(o, offset, length, read_cache_policy, ready_regions, blobs2read);
+
+
+  // read raw blob data.
+  start = mono_clock::now(); // for the sake of simplicity
+                             // measure the whole block below.
+                             // The error isn't that much...
+  vector&lt;bufferlist&gt; compressed_blob_bls;
+  IOContext ioc(cct, NULL, true); // allow EIO
+  r = _prepare_read_ioc(blobs2read, &amp;compressed_blob_bls, &amp;ioc);
+  // we always issue aio for reading, so errors other than EIO are not allowed
+  if (r &lt; 0)
+    return r;
+
+  int64_t num_ios = length;
+  if (ioc.has_pending_aios()) {
+    num_ios = -ioc.get_num_ios();
+    bdev-&gt;aio_submit(&amp;ioc);
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; waiting for aio&quot; &lt;&lt; dendl;
+    ioc.aio_wait();
+    r = ioc.get_return_value();
+    if (r &lt; 0) {
+      ceph_assert(r == -EIO); // no other errors allowed
+      return -EIO;
+    }
+  }
+  log_latency_fn(__func__,
+    l_bluestore_read_wait_aio_lat,
+    mono_clock::now() - start,
+    cct-&gt;_conf-&gt;bluestore_log_op_age,
+    [&amp;](auto lat) { return &quot;, num_ios = &quot; + stringify(num_ios); }
+  );
+
+  bool csum_error = false;
+  r = _generate_read_result_bl(o, offset, length, ready_regions,
+                              compressed_blob_bls, blobs2read,
+                              buffered, &amp;csum_error, bl);
+  if (csum_error) {
+    // Handles spurious read errors caused by a kernel bug.
+    // We sometimes get all-zero pages as a result of the read under
+    // high memory pressure. Retrying the failing read succeeds in most 
+    // cases.
+    // See also: http://tracker.ceph.com/issues/22464
+    if (retry_count &gt;= cct-&gt;_conf-&gt;bluestore_retry_disk_reads) {
+      return -EIO;
+    }
+    return _do_read(c, o, offset, length, bl, op_flags, retry_count + 1);
+  }
+  r = bl.length();
+  if (retry_count) {
+    logger-&gt;inc(l_bluestore_reads_with_retries);
+    dout(5) &lt;&lt; __func__ &lt;&lt; &quot; read at 0x&quot; &lt;&lt; std::hex &lt;&lt; offset &lt;&lt; &quot;~&quot; &lt;&lt; length
+            &lt;&lt; &quot; failed &quot; &lt;&lt; std::dec &lt;&lt; retry_count &lt;&lt; &quot; times before succeeding&quot; &lt;&lt; dendl;
+  }
+  return r;
+}
+
+int BlueStore::_do_readv(
+  Collection *c,
+  OnodeRef o,
+  const interval_set&lt;uint64_t&gt;&amp; m,
+  bufferlist&amp; bl,
+  uint32_t op_flags,
+  uint64_t retry_count)
+{
+  FUNCTRACE(cct);
+  int r = 0;
+  int read_cache_policy = 0; // do not bypass clean or dirty cache
+
+  dout(20) &lt;&lt; __func__ &lt;&lt; &quot; fiemap &quot; &lt;&lt; m &lt;&lt; std::hex
+           &lt;&lt; &quot; size 0x&quot; &lt;&lt; o-&gt;onode.size &lt;&lt; &quot; (&quot; &lt;&lt; std::dec
+           &lt;&lt; o-&gt;onode.size &lt;&lt; &quot;)&quot; &lt;&lt; dendl;
+
+  // generally, don't buffer anything, unless the client explicitly requests
+  // it.
+  bool buffered = false;
+  if (op_flags &amp; CEPH_OSD_OP_FLAG_FADVISE_WILLNEED) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; will do buffered read&quot; &lt;&lt; dendl;
+    buffered = true;
+  } else if (cct-&gt;_conf-&gt;bluestore_default_buffered_read &amp;&amp;
+             (op_flags &amp; (CEPH_OSD_OP_FLAG_FADVISE_DONTNEED |
+                          CEPH_OSD_OP_FLAG_FADVISE_NOCACHE)) == 0) {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; defaulting to buffered read&quot; &lt;&lt; dendl;
+    buffered = true;
+  }
+  // this method must be idempotent since we may call it several times
+  // before we finally read the expected result.
+  bl.clear();
+
+  // call fiemap first!
+  ceph_assert(m.range_start() &lt;= o-&gt;onode.size);
+  ceph_assert(m.range_end() &lt;= o-&gt;onode.size);
+  auto start = mono_clock::now();
+  o-&gt;extent_map.fault_range(db, m.range_start(), m.range_end() - m.range_start());
+  log_latency(__func__,
+    l_bluestore_read_onode_meta_lat,
+    mono_clock::now() - start,
+    cct-&gt;_conf-&gt;bluestore_log_op_age);
+  _dump_onode&lt;30&gt;(cct, *o);
+
+  IOContext ioc(cct, NULL, true); // allow EIO
+  vector&lt;std::tuple&lt;ready_regions_t, vector&lt;bufferlist&gt;, blobs2read_t&gt;&gt; raw_results;
+  raw_results.reserve(m.num_intervals());
+  int i = 0;
+  for (auto p = m.begin(); p != m.end(); p++, i++) {
+    raw_results.push_back({});
+    _read_cache(o, p.get_start(), p.get_len(), read_cache_policy,
+                std::get&lt;0&gt;(raw_results[i]), std::get&lt;2&gt;(raw_results[i]));
+    r = _prepare_read_ioc(std::get&lt;2&gt;(raw_results[i]), &amp;std::get&lt;1&gt;(raw_results[i]), &amp;ioc);
+    // we always issue aio for reading, so errors other than EIO are not allowed
+    if (r &lt; 0)
+      return r;
+  }
+
+  auto num_ios = m.size();
+  if (ioc.has_pending_aios()) {
+    num_ios = ioc.get_num_ios();
+    bdev-&gt;aio_submit(&amp;ioc);
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; waiting for aio&quot; &lt;&lt; dendl;
+    ioc.aio_wait();
+    r = ioc.get_return_value();
+    if (r &lt; 0) {
+      ceph_assert(r == -EIO); // no other errors allowed
+      return -EIO;
+    }
+  }
+  log_latency_fn(__func__,
+    l_bluestore_read_wait_aio_lat,
+    mono_clock::now() - start,
+    cct-&gt;_conf-&gt;bluestore_log_op_age,
+    [&amp;](auto lat) { return &quot;, num_ios = &quot; + stringify(num_ios); }
+  );
+
+  ceph_assert(raw_results.size() == (size_t)m.num_intervals());
+  i = 0;
+  for (auto p = m.begin(); p != m.end(); p++, i++) {
+    bool csum_error = false;
+    bufferlist t;
+    r = _generate_read_result_bl(o, p.get_start(), p.get_len(),
+                                 std::get&lt;0&gt;(raw_results[i]),
+                                 std::get&lt;1&gt;(raw_results[i]),
+                                 std::get&lt;2&gt;(raw_results[i]),
+                                 buffered, &amp;csum_error, t);
+    if (csum_error) {
+      // Handles spurious read errors caused by a kernel bug.
+      // We sometimes get all-zero pages as a result of the read under
+      // high memory pressure. Retrying the failing read succeeds in most
+      // cases.
+      // See also: http://tracker.ceph.com/issues/22464
+      if (retry_count &gt;= cct-&gt;_conf-&gt;bluestore_retry_disk_reads) {
+        return -EIO;
+      }
+      return _do_readv(c, o, m, bl, op_flags, retry_count + 1);
+    }
+    bl.claim_append(t);
+  }
+  if (retry_count) {
+    logger-&gt;inc(l_bluestore_reads_with_retries);
+    dout(5) &lt;&lt; __func__ &lt;&lt; &quot; read fiemap &quot; &lt;&lt; m
+            &lt;&lt; &quot; failed &quot; &lt;&lt; retry_count &lt;&lt; &quot; times before succeeding&quot;
+            &lt;&lt; dendl;
+  }
+  return bl.length();
+}
+</code></pre>
+<figure data-type="image" tabindex="4"><img src="https://blog.shunzi.tech/post-images/1583045697056.jpg" alt="" loading="lazy"></figure>
+<h5 id="参考链接">参考链接</h5>
+<ul>
+<li><a href="https://blog.csdn.net/don_chiang709/article/details/90607215">[1] CSDN：Ceph 撸源码系列（三）：Ceph OSDC源码分析 （1 of 2）</a></li>
+<li><a href="https://blog.csdn.net/wh8_2011/article/details/103064083">[2] CSDN：Ceph 撸源码系列（一）：Ceph开源项目源代码的关键目录介绍</a></li>
+<li><a href="https://blog.csdn.net/u014104588/article/details/87277341">[3] CSDN：ceph bluestore 写操作源码分析（上）</a></li>
+<li><a href="https://blog.csdn.net/u014104588/article/details/87391548">[4] CSDN：ceph bluestore 写操作源码分析（下）</a></li>
+<li><a href="http://www.sysnote.org/2016/08/19/ceph-bluestore/">[5] Sysnote：ceph存储引擎bluestore解析</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/101772382">[6] DieInADream - 分布式存储系统 Ceph 的后端存储引擎研究</a></li>
+<li><a href="">[7] tom-sun - BlueStore-先进的用户态文件系统《一》</a></li>
+<li><a href="https://storageconference.us/2017/Papers/CephObjectStore.pdf">[8] Understanding Write Behaviors of Storage Backends in Ceph Object Store</a>
+<ul>
+<li><a href="https://storageconference.us/2017/Presentations/CephObjectStore-slides.pdf">slides</a></li>
+</ul>
+</li>
+<li><a href="https://www.zhihu.com/column/c_1175452658096476160">[9] 知乎 - 分布式存储</a>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/91015613">BlueStore 源码分析之架构设计</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/91018497">BlueStore 源码分析之 BitMap 分配器</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/91019062">BlueStore 源码分析之 Stupid 分配器</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/91025247">BlueStore 源码分析之 FreelistManager</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/92396291">BlueStore 源码分析之 Cache</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/92397191">BlueStore 源码分析之对象 IO</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/92850284">BlueStore 源码分析之事物状态机</a></li>
+</ul>
+</li>
+<li><a href="https://www.cnblogs.com/DevOpsTechLab/p/7096856.html">[10] ceph存储引擎bluestore解析</a></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/controlled-data-migration-in-the-expansion-of-decentralized-object-based-storage-systems.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/controlled-data-migration-in-the-expansion-of-decentralized-object-based-storage-systems/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-03-06">2020-03-06</time>
+                  <h4 class="title white no-margin">Controlled Data Migration in the Expansion of Decentralized Object-Based Storage Systems</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/fast-2017-2019.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/fast-2017-2019/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-01-09">2020-01-09</time>
+                  <h4 class="title white no-margin">FAST 2017-2019</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

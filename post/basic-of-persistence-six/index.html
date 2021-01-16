@@ -1,0 +1,765 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Series Six of Basic of Persistence -  Log-structured File System | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+威斯康辛州大学操作系统书籍《Operating Systems: Three Easy Pieces》读书笔记系列之 Persistence（持久化）
+机缘巧合，因为项目以及最近的一些学术关注点，需要对存储系统底层原理进行回顾并加深理解..." />
+    <meta name="keywords" content="存储,读书笔记,OS" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-07-27"><i class="fa fa-calendar"></i><span class="lately">6 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/basic-of-persistence-six/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/basic-of-persistence-six/"> </span>
+              </a>
+              <span id="/basic-of-persistence-six/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-1 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-2 ctag-os" aria-label="">OS</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Series Six of Basic of Persistence -  Log-structured File System</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>威斯康辛州大学操作系统书籍《Operating Systems: Three Easy Pieces》读书笔记系列之 Persistence（持久化）</li>
+<li>机缘巧合，因为项目以及最近的一些学术关注点，需要对存储系统底层原理进行回顾并加深理解，又恰好被推荐了这本书籍，故首先针对持久化章节进行了阅读。</li>
+<li>本篇为持久化技术的基础篇系列第六篇（日志结构化文件系统），有对应的原论文 <a href="https://dl.acm.org/doi/10.1145/121132.121137">SOSP1991 - The design and implementation of a log-structured file system</a></li>
+<li>可以参考 <a href="https://zhuanlan.zhihu.com/p/41358013">知乎: Logician - Log-structured File System</a></li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="chapter-index">Chapter Index</h2>
+<ul>
+<li>Basic of Persistence
+<ul>
+<li><a href="https://blog.shunzi.tech/post/flavor-of-io/">Flavor of IO</a></li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-one/">I/O Devices</a></li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-two/">Hard Disk Drives</a></li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-three/">Files and Directories</a></li>
+</ul>
+</li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-four/">File Systems Implementation</a></li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-five/">Locality and The Fast File System</a></li>
+<li><a href="https://blog.shunzi.tech/post/dist-block-consistency/#toc-heading-16">Crash Consistency: FSCK and Journaling</a></li>
+<li><a href="https://blog.shunzi.tech/post/basic-of-persistence-six/">Log-structured File System</a></li>
+</ul>
+<h2 id="motivation">Motivation</h2>
+<ul>
+<li><strong>内存容量不断变大</strong>：随着内存的变大，更多的数据可以被缓存在内存中，随着更多的数据被缓存，磁盘通信越来越多地由写组成，因为读是由缓存提供的。因此，文件系统性能在很大程度上取决于它的写性能。</li>
+<li><strong>随机 I/O 性能和顺序 I/O 性能之间存在很大的差距</strong>：硬盘传输带宽在过去几年里增加了很多，当更多的位被压缩到驱动器表面时，访问的带宽增加，然而，Seek 和旋转延迟成本已经缓慢下降，要让廉价的小型马达更快地旋转磁盘或更快地移动磁盘臂，这是一个挑战。所以 seek 和旋转操作相对较少的顺序读写会比随机读写性能好很多。</li>
+<li><strong>现有的文件系统在许多常见工作负载上执行得很差</strong>：FFS 会执行大量的写操作来创建一个大小为一个块的新文件（一次写 new inode，一次更新 inode bitmap，一次写该文件所在的目录对应的数据块，一次写目录对应的 inode，一次写文件的新数据块，一次更新数据块对应的位图）。因此，尽管FFS将所有这些块放在同一个块组中，但FFS会导致许多短寻和随后的旋转延迟，因此性能远远低于连续带宽的峰值</li>
+<li><strong>文件系统无法感知 RAID</strong>：RAID-4 RAID-5 都会有小写问题，逻辑上的一个对一个块的写操作会造成物理上四个实际的 I/O 发生，现有的文件系统无法避免 RAID 下的最坏的写情况。</li>
+<li>因此理想的文件系统需要更加关注写性能，同时不仅需要支持较好的数据写，还要支持元数据的更新操作也比较高效。对于单盘和 RAID 都应该表现得比较好。所以出现了 LFS，LFS 首先将写操作缓冲到一个内存段 segment 中，当 segment 满了之后，顺序地将该段写入磁盘。LFS 从不更新已经存在得数据，及永远都是追加写的方式，所以每次都是将段写到磁盘的新位置，因为段很大，所以磁盘或 RAID 能够更加接近本身的带宽性能。</li>
+</ul>
+<h2 id="lsf">LSF</h2>
+<ul>
+<li>CRUX: 如何让所有的写变成顺序写？对于读操作，因为可能读取磁盘的任何位置，所以要求读操作顺序很难，但写操作是可以保证顺序的。</li>
+</ul>
+<h3 id="writing-to-disk-sequentially">Writing To Disk Sequentially</h3>
+<h4 id="如何将所有对文件系统状态的更新转换为一系列对磁盘的连续写操作">如何将所有对文件系统状态的更新转换为一系列对磁盘的连续写操作？</h4>
+<ul>
+<li>例如写入数据块 D 到磁盘上的地址 A0<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200727095931.png" alt="20200727095931" loading="lazy"></li>
+<li>写数据的同时，还会有元数据的写入，譬如写入 inode 数据，inode 数据指向数据块。即顺序写入是想将对应的数据块和元数据都顺序地写入到磁盘。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200727100158.png" alt="20200727100158" loading="lazy"></li>
+</ul>
+<h3 id="writing-sequentially-and-effectively">Writing Sequentially And Effectively</h3>
+<ul>
+<li>直接顺序写入到磁盘并不能保证高效。例如，假设我们写入了一个单独的数据块到地址 A，在时刻 T，等了一段时间之后，需要顺序写到磁盘的 A+1，这时候的时刻为 T + t。在第一次写和第二次之间，磁盘旋转了，当发起第二次写操作的时候，在真正写入之前坑需要等待一个完整的旋转周期（具体的等待时间为 t - 旋转周期）。因此简单的顺序写入到磁盘是无法解决性能较差的问题的，所以必须发起一连串的连续的读写操作或者一个大的写操作，才能实现比较好的性能。</li>
+<li>为了实现上述的连续写操作或者一个较大的写操作，LFS 引入了一个古老的技术 写缓冲（write buffering）。在写入磁盘之前，LFS 在内存中追踪对应的写操作，当到达一定数量的更新操作之后，再一次性地将这些写操作写入磁盘，从而保证写入磁盘的高效性。</li>
+<li>而 LFS 中批量写入的单位就是所谓的 segment，即 LFS 将一些要写入到磁盘中的写操作首先缓冲到内存的 segement 中，然后一次性地写入该段到磁盘。如果这个段足够大，那么磁盘的写入也将足够高效。</li>
+<li>如图所示例子中，LFS 将两组更新操作合并到一个小段中，实际的段可能比图中更大，以 MB 为单位。第一组更新为写数据到文件 j 的四个块，第二组操作是向文件 k 中新写入一个块，LFS 然后把这七个块一次性写入磁盘，磁盘上的数据结构如图所示：<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200727101646.png" alt="20200727101646" loading="lazy"></li>
+</ul>
+<h3 id="how-much-to-buffer">How Much To Buffer?</h3>
+<ul>
+<li>LFS 在写入磁盘之前需要缓冲多少写操作？取决于磁盘本身，主要由磁盘的定位开销和传输速率决定。假设 seek 开销 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>T</mi><mrow><mi>p</mi><mi>o</mi><mi>s</mi><mi>i</mi><mi>t</mi><mi>i</mi><mi>o</mi><mi>n</mi></mrow></msub></mrow><annotation encoding="application/x-tex">T_{position}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.311664em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">p</span><span class="mord mathdefault mtight">o</span><span class="mord mathdefault mtight">s</span><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight">t</span><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight">o</span><span class="mord mathdefault mtight">n</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span></span></span></span>，磁盘传输速率 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>R</mi><mrow><mi>p</mi><mi>e</mi><mi>a</mi><mi>k</mi></mrow></msub></mrow><annotation encoding="application/x-tex">R_{peak}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.00773em;">R</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361079999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.00773em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">p</span><span class="mord mathdefault mtight">e</span><span class="mord mathdefault mtight">a</span><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span></span></span></span> MB/S，写入数据 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>D</mi></mrow><annotation encoding="application/x-tex">D</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">D</span></span></span></span> MB，那么写入该数据块的总时间 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>T</mi><mrow><mi>w</mi><mi>r</mi><mi>i</mi><mi>t</mi><mi>e</mi></mrow></msub></mrow><annotation encoding="application/x-tex">T_{write}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31166399999999994em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.02691em;">w</span><span class="mord mathdefault mtight" style="margin-right:0.02778em;">r</span><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight">t</span><span class="mord mathdefault mtight">e</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 为 $$T_{write}=T_{position}+ \frac {D}{R_{peak}}$$ 因此写入效率 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>R</mi><mrow><mi>e</mi><mi>f</mi><mi>f</mi><mi>e</mi><mi>c</mi><mi>t</mi><mi>i</mi><mi>v</mi><mi>e</mi></mrow></msub></mrow><annotation encoding="application/x-tex">R_{effective}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.00773em;">R</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361079999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.00773em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">e</span><span class="mord mathdefault mtight" style="margin-right:0.10764em;">f</span><span class="mord mathdefault mtight" style="margin-right:0.10764em;">f</span><span class="mord mathdefault mtight">e</span><span class="mord mathdefault mtight">c</span><span class="mord mathdefault mtight">t</span><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight" style="margin-right:0.03588em;">v</span><span class="mord mathdefault mtight">e</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span></span></span></span> 即为  $$R_{effective} = \frac {D}{T_{write}}= \frac {D}{T_{position}+ \frac {D}{R_{peak}}}$$ 我们想要实现的是 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>R</mi><mrow><mi>e</mi><mi>f</mi><mi>f</mi><mi>e</mi><mi>c</mi><mi>t</mi><mi>i</mi><mi>v</mi><mi>e</mi></mrow></msub></mrow><annotation encoding="application/x-tex">R_{effective}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.00773em;">R</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361079999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.00773em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">e</span><span class="mord mathdefault mtight" style="margin-right:0.10764em;">f</span><span class="mord mathdefault mtight" style="margin-right:0.10764em;">f</span><span class="mord mathdefault mtight">e</span><span class="mord mathdefault mtight">c</span><span class="mord mathdefault mtight">t</span><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight" style="margin-right:0.03588em;">v</span><span class="mord mathdefault mtight">e</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span></span></span></span> 尽可能地接近 peak rate，假设我们使用系数 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>F</mi></mrow><annotation encoding="application/x-tex">F</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathdefault" style="margin-right:0.13889em;">F</span></span></span></span> 来表示，<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>R</mi><mrow><mi>e</mi><mi>f</mi><mi>f</mi><mi>e</mi><mi>c</mi><mi>t</mi><mi>i</mi><mi>v</mi><mi>e</mi></mrow></msub><mo>=</mo><mi>F</mi><mo>∗</mo><msub><mi>R</mi><mrow><mi>p</mi><mi>e</mi><mi>a</mi><mi>k</mi></mrow></msub></mrow><annotation encoding="application/x-tex">R_{effective} = F *R_{peak}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.00773em;">R</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361079999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.00773em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">e</span><span class="mord mathdefault mtight" style="margin-right:0.10764em;">f</span><span class="mord mathdefault mtight" style="margin-right:0.10764em;">f</span><span class="mord mathdefault mtight">e</span><span class="mord mathdefault mtight">c</span><span class="mord mathdefault mtight">t</span><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight" style="margin-right:0.03588em;">v</span><span class="mord mathdefault mtight">e</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathdefault" style="margin-right:0.13889em;">F</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.00773em;">R</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361079999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.00773em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">p</span><span class="mord mathdefault mtight">e</span><span class="mord mathdefault mtight">a</span><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span></span></span></span>，所以我们可以推导出 $$D = \frac{F}{1-F} * R_{peak} * T_{position}$$</li>
+<li>假设 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>T</mi><mrow><mi>p</mi><mi>o</mi><mi>s</mi><mi>i</mi><mi>t</mi><mi>i</mi><mi>o</mi><mi>n</mi></mrow></msub></mrow><annotation encoding="application/x-tex">T_{position}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.311664em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">p</span><span class="mord mathdefault mtight">o</span><span class="mord mathdefault mtight">s</span><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight">t</span><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight">o</span><span class="mord mathdefault mtight">n</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span></span></span></span> 为 10ms，peak transfer 为 100MB/S，假设我们想实现原设备的百分之九十的带宽，<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>F</mi></mrow><annotation encoding="application/x-tex">F</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathdefault" style="margin-right:0.13889em;">F</span></span></span></span> = 0.9，计算出 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>D</mi></mrow><annotation encoding="application/x-tex">D</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">D</span></span></span></span> = 9MB。为了实现 95% 的带宽，对应需要缓冲 19MB，99% 的带宽需要 99MB</li>
+</ul>
+<h3 id="problem-finding-inodes">Problem: Finding Inodes</h3>
+<ul>
+<li>以前的文件系统中将 inode 数据组织成了数组并存放在了磁盘上固定的位置，可以通过起始地址和对应的inode 号计算得出 inode 的具体位置，FFS 通过在每个 group 中也能计算得出，但是 LFS 中寻找到 inode 很困难。</li>
+</ul>
+<h4 id="solution-through-indirection-the-inode-map">Solution Through Indirection: The Inode Map</h4>
+<ul>
+<li>引入数据结构 inode map，inode number 作为输入 key，value 输出则为对应的最新的 inode 地址。因此，可以想象它通常被实现为一个简单的数组，每个条目有4个字节(一个磁盘指针)。每当一个inode被写到磁盘时，imap就会更新它的新位置。</li>
+<li>imap 需要持久化来保证磁盘崩溃后的恢复也能正常进行，因此产生新的问题：持久化到磁盘的什么位置？如果持久化到磁盘的一个固定位置，因为 imap 可能会被频繁更新，性能上可能会严重下降。</li>
+<li>因此 LFS 将 imap 放在了写入的所有新数据的最右侧，因此在向文件 k 中追加写入一个数据块时，LFS 实际会写入新的数据块、其对应的 inode 和 imap 的一部分数据到磁盘上。imap 告诉 LFS inode k 在对应的地址 A1 上，而 inode k 告诉 LFS 数据块 D 在对应的地址 A0 上。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200727110822.png" alt="20200727110822" loading="lazy"></li>
+</ul>
+<h4 id="completing-the-solution-the-checkpoint-region">Completing The Solution: The Checkpoint Region</h4>
+<ul>
+<li>尽管已经将 imap 持久化散布到了磁盘的各个部分，但是文件系统还是不知道如何去查询 imap 找到对应的文件。LFS 因此设置了一个确定的位置 checkpoint region (<strong>CR</strong>)，该区域包含 inode map 最近的部分，因此 inode map 可以通过首先读取 CR 查询到 inode map，CR 定期更新，大约 30s 更新一次，因此性能上不会有太大的影响。因此整个磁盘的结构将如图所示：<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200727112050.png" alt="20200727112050" loading="lazy"></li>
+</ul>
+<h3 id="reading-a-file-from-disk-a-recap">Reading A File From Disk: A Recap</h3>
+<ul>
+<li>假设内存中无任何缓存数据，读操作的步骤大致如下:
+<ul>
+<li>首先读取 CR，从而获取到整个 inode map，将其缓存在内存中</li>
+<li>根据文件的 inode 号和缓存的 inode map，很容易读取到对应的文件 inode 地址信息，需要读取到最新版本的地址</li>
+<li>读取到文件的 inode 之后，和原有的文件系统一样，使用 inode 中存储的数据块指针对应地读取数据块</li>
+</ul>
+</li>
+<li>LFS 和普通的文件系统读取磁盘上的文件的开销应该是大致一样的，因为整个 imap 都会被缓存，因此 LFS 在读取期间所做的额外工作就是在 imap 中查找 inode 的地址。</li>
+</ul>
+<h3 id="what-about-directories">What About Directories?</h3>
+<ul>
+<li>目录结构基本上与经典的 UNIX 文件系统相同，其中目录只是(名称、inode编号)映射的集合。例如创建一个文件时，LFS 需要写 inode，data，以及目录的 inode 和 data，结构大致如下，创建 /home/remzi/foo<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200727113019.png" alt="20200727113019" loading="lazy"></li>
+<li>最右边的 imap 将同时包含文件和目录的映射信息，因此访问文件 foo 时，首先查询缓存到内存中的 imap，找到目录对应 inode A3，从而找到目录对应的数据块 A2，读取数据发现 foo 对应了 inode number 为 k，再去 imap 中查询 k 对应的 inode A1，再找到数据块 A0，从而得到 foo 的数据。</li>
+<li>inode map 还解决了递归更新问题，该问题存在于所有异地更新的文件系统中。因为每当 inode 更新，通常都是需要写入到一个新的位置，可能会导致对应的目录也发生更新，更严重的直接递归到根目录。使用了 inode map 就能避免这个问题，inode 的地址可能发生改变，但是改变不会反映到对应的目录中，当目录保持相同的名称到 inode-number映射时，会更新 imap 结构，而不会级联更新。</li>
+</ul>
+<h3 id="a-new-problem-garbage-collection">A New Problem: Garbage Collection</h3>
+<ul>
+<li>异地更新的策略会将最新版本的数据写入到新的位置，但是原本位置的老数据仍然分布在磁盘中，但此时已经是垃圾数据，假设现在有一个 inmuber 为 k 的文件，指向了单一的数据块 D0，现在更新数据块 D0，将会生成一个新的数据块 D0 和 inode，磁盘布局如下所示，省略了 imap<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200727115241.png" alt="20200727115241" loading="lazy"></li>
+<li>如果在原有的文件的基础上进行追加的方式写入新版本数据，布局如下：（version file system）<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200727115430.png" alt="20200727115430" loading="lazy"></li>
+<li>LFS只保存文件的最新活动版本;因此（在后台），LFS 必须定期查找这些文件数据、索引节点和其他结构的旧版本，并清除它们。回收操作可以让磁盘上的数据块再一次 free，并用于之后顺序的读写。前面我们讨论了段的重要性，因为它们是LFS中支持对磁盘进行大规模写操作的机制，事实证明，它们也是有效清洁不可或缺的一部分。在磁盘上分配的空间之间混合了一些空闲孔的文件系统。写性能会显著下降，因为LFS将无法找到一个大的连续区域以高性能顺序写入磁盘。</li>
+<li>LFS 回收器是逐段工作的，从而为后续的写入清理大块空间。基本的回收过程如下
+<ul>
+<li>LFS 回收器定期读入许多旧的(部分使用的)段，确定这些段中活动的块，</li>
+<li>然后写出一组新的段，其中只有活动块，释放旧的用于编写。希望读入 M 个现有片段，将其内容压缩为 N 个新片段(其中N &lt; M)，然后把这 N 段写到磁盘的新位置。</li>
+<li>然后释放旧的 M 段，供文件系统用于后续的写操作。</li>
+</ul>
+</li>
+<li>LFS 如何分辨段中哪些块是活动的，哪些是老旧无效的？以及多久清理一次？</li>
+</ul>
+<h3 id="determining-block-liveness">Determining Block Liveness</h3>
+<ul>
+<li>LFS 在每一个段中添加了一些额外的数据信息，用于描述数据块，LFS 包含每个数据块的 inode number（属于哪个文件） 和偏移（属于该文件的哪个块），这部分数据信息位于段头，称之为 Segment Summary Block。</li>
+<li>例如地址 A 上的数据块 D，查看 segment summary block 并找到对应的 inode number N 和偏移量 T。查询 imap 发现 N 对应的文件 inode 的实际地址，并将该 inode 读取上来。最后使用偏移量 T 看这个 inode 中对应 T 位置的数据块的地址，如果该地址等于 A，那说明该块在使用中，如果不等于，则说明该块已经是垃圾数据。伪代码如下：</li>
+</ul>
+<pre><code>(N, T) = SegmentSummary[A];
+inode = Read(imap[N]);
+if (inode[T] == A)
+  // block D is alive
+else
+  // block D is garbage
+</code></pre>
+<ul>
+<li>如图所示：summray block 标识为 ss，记录了地址 A0 对应的 inode number 为 K，偏移量为 0，查询 imap 找 K 对应的地址，为 A1，读取 A1 对应的 inode，查看偏移量 0 对应的数据块地址，判断是否等于 A0<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200727142102.png" alt="20200727142102" loading="lazy"></li>
+<li>LFS 可以采用一些捷径来更有效地确定数据块的活性，比如当一个文件被标记为删除，LFS 增加对应的版本号并记录最新的版本号到 imap 中，通过比较磁盘上的版本号和imap中的版本号，LFS可以缩短上述较长的检查，从而避免额外的读取。</li>
+</ul>
+<h3 id="a-policy-question-which-blocks-to-clean-and-when">A Policy Question: Which Blocks To Clean, And When?</h3>
+<ul>
+<li>清理哪些块是许多学术研究重点讨论的问题。原始的 LFS Paper 中描述了一种方式来区分段的冷热，经常被覆盖写的段被称为热数据段，对于热段，最好的策略就是等待一段时间之后再进行清理，因为越来越多的块被覆盖写从而就可以被释放用于新的写。冷数据段是指还有少量的垃圾数据块，但是其他数据块还很稳定，因此作者建议更早地清理冷数据段，更晚地清理热数据段。但是该方法不够完美。</li>
+<li>对于何时清理，大概有两种思路。一种是定期清理，一种是在达到一定的阈值之后磁盘必须这样做。</li>
+</ul>
+<h3 id="crash-recovery-and-the-log">Crash Recovery And The Log</h3>
+<ul>
+<li>当 LFS 往磁盘上写的时候发生了系统故障如何处理？在正常的操作中，LFS 缓存了写操作到段中，然后将段刷入到磁盘。这些写操作都是以日志的形式组织的，例如段中的 CR 区域指向了段的头部和尾部，每一个段指向了下一个段。LFS 周期性地更新 CR 区域的数据，故障可能发生在写段的操作或者写 CR 区域的操作中。</li>
+<li>为了保证 CR 区域的原子更新，LFS 实际上保存了两个 CR 区域，分别在磁盘的两端，交替地对他们进行写操作。LFS 还设计了一个协议用于指向 inode 映射和其他信息的最新指针更新 CR 操作。具体表现为：首先写 header，带时间戳，然后写 CR 的 body，最后写最后一个数据块的时候也带上时间戳。如果在写 CR 过程中系统挂掉了，LFS 可以检查对应的前后时间戳是否一致来判断是否发生了故障，LFS 将选择使用带一致的时间戳的 CR，从而实现 CR 的一致性更新。</li>
+<li>因为 LFS 大约每 30s 写一次 CR，所以出现不一致的时候可能 CR 中的数据已经很老了，重启的时候，将会读取 CR 中一致的那一部分数据，从而进行恢复，但自一致状态之后的写操作将会丢失。为了改善该现象，LSF 通过使用数据库领域中常用的 <strong>roll forward</strong> 技术，基本思想是从最后一个检查点区域开始，找到日志的末端(包含在CR中)，然后使用它读取下一个片段，看看其中是否有任何有效的更新，如果对应的更新有效则相应的更新文件系统，从而恢复自上一个检查点以来写入的大量数据和元数据。<strong>Redo Log</strong></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200729103236.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/MatrixKV/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-07-29">2020-07-29</time>
+                  <h4 class="title white no-margin">MatrixKV: Reducing Write Stalls and Write Amplification in LSM-tree Based KV Stores with Matrix Container in NVM</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/basic-of-persistence-five/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-07-23">2020-07-23</time>
+                  <h4 class="title white no-margin">Series Five of Basic of Persistence -  Locality and The Fast File System</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

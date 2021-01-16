@@ -1,0 +1,2762 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RADOS 读写流程 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+本篇主要总结 RADOS 底层的读写流程，并结合源码进行分析
+考虑基于现有的强一致性模型的读写流程是否有可以优化的点，提升 Ceph 的 IO 性能
+
+
+
+
+OSD 读写流程
+
+
+
+大致分为三个阶段：
+
+接受请求：主要是网络模块相关
+O..." />
+    <meta name="keywords" content="Ceph,分布式" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200924171959.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2020-09-22"><i class="fa fa-calendar"></i><span class="lately">4 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/rados-io-path/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/rados-io-path/"> </span>
+              </a>
+              <span id="/rados-io-path/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-0 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-1 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">RADOS 读写流程</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>本篇主要总结 RADOS 底层的读写流程，并结合源码进行分析</li>
+<li>考虑基于现有的强一致性模型的读写流程是否有可以优化的点，提升 Ceph 的 IO 性能</li>
+<li></li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="osd-读写流程">OSD 读写流程</h2>
+<p><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200924171959.png" alt="20200924171959" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200924172030.png" alt="20200924172030" loading="lazy"></p>
+<ul>
+<li>大致分为三个阶段：
+<ul>
+<li>接受请求：主要是网络模块相关</li>
+<li>OSD 的 op_wq 处理：在工作队列 op_wq 的线程池中处理，检查 PG 状态，封装请求为事务</li>
+<li>PGBackend 的处理：仍然在 op_wq 的线程池中处理，将事务进行分发，由对应的 PGBackend 来实现本地事务处理</li>
+</ul>
+</li>
+</ul>
+<h2 id="pg">PG</h2>
+<ul>
+<li>Placement Group (PG)，是一些对象的集合，对象和 PG 的对应关系其实就是对象标识 HASH 之后取模得到对应的 pg_id（模值为对应存储池对应的 PG 数目）。</li>
+</ul>
+<pre><code class="language-Python">locator = object_name
+obj_hash = hash(locator)
+pg = obj_hash % num_pg
+OSDs_for_pg = crush(pg)  # returns a list of OSDs
+primary = osds_for_pg[0]
+replicas = osds_for_pg[1:]
+</code></pre>
+<ul>
+<li>以 PG 为单位进行组织的目的是为了使用有限的、可控数目的 PG 来管理无限扩张的对象数据，并控制节点资源的分配。</li>
+<li>PG 是数据备份、同步、迁移等操作的基本单位。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200923115445.png" alt="20200923115445" loading="lazy"></li>
+</ul>
+<h3 id="常见的-pg-级别的操作">常见的 PG 级别的操作</h3>
+<h4 id="peering">Peering</h4>
+<ul>
+<li>指（当前或者过去曾经）归属于同一个 PG 所有的 PG 实例就本 PG 所存储的全部对象及对象相关的元数据进行协商并最终达成一致的过程。</li>
+<li>Peering 基于 Info 和 Log 进行。Log 是指权威日志，作为数据同步的依据。Info 是指 PG 的基本元数据信息，在 Peering 过程中通过交换 Info，可以由 Primary 选举得到权威日志。</li>
+<li>此处说的一致，并不意味着每个 PG 实例都实时拥有每个对象的最新内容</li>
+<li><strong>Golden Rule</strong>: 对任何 PG 的写操作只有在该 PG 的操作集的所有成员都持久化后，才会向客户端确认，且在 Peering 期间不能进行任何 IO 操作，且不能做 Recovery</li>
+</ul>
+<h5 id="涉及的其他概念">涉及的其他概念</h5>
+<ul>
+<li><em>Acting Set</em>：负责特定 PG 的(或在某些 epoch 时) OSD 的有序列表。列表第一个 OSD 为主 OSD，其余为 Replica OSD</li>
+<li><em>Up Set</em>：通常情况下和 Acting Set 相同，出现 PG temp 时有所不同。Acting Set 完全由 CRUSH 决定，Up Set 会受到 PG temp 的影响</li>
+<li><em>PG temp</em>：假设一个 PG 的 acting set 为 [0,1,2] 列表。此时如果 osd0 出现故障，导致 CRUSH 算法重新分配该 PG 的 acting set 为 [3,1,2]。此时 osd3 为该 PG 的主 OSD，但是 osd3 为新加入的 OSD，并不能负担该 PG 上的读操作。所以 PG 向 Monitor 申请一个临时的 PG，osd1 为临时的主 OSD，这时 up set 变为 [1,3,2]，acting set 依然为 [3,1,2]，导致 acting set 和 up set 不同。当 osd3 完成 Backfill 过程之后，临时 PG 被取消，该 PG 的 up set 修复为 acting set，此时 acting set 和 up set 都为 [3,1,2] 列表。</li>
+<li><em>Epoch</em>：OSDMap 的版本号，Monitor 管理生成，单增。OSDMap 发生了变化，Epoch 相应地增加，但为了防止 Epoch 的剧烈变化和较快的消耗，一个特定时间段内的修改会被折叠进入一个 Epoch</li>
+<li><em>Interval</em>：OSDMap 的一个连续 Epoch 间隔，该期间内的 PG 的 Active Set 和 Up Set 没有发生变化，也就意味着和 PG 是绑定的。每个 Interval 的起始 Epoch 称之为 <em>same_interval_since</em></li>
+</ul>
+<h5 id="触发时机">触发时机</h5>
+<ul>
+<li>系统初始化时，OSD 重新启动导致 PG 重新加载</li>
+<li>PG 新创建时，PG 会发起一次 Peering 的过程</li>
+<li>当有 OSD 失效，OSD 的增加或者删除等导致 PG 的 acting set 发生了变化，该 PG 就会重新发起一次 Peering 过程</li>
+</ul>
+<h4 id="recovery">Recovery</h4>
+<ul>
+<li>当 PG 完成了 Peering 过程后，处于 Active 状态的 PG 就已经可以对外提供服务了。如果该 PG 的各个副本上有不一致的对象，就需要进行修复。Ceph 的修复过程有两种：Recovery 和 Backfill。本质是针对 PG 某些实例进行数据同步的过程，最终目标是将 PG 变成 Active+Clean 状态</li>
+</ul>
+<h5 id="过程">过程</h5>
+<ul>
+<li>Peering 过程产生关于缺失对象的信息，主副本和从副本对应的缺失对象信息有所不同，存储的位置不同。主 OSD  缺失的对象存储在权威日志 pg_log 的相关数据结构中，副本上缺失的对象存储在 OSD 对应的 peer_missing 的数据结构中。</li>
+<li>对于主 OSD 缺失的对象，随机选择一个拥有该对象的 OSD，拉取数据（PULL）。（先修复主 OSD，再修复从 OSD）</li>
+<li>对于 replica 数据缺失的情况，从主副本上把缺失的对象数据推送到副本上完成数据修复（PUSH）</li>
+<li>快照对象有一些单独的处理</li>
+</ul>
+<h5 id="场景">场景</h5>
+<ul>
+<li>OSD 暂时下线，然后又上线</li>
+<li>OSD 硬件故障下线，更换硬盘重新上线</li>
+</ul>
+<h4 id="pullpush">Pull/Push</h4>
+<ul>
+<li>Recovery 由 Primary 主导进行，期间 Primary 通过 Pull 或者 Push 的方式进行对象间的数据同步</li>
+</ul>
+<h4 id="backfill">Backfill</h4>
+<ul>
+<li>是 Recovery 的一种特殊场景，指 Peering 完成后，如果基于当前权威日志无法对 Up Set 当中的某些 PG 实例实施增量同步（例如承载这些 PG 实例的 OSD 离线太久，或者是新的 OSD 加入集群导致的 PG 实例整体迁移），则通过完全拷贝当前 Primary 所有对象的方式进行全量同步。</li>
+</ul>
+<h4 id="scrub">Scrub</h4>
+<ul>
+<li>Ceph 内部实现的数据一致性检查工具 Ceph Scrub。原理为：通过对比各个对象副本的数据和元数据完成副本的一致性检查。后台执行检查操作，可以设置相应的调度策略来触发 Scrub（立即启动/间隔一定的时间/定时）</li>
+<li>主要包括scrub 和 deep-scrub。
+<ul>
+<li>其中 scrub 只对元数据信息进行扫描，相对比较快；</li>
+<li>而 deep-scrub 不仅对元数据进行扫描，还会对存储的数据进行扫描，几乎要扫描磁盘上的所有数据并计算 crc32 校验值，相对比较慢。</li>
+</ul>
+</li>
+</ul>
+<h2 id="primarylogpgdo_request">PrimaryLogPG::do_request</h2>
+<ul>
+<li>该步骤主要是做一些 PG 级别的检查，以及一些 PG 级别的操作的分发处理。</li>
+<li>操作最终可能因为各种各样的原因被加入到响应队列推迟处理，对应了很多种重试队列，用于区分不同的场景。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200923164805.png" alt="20200923164805" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200923164817.png" alt="20200923164817" loading="lazy"></li>
+<li>为了保证 OP 之间不会乱序，上述队列均为 FIFO 队列，且队列之间也严格有序。当对应的限制接触后，PG 会触发关联的 OP 重新进入 op_shardedwq 队列排队，等候再次被 PG 执行</li>
+<li>最终许多普通的操作都会进入 do_op 执行</li>
+</ul>
+<pre><code class="language-C++">void PrimaryLogPG::do_request(
+    OpRequestRef &amp;op,
+    ThreadPool::TPHandle &amp;handle)
+{
+  // Trace 相关配置检查
+  if (op-&gt;osd_trace)
+  {
+    op-&gt;pg_trace.init(&quot;pg op&quot;, &amp;trace_endpoint, &amp;op-&gt;osd_trace);
+    op-&gt;pg_trace.event(&quot;do request&quot;);
+  }
+
+  // make sure we have a new enough map
+  // 判断 waiting_for_map 队列中是否有来自相同客户端的操作
+  auto p = waiting_for_map.find(op-&gt;get_source());
+  if (p != waiting_for_map.end())
+  {
+    // 有则将当前 Op 加入 waiting_for_map 队列，然后直接返回
+    // preserve ordering
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; waiting_for_map &quot;
+             &lt;&lt; p-&gt;first &lt;&lt; &quot; not empty, queueing&quot; &lt;&lt; dendl;
+    p-&gt;second.push_back(op);
+    op-&gt;mark_delayed(&quot;waiting_for_map not empty&quot;);
+    return;
+  }
+
+  // 判断当前 op 携带的 Epoch 信息是否是最新的 op-&gt;min_epoch &lt;= get_osdmap_epoch()
+  if (!have_same_or_newer_map(op-&gt;min_epoch))
+  {
+    // 如果 Op 携带的 epoch 更新，则将当前 Op 加入 waiting_for_map 队列，然后直接返回
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; min &quot; &lt;&lt; op-&gt;min_epoch
+             &lt;&lt; &quot;, queue on waiting_for_map &quot; &lt;&lt; op-&gt;get_source() &lt;&lt; dendl;
+    waiting_for_map[op-&gt;get_source()].push_back(op);
+    op-&gt;mark_delayed(&quot;op must wait for map&quot;);
+    osd-&gt;request_osdmap_update(op-&gt;min_epoch);
+    return;
+  }
+
+  // 判断是否可以丢弃掉该 op
+  //   1. op 对应的客户端链路断开
+  //   2. 收到 op 时，PG 当前已经切换到一个更新的 Interval (即 PG 此时的 same_interval_since 比 op 携带的 Epoch 要大，后续客户端会重发)
+  //   3. op 在 PG 分裂之前发送（后续客户端会进行重发）
+  //   4. ...
+  if (can_discard_request(op))
+  {
+    return;
+  }
+
+  // pg-wide backoffs
+  const Message *m = op-&gt;get_req();
+  int msg_type = m-&gt;get_type();
+  if (m-&gt;get_connection()-&gt;has_feature(CEPH_FEATURE_RADOS_BACKOFF))
+  {
+    auto session = ceph::ref_cast&lt;Session&gt;(m-&gt;get_connection()-&gt;get_priv());
+    if (!session)
+      return; // drop it.
+
+    if (msg_type == CEPH_MSG_OSD_OP)
+    {
+      if (session-&gt;check_backoff(cct, info.pgid,
+                                 info.pgid.pgid.get_hobj_start(), m))
+      {
+        return;
+      }
+
+      bool backoff =
+          is_down() ||
+          is_incomplete() ||
+          (!is_active() &amp;&amp; is_peered());
+      if (g_conf()-&gt;osd_backoff_on_peering &amp;&amp; !backoff)
+      {
+        if (is_peering())
+        {
+          backoff = true;
+        }
+      }
+      if (backoff)
+      {
+        add_pg_backoff(session);
+        return;
+      }
+    }
+    // pg backoff acks at pg-level
+    if (msg_type == CEPH_MSG_OSD_BACKOFF)
+    {
+      const MOSDBackoff *ba = static_cast&lt;const MOSDBackoff *&gt;(m);
+      if (ba-&gt;begin != ba-&gt;end)
+      {
+        handle_backoff(op);
+        return;
+      }
+    }
+  }
+
+  // PG 是否处于 Active 或者 Peer 状态？
+  if (!is_peered())
+  {
+    // 不处于上述状态，判断是否可以由后端直接处理。
+    // 1. ECBackend 该情况下不能处理
+    // 2. ReplicatedBackend 判断如果是 PULL 操作则可以进行处理
+    // Delay unless PGBackend says it's ok
+    if (pgbackend-&gt;can_handle_while_inactive(op))
+    {
+      bool handled = pgbackend-&gt;handle_message(op);
+      ceph_assert(handled);
+      return;
+    }
+    else
+    {
+      // 不能处理则加入 waiting_for_peered 队列，然后返回。
+      waiting_for_peered.push_back(op);
+      op-&gt;mark_delayed(&quot;waiting for peered&quot;);
+      return;
+    }
+  }
+
+  // PG 处于 Active 或者 Peer 状态，判断是否正在进行刷回
+  if (recovery_state.needs_flush())
+  {
+    // 正在刷回则将该 op 加入 waiting_for_flush 队列，并返回
+    dout(20) &lt;&lt; &quot;waiting for flush on &quot; &lt;&lt; op &lt;&lt; dendl;
+    waiting_for_flush.push_back(op);
+    op-&gt;mark_delayed(&quot;waiting for flush&quot;);
+    return;
+  }
+
+  ceph_assert(is_peered() &amp;&amp; !recovery_state.needs_flush());
+
+  // 由 PGBackend 直接处理然后返回，此处只处理以下操作
+  // 1. MSG_OSD_PG_RECOVERY_DELETE (Common)
+  // 2. MSG_OSD_PG_RECOVERY_DELETE_REPLY (Common)
+  // 3. MSG_OSD_PG_PUSH (副本)
+  // 4. MSG_OSD_PG_PULL (副本)
+  // 5. MSG_OSD_PG_PUSH_REPLY (副本)
+  // 6. MSG_OSD_REPOP (副本)
+  // 7. MSG_OSD_REPOPREPLY (副本)
+  // 8. MSG_OSD_EC_WRITE (EC)
+  // 9. MSG_OSD_EC_WRITE_REPLY (EC)
+  // 10. MSG_OSD_EC_READ (EC)
+  // 11. MSG_OSD_EC_READ_REPLY (EC)
+  // 12. MSG_OSD_PG_PUSH (EC)
+  // 13. MSG_OSD_PG_PUSH_REPLY (EC)
+  if (pgbackend-&gt;handle_message(op))
+    return;
+
+  // 其余操作如下处理：
+  switch (msg_type)
+  {
+  case CEPH_MSG_OSD_OP:
+  case CEPH_MSG_OSD_BACKOFF:
+    // 判断是否是 Active 状态
+    if (!is_active())
+    {
+      // 即 Peer 状态，加入 waiting_for_active 队列并返回
+      dout(20) &lt;&lt; &quot; peered, not active, waiting for active on &quot; &lt;&lt; op &lt;&lt; dendl;
+      waiting_for_active.push_back(op);
+      op-&gt;mark_delayed(&quot;waiting for active&quot;);
+      return;
+    }
+
+    // 为 Active 状态
+    switch (msg_type)
+    {
+      // 处理 CEPH_MSG_OSD_OP
+      // 如果为 tier 相关直接报错，否则 do_op
+    case CEPH_MSG_OSD_OP:
+      // verify client features
+      if ((pool.info.has_tiers() || pool.info.is_tier()) &amp;&amp;
+          !op-&gt;has_feature(CEPH_FEATURE_OSD_CACHEPOOL))
+      {
+        osd-&gt;reply_op_error(op, -EOPNOTSUPP);
+        return;
+      }
+      do_op(op);
+      break;
+      
+      
+      // 处理 CEPH_MSG_OSD_BACKOFF
+    case CEPH_MSG_OSD_BACKOFF:
+      // object-level backoff acks handled in osdop context
+      handle_backoff(op);
+      break;
+    }
+    break;
+
+  // 其他操作的处理
+  case MSG_OSD_PG_SCAN:
+    do_scan(op, handle);
+    break;
+
+  case MSG_OSD_PG_BACKFILL:
+    do_backfill(op);
+    break;
+
+  case MSG_OSD_PG_BACKFILL_REMOVE:
+    do_backfill_remove(op);
+    break;
+
+  case MSG_OSD_SCRUB_RESERVE:
+  {
+    auto m = op-&gt;get_req&lt;MOSDScrubReserve&gt;();
+    switch (m-&gt;type)
+    {
+    case MOSDScrubReserve::REQUEST:
+      handle_scrub_reserve_request(op);
+      break;
+    case MOSDScrubReserve::GRANT:
+      handle_scrub_reserve_grant(op, m-&gt;from);
+      break;
+    case MOSDScrubReserve::REJECT:
+      handle_scrub_reserve_reject(op, m-&gt;from);
+      break;
+    case MOSDScrubReserve::RELEASE:
+      handle_scrub_reserve_release(op);
+      break;
+    }
+  }
+  break;
+
+  case MSG_OSD_REP_SCRUB:
+    replica_scrub(op, handle);
+    break;
+
+  case MSG_OSD_REP_SCRUBMAP:
+    do_replica_scrub_map(op);
+    break;
+
+  case MSG_OSD_PG_UPDATE_LOG_MISSING:
+    do_update_log_missing(op);
+    break;
+
+  case MSG_OSD_PG_UPDATE_LOG_MISSING_REPLY:
+    do_update_log_missing_reply(op);
+    break;
+
+  default:
+    ceph_abort_msg(&quot;bad message type in do_request&quot;);
+  }
+}
+</code></pre>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200922103400.png" alt="20200922103400" loading="lazy"></figure>
+<h2 id="primarylogpgdo_op">PrimaryLogPG::do_op</h2>
+<pre><code class="language-C++">/** do_op - do an op
+ * pg lock will be held (if multithreaded)
+ * osd_lock NOT held.
+ */
+void PrimaryLogPG::do_op(OpRequestRef &amp;op)
+{
+  FUNCTRACE(cct);
+
+  // 使用一个指针进行指向对应的请求，后续操作都使用该指针
+  // NOTE: take a non-const pointer here; we must be careful not to
+  // change anything that will break other reads on m (operator&lt;&lt;).
+  MOSDOp *m = static_cast&lt;MOSDOp *&gt;(op-&gt;get_nonconst_req());
+  
+  // op 参数校验
+  ceph_assert(m-&gt;get_type() == CEPH_MSG_OSD_OP);
+
+  // decode 请求解码状态判断，从 bufferlist 中解析数据
+  if (m-&gt;finish_decode())
+  {
+    op-&gt;reset_desc(); // for TrackedOp
+    m-&gt;clear_payload();
+  }
+
+  dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: op &quot; &lt;&lt; *m &lt;&lt; dendl;
+
+  const hobject_t head = m-&gt;get_hobj().get_head();
+
+  // 【PG 参数检查】判断是否包含 op 所携带的对象
+  if (!info.pgid.pgid.contains(
+          info.pgid.pgid.get_split_bits(pool.info.get_pg_num()), head))
+  {
+    derr &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; info.pgid.pgid &lt;&lt; &quot; does not contain &quot;
+         &lt;&lt; head &lt;&lt; &quot; pg_num &quot; &lt;&lt; pool.info.get_pg_num() &lt;&lt; &quot; hash &quot;
+         &lt;&lt; std::hex &lt;&lt; head.get_hash() &lt;&lt; std::dec &lt;&lt; dendl;
+    osd-&gt;clog-&gt;warn() &lt;&lt; info.pgid.pgid &lt;&lt; &quot; does not contain &quot; &lt;&lt; head
+                      &lt;&lt; &quot; op &quot; &lt;&lt; *m;
+    ceph_assert(!cct-&gt;_conf-&gt;osd_debug_misdirected_ops);
+    return;
+  }
+
+  bool can_backoff =
+      m-&gt;get_connection()-&gt;has_feature(CEPH_FEATURE_RADOS_BACKOFF);
+  ceph::ref_t&lt;Session&gt; session;
+  if (can_backoff)
+  {
+    session = static_cast&lt;Session *&gt;(m-&gt;get_connection()-&gt;get_priv().get());
+    if (!session.get())
+    {
+      dout(10) &lt;&lt; __func__ &lt;&lt; &quot; no session&quot; &lt;&lt; dendl;
+      return;
+    }
+
+    if (session-&gt;check_backoff(cct, info.pgid, head, m))
+    {
+      return;
+    }
+  }
+
+
+  // op 携带了 CEPH_OSD_FLAG_PARALLELEXEC 标志，指示可以并发执行
+  if (m-&gt;has_flag(CEPH_OSD_FLAG_PARALLELEXEC))
+  {
+    // not implemented.
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: PARALLELEXEC not implemented &quot; &lt;&lt; *m &lt;&lt; dendl;
+    osd-&gt;reply_op_error(op, -EINVAL);
+    return;
+  }
+
+  {
+    int r = op-&gt;maybe_init_op_info(*get_osdmap());
+    if (r)
+    {
+      osd-&gt;reply_op_error(op, r);
+      return;
+    }
+  }
+
+
+  // op 携带了 CEPH_OSD_FLAG_BALANCE_READS 或者 CEPH_OSD_FLAG_LOCALIZE_READS 标志，
+  // 指示可以读取别的 OSD 节点，不一定是主 OSD，或者执行本地读
+  // 注意：该 Flag 支持读操作，且不支持缓存
+  if ((m-&gt;get_flags() &amp; (CEPH_OSD_FLAG_BALANCE_READS |
+                         CEPH_OSD_FLAG_LOCALIZE_READS)) &amp;&amp;
+      op-&gt;may_read() &amp;&amp;
+      !(op-&gt;may_write() || op-&gt;may_cache()))
+  {
+    // 当前节点既不是主节点，也不是 replicated 节点时，譬如 Stray，则报错
+    // balanced reads; any replica will do
+    if (!(is_primary() || is_nonprimary()))
+    {
+      osd-&gt;handle_misdirected_op(this, op);
+      return;
+    }
+  }
+  else
+  {
+    // 正常操作的时候必须是主节点，否则报错
+    // normal case; must be primary
+    if (!is_primary())
+    {
+      osd-&gt;handle_misdirected_op(this, op);
+      return;
+    }
+  }
+
+  // 判断是否为 laggy 状态
+  // https://docs.ceph.com/en/latest/dev/osd_internals/stale_read/
+  if (!check_laggy(op))
+  {
+    return;
+  }
+
+  // 检查权限 caps
+  if (!op_has_sufficient_caps(op))
+  {
+    osd-&gt;reply_op_error(op, -EPERM);
+    return;
+  }
+
+  // 如果包含 includes_pg_op 操作（对 PG 的操作，主要是获取 PG 相关信息），则执行 do_pg_op
+  if (op-&gt;includes_pg_op())
+  {
+    return do_pg_op(op);
+  }
+
+  // 对象名称超过、key、命名空间等数据信息超过最大限制会影响存储后端
+  // 检查 oid 是否为空，检查对象 key
+  // object name too long?
+  if (m-&gt;get_oid().name.size() &gt; cct-&gt;_conf-&gt;osd_max_object_name_len)
+  {
+    dout(4) &lt;&lt; &quot;do_op name is longer than &quot;
+            &lt;&lt; cct-&gt;_conf-&gt;osd_max_object_name_len
+            &lt;&lt; &quot; bytes&quot; &lt;&lt; dendl;
+    osd-&gt;reply_op_error(op, -ENAMETOOLONG);
+    return;
+  }
+  if (m-&gt;get_hobj().get_key().size() &gt; cct-&gt;_conf-&gt;osd_max_object_name_len)
+  {
+    dout(4) &lt;&lt; &quot;do_op locator is longer than &quot;
+            &lt;&lt; cct-&gt;_conf-&gt;osd_max_object_name_len
+            &lt;&lt; &quot; bytes&quot; &lt;&lt; dendl;
+    osd-&gt;reply_op_error(op, -ENAMETOOLONG);
+    return;
+  }
+  if (m-&gt;get_hobj().nspace.size() &gt; cct-&gt;_conf-&gt;osd_max_object_namespace_len)
+  {
+    dout(4) &lt;&lt; &quot;do_op namespace is longer than &quot;
+            &lt;&lt; cct-&gt;_conf-&gt;osd_max_object_namespace_len
+            &lt;&lt; &quot; bytes&quot; &lt;&lt; dendl;
+    osd-&gt;reply_op_error(op, -ENAMETOOLONG);
+    return;
+  }
+  if (m-&gt;get_hobj().oid.name.empty())
+  {
+    dout(4) &lt;&lt; &quot;do_op empty oid name is not allowed&quot; &lt;&lt; dendl;
+    osd-&gt;reply_op_error(op, -EINVAL);
+    return;
+  }
+
+  if (int r = osd-&gt;store-&gt;validate_hobject_key(head))
+  {
+    dout(4) &lt;&lt; &quot;do_op object &quot; &lt;&lt; head &lt;&lt; &quot; invalid for backing store: &quot;
+            &lt;&lt; r &lt;&lt; dendl;
+    osd-&gt;reply_op_error(op, r);
+    return;
+  }
+
+  // 客户端被禁止访问
+  // blocklisted?
+  if (get_osdmap()-&gt;is_blocklisted(m-&gt;get_source_addr()))
+  {
+    dout(10) &lt;&lt; &quot;do_op &quot; &lt;&lt; m-&gt;get_source_addr() &lt;&lt; &quot; is blocklisted&quot; &lt;&lt; dendl;
+    osd-&gt;reply_op_error(op, -EBLOCKLISTED);
+    return;
+  }
+
+  // order this op as a write?
+  bool write_ordered = op-&gt;rwordered();
+
+  // 检查集群是否已被标记为 FULL，并检查 op 是否有携带 CEPH_OSD_FLAG_FULL_TRY 和 CEPH_OSD_FLAG_FULL_FORCE 标志
+  // discard due to cluster full transition?  (we discard any op that
+  // originates before the cluster or pool is marked full; the client
+  // will resend after the full flag is removed or if they expect the
+  // op to succeed despite being full).  The except is FULL_FORCE and
+  // FULL_TRY ops, which there is no reason to discard because they
+  // bypass all full checks anyway.  If this op isn't write or
+  // read-ordered, we skip.
+  // FIXME: we exclude mds writes for now.
+  if (write_ordered &amp;&amp; !(m-&gt;get_source().is_mds() || m-&gt;has_flag(CEPH_OSD_FLAG_FULL_TRY) || m-&gt;has_flag(CEPH_OSD_FLAG_FULL_FORCE)) &amp;&amp;
+      info.history.last_epoch_marked_full &gt; m-&gt;get_map_epoch())
+  {
+    dout(10) &lt;&lt; __func__ &lt;&lt; &quot; discarding op sent before full &quot; &lt;&lt; m &lt;&lt; &quot; &quot;
+             &lt;&lt; *m &lt;&lt; dendl;
+    return;
+  }
+
+  // 检查 PG 所在 OSD 可用存储空间情况
+  // mds should have stopped writing before this point.
+  // We can't allow OSD to become non-startable even if mds
+  // could be writing as part of file removals.
+  if (write_ordered &amp;&amp; osd-&gt;check_failsafe_full(get_dpp()) &amp;&amp;
+      !m-&gt;has_flag(CEPH_OSD_FLAG_FULL_TRY))
+  {
+    dout(10) &lt;&lt; __func__ &lt;&lt; &quot; fail-safe full check failed, dropping request.&quot; &lt;&lt; dendl;
+    return;
+  }
+  int64_t poolid = get_pgid().pool();
+  
+  // 判断 op 是否为写操作
+  if (op-&gt;may_write())
+  {
+    // 获取对应的 pool 并检查
+    const pg_pool_t *pi = get_osdmap()-&gt;get_pg_pool(poolid);
+    if (!pi)
+    {
+      return;
+    }
+
+    // invalid?
+    // 判断是否访问快照对象，若访问则报错，快照不允许写
+    if (m-&gt;get_snapid() != CEPH_NOSNAP)
+    {
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: write to clone not valid &quot; &lt;&lt; *m &lt;&lt; dendl;
+      osd-&gt;reply_op_error(op, -EINVAL);
+      return;
+    }
+
+    // too big?
+    // 判断写入的数据大小并校验，osd_max_write_size
+    if (cct-&gt;_conf-&gt;osd_max_write_size &amp;&amp;
+        m-&gt;get_data_len() &gt; cct-&gt;_conf-&gt;osd_max_write_size &lt;&lt; 20)
+    {
+      // journal can't hold commit!
+      derr &lt;&lt; &quot;do_op msg data len &quot; &lt;&lt; m-&gt;get_data_len()
+           &lt;&lt; &quot; &gt; osd_max_write_size &quot; &lt;&lt; (cct-&gt;_conf-&gt;osd_max_write_size &lt;&lt; 20)
+           &lt;&lt; &quot; on &quot; &lt;&lt; *m &lt;&lt; dendl;
+      osd-&gt;reply_op_error(op, -OSD_WRITETOOBIG);
+      return;
+    }
+  }
+
+  dout(10) &lt;&lt; &quot;do_op &quot; &lt;&lt; *m
+           &lt;&lt; (op-&gt;may_write() ? &quot; may_write&quot; : &quot;&quot;)
+           &lt;&lt; (op-&gt;may_read() ? &quot; may_read&quot; : &quot;&quot;)
+           &lt;&lt; (op-&gt;may_cache() ? &quot; may_cache&quot; : &quot;&quot;)
+           &lt;&lt; &quot; -&gt; &quot; &lt;&lt; (write_ordered ? &quot;write-ordered&quot; : &quot;read-ordered&quot;)
+           &lt;&lt; &quot; flags &quot; &lt;&lt; ceph_osd_flag_string(m-&gt;get_flags())
+           &lt;&lt; dendl;
+
+  // missing object?
+  // 检查对象是否不可读，
+  // 1. 如果对象在 missing 列表（恢复过程中检查 PGLog 构建的 missing 列表）中，不可读
+  // 2. 数据修复过程中，在当前 acting set 对应的多个 OSD 上该对象不可读
+  // bool is_unreadable_object(const hobject_t &amp;oid) const
+  // {
+  //   return is_missing_object(oid) ||
+  //          !recovery_state.get_missing_loc().readable_with_acting(
+  //              oid, get_actingset());
+  // }
+  if (is_unreadable_object(head))
+  {
+    // 不是主节点 报错
+    if (!is_primary())
+    {
+      osd-&gt;reply_op_error(op, -EAGAIN);
+      return;
+    }
+
+    // 是主节点相应地判断 OSD backoff 状态
+    if (can_backoff &amp;&amp;
+        (g_conf()-&gt;osd_backoff_on_degraded ||
+         (g_conf()-&gt;osd_backoff_on_unfound &amp;&amp;
+          recovery_state.get_missing_loc().is_unfound(head))))
+    {
+      add_backoff(session, head, head);
+      maybe_kick_recovery(head);
+    }
+    else
+    {
+      // 等待对象恢复完成
+      wait_for_unreadable_object(head, op);
+    }
+    return;
+  }
+
+
+  // 顺序写
+  if (write_ordered)
+  {
+    // 对象处于降级状态（恢复状态）
+    // degraded object?
+    if (is_degraded_or_backfilling_object(head))
+    {
+      if (can_backoff &amp;&amp; g_conf()-&gt;osd_backoff_on_degraded)
+      {
+        // 尝试启动 recovery
+        add_backoff(session, head, head);
+        maybe_kick_recovery(head);
+      }
+      else
+      {
+        wait_for_degraded_object(head, op);
+      }
+      return;
+    }
+
+    // 对象正在被 scrub，加入相应的队列 waiting_for_scrub
+    if (scrubber.is_chunky_scrub_active() &amp;&amp; write_blocked_by_scrub(head))
+    {
+      dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: waiting for scrub&quot; &lt;&lt; dendl;
+      waiting_for_scrub.push_back(op);
+      op-&gt;mark_delayed(&quot;waiting for scrub&quot;);
+      return;
+    }
+    if (!check_laggy_requeue(op))
+    {
+      return;
+    }
+
+    // 对象被 snap
+    // objects_blocked_on_degraded_snap 保存了 head 对象则需要等待
+    // head 对象在 rollback 到某个版本的快照时，该版本的 snap 对象处于确实状态，则需要等待 snap 对象恢复
+    // blocked on snap?
+    if (auto blocked_iter = objects_blocked_on_degraded_snap.find(head);
+        blocked_iter != std::end(objects_blocked_on_degraded_snap))
+    {
+      hobject_t to_wait_on(head);
+      to_wait_on.snap = blocked_iter-&gt;second;
+      wait_for_degraded_object(to_wait_on, op);
+      return;
+    }
+
+    // objects_blocked_on_snap_promotion 里的对象表示 head 对象 rollback 到某个版本的快照时
+    // 该版本的快照对象在 cache pool 层中没有，需要到 data pool 层获取
+    if (auto blocked_snap_promote_iter = objects_blocked_on_snap_promotion.find(head);
+        blocked_snap_promote_iter != std::end(objects_blocked_on_snap_promotion))
+    {
+      wait_for_blocked_object(blocked_snap_promote_iter-&gt;second-&gt;obs.oi.soid, op);
+      return;
+    }
+
+    // objects_blocked_on_cache_full 该队列中的对象因为 cache pool 层空间满而阻塞了写操作
+    if (objects_blocked_on_cache_full.count(head))
+    {
+      block_write_on_full_cache(head, op);
+      return;
+    }
+  }
+
+  // 检查 op 是否为重发
+  // dup/resent?
+  if (op-&gt;may_write() || op-&gt;may_cache())
+  {
+    // warning: we will get back *a* request for this reqid, but not
+    // necessarily the most recent.  this happens with flush and
+    // promote ops, but we can't possible have both in our log where
+    // the original request is still not stable on disk, so for our
+    // purposes here it doesn't matter which one we get.
+    eversion_t version;
+    version_t user_version;
+    int return_code = 0;
+    vector&lt;pg_log_op_return_item_t&gt; op_returns;
+    bool got = check_in_progress_op(
+        m-&gt;get_reqid(), &amp;version, &amp;user_version, &amp;return_code, &amp;op_returns);
+    if (got)
+    {
+      dout(3) &lt;&lt; __func__ &lt;&lt; &quot; dup &quot; &lt;&lt; m-&gt;get_reqid()
+              &lt;&lt; &quot; version &quot; &lt;&lt; version &lt;&lt; dendl;
+      if (already_complete(version))
+      {
+        osd-&gt;reply_op_error(op, return_code, version, user_version, op_returns);
+      }
+      else
+      {
+        dout(10) &lt;&lt; &quot; waiting for &quot; &lt;&lt; version &lt;&lt; &quot; to commit&quot; &lt;&lt; dendl;
+        // always queue ondisk waiters, so that we can requeue if needed
+        waiting_for_ondisk[version].emplace_back(op, user_version, return_code,
+                                                 op_returns);
+        op-&gt;mark_delayed(&quot;waiting for ondisk&quot;);
+      }
+      return;
+    }
+  }
+
+  ObjectContextRef obc;
+  bool can_create = op-&gt;may_write();
+  hobject_t missing_oid;
+
+  // kludge around the fact that LIST_SNAPS sets CEPH_SNAPDIR for LIST_SNAPS
+  const hobject_t &amp;oid =
+      m-&gt;get_snapid() == CEPH_SNAPDIR ? head : m-&gt;get_hobj();
+
+  // make sure LIST_SNAPS is on CEPH_SNAPDIR and nothing else
+  for (vector&lt;OSDOp&gt;::iterator p = m-&gt;ops.begin(); p != m-&gt;ops.end(); ++p)
+  {
+    OSDOp &amp;osd_op = *p;
+
+    if (osd_op.op.op == CEPH_OSD_OP_LIST_SNAPS)
+    {
+      if (m-&gt;get_snapid() != CEPH_SNAPDIR)
+      {
+        dout(10) &lt;&lt; &quot;LIST_SNAPS with incorrect context&quot; &lt;&lt; dendl;
+        osd-&gt;reply_op_error(op, -EINVAL);
+        return;
+      }
+    }
+    else
+    {
+      if (m-&gt;get_snapid() == CEPH_SNAPDIR)
+      {
+        dout(10) &lt;&lt; &quot;non-LIST_SNAPS on snapdir&quot; &lt;&lt; dendl;
+        osd-&gt;reply_op_error(op, -EINVAL);
+        return;
+      }
+    }
+  }
+
+  // io blocked on obc?
+  if (!m-&gt;has_flag(CEPH_OSD_FLAG_FLUSH) &amp;&amp;
+      maybe_await_blocked_head(oid, op))
+  {
+    return;
+  }
+
+
+  // 当前节点不是主节点
+  if (!is_primary())
+  {
+    // 判断当前状态下是否能处理副本节点的读请求
+    if (!recovery_state.can_serve_replica_read(oid))
+    {
+      dout(20) &lt;&lt; __func__
+               &lt;&lt; &quot;: unstable write on replica, bouncing to primary &quot;
+               &lt;&lt; *m &lt;&lt; dendl;
+      osd-&gt;reply_op_error(op, -EAGAIN);
+      return;
+    }
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: serving replica read on oid &quot; &lt;&lt; oid
+             &lt;&lt; dendl;
+  }
+
+  int r = find_object_context(
+      oid, &amp;obc, can_create,
+      m-&gt;has_flag(CEPH_OSD_FLAG_MAP_SNAP_CLONE),
+      &amp;missing_oid);
+
+  // LIST_SNAPS needs the ssc too
+  if (obc &amp;&amp;
+      m-&gt;get_snapid() == CEPH_SNAPDIR &amp;&amp;
+      !obc-&gt;ssc)
+  {
+    obc-&gt;ssc = get_snapset_context(oid, true);
+  }
+
+  if (r == -EAGAIN)
+  {
+    // If we're not the primary of this OSD, we just return -EAGAIN. Otherwise,
+    // we have to wait for the object.
+    if (is_primary())
+    {
+      // missing the specific snap we need; requeue and wait.
+      ceph_assert(!op-&gt;may_write()); // only happens on a read/cache
+      wait_for_unreadable_object(missing_oid, op);
+      return;
+    }
+  }
+  else if (r == 0)
+  {
+    // 检查 snapdir 对象是否可读
+    if (is_unreadable_object(obc-&gt;obs.oi.soid))
+    {
+      dout(10) &lt;&lt; __func__ &lt;&lt; &quot;: clone &quot; &lt;&lt; obc-&gt;obs.oi.soid
+               &lt;&lt; &quot; is unreadable, waiting&quot; &lt;&lt; dendl;
+      wait_for_unreadable_object(obc-&gt;obs.oi.soid, op);
+      return;
+    }
+
+    // 如果是写操作需要检查 snapdir 对象是否缺失
+    // degraded object?  (the check above was for head; this could be a clone)
+    if (write_ordered &amp;&amp;
+        obc-&gt;obs.oi.soid.snap != CEPH_NOSNAP &amp;&amp;
+        is_degraded_or_backfilling_object(obc-&gt;obs.oi.soid))
+    {
+      dout(10) &lt;&lt; __func__ &lt;&lt; &quot;: clone &quot; &lt;&lt; obc-&gt;obs.oi.soid
+               &lt;&lt; &quot; is degraded, waiting&quot; &lt;&lt; dendl;
+      wait_for_degraded_object(obc-&gt;obs.oi.soid, op);
+      return;
+    }
+  }
+
+  bool in_hit_set = false;
+
+  // hitset 不为空，进入 cache tiering 流程
+  if (hit_set)
+  {
+    if (obc.get())
+    {
+      if (obc-&gt;obs.oi.soid != hobject_t() &amp;&amp; hit_set-&gt;contains(obc-&gt;obs.oi.soid))
+        in_hit_set = true;
+    }
+    else
+    {
+      if (missing_oid != hobject_t() &amp;&amp; hit_set-&gt;contains(missing_oid))
+        in_hit_set = true;
+    }
+    if (!op-&gt;hitset_inserted)
+    {
+      hit_set-&gt;insert(oid);
+      op-&gt;hitset_inserted = true;
+      if (hit_set-&gt;is_full() ||
+          hit_set_start_stamp + pool.info.hit_set_period &lt;= m-&gt;get_recv_stamp())
+      {
+        hit_set_persist();
+      }
+    }
+  }
+
+  if (agent_state)
+  {
+    if (agent_choose_mode(false, op))
+      return;
+  }
+
+  if (obc.get() &amp;&amp; obc-&gt;obs.exists &amp;&amp; obc-&gt;obs.oi.has_manifest())
+  {
+    if (maybe_handle_manifest(op,
+                              write_ordered,
+                              obc))
+      return;
+  }
+
+  if (maybe_handle_cache(op,
+                         write_ordered,
+                         obc,
+                         r,
+                         missing_oid,
+                         false,
+                         in_hit_set))
+    return;
+
+  if (r &amp;&amp; (r != -ENOENT || !obc))
+  {
+    // copy the reqids for copy get on ENOENT
+    if (r == -ENOENT &amp;&amp;
+        (m-&gt;ops[0].op.op == CEPH_OSD_OP_COPY_GET))
+    {
+      fill_in_copy_get_noent(op, oid, m-&gt;ops[0]);
+      return;
+    }
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: find_object_context got error &quot; &lt;&lt; r &lt;&lt; dendl;
+    if (op-&gt;may_write() &amp;&amp;
+        get_osdmap()-&gt;require_osd_release &gt;= ceph_release_t::kraken)
+    {
+      record_write_error(op, oid, nullptr, r);
+    }
+    else
+    {
+      osd-&gt;reply_op_error(op, r);
+    }
+    return;
+  }
+
+  // 验证 object_locator 和 msg 中的是否相同
+  // make sure locator is consistent
+  object_locator_t oloc(obc-&gt;obs.oi.soid);
+  if (m-&gt;get_object_locator() != oloc)
+  {
+    dout(10) &lt;&lt; &quot; provided locator &quot; &lt;&lt; m-&gt;get_object_locator()
+             &lt;&lt; &quot; != object's &quot; &lt;&lt; obc-&gt;obs.oi.soid &lt;&lt; dendl;
+    osd-&gt;clog-&gt;warn() &lt;&lt; &quot;bad locator &quot; &lt;&lt; m-&gt;get_object_locator()
+                      &lt;&lt; &quot; on object &quot; &lt;&lt; oloc
+                      &lt;&lt; &quot; op &quot; &lt;&lt; *m;
+  }
+
+  // 检查该对象是否被阻塞
+  // io blocked on obc?
+  if (obc-&gt;is_blocked() &amp;&amp;
+      !m-&gt;has_flag(CEPH_OSD_FLAG_FLUSH))
+  {
+    wait_for_blocked_object(obc-&gt;obs.oi.soid, op);
+    return;
+  }
+
+  dout(25) &lt;&lt; __func__ &lt;&lt; &quot; oi &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
+
+
+
+  // 获取对象上下文，创建 OpContext 对 op 进行跟踪
+  OpContext *ctx = new OpContext(op, m-&gt;get_reqid(), &amp;m-&gt;ops, obc, this);
+
+  // 根据对应的 flag 决定锁的处理方式
+  if (m-&gt;has_flag(CEPH_OSD_FLAG_SKIPRWLOCKS))
+  {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: skipping rw locks&quot; &lt;&lt; dendl;
+  }
+  else if (m-&gt;get_flags() &amp; CEPH_OSD_FLAG_FLUSH)
+  {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: part of flush, will ignore write lock&quot; &lt;&lt; dendl;
+
+    // verify there is in fact a flush in progress
+    // FIXME: we could make this a stronger test.
+    map&lt;hobject_t, FlushOpRef&gt;::iterator p = flush_ops.find(obc-&gt;obs.oi.soid);
+    if (p == flush_ops.end())
+    {
+      dout(10) &lt;&lt; __func__ &lt;&lt; &quot; no flush in progress, aborting&quot; &lt;&lt; dendl;
+      reply_ctx(ctx, -EINVAL);
+      return;
+    }
+  }
+  else if (!get_rw_locks(write_ordered, ctx))
+  {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; waiting for rw locks &quot; &lt;&lt; dendl;
+    op-&gt;mark_delayed(&quot;waiting for rw locks&quot;);
+    close_op_ctx(ctx);
+    return;
+  }
+  dout(20) &lt;&lt; __func__ &lt;&lt; &quot; obc &quot; &lt;&lt; *obc &lt;&lt; dendl;
+
+  if (r)
+  {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; returned an error: &quot; &lt;&lt; r &lt;&lt; dendl;
+    if (op-&gt;may_write() &amp;&amp;
+        get_osdmap()-&gt;require_osd_release &gt;= ceph_release_t::kraken)
+    {
+      record_write_error(op, oid, nullptr, r,
+                         ctx-&gt;op-&gt;allows_returnvec() ? ctx : nullptr);
+    }
+    else
+    {
+      osd-&gt;reply_op_error(op, r);
+    }
+    close_op_ctx(ctx);
+    return;
+  }
+
+  if (m-&gt;has_flag(CEPH_OSD_FLAG_IGNORE_CACHE))
+  {
+    ctx-&gt;ignore_cache = true;
+  }
+
+  if ((op-&gt;may_read()) &amp;&amp; (obc-&gt;obs.oi.is_lost()))
+  {
+    // This object is lost. Reading from it returns an error.
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: object &quot; &lt;&lt; obc-&gt;obs.oi.soid
+             &lt;&lt; &quot; is lost&quot; &lt;&lt; dendl;
+    reply_ctx(ctx, -ENFILE);
+    return;
+  }
+  if (!op-&gt;may_write() &amp;&amp;
+      !op-&gt;may_cache() &amp;&amp;
+      (!obc-&gt;obs.exists ||
+       ((m-&gt;get_snapid() != CEPH_SNAPDIR) &amp;&amp;
+        obc-&gt;obs.oi.is_whiteout())))
+  {
+    // copy the reqids for copy get on ENOENT
+    if (m-&gt;ops[0].op.op == CEPH_OSD_OP_COPY_GET)
+    {
+      fill_in_copy_get_noent(op, oid, m-&gt;ops[0]);
+      close_op_ctx(ctx);
+      return;
+    }
+    reply_ctx(ctx, -ENOENT);
+    return;
+  }
+
+  op-&gt;mark_started();
+
+
+  // 真正开始执行 op
+  execute_ctx(ctx);
+  utime_t prepare_latency = ceph_clock_now();
+  prepare_latency -= op-&gt;get_dequeued_time();
+  osd-&gt;logger-&gt;tinc(l_osd_op_prepare_lat, prepare_latency);
+  if (op-&gt;may_read() &amp;&amp; op-&gt;may_write())
+  {
+    osd-&gt;logger-&gt;tinc(l_osd_op_rw_prepare_lat, prepare_latency);
+  }
+  else if (op-&gt;may_read())
+  {
+    osd-&gt;logger-&gt;tinc(l_osd_op_r_prepare_lat, prepare_latency);
+  }
+  else if (op-&gt;may_write() || op-&gt;may_cache())
+  {
+    osd-&gt;logger-&gt;tinc(l_osd_op_w_prepare_lat, prepare_latency);
+  }
+
+  // force recovery of the oldest missing object if too many logs
+  maybe_force_recovery();
+}
+</code></pre>
+<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200923165351.png" alt="20200923165351" loading="lazy"></figure>
+<h2 id="execute_ctx">execute_ctx</h2>
+<pre><code class="language-C++">void PrimaryLogPG::execute_ctx(OpContext *ctx)
+{
+  FUNCTRACE(cct);
+  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; ctx &lt;&lt; dendl;
+  ctx-&gt;reset_obs(ctx-&gt;obc);
+  ctx-&gt;update_log_only = false; // reset in case finish_copyfrom() is re-running execute_ctx
+  OpRequestRef op = ctx-&gt;op;
+  auto m = op-&gt;get_req&lt;MOSDOp&gt;();
+  ObjectContextRef obc = ctx-&gt;obc;
+  const hobject_t &amp;soid = obc-&gt;obs.oi.soid;
+
+  // this method must be idempotent since we may call it several times
+  // before we finally apply the resulting transaction.
+  ctx-&gt;op_t.reset(new PGTransaction);
+
+ 
+  // 写操作
+  if (op-&gt;may_write() || op-&gt;may_cache())
+  {
+    // snap
+    // 对于快照进行一些处理
+    if (!(m-&gt;has_flag(CEPH_OSD_FLAG_ENFORCE_SNAPC)) &amp;&amp;
+        pool.info.is_pool_snaps_mode())
+    {
+      // 更新 ctx-&gt;snapc，该值保存了该操作的客户端附带的快照相关信息
+      // use pool's snapc
+      ctx-&gt;snapc = pool.snapc;
+    }
+    else
+    {
+      // 用户特定快照，通常为 RBD 快照，此时设置为消息中携带的信息
+      // client specified snapc
+      ctx-&gt;snapc.seq = m-&gt;get_snap_seq();
+      ctx-&gt;snapc.snaps = m-&gt;get_snaps();
+      filter_snapc(ctx-&gt;snapc.snaps);
+    }
+
+    // 比较 SNAP_SEQ，如果客户端的更小则报错
+    if ((m-&gt;has_flag(CEPH_OSD_FLAG_ORDERSNAP)) &amp;&amp;
+        ctx-&gt;snapc.seq &lt; obc-&gt;ssc-&gt;snapset.seq)
+    {
+      dout(10) &lt;&lt; &quot; ORDERSNAP flag set and snapc seq &quot; &lt;&lt; ctx-&gt;snapc.seq
+               &lt;&lt; &quot; &lt; snapset seq &quot; &lt;&lt; obc-&gt;ssc-&gt;snapset.seq
+               &lt;&lt; &quot; on &quot; &lt;&lt; obc-&gt;obs.oi.soid &lt;&lt; dendl;
+      reply_ctx(ctx, -EOLDSNAPC);
+      return;
+    }
+
+    // 更新 OpContext 版本号
+    // version
+    ctx-&gt;at_version = get_next_version();
+    ctx-&gt;mtime = m-&gt;get_mtime();
+
+    dout(10) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; soid &lt;&lt; &quot; &quot; &lt;&lt; *ctx-&gt;ops
+             &lt;&lt; &quot; ov &quot; &lt;&lt; obc-&gt;obs.oi.version &lt;&lt; &quot; av &quot; &lt;&lt; ctx-&gt;at_version
+             &lt;&lt; &quot; snapc &quot; &lt;&lt; ctx-&gt;snapc
+             &lt;&lt; &quot; snapset &quot; &lt;&lt; obc-&gt;ssc-&gt;snapset
+             &lt;&lt; dendl;
+  }
+  else
+  {
+    dout(10) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; soid &lt;&lt; &quot; &quot; &lt;&lt; *ctx-&gt;ops
+             &lt;&lt; &quot; ov &quot; &lt;&lt; obc-&gt;obs.oi.version
+             &lt;&lt; dendl;
+  }
+
+  if (!ctx-&gt;user_at_version)
+    ctx-&gt;user_at_version = obc-&gt;obs.oi.user_version;
+  dout(30) &lt;&lt; __func__ &lt;&lt; &quot; user_at_version &quot; &lt;&lt; ctx-&gt;user_at_version &lt;&lt; dendl;
+
+  {
+#ifdef WITH_LTTNG
+    osd_reqid_t reqid = ctx-&gt;op-&gt;get_reqid();
+#endif
+    tracepoint(osd, prepare_tx_enter, reqid.name._type,
+               reqid.name._num, reqid.tid, reqid.inc);
+  }
+
+  // 准备事务
+  // 1. 通过 do_osd_ops 生成原始 op 对应的 PG 事务
+  // 2. 如果 op 针对 head 对象进行操作，通过 make_writable 检查是否需要预先执行克隆操作
+  // 3. 通过 finish_ctx 检查是否需要创建或者删除 snapdir 对象，生成日志，并更新对象的 OI（object_info_t） 和 SS（SnapSet） 属性
+  // 其中涉及了大量的对克隆和快照的处理
+  int result = prepare_transaction(ctx);
+
+  {
+#ifdef WITH_LTTNG
+    osd_reqid_t reqid = ctx-&gt;op-&gt;get_reqid();
+#endif
+    tracepoint(osd, prepare_tx_exit, reqid.name._type,
+               reqid.name._num, reqid.tid, reqid.inc);
+  }
+
+  // 异步读则将 op 加入 in_progress_async_reads 队列，完成之后再向客户端应答
+  bool pending_async_reads = !ctx-&gt;pending_async_reads.empty();
+  if (result == -EINPROGRESS || pending_async_reads)
+  {
+    // come back later.
+    if (pending_async_reads)
+    {
+      ceph_assert(pool.info.is_erasure());
+      in_progress_async_reads.push_back(make_pair(op, ctx));
+      // 完成异步读取
+      ctx-&gt;start_async_reads(this);
+    }
+    return;
+  }
+
+  if (result == -EAGAIN)
+  {
+    // clean up after the ctx
+    close_op_ctx(ctx);
+    return;
+  }
+
+  bool ignore_out_data = false;
+  if (!ctx-&gt;op_t-&gt;empty() &amp;&amp;
+      op-&gt;may_write() &amp;&amp;
+      result &gt;= 0)
+  {
+    // successful update
+    if (ctx-&gt;op-&gt;allows_returnvec())
+    {
+      // enforce reasonable bound on the return buffer sizes
+      for (auto &amp;i : *ctx-&gt;ops)
+      {
+        if (i.outdata.length() &gt; cct-&gt;_conf-&gt;osd_max_write_op_reply_len)
+        {
+          dout(10) &lt;&lt; __func__ &lt;&lt; &quot; op &quot; &lt;&lt; i &lt;&lt; &quot; outdata overflow&quot; &lt;&lt; dendl;
+          result = -EOVERFLOW; // overall result is overflow
+          i.rval = -EOVERFLOW;
+          i.outdata.clear();
+        }
+      }
+    }
+    else
+    {
+      // legacy behavior -- zero result and return data etc.
+      ignore_out_data = true;
+      result = 0;
+    }
+  }
+
+  // prepare the reply
+  ctx-&gt;reply = new MOSDOpReply(m, result, get_osdmap_epoch(), 0,
+                               ignore_out_data);
+  dout(20) &lt;&lt; __func__ &lt;&lt; &quot; alloc reply &quot; &lt;&lt; ctx-&gt;reply
+           &lt;&lt; &quot; result &quot; &lt;&lt; result &lt;&lt; dendl;
+
+  // 只包含读操作或者 失败，是则向客户端发送应答
+  // read or error?
+  if ((ctx-&gt;op_t-&gt;empty() || result &lt; 0) &amp;&amp; !ctx-&gt;update_log_only)
+  {
+    // finish side-effects
+    if (result &gt;= 0)
+      do_osd_op_effects(ctx, m-&gt;get_connection());
+
+    // 同步读取调用以下方法完成读操作
+    complete_read_ctx(result, ctx);
+    return;
+  }
+
+  ctx-&gt;reply-&gt;set_reply_versions(ctx-&gt;at_version, ctx-&gt;user_at_version);
+
+
+  // 后续均为写操作
+  ceph_assert(op-&gt;may_write() || op-&gt;may_cache());
+
+  // trim log?
+  // 将旧的日志进行 trim
+  // calc_trim_to_aggressive()
+  // calc_trim_to()
+  recovery_state.update_trim_to();
+
+  // verify that we are doing this in order?
+  if (cct-&gt;_conf-&gt;osd_debug_op_order &amp;&amp; m-&gt;get_source().is_client() &amp;&amp;
+      !pool.info.is_tier() &amp;&amp; !pool.info.has_tiers())
+  {
+    map&lt;client_t, ceph_tid_t&gt; &amp;cm = debug_op_order[obc-&gt;obs.oi.soid];
+    ceph_tid_t t = m-&gt;get_tid();
+    client_t n = m-&gt;get_source().num();
+    map&lt;client_t, ceph_tid_t&gt;::iterator p = cm.find(n);
+    if (p == cm.end())
+    {
+      dout(20) &lt;&lt; &quot; op order client.&quot; &lt;&lt; n &lt;&lt; &quot; tid &quot; &lt;&lt; t &lt;&lt; &quot; (first)&quot; &lt;&lt; dendl;
+      cm[n] = t;
+    }
+    else
+    {
+      dout(20) &lt;&lt; &quot; op order client.&quot; &lt;&lt; n &lt;&lt; &quot; tid &quot; &lt;&lt; t &lt;&lt; &quot; last was &quot; &lt;&lt; p-&gt;second &lt;&lt; dendl;
+      if (p-&gt;second &gt; t)
+      {
+        derr &lt;&lt; &quot;bad op order, already applied &quot; &lt;&lt; p-&gt;second &lt;&lt; &quot; &gt; this &quot; &lt;&lt; t &lt;&lt; dendl;
+        ceph_abort_msg(&quot;out of order op&quot;);
+      }
+      p-&gt;second = t;
+    }
+  }
+
+  if (ctx-&gt;update_log_only)
+  {
+    if (result &gt;= 0)
+      do_osd_op_effects(ctx, m-&gt;get_connection());
+
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; update_log_only -- result=&quot; &lt;&lt; result &lt;&lt; dendl;
+    // save just what we need from ctx
+    MOSDOpReply *reply = ctx-&gt;reply;
+    ctx-&gt;reply = nullptr;
+    reply-&gt;get_header().data_off = (ctx-&gt;data_off ? *ctx-&gt;data_off : 0);
+
+    if (result == -ENOENT)
+    {
+      reply-&gt;set_enoent_reply_versions(info.last_update,
+                                       info.last_user_version);
+    }
+    reply-&gt;add_flags(CEPH_OSD_FLAG_ACK | CEPH_OSD_FLAG_ONDISK);
+    // append to pg log for dup detection - don't save buffers for now
+    record_write_error(op, soid, reply, result,
+                       ctx-&gt;op-&gt;allows_returnvec() ? ctx : nullptr);
+    close_op_ctx(ctx);
+    return;
+  }
+
+  // 写操作则注册如下的回调函数：按照如下顺序要求
+  // 1. on_commit: 执行时，向客户端发送写入完成应答
+  // 2. on_success: 执行时，进行 Watch/Notify 相关的处理
+  // 3. on_finish: 执行时，删除 OpContext
+  // no need to capture PG ref, repop cancel will handle that
+  // Can capture the ctx by pointer, it's owned by the repop
+  ctx-&gt;register_on_commit(
+      [m, ctx, this]() {
+        if (ctx-&gt;op)
+          log_op_stats(*ctx-&gt;op, ctx-&gt;bytes_written, ctx-&gt;bytes_read);
+
+        if (m &amp;&amp; !ctx-&gt;sent_reply)
+        {
+          MOSDOpReply *reply = ctx-&gt;reply;
+          ctx-&gt;reply = nullptr;
+          reply-&gt;add_flags(CEPH_OSD_FLAG_ACK | CEPH_OSD_FLAG_ONDISK);
+          dout(10) &lt;&lt; &quot; sending reply on &quot; &lt;&lt; *m &lt;&lt; &quot; &quot; &lt;&lt; reply &lt;&lt; dendl;
+          osd-&gt;send_message_osd_client(reply, m-&gt;get_connection());
+          ctx-&gt;sent_reply = true;
+          ctx-&gt;op-&gt;mark_commit_sent();
+        }
+      });
+  ctx-&gt;register_on_success(
+      [ctx, this]() {
+        do_osd_op_effects(
+            ctx,
+            ctx-&gt;op ? ctx-&gt;op-&gt;get_req()-&gt;get_connection() : ConnectionRef());
+      });
+  ctx-&gt;register_on_finish(
+      [ctx]() {
+        delete ctx;
+      });
+
+  // 事务准备完成，由 Primary 进行副本间的本地事务分发和整体同步
+  // issue replica writes
+  ceph_tid_t rep_tid = osd-&gt;get_tid();
+
+  // 创建一个 RepGather
+  RepGather *repop = new_repop(ctx, obc, rep_tid);
+
+  // 将 RepGather 提交到 PGBackend，由 PGBackend 负责将 PG 事务转为每个副本的本地事务，然后分发
+  // 即向各个副本发送同步操作请求
+  issue_repop(repop, ctx);
+
+  // 评估 RepGather 是否真正完成，真正完成后则依次执行 RepGather 中注册过的一系列回调函数，最后删除 RepGather
+  // 检查各个副本的同步操作是否已经 reply 成功
+  eval_repop(repop);
+  repop-&gt;put();
+}
+</code></pre>
+<figure data-type="image" tabindex="3"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200924154633.png" alt="20200924154633" loading="lazy"></figure>
+<h2 id="issue_repop">issue_repop</h2>
+<ul>
+<li>真正的分发逻辑，和 OSD 本地事务处理都封装在该方法中。回顾上述主流程中关于多副本写操作的处理：</li>
+</ul>
+<pre><code class="language-C++">
+  // 写操作则注册如下的回调函数：按照如下顺序要求
+  // 1. on_commit: 执行时，向客户端发送写入完成应答
+  // 2. on_success: 执行时，进行 Watch/Notify 相关的处理
+  // 3. on_finish: 执行时，删除 OpContext
+  // no need to capture PG ref, repop cancel will handle that
+  // Can capture the ctx by pointer, it's owned by the repop
+  ctx-&gt;register_on_commit(
+      [m, ctx, this]() {
+        if (ctx-&gt;op)
+          log_op_stats(*ctx-&gt;op, ctx-&gt;bytes_written, ctx-&gt;bytes_read);
+
+        if (m &amp;&amp; !ctx-&gt;sent_reply)
+        {
+          MOSDOpReply *reply = ctx-&gt;reply;
+          ctx-&gt;reply = nullptr;
+          reply-&gt;add_flags(CEPH_OSD_FLAG_ACK | CEPH_OSD_FLAG_ONDISK);
+          dout(10) &lt;&lt; &quot; sending reply on &quot; &lt;&lt; *m &lt;&lt; &quot; &quot; &lt;&lt; reply &lt;&lt; dendl;
+          osd-&gt;send_message_osd_client(reply, m-&gt;get_connection());
+          ctx-&gt;sent_reply = true;
+          ctx-&gt;op-&gt;mark_commit_sent();
+        }
+      });
+  ctx-&gt;register_on_success(
+      [ctx, this]() {
+        do_osd_op_effects(
+            ctx,
+            ctx-&gt;op ? ctx-&gt;op-&gt;get_req()-&gt;get_connection() : ConnectionRef());
+      });
+  ctx-&gt;register_on_finish(
+      [ctx]() {
+        delete ctx;
+      });
+
+  // 事务准备完成，由 Primary 进行副本间的本地事务分发和整体同步
+  // issue replica writes
+  ceph_tid_t rep_tid = osd-&gt;get_tid();
+
+  // 创建一个 RepGather
+  RepGather *repop = new_repop(ctx, obc, rep_tid);
+
+  // 将 RepGather 提交到 PGBackend，由 PGBackend 负责将 PG 事务转为每个副本的本地事务，然后分发
+  // 即向各个副本发送同步操作请求
+  issue_repop(repop, ctx);
+
+  // 评估 RepGather 是否真正完成，真正完成后则依次执行 RepGather 中注册过的一系列回调函数，最后删除 RepGather
+  // 检查各个副本的同步操作是否已经 reply 成功
+  eval_repop(repop);
+  repop-&gt;put();
+</code></pre>
+<ul>
+<li>其中 issue_repopn 主要是调用了 <code>submit_transaction</code> 让对应的 PGBackend 来执行事务</li>
+</ul>
+<pre><code class="language-C++">pgbackend-&gt;submit_transaction(
+      soid,
+      ctx-&gt;delta_stats,
+      ctx-&gt;at_version,
+      std::move(ctx-&gt;op_t),
+      recovery_state.get_pg_trim_to(),
+      recovery_state.get_min_last_complete_ondisk(),
+      std::move(ctx-&gt;log),
+      ctx-&gt;updated_hset_history,
+      on_all_commit,
+      repop-&gt;rep_tid,
+      ctx-&gt;reqid,
+      ctx-&gt;op);
+}
+</code></pre>
+<h3 id="submit_transaction">submit_transaction</h3>
+<ul>
+<li>此处暂时只讨论 ReplicatedBackend，即多副本情况下的事务提交
+<ul>
+<li>副本方式：核心处理流程是把封装好的事务分发到该 PG 对应的其他从 OSD 上</li>
+<li>纠删码方式：核心处理流程是为主 chunk 向各个分片 chunk 分发数据的过程</li>
+</ul>
+</li>
+<li>通过 <code>issue_op</code> 分发消息到副本 OSD（异步），当前 OSD 相应地执行日志操作以及完成本地 OSD 请求的处理<code>queue_transactions</code>。</li>
+</ul>
+<pre><code class="language-C++">void ReplicatedBackend::submit_transaction(
+    const hobject_t &amp;soid,
+    const object_stat_sum_t &amp;delta_stats,
+    const eversion_t &amp;at_version,
+    PGTransactionUPtr &amp;&amp;_t,
+    const eversion_t &amp;trim_to,
+    const eversion_t &amp;min_last_complete_ondisk,
+    vector&lt;pg_log_entry_t&gt; &amp;&amp;_log_entries,
+    std::optional&lt;pg_hit_set_history_t&gt; &amp;hset_history,
+    Context *on_all_commit,
+    ceph_tid_t tid,
+    osd_reqid_t reqid,
+    OpRequestRef orig_op)
+{
+  parent-&gt;apply_stats(
+      soid,
+      delta_stats);
+
+  vector&lt;pg_log_entry_t&gt; log_entries(_log_entries);
+  ObjectStore::Transaction op_t;
+  PGTransactionUPtr t(std::move(_t));
+  set&lt;hobject_t&gt; added, removed;
+
+  // 根据具体的操作类型生成相应的事务
+  generate_transaction(
+      t,
+      coll,
+      log_entries,
+      &amp;op_t,
+      &amp;added,
+      &amp;removed,
+      get_osdmap()-&gt;require_osd_release);
+  ceph_assert(added.size() &lt;= 1);
+  ceph_assert(removed.size() &lt;= 1);
+
+  // 构建处理中的请求记录 in_progress_ops
+  auto insert_res = in_progress_ops.insert(
+      make_pair(
+          tid,
+          ceph::make_ref&lt;InProgressOp&gt;(
+              tid, on_all_commit,
+              orig_op, at_version)));
+  ceph_assert(insert_res.second);
+  InProgressOp &amp;op = *insert_res.first-&gt;second;
+
+  // 统计 commit 的副本操作数量，等待副本操作完成回调时进行清除，使用该结构方便统计是不是所有的副本都完成了操作。
+  op.waiting_for_commit.insert(
+      parent-&gt;get_acting_recovery_backfill_shards().begin(),
+      parent-&gt;get_acting_recovery_backfill_shards().end());
+
+  // 把请求发送出去
+  issue_op(
+      soid,
+      at_version,
+      tid,
+      reqid,
+      trim_to,
+      min_last_complete_ondisk,
+      added.size() ? *(added.begin()) : hobject_t(),
+      removed.size() ? *(removed.begin()) : hobject_t(),
+      log_entries,
+      hset_history,
+      &amp;op,
+      op_t);
+
+  add_temp_objs(added);
+  clear_temp_objs(removed);
+
+  //进行日志操作，开始记录本端操作 object 的 log
+  parent-&gt;log_operation(
+      std::move(log_entries),
+      hset_history,
+      trim_to,
+      at_version,
+      min_last_complete_ondisk,
+      true,
+      op_t);
+
+  // 开始注册本端的 commit 回调函数，这里回调后直接向上返回
+  op_t.register_on_commit(
+      parent-&gt;bless_context(
+          new C_OSD_OnOpCommit(this, &amp;op)));
+
+  vector&lt;ObjectStore::Transaction&gt; tls;
+  tls.push_back(std::move(op_t));
+
+  // 完成本地 OSD 的请求处理
+  parent-&gt;queue_transactions(tls, op.op);
+  if (at_version != eversion_t())
+  {
+    parent-&gt;op_applied(at_version);
+  }
+}
+</code></pre>
+<h3 id="issue_op">issue_op</h3>
+<ul>
+<li>该方法构造相应的写请求，以消息的方式发送到该主 OSD 对应的副本 OSD 上。</li>
+</ul>
+<pre><code class="language-C++">void ReplicatedBackend::issue_op(
+    const hobject_t &amp;soid,
+    const eversion_t &amp;at_version,
+    ceph_tid_t tid,
+    osd_reqid_t reqid,
+    eversion_t pg_trim_to,
+    eversion_t min_last_complete_ondisk,
+    hobject_t new_temp_oid,
+    hobject_t discard_temp_oid,
+    const vector&lt;pg_log_entry_t&gt; &amp;log_entries,
+    std::optional&lt;pg_hit_set_history_t&gt; &amp;hset_hist,
+    InProgressOp *op,
+    ObjectStore::Transaction &amp;op_t)
+{
+  // 副本节点数量 &gt; 1
+  if (parent-&gt;get_acting_recovery_backfill_shards().size() &gt; 1)
+  {
+    if (op-&gt;op)
+    {
+      op-&gt;op-&gt;pg_trace.event(&quot;issue replication ops&quot;);
+      ostringstream ss;
+      set&lt;pg_shard_t&gt; replicas = parent-&gt;get_acting_recovery_backfill_shards();
+      replicas.erase(parent-&gt;whoami_shard());
+      ss &lt;&lt; &quot;waiting for subops from &quot; &lt;&lt; replicas;
+      op-&gt;op-&gt;mark_sub_op_sent(ss.str());
+    }
+
+    // avoid doing the same work in generate_subop
+    bufferlist logs;
+    encode(log_entries, logs);
+
+    // 遍历所有的 replica OSDs
+    for (const auto &amp;shard : get_parent()-&gt;get_acting_recovery_backfill_shards())
+    {
+      // 如果该节点是主节点，跳过
+      if (shard == parent-&gt;whoami_shard())
+        continue;
+
+      // 获取副本节点对应的 pg
+      const pg_info_t &amp;pinfo = parent-&gt;get_shard_info().find(shard)-&gt;second;
+
+      Message *wr;
+
+      // 使用相应的参数构造 REPOP 请求
+      wr = generate_subop(
+          soid,
+          at_version,
+          tid,
+          reqid,
+          pg_trim_to,
+          min_last_complete_ondisk,
+          new_temp_oid,
+          discard_temp_oid,
+          logs,
+          hset_hist,
+          op_t,
+          shard,
+          pinfo);
+      if (op-&gt;op &amp;&amp; op-&gt;op-&gt;pg_trace)
+        wr-&gt;trace.init(&quot;replicated op&quot;, nullptr, &amp;op-&gt;op-&gt;pg_trace);
+
+      // 将消息发送出去到整个集群
+      // void OSDService::send_message_osd_cluster(int peer, Message *m, epoch_t from_epoch)
+      // 写操作的消息发送给对应副本节点对应的 osd
+      get_parent()-&gt;send_message_osd_cluster(
+          shard.osd, wr, get_osdmap_epoch());
+    }
+  }
+}
+</code></pre>
+<h3 id="do_repop">do_repop</h3>
+<ul>
+<li>相应的副本 OSD 收到消息时，继续上述流程，从头到尾，直到执行对应的 <code>do_request</code> 方法。在 <code>do_request</code> 方法中曾介绍有对部分请求的处理，截取如下：</li>
+</ul>
+<pre><code class="language-C++">  // 由 PGBackend 直接处理然后返回，此处只处理以下操作
+  // 1. MSG_OSD_PG_RECOVERY_DELETE (Common)
+  // 2. MSG_OSD_PG_RECOVERY_DELETE_REPLY (Common)
+  // 3. MSG_OSD_PG_PUSH (副本)
+  // 4. MSG_OSD_PG_PULL (副本)
+  // 5. MSG_OSD_PG_PUSH_REPLY (副本)
+  // 6. MSG_OSD_REPOP (副本)
+  // 7. MSG_OSD_REPOPREPLY (副本)
+  // 8. MSG_OSD_EC_WRITE (EC)
+  // 9. MSG_OSD_EC_WRITE_REPLY (EC)
+  // 10. MSG_OSD_EC_READ (EC)
+  // 11. MSG_OSD_EC_READ_REPLY (EC)
+  // 12. MSG_OSD_PG_PUSH (EC)
+  // 13. MSG_OSD_PG_PUSH_REPLY (EC)
+  if (pgbackend-&gt;handle_message(op))
+    return;
+</code></pre>
+<ul>
+<li>其中就包含 MSG_OSD_REPOP 和 MSG_OSD_REPOPREPLY 的处理（针对多副本）。又相应地调用了 <code>do_repop</code> 和 <code>do_repop_reply</code> 方法</li>
+</ul>
+<pre><code class="language-C++">bool ReplicatedBackend::_handle_message(
+    OpRequestRef op)
+{
+  dout(10) &lt;&lt; __func__ &lt;&lt; &quot;: &quot; &lt;&lt; op &lt;&lt; dendl;
+  switch (op-&gt;get_req()-&gt;get_type())
+  {
+  case MSG_OSD_PG_PUSH:
+    do_push(op);
+    return true;
+
+  case MSG_OSD_PG_PULL:
+    do_pull(op);
+    return true;
+
+  case MSG_OSD_PG_PUSH_REPLY:
+    do_push_reply(op);
+    return true;
+
+  case MSG_OSD_REPOP:
+  {
+    do_repop(op);
+    return true;
+  }
+
+  case MSG_OSD_REPOPREPLY:
+  {
+    do_repop_reply(op);
+    return true;
+  }
+
+  default:
+    break;
+  }
+  return false;
+}
+</code></pre>
+<ul>
+<li><code>do_repop</code> 用于处理 repop 类型的 msg，相应地检查参数和当前 OSD 对应的状态，记录日志，注册回调函数，并执行本地事务更新。</li>
+</ul>
+<pre><code class="language-C++">// sub op modify
+void ReplicatedBackend::do_repop(OpRequestRef op)
+{
+  static_cast&lt;MOSDRepOp *&gt;(op-&gt;get_nonconst_req())-&gt;finish_decode();
+  // 获取当前消息
+  auto m = op-&gt;get_req&lt;MOSDRepOp&gt;();
+  // 检查消息类型
+  int msg_type = m-&gt;get_type();
+  ceph_assert(MSG_OSD_REPOP == msg_type);
+
+  const hobject_t &amp;soid = m-&gt;poid;
+
+  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; soid
+           &lt;&lt; &quot; v &quot; &lt;&lt; m-&gt;version
+           &lt;&lt; (m-&gt;logbl.length() ? &quot; (transaction)&quot; : &quot; (parallel exec&quot;)
+           &lt;&lt; &quot; &quot; &lt;&lt; m-&gt;logbl.length()
+           &lt;&lt; dendl;
+
+  // 检查版本号和 interval
+  // sanity checks
+  ceph_assert(m-&gt;map_epoch &gt;= get_info().history.same_interval_since);
+
+  // 检查该副本节点是否在进行 scrub 操作
+  dout(30) &lt;&lt; __func__ &lt;&lt; &quot; missing before &quot; &lt;&lt; get_parent()-&gt;get_log().get_missing().get_items() &lt;&lt; dendl;
+  parent-&gt;maybe_preempt_replica_scrub(soid);
+
+  // 获取消息来源
+  int ackerosd = m-&gt;get_source().num();
+
+  // 标记当前操作开始，设置相关参数
+  op-&gt;mark_started();
+
+  RepModifyRef rm(std::make_shared&lt;RepModify&gt;());
+  rm-&gt;op = op;
+  rm-&gt;ackerosd = ackerosd;
+  rm-&gt;last_complete = get_info().last_complete;
+  rm-&gt;epoch_started = get_osdmap_epoch();
+
+  ceph_assert(m-&gt;logbl.length());
+  // shipped transaction and log entries
+  vector&lt;pg_log_entry_t&gt; log;
+
+  auto p = const_cast&lt;bufferlist &amp;&gt;(m-&gt;get_data()).cbegin();
+  decode(rm-&gt;opt, p);
+
+  if (m-&gt;new_temp_oid != hobject_t())
+  {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; start tracking temp &quot; &lt;&lt; m-&gt;new_temp_oid &lt;&lt; dendl;
+    add_temp_obj(m-&gt;new_temp_oid);
+  }
+  if (m-&gt;discard_temp_oid != hobject_t())
+  {
+    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; stop tracking temp &quot; &lt;&lt; m-&gt;discard_temp_oid &lt;&lt; dendl;
+    if (rm-&gt;opt.empty())
+    {
+      dout(10) &lt;&lt; __func__ &lt;&lt; &quot;: removing object &quot; &lt;&lt; m-&gt;discard_temp_oid
+               &lt;&lt; &quot; since we won't get the transaction&quot; &lt;&lt; dendl;
+      rm-&gt;localt.remove(coll, ghobject_t(m-&gt;discard_temp_oid));
+    }
+    clear_temp_obj(m-&gt;discard_temp_oid);
+  }
+
+  p = const_cast&lt;bufferlist &amp;&gt;(m-&gt;logbl).begin();
+  decode(log, p);
+  rm-&gt;opt.set_fadvise_flag(CEPH_OSD_OP_FLAG_FADVISE_DONTNEED);
+
+  bool update_snaps = false;
+  if (!rm-&gt;opt.empty())
+  {
+    // If the opt is non-empty, we infer we are before
+    // last_backfill (according to the primary, not our
+    // not-quite-accurate value), and should update the
+    // collections now.  Otherwise, we do it later on push.
+    update_snaps = true;
+  }
+
+  // flag set to true during async recovery
+  bool async = false;
+  pg_missing_tracker_t pmissing = get_parent()-&gt;get_local_missing();
+  if (pmissing.is_missing(soid))
+  {
+    async = true;
+    dout(30) &lt;&lt; __func__ &lt;&lt; &quot; is_missing &quot; &lt;&lt; pmissing.is_missing(soid) &lt;&lt; dendl;
+    for (auto &amp;&amp;e : log)
+    {
+      dout(30) &lt;&lt; &quot; add_next_event entry &quot; &lt;&lt; e &lt;&lt; dendl;
+      get_parent()-&gt;add_local_next_event(e);
+      dout(30) &lt;&lt; &quot; entry is_delete &quot; &lt;&lt; e.is_delete() &lt;&lt; dendl;
+    }
+  }
+
+  parent-&gt;update_stats(m-&gt;pg_stats);
+
+  // 更新日志
+  parent-&gt;log_operation(
+      std::move(log),
+      m-&gt;updated_hit_set_history,
+      m-&gt;pg_trim_to,
+      m-&gt;version, /* Replicated PGs don't have rollback info */
+      m-&gt;min_last_complete_ondisk,
+      update_snaps,
+      rm-&gt;localt,
+      async);
+
+  // 注册回调函数 C_OSD_RepModifyCommit，回调完成后调用 pg-&gt;repop_commit(rm)
+  // C_OSD_RepModifyCommit(ReplicatedBackend *pg, RepModifyRef r)
+  //     : pg(pg), rm(r) {}
+  // void finish(int r) override
+  // {
+  //   pg-&gt;repop_commit(rm);
+  // }
+  rm-&gt;opt.register_on_commit(
+      parent-&gt;bless_context(
+          new C_OSD_RepModifyCommit(this, rm)));
+  vector&lt;ObjectStore::Transaction&gt; tls;
+  tls.reserve(2);
+  tls.push_back(std::move(rm-&gt;localt));
+  tls.push_back(std::move(rm-&gt;opt));
+
+  // 本地事务更新
+  parent-&gt;queue_transactions(tls, op);
+  // op is cleaned up by oncommit/onapply when both are executed
+  dout(30) &lt;&lt; __func__ &lt;&lt; &quot; missing after&quot; &lt;&lt; get_parent()-&gt;get_log().get_missing().get_items() &lt;&lt; dendl;
+}
+</code></pre>
+<h3 id="queue_transactions">queue_transactions</h3>
+<ul>
+<li>无论是一开始的主节点还是后面描述的副本节点执行写操作都调用了 <code>queue_transactions</code> 该方法，该方法是ObjectStore 层的统一入口，KVStore、MemStore、FileStore、BlueStore都相应的实现了这个接口。</li>
+<li>该方法相应地创建事务上下文并进行保序，并执行事务状态机，事务提交后相应地执行上文注册的一系列回调函数。</li>
+</ul>
+<pre><code class="language-C++">// ---------------------------
+// transactions
+
+int BlueStore::queue_transactions(
+    CollectionHandle &amp;ch,
+    vector&lt;Transaction&gt; &amp;tls,
+    TrackedOpRef op,
+    ThreadPool::TPHandle *handle)
+{
+  FUNCTRACE(cct);
+
+  // on_commoit: 事务提交完成之后的回调函数
+  // on_applied_sync: 同步调用执行，事务应用完成之后的回调函数
+  // on_applied: 在 Finisher 线程里异步调用执行，事务应用完成之后的回调函数
+  list&lt;Context *&gt; on_applied, on_commit, on_applied_sync;
+  ObjectStore::Transaction::collect_contexts(
+      tls, &amp;on_applied, &amp;on_commit, &amp;on_applied_sync);
+
+  // 计时开始
+  auto start = mono_clock::now();
+
+  Collection *c = static_cast&lt;Collection *&gt;(ch.get());
+
+  // 获取操作序列号，用于保序。
+  // 会判断 PG 是否已经关联 OpSeq，未关联则新建并关联 PG
+  OpSequencer *osr = c-&gt;osr.get();
+  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; ch &quot; &lt;&lt; c &lt;&lt; &quot; &quot; &lt;&lt; c-&gt;cid &lt;&lt; dendl;
+
+  // 创建 TransContext，并关联回调函数 on_commit
+  // prepare
+  TransContext *txc = _txc_create(static_cast&lt;Collection *&gt;(ch.get()), osr,
+                                  &amp;on_commit, op);
+
+  // With HM-SMR drives (and ZNS SSDs) we want the I/O allocation and I/O
+  // submission to happen atomically because if I/O submission happens in a
+  // different order than I/O allocation, we end up issuing non-sequential
+  // writes to the drive.  This is a temporary solution until ZONE APPEND
+  // support matures in the kernel.  For more information please see:
+  // https://www.usenix.org/conference/vault20/presentation/bjorling
+  if (bdev-&gt;is_smr())
+  {
+    atomic_alloc_and_submit_lock.lock();
+  }
+
+  // 将所有的写操作添加到 TransContext，并记录操作字节数
+  for (vector&lt;Transaction&gt;::iterator p = tls.begin(); p != tls.end(); ++p)
+  {
+    txc-&gt;bytes += (*p).get_num_bytes();
+    _txc_add_transaction(txc, &amp;(*p));
+  }
+
+  // 计算开销
+  _txc_calc_cost(txc);
+
+  // 更新 ONodes， shared_blobs
+  _txc_write_nodes(txc, txc-&gt;t);
+
+  // journal deferred items
+  if (txc-&gt;deferred_txn)
+  {
+    txc-&gt;deferred_txn-&gt;seq = ++deferred_seq;
+    bufferlist bl;
+    encode(*txc-&gt;deferred_txn, bl);
+    string key;
+    get_deferred_key(txc-&gt;deferred_txn-&gt;seq, &amp;key);
+    txc-&gt;t-&gt;set(PREFIX_DEFERRED, key, bl);
+  }
+
+  _txc_finalize_kv(txc, txc-&gt;t);
+
+#ifdef WITH_BLKIN
+  if (txc-&gt;trace)
+  {
+    txc-&gt;trace.event(&quot;txc encode finished&quot;);
+  }
+#endif
+
+  if (handle)
+    handle-&gt;suspend_tp_timeout();
+
+  // 记录 throttle 开始的时间
+  auto tstart = mono_clock::now();
+
+  // 事务提交到 Throttle (内部流控机制)
+  if (!throttle.try_start_transaction(
+          *db,
+          *txc,
+          tstart))
+  {
+    // ensure we do not block here because of deferred writes
+    dout(10) &lt;&lt; __func__ &lt;&lt; &quot; failed get throttle_deferred_bytes, aggressive&quot;
+             &lt;&lt; dendl;
+    ++deferred_aggressive;
+    deferred_try_submit();
+    {
+      // wake up any previously finished deferred events
+      std::lock_guard l(kv_lock);
+      if (!kv_sync_in_progress)
+      {
+        kv_sync_in_progress = true;
+        kv_cond.notify_one();
+      }
+    }
+    throttle.finish_start_transaction(*db, *txc, tstart);
+    --deferred_aggressive;
+  }
+
+  // 记录 throttle 完成时间
+  auto tend = mono_clock::now();
+
+  if (handle)
+    handle-&gt;reset_tp_timeout();
+
+  logger-&gt;inc(l_bluestore_txc);
+
+  // 处理事务状态，执行状态机，将 IO 请求交给块设备执行
+  // 该方法中为一系列事务状态机的转换，最终写操作完成后会执行 oncommit 的回调
+  // execute (start)
+  _txc_state_proc(txc);
+
+  if (bdev-&gt;is_smr())
+  {
+    atomic_alloc_and_submit_lock.unlock();
+  }
+
+  // 针对写完日志之后的回调操作，也就是所谓的 on_readable
+  // BliueStore 只会产生少量 WAL 到 RocksDB，所以写日志先于写数据完成
+  // we're immediately readable (unlike FileStore)
+  for (auto c : on_applied_sync)
+  {
+    c-&gt;complete(0);
+  }
+  if (!on_applied.empty())
+  {
+    if (c-&gt;commit_queue)
+    {
+      c-&gt;commit_queue-&gt;queue(on_applied);
+    }
+    else
+    {
+      finisher.queue(on_applied);
+    }
+  }
+
+#ifdef WITH_BLKIN
+  if (txc-&gt;trace)
+  {
+    txc-&gt;trace.event(&quot;txc applied&quot;);
+  }
+#endif
+
+  log_latency(&quot;submit_transact&quot;,
+              l_bluestore_submit_lat,
+              mono_clock::now() - start,
+              cct-&gt;_conf-&gt;bluestore_log_op_age);
+  log_latency(&quot;throttle_transact&quot;,
+              l_bluestore_throttle_lat,
+              tend - tstart,
+              cct-&gt;_conf-&gt;bluestore_log_op_age);
+  return 0;
+}
+</code></pre>
+<h3 id="repop_commit">repop_commit</h3>
+<ul>
+<li>在写完成后的回调函数中对应地执行 <code>repop_commit</code>，相应地构造 MOSDRepOpReply，再发送到集群。</li>
+</ul>
+<pre><code class="language-C++">void ReplicatedBackend::repop_commit(RepModifyRef rm)
+{
+  rm-&gt;op-&gt;mark_commit_sent();
+  rm-&gt;op-&gt;pg_trace.event(&quot;sup_op_commit&quot;);
+  rm-&gt;committed = true;
+
+  // send commit.
+  auto m = rm-&gt;op-&gt;get_req&lt;MOSDRepOp&gt;();
+  ceph_assert(m-&gt;get_type() == MSG_OSD_REPOP);
+  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; on op &quot; &lt;&lt; *m
+           &lt;&lt; &quot;, sending commit to osd.&quot; &lt;&lt; rm-&gt;ackerosd
+           &lt;&lt; dendl;
+  ceph_assert(get_osdmap()-&gt;is_up(rm-&gt;ackerosd));
+
+  get_parent()-&gt;update_last_complete_ondisk(rm-&gt;last_complete);
+
+  MOSDRepOpReply *reply = new MOSDRepOpReply(
+      m,
+      get_parent()-&gt;whoami_shard(),
+      0, get_osdmap_epoch(), m-&gt;get_min_epoch(), CEPH_OSD_FLAG_ONDISK);
+  reply-&gt;set_last_complete_ondisk(rm-&gt;last_complete);
+  reply-&gt;set_priority(CEPH_MSG_PRIO_HIGH); // this better match ack priority!
+  reply-&gt;trace = rm-&gt;op-&gt;pg_trace;
+  get_parent()-&gt;send_message_osd_cluster(
+      rm-&gt;ackerosd, reply, get_osdmap_epoch());
+
+  log_subop_stats(get_parent()-&gt;get_logger(), rm-&gt;op, l_osd_sop_w);
+}
+</code></pre>
+<h3 id="do_repop_reply">do_repop_reply</h3>
+<ul>
+<li>MSG_OSD_REPOPREPLY 消息发送到了集群，又开始从头到尾的消息处理逻辑，在 _handle_message 中对该类型的消息进行处理，相应地执行 <code>do_repop_reply</code></li>
+</ul>
+<pre><code class="language-C++">void ReplicatedBackend::do_repop_reply(OpRequestRef op)
+{
+  static_cast&lt;MOSDRepOpReply *&gt;(op-&gt;get_nonconst_req())-&gt;finish_decode();
+
+  // 获取上文构造的 Reply Msg
+  auto r = op-&gt;get_req&lt;MOSDRepOpReply&gt;();
+  ceph_assert(r-&gt;get_header().type == MSG_OSD_REPOPREPLY);
+
+  op-&gt;mark_started();
+
+  // must be replication.
+  ceph_tid_t rep_tid = r-&gt;get_tid();
+  pg_shard_t from = r-&gt;from;
+
+  auto iter = in_progress_ops.find(rep_tid);
+  if (iter != in_progress_ops.end())
+  {
+    // 获取副本节点上正在处理的 op InProgressOp
+    InProgressOp &amp;ip_op = *iter-&gt;second;
+    const MOSDOp *m = nullptr;
+    if (ip_op.op)
+      m = ip_op.op-&gt;get_req&lt;MOSDOp&gt;();
+
+    if (m)
+      dout(7) &lt;&lt; __func__ &lt;&lt; &quot;: tid &quot; &lt;&lt; ip_op.tid &lt;&lt; &quot; op &quot; //&lt;&lt; *m
+              &lt;&lt; &quot; ack_type &quot; &lt;&lt; (int)r-&gt;ack_type
+              &lt;&lt; &quot; from &quot; &lt;&lt; from
+              &lt;&lt; dendl;
+    else
+      dout(7) &lt;&lt; __func__ &lt;&lt; &quot;: tid &quot; &lt;&lt; ip_op.tid &lt;&lt; &quot; (no op) &quot;
+              &lt;&lt; &quot; ack_type &quot; &lt;&lt; (int)r-&gt;ack_type
+              &lt;&lt; &quot; from &quot; &lt;&lt; from
+              &lt;&lt; dendl;
+
+    // oh, good.
+    // 检查响应消息中的 ACK 类型
+    if (r-&gt;ack_type &amp; CEPH_OSD_FLAG_ONDISK)
+    {
+      ceph_assert(ip_op.waiting_for_commit.count(from));
+      ip_op.waiting_for_commit.erase(from);
+      if (ip_op.op)
+      {
+        ip_op.op-&gt;mark_event(&quot;sub_op_commit_rec&quot;);
+        ip_op.op-&gt;pg_trace.event(&quot;sub_op_commit_rec&quot;);
+      }
+    }
+    else
+    {
+      // legacy peer; ignore
+    }
+
+    parent-&gt;update_peer_last_complete_ondisk(
+        from,
+        r-&gt;get_last_complete_ondisk());
+
+    // 检查 waiting_for_commit 是否为空
+    // 如果为空，继续向上回调。C_OSD_RepopCommit
+//   C_OSD_RepopCommit(PrimaryLogPG *pg, PrimaryLogPG::RepGather *repop)
+//       : pg(pg), repop(repop) {}
+//   void finish(int) override
+//   {
+//     pg-&gt;repop_all_committed(repop.get());
+//   }
+// };
+    if (ip_op.waiting_for_commit.empty() &amp;&amp;
+        ip_op.on_commit)
+    {
+      ip_op.on_commit-&gt;complete(0);
+      ip_op.on_commit = 0;
+      in_progress_ops.erase(iter);
+    }
+  }
+}
+</code></pre>
+<h3 id="repop_all_committed">repop_all_committed</h3>
+<ul>
+<li><code>PrimaryLogPG::repop_all_committed</code> 准备于客户端进行交互，调用 <code>eval_repop</code></li>
+</ul>
+<pre><code class="language-C++">void PrimaryLogPG::repop_all_committed(RepGather *repop)
+{
+  dout(10) &lt;&lt; __func__ &lt;&lt; &quot;: repop tid &quot; &lt;&lt; repop-&gt;rep_tid &lt;&lt; &quot; all committed &quot;
+           &lt;&lt; dendl;
+  repop-&gt;all_committed = true;
+  if (!repop-&gt;rep_aborted)
+  {
+    if (repop-&gt;v != eversion_t())
+    {
+      recovery_state.complete_write(repop-&gt;v, repop-&gt;pg_local_last_complete);
+    }
+    eval_repop(repop);
+  }
+}
+</code></pre>
+<h3 id="eval_repop">eval_repop</h3>
+<ul>
+<li>通过执行在 <code>execute_ctx</code> 函数中注册的 commit 回调，从而向客户端发送应答消息。</li>
+</ul>
+<pre><code class="language-C++">void PrimaryLogPG::eval_repop(RepGather *repop)
+{
+  dout(10) &lt;&lt; &quot;eval_repop &quot; &lt;&lt; *repop
+           &lt;&lt; (repop-&gt;op &amp;&amp; repop-&gt;op-&gt;get_req&lt;MOSDOp&gt;() ? &quot;&quot; : &quot; (no op)&quot;) &lt;&lt; dendl;
+
+  // 所有副本应答写入磁盘完成
+  // ondisk?
+  if (repop-&gt;all_committed)
+  {
+    dout(10) &lt;&lt; &quot; commit: &quot; &lt;&lt; *repop &lt;&lt; dendl;
+    for (auto p = repop-&gt;on_committed.begin();
+         p != repop-&gt;on_committed.end();
+         repop-&gt;on_committed.erase(p++))
+    {
+      // 执行回调
+      // ctx-&gt;register_on_commit(
+      // [m, ctx, this]() {
+      //   if (ctx-&gt;op)
+      //     log_op_stats(*ctx-&gt;op, ctx-&gt;bytes_written, ctx-&gt;bytes_read);
+
+      //   if (m &amp;&amp; !ctx-&gt;sent_reply)
+      //   {
+      //     MOSDOpReply *reply = ctx-&gt;reply;
+      //     ctx-&gt;reply = nullptr;
+      //     reply-&gt;add_flags(CEPH_OSD_FLAG_ACK | CEPH_OSD_FLAG_ONDISK);
+      //     dout(10) &lt;&lt; &quot; sending reply on &quot; &lt;&lt; *m &lt;&lt; &quot; &quot; &lt;&lt; reply &lt;&lt; dendl;
+      //     osd-&gt;send_message_osd_client(reply, m-&gt;get_connection());
+      //     ctx-&gt;sent_reply = true;
+      //     ctx-&gt;op-&gt;mark_commit_sent();
+      //   }
+      // });
+      (*p)();
+    }
+    // send dup commits, in order
+    auto it = waiting_for_ondisk.find(repop-&gt;v);
+    if (it != waiting_for_ondisk.end())
+    {
+      ceph_assert(waiting_for_ondisk.begin()-&gt;first == repop-&gt;v);
+      for (auto &amp;i : it-&gt;second)
+      {
+        int return_code = repop-&gt;r;
+        if (return_code &gt;= 0)
+        {
+          return_code = std::get&lt;2&gt;(i);
+        }
+        osd-&gt;reply_op_error(std::get&lt;0&gt;(i), return_code, repop-&gt;v,
+                            std::get&lt;1&gt;(i), std::get&lt;3&gt;(i));
+      }
+      waiting_for_ondisk.erase(it);
+    }
+
+    publish_stats_to_osd();
+
+    dout(10) &lt;&lt; &quot; removing &quot; &lt;&lt; *repop &lt;&lt; dendl;
+    ceph_assert(!repop_queue.empty());
+    dout(20) &lt;&lt; &quot;   q front is &quot; &lt;&lt; *repop_queue.front() &lt;&lt; dendl;
+    if (repop_queue.front() == repop)
+    {
+      RepGather *to_remove = nullptr;
+      while (!repop_queue.empty() &amp;&amp;
+             (to_remove = repop_queue.front())-&gt;all_committed)
+      {
+        repop_queue.pop_front();
+        for (auto p = to_remove-&gt;on_success.begin();
+             p != to_remove-&gt;on_success.end();
+             to_remove-&gt;on_success.erase(p++))
+        {
+          (*p)();
+        }
+        remove_repop(to_remove);
+      }
+    }
+  }
+}
+</code></pre>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201005152720.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/NSDI20-FileMR/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-10-05">2020-10-05</time>
+                  <h4 class="title white no-margin">FileMR: Rethinking RDMA Networking for Scalable Persistent Memory</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200916164129.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/ASPLOS20-FlatStore/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2020-09-15">2020-09-15</time>
+                  <h4 class="title white no-margin">FlatStore: An Efficient Log-Structured Key-Value Storage Engine for Persistent Memory</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

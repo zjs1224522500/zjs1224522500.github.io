@@ -1,0 +1,821 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ceph Tiring Cache 调优 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+主要介绍 Ceph 缓存机制涉及到的相关参数
+提供了一些参数的经验值参考
+后续针对具体的IO设计更为细致的优化方案
+
+
+
+Ceph Tiring 调优
+
+Ceph Tiring 功能需要仔细配置其各种参数以确保良好的性能。需要对工作负载..." />
+    <meta name="keywords" content="缓存,Ceph" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/project/Tier-Arch.png?raw=true');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2019-12-05"><i class="fa fa-calendar"></i><span class="lately">1 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/ceph-tiring-cache-optimization/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/ceph-tiring-cache-optimization/"> </span>
+              </a>
+              <span id="/ceph-tiring-cache-optimization/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-0 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-1 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Ceph Tiring Cache 调优</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>主要介绍 Ceph 缓存机制涉及到的相关参数</li>
+<li>提供了一些参数的经验值参考</li>
+<li>后续针对具体的IO设计更为细致的优化方案</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="ceph-tiring-调优">Ceph Tiring 调优</h2>
+<ul>
+<li>Ceph Tiring 功能需要仔细配置其各种参数以确保良好的性能。需要对工作负载I/O有基本的了解;只有当您的数据只有一小部分是热数据时，Tiring 才能很好地工作。均匀随机或涉及大量顺序访问模式的工作负载的情况下，要么没有任何改进，要么在某些情况下可能比无Tiring 更慢。</li>
+</ul>
+<h3 id="flushing-eviction">Flushing &amp; Eviction</h3>
+<h5 id="target_max_bytes-target_max_objects">target_max_bytes / target_max_objects</h5>
+<ul>
+<li>该值设定了缓冲池中最大的数据字节数或对象个数，当缓冲池中数据大小或者对象个数到达该值时将根据缓存策略进行数据的刷回或者淘汰。</li>
+<li>该值需要根据缓存池的容量大小以及副本个数来设置，以三副本为例，target_max_bytes 不应该超过容量的 1/3，如果实际的负载使得存储池中的数据大小达到了容量的 1/3，后续的 IO 将被阻塞，所以需要设置别的参数来避免池中的数据到达该阈值。</li>
+<li>该类参数的设计目的：
+<ul>
+<li>作为刷回淘汰操作的触发条件，避免 OSD 被数据撑满。</li>
+<li>为什么不直接使用存储池的容量作为该参数，是为了考虑另外一种场景，存在多个缓存池，使用相同的磁盘。</li>
+</ul>
+</li>
+</ul>
+<h5 id="cache_target_full_ratio">cache_target_full_ratio</h5>
+<ul>
+<li>该参数的设置是为了防止存储池中的数据大小达到 target_max_bytes/objects。</li>
+<li>当数据到达 cache_target_full_ratio 时，将淘汰缓存池中的对象数据</li>
+<li>淘汰数据本质就是删除数据，其开销相比于 flush/promote 小的多</li>
+<li>需要注意的是，target_max_bytes 和 cache_target_full_ratio 虽然是对存储池的配置，但 Ceph 内部将这些参数用于每个 PG 的 limit 计算。</li>
+</ul>
+<pre><code class="language-C++"> // 计算脏数据的比率和数据满的比率，单位为百万分之一
+  // get dirty, full ratios
+  uint64_t dirty_micro = 0;
+  uint64_t full_micro = 0;
+  // 如果设置了 target_max_bytes，就按照字节数算
+  if (pool.info.target_max_bytes &amp;&amp; num_user_objects &gt; 0) {
+    // 首先计算每个对象的平均大小 avg_size
+    uint64_t avg_size = num_user_bytes / num_user_objects;
+    // 脏数据率 = 100w * 脏数据对象数目 * 每个对象的平均大小 / 每个PG的平均字节数
+    dirty_micro =
+      num_dirty * avg_size * 1000000 /
+      std::max&lt;uint64_t&gt;(pool.info.target_max_bytes / divisor, 1);
+    // 满数据率 = 100w * 用户对象数目 * 每个对象的平均大小 / 每个PG的平均字节数  
+    full_micro =
+      num_user_objects * avg_size * 1000000 /
+      std::max&lt;uint64_t&gt;(pool.info.target_max_bytes / divisor, 1);
+  }
+  
+  // 如果设置了 target_max_objects，就按照对象个数算
+  if (pool.info.target_max_objects &gt; 0) {
+    // 脏数据率 = 100w * 脏数据对象数目 / 每个 PG 的平均对象数目
+    uint64_t dirty_objects_micro =
+      num_dirty * 1000000 /
+      std::max&lt;uint64_t&gt;(pool.info.target_max_objects / divisor, 1);
+    // 取两种计算方式中的最大值
+    if (dirty_objects_micro &gt; dirty_micro)
+      dirty_micro = dirty_objects_micro;
+    // 满数据率 = 100w * 用户对象数目 / 每个 PG 的平均对象数目  
+    uint64_t full_objects_micro =
+      num_user_objects * 1000000 /
+      std::max&lt;uint64_t&gt;(pool.info.target_max_objects / divisor, 1);
+    if (full_objects_micro &gt; full_micro)
+      full_micro = full_objects_micro;
+  }
+  dout(20) &lt;&lt; __func__ &lt;&lt; &quot; dirty &quot; &lt;&lt; ((float)dirty_micro / 1000000.0)
+	   &lt;&lt; &quot; full &quot; &lt;&lt; ((float)full_micro / 1000000.0)
+	   &lt;&lt; dendl;
+</code></pre>
+<ul>
+<li>每个 PG 计算出来的结果会因为该 PG 内的数据分布情况不一致，有的 PG 可能大于 full_ratio，有的可能小于 full_ratio，所以为了避免出现故障，不能将该数据设置为 1.</li>
+<li>经验表明，不能将 cache_target_full_ratio 设置的太高，需要预留一定的空间，经验值 0.8 通常能够很好低保证系统运行。</li>
+</ul>
+<h5 id="cache_target_dirty_ratio-cache_target_high_dirty_ratio">cache_target_dirty_ratio / cache_target_high_dirty_ratio</h5>
+<ul>
+<li>这两个参数主要用于控制刷回操作的时机，区别在于刷回的速度不同</li>
+<li>刷回操作是指 cache tier -&gt; base tier 的数据写入过程，涉及到了一次完整的数据写入过程，开销相对较大。所以通常情况下，对象的刷回速度小于淘汰速度，因为淘汰操作开销更小</li>
+<li>刷回操作是异步的，不直接影响客户端发来的 IO 请求处理</li>
+<li>刷回速度不同的原因是刷回的并发线程数不同，高速刷回使用的并发线程更多。并发线程数一般由 OSD 的相关配置参数指定：osd_agent_max_ops, osd_agent_max_high_ops. 默认低速为 2 个线程，高速为 4 个线程</li>
+</ul>
+<pre><code class="language-C++">// flush mode
+  // 获取 flush_target 和 flush_high_target 参数，以及计算 flush_slop
+  uint64_t flush_target = pool.info.cache_target_dirty_ratio_micro;
+  uint64_t flush_high_target = pool.info.cache_target_dirty_high_ratio_micro;
+  uint64_t flush_slop = (float)flush_target * cct-&gt;_conf-&gt;osd_agent_slop;
+  
+  // 根据传入的参数和 flush_mode 对 target 做修正 
+  if (restart || agent_state-&gt;flush_mode == TierAgentState::FLUSH_MODE_IDLE) {
+    flush_target += flush_slop;
+    flush_high_target += flush_slop;
+  } else {
+    flush_target -= std::min(flush_target, flush_slop);
+    flush_high_target -= std::min(flush_high_target, flush_slop);
+  }
+
+  // 根据脏数据的比例，设置 flush_mode
+  if (dirty_micro &gt; flush_high_target) {
+    flush_mode = TierAgentState::FLUSH_MODE_HIGH;
+  } else if (dirty_micro &gt; flush_target || (!flush_target &amp;&amp; num_dirty &gt; 0)) {
+    flush_mode = TierAgentState::FLUSH_MODE_LOW;
+  }
+  
+  ...
+  
+  skip_calc:
+  bool old_idle = agent_state-&gt;is_idle();
+  // 设置新的 flush_mode，并更新统计信息
+  if (flush_mode != agent_state-&gt;flush_mode) {
+    dout(5) &lt;&lt; __func__ &lt;&lt; &quot; flush_mode &quot;
+	    &lt;&lt; TierAgentState::get_flush_mode_name(agent_state-&gt;flush_mode)
+	    &lt;&lt; &quot; -&gt; &quot;
+	    &lt;&lt; TierAgentState::get_flush_mode_name(flush_mode)
+	    &lt;&lt; dendl;
+    recovery_state.update_stats(
+      [=](auto &amp;history, auto &amp;stats) {
+	if (flush_mode == TierAgentState::FLUSH_MODE_HIGH) {
+	  osd-&gt;agent_inc_high_count();
+	  stats.stats.sum.num_flush_mode_high = 1;
+	} else if (flush_mode == TierAgentState::FLUSH_MODE_LOW) {
+	  stats.stats.sum.num_flush_mode_low = 1;
+	}
+	if (agent_state-&gt;flush_mode == TierAgentState::FLUSH_MODE_HIGH) {
+	  osd-&gt;agent_dec_high_count();
+	  stats.stats.sum.num_flush_mode_high = 0;
+	} else if (agent_state-&gt;flush_mode == TierAgentState::FLUSH_MODE_LOW) {
+	  stats.stats.sum.num_flush_mode_low = 0;
+	}
+	return false;
+      });
+    agent_state-&gt;flush_mode = flush_mode;
+  }
+</code></pre>
+<ul>
+<li>理论上，集群在正常的使用情况下，脏对象的百分比一般在低脏数据率的附近徘徊，部分对象数据将被刷回到存储层，使用的刷回线程较少，尽可能地减小集群的响应延迟；但写如果发生突增，脏数据的比例将会小幅度上升，但通常不会持续太长一段时间，后台线程仍然进行刷回。但如果出现了持续写，且速度大于低速刷回的速度，那么脏数据的比率将会持续上升，如果持续时间较短则保持低俗刷回，脏数据比例会逐渐下降；但如果持续时间较长，到达高速刷回的阈值，将开启更多的线程进行高速刷回，避免脏数据率进一步增长，一旦写流量减少，脏数据率又会重新回到低阈值。<br>
+<img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/project/Dirty%20Flushing.png?raw=true" alt="image" loading="lazy"></li>
+<li>脏数据率的低阈值和高阈值之间需要存在一定的差距，从而才能够较好地吸收正常写操作，而不需要引入高阈值。高阈值应被视为一种紧急限制。经验值表明：一个好的初始值是低阈值为0.4，高阈值为0.6。</li>
+<li>osd_agent_max_ops 的配置，需要根据实际情况进行设置，以便在正常操作条件下，脏对象的数量在低脏比率上下浮动。该参数无准确的经验值，因为该值在很大程度上取决于顶层与底层的大小和性能之比。但是，首先将osd_agent_max_ops设置为1，然后根据需要增加，将 osd_agent_max_high_ops 设置为 osd_agent_max_ops 的至少两倍。</li>
+<li>Ceph Dashboard 可以观察刷回情况，如果正在进行高速刷新，可以考虑增加osd_agent_max_ops。如果发现缓存层被填满并阻塞了1/O，那么需要考虑降低 cache_target_dirty_high_ratio，或者增加osd agent_max_high_ops 线程数来阻止层被脏对象填满</li>
+</ul>
+<h3 id="promotions">Promotions</h3>
+<h5 id="hitset_count-hitset_period">hitset_count &amp; hitset_period</h5>
+<ul>
+<li>hitset_count 控制在最老的 hitset 开始被清除之前可以存在多少 hitset（即最多多少个 hitset）。hitset_period 控制创建 HitSet 的频率。</li>
+<li>如果在实验室环境中测试分层，应该注意，为了创建 HitSet，需要对 PG 进行 I/O;在空闲集群上，不会创建或清除hitset。</li>
+<li>拥有正确的数量并控制创建 hitset 的频率是能够可靠地控制何时提升对象的关键。</li>
+<li>hitset 只包含对象是否被访问过的数据，不包含访问对象的次数计数</li>
+<li>如果 hitset_period 太大，那么即使访问相对较少的对象也会出现在大多数 hitset 中。例如，对于hitset_period为2分钟的情况，一个包含磁盘块的RBD对象(日志文件每分钟更新一次)与一个每秒访问100次的对象处于相同的hitset中</li>
+<li>相反，如果 hitset_period 过短，即使是热数据对象也可能无法出现在足够多的 hitset 中，从而无法使热数据成为 Promote 的候选对象，则缓存层得不到充分利用。</li>
+<li>通过找到正确的 HitSet 创建周期，就能够捕捉到 I/O 的对应视图，从而设置适当大小的热数据比例来优化 Promotion</li>
+</ul>
+<h5 id="min_read_recency_for_promote-min_write_recency_for_promote">min_read_recency_for_promote &amp; min_write_recency_for_promote</h5>
+<ul>
+<li>这两个参数定义一个对象必须出现多少最近的 hitset 才能 Promote。</li>
+<li>由于概率的影响，半热数据 与 recency 设定的关系不是线性的。一旦 recency 设置超过 3或4，需要 Promote 的对象的数量将指数级下降</li>
+<li>虽然可以分别对读或写分别设置Promeote策略，但它们都引用相同的HitSet数据，因此无法确定访问是读还是写。</li>
+<li>如果您将 recency 设置为高于 hitset_count 的值，那么它将永远不会 Promote。例如，可以通过将 min_write_recency_for_promote 设置为高于 hitset_count 的值来确保写 I/O 不会导致对象提升。</li>
+</ul>
+<h3 id="promotion-瓶颈">Promotion 瓶颈</h3>
+<ul>
+<li>Promotion 是一个开销较大的操作，所以尽量只在必须进行 Promote 的场景下进行该操作。</li>
+<li>通常通过配置 HitSet 和 recency 来限制 Promote 操作，但为了限制 Promotion 带来的影响，有额外的参数来限制 Promotion 的速度。</li>
+</ul>
+<h5 id="osd_tier_promote_max_bytes_sec-osd_tier_promote_max_objects_sec">osd_tier_promote_max_bytes_sec &amp; osd_tier_promote_max_objects_sec</h5>
+<ul>
+<li>默认限制是 4 Mbps 或每秒 5 个对象。虽然这些数字可能看起来很低，特别是与最新ssd的性能相比，他们的主要目标是尽量减少 Promote 对延迟的影响，所以需要根据实际的负载和硬件条件应该进行仔细的调优，以便在集群中找到更好的平衡值。</li>
+<li>需要注意的是，这个值是根据每个OSD配置的，因此总的 Promote 速度将是所有 OSD 的总和。</li>
+</ul>
+<h5 id="hit_set_grade_search_last_n">hit_set_grade_search_last_n</h5>
+<ul>
+<li>该配置选项允许配置刷回对象的选择过程（即选择哪些对象进行刷回）</li>
+<li>该参数控制多少个 hitset 被用于查询对象的访问热度，而对象的访问热度反映了访问它的频率。</li>
+<li>经验值表明一般将该参数设置为 recency 对应的值</li>
+</ul>
+<h5 id="hit_set_grade_decay_rate">hit_set_grade_decay_rate</h5>
+<ul>
+<li>两个连续的hit_set之间的温度衰减率</li>
+<li>该参数与 hit_set_grade_search_last_n 协同生效，Hitset 的相关结果会随着时间变得不太具有时效性，所以为了确保更频繁访问的对象没有被错误地刷新，比其他对象更频繁访问的对象具有更热的评级。</li>
+<li>需要注意的是，min_flush 和 evict_age 的设置可能会覆盖被刷新或被驱逐对象的访问热度</li>
+</ul>
+<h5 id="cache_min_flush_age-cache_min_evict_age">cache_min_flush_age &amp; cache_min_evict_age</h5>
+<ul>
+<li>cache_min_evict_age 和 cache_min_flush_age 参数简单地定义了一个对象在允许被刷新或被驱逐之前必须多长时间没有被修改。</li>
+<li>可以用来阻止那些仅仅不够 Promote 的对象，使它们不再陷入在层之间移动的循环中。</li>
+<li>经验值将它们设置为10到30分钟，但是需要注意，在没有需要刷新或清除的对象的情况下，要保证缓存层不能被填满。</li>
+</ul>
+<!-- more -->
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/gem5-and-nvmain.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/gem5-and-nvmain/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-12-11">2019-12-11</time>
+                  <h4 class="title white no-margin">GEM5 &amp; NVMain</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/project/Tier-Arch.png?raw=true');"></div>
+                 <a href="https://blog.shunzi.tech/post/ceph-cache-tiering/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2019-11-11">2019-11-11</time>
+                  <h4 class="title white no-margin">Ceph Cache Tiering</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

@@ -1,0 +1,1224 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Java.String | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+该博文主要是介绍字符串处理过程中一些常用的函数和操作。
+结合Java本身封装的字符串库来讲解
+对于部分操作的效率进行对比，探讨性能问题
+
+
+
+Java.String
+String 类的两种赋值方式
+
+
+String 可以表示出一个字符串..." />
+    <meta name="keywords" content="JavaSE" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('\media\images\custom-featureImage.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2017-05-06"><i class="fa fa-calendar"></i><span class="lately">4 年前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/Java.String/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/Java.String/"> </span>
+              </a>
+              <span id="/Java.String/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-0 ctag-javase" aria-label="">JavaSE</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Java.String</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>该博文主要是介绍字符串处理过程中一些常用的函数和操作。</li>
+<li>结合Java本身封装的字符串库来讲解</li>
+<li>对于部分操作的效率进行对比，探讨性能问题</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h1 id="javastring">Java.String</h1>
+<h3 id="string-类的两种赋值方式">String 类的两种赋值方式</h3>
+<ul>
+<li>
+<p>String 可以表示出一个字符串,根据String的源码我们会发现String类实际上是使用字符数组char[]存储的.</p>
+</li>
+<li>
+<p>如下为<code>String</code>的源码实现</p>
+</li>
+</ul>
+<!-- more -->
+<pre><code class="language-java">public final class String
+    implements java.io.Serializable, Comparable&lt;String&gt;, CharSequence {
+    /** The value is used for character storage. */
+    private final char value[];
+
+    /** Cache the hash code for the string */
+    private int hash; // Default to 0
+
+    /** use serialVersionUID from JDK 1.0.2 for interoperability */
+    private static final long serialVersionUID = -6849794470754667710L;
+
+    public String() {
+        this.value = &quot;&quot;.value;
+    }
+
+    public String(String original) {
+        this.value = original.value;
+        this.hash = original.hash;
+    }
+
+    public String(char value[]) {
+        this.value = Arrays.copyOf(value, value.length);
+    }
+
+    public String(char value[], int offset, int count) {
+        if (offset &lt; 0) {
+            throw new StringIndexOutOfBoundsException(offset);
+        }
+        if (count &lt;= 0) {
+            if (count &lt; 0) {
+                throw new StringIndexOutOfBoundsException(count);
+            }
+            if (offset &lt;= value.length) {
+                this.value = &quot;&quot;.value;
+                return;
+            }
+        }
+        // Note: offset or count might be near -1&gt;&gt;&gt;1.
+        if (offset &gt; value.length - count) {
+            throw new StringIndexOutOfBoundsException(offset + count);
+        }
+        this.value = Arrays.copyOfRange(value, offset, offset+count);
+    }
+
+    public String(int[] codePoints, int offset, int count) {
+        if (offset &lt; 0) {
+            throw new StringIndexOutOfBoundsException(offset);
+        }
+        if (count &lt;= 0) {
+            if (count &lt; 0) {
+                throw new StringIndexOutOfBoundsException(count);
+            }
+            if (offset &lt;= codePoints.length) {
+                this.value = &quot;&quot;.value;
+                return;
+            }
+        }
+        // Note: offset or count might be near -1&gt;&gt;&gt;1.
+        if (offset &gt; codePoints.length - count) {
+            throw new StringIndexOutOfBoundsException(offset + count);
+        }
+
+        final int end = offset + count;
+
+        // Pass 1: Compute precise size of char[]
+        int n = count;
+        for (int i = offset; i &lt; end; i++) {
+            int c = codePoints[i];
+            if (Character.isBmpCodePoint(c))
+                continue;
+            else if (Character.isValidCodePoint(c))
+                n++;
+            else throw new IllegalArgumentException(Integer.toString(c));
+        }
+
+        // Pass 2: Allocate and fill in char[]
+        final char[] v = new char[n];
+
+        for (int i = offset, j = 0; i &lt; end; i++, j++) {
+            int c = codePoints[i];
+            if (Character.isBmpCodePoint(c))
+                v[j] = (char)c;
+            else
+                Character.toSurrogates(c, v, j++);
+        }
+
+        this.value = v;
+    }
+
+    public String(byte bytes[], int offset, int length, String charsetName)
+            throws UnsupportedEncodingException {
+        if (charsetName == null)
+            throw new NullPointerException(&quot;charsetName&quot;);
+        checkBounds(bytes, offset, length);
+        this.value = StringCoding.decode(charsetName, bytes, offset, length);
+    }
+
+    public String(byte bytes[], int offset, int length, Charset charset) {
+        if (charset == null)
+            throw new NullPointerException(&quot;charset&quot;);
+        checkBounds(bytes, offset, length);
+        this.value =  StringCoding.decode(charset, bytes, offset, length);
+    }
+
+    public String(byte bytes[], String charsetName)
+            throws UnsupportedEncodingException {
+        this(bytes, 0, bytes.length, charsetName);
+    }
+
+    public String(byte bytes[], Charset charset) {
+        this(bytes, 0, bytes.length, charset);
+    }
+
+    public String(byte bytes[], int offset, int length) {
+        checkBounds(bytes, offset, length);
+        this.value = StringCoding.decode(bytes, offset, length);
+    }
+
+    public String(byte bytes[]) {
+        this(bytes, 0, bytes.length);
+    }
+
+    public String(StringBuffer buffer) {
+        synchronized(buffer) {
+            this.value = Arrays.copyOf(buffer.getValue(), buffer.length());
+        }
+    }
+
+    public String(StringBuilder builder) {
+        this.value = Arrays.copyOf(builder.getValue(), builder.length());
+    }
+</code></pre>
+<ul>
+<li>
+<p>常见的两种String赋值方式</p>
+<ul>
+<li>String str1 = new String(&quot;name&quot;);</li>
+<li>String str2 = &quot;name&quot;;</li>
+</ul>
+</li>
+<li>
+<p>两种赋值方式分析</p>
+</li>
+</ul>
+<pre><code class="language-java">//会创建两个字符串对象，一个在常量池中创建便于下一次使用，一个在堆内存中创建
+String str1 = new String(&quot;name&quot;);
+//最多创建一个字符串对象，有可能不用创建对象（如果常量池中已经存在相应的常量）
+String str2 = &quot;name&quot;;//推荐使用
+</code></pre>
+<p><a href="http://img.blog.csdn.net/20170723130814511?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcXFfMzM5ODM2MTc=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">内存分析</a><br>
+<img src="http://img.blog.csdn.net/20170723130814511?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcXFfMzM5ODM2MTc=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="内存分析" loading="lazy"></p>
+<h3 id="string类编译期与运行期分析">String类编译期与运行期分析</h3>
+<ul>
+<li>首先明确对象之间 &quot;==&quot; 是比较两个对象的地址。</li>
+</ul>
+<pre><code class="language-java">public class StringDemo {
+	
+	public static void main(String[] args) {
+		
+		// 情况一   结果为true
+		String aString = &quot;a1&quot;;
+		String a1String = &quot;a&quot; + 1;
+		System.out.println(aString == a1String);
+		
+		
+		// 情况二    结果为false
+		String bString = &quot;b1&quot;;
+		int bb = 1;
+		String b1String = &quot;b&quot; + bb;
+		System.out.println(bString == b1String);
+		
+		
+		// 情况三    结果为true
+		String cString = &quot;c1&quot;;
+		final int cc = 1;
+		String c1String = &quot;c&quot; + cc;
+		System.out.println(cString == c1String);
+	
+	
+		// 情况四     结果为false
+		String dString = &quot;dd&quot;;
+		final int dd = getDD();
+		String d1String = dString + dd;
+		System.out.println(dString == d1String);
+		
+	}
+	
+	public static int getDD(){
+		return 1;
+	}
+}
+</code></pre>
+<ul>
+<li>情况二为false，因为 b1String 在编译期时是还没有完全确定下来的，因为 bb 是一个变量，只有在执行期才能加载到。</li>
+<li>情况四为false，注意与情况三进行对比，虽然使用了final关键字，但是根据函数返回值确定下来的，而函数要执行仍然是在运行期的时候确定的，编译期仍然无法确定。</li>
+</ul>
+<h3 id="string-类字符与字符串操作方法">String 类字符与字符串操作方法</h3>
+<ul>
+<li>字符与字符串操作</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="http://img.blog.csdn.net/20170723131120545?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcXFfMzM5ODM2MTc=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="image" loading="lazy"></figure>
+<ul>
+<li>字节与字符串操作</li>
+</ul>
+<figure data-type="image" tabindex="2"><img src="http://img.blog.csdn.net/20170723131221770?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcXFfMzM5ODM2MTc=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="image" loading="lazy"></figure>
+<ul>
+<li>是否以指定内容开头或结尾</li>
+</ul>
+<p><img src="http://img.blog.csdn.net/20170723131306585?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcXFfMzM5ODM2MTc=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="![image](http://f.hiphotos.baidu.com/image/pic/item/9f510fb30f2442a7444789b1db43ad4bd113025c.jpg" loading="lazy">)</p>
+<ul>
+<li>String 类替换操作</li>
+</ul>
+<figure data-type="image" tabindex="3"><img src="http://img.blog.csdn.net/20170723131514431?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcXFfMzM5ODM2MTc=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="image" loading="lazy"></figure>
+<ul>
+<li>String 类字符串截取操作</li>
+</ul>
+<figure data-type="image" tabindex="4"><img src="http://img.blog.csdn.net/20170723131533882?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcXFfMzM5ODM2MTc=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="image" loading="lazy"></figure>
+<ul>
+<li>字符串拆分操作</li>
+</ul>
+<figure data-type="image" tabindex="5"><img src="http://img.blog.csdn.net/20170723131613731?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcXFfMzM5ODM2MTc=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="image" loading="lazy"></figure>
+<ul>
+<li>String 类字符串查找操作</li>
+</ul>
+<figure data-type="image" tabindex="6"><img src="http://img.blog.csdn.net/20170723131637723?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcXFfMzM5ODM2MTc=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="image" loading="lazy"></figure>
+<ul>
+<li>String 类其他操作方法</li>
+</ul>
+<figure data-type="image" tabindex="7"><img src="http://img.blog.csdn.net/20170723131703342?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcXFfMzM5ODM2MTc=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述" loading="lazy"></figure>
+<ul>
+<li>
+<p>更多请见相关api文档</p>
+</li>
+<li>
+<p>常见用例</p>
+</li>
+</ul>
+<pre><code class="language-java">System.out.println(&quot;abcde&quot;.charAt(3));//d
+System.out.println(&quot;abcde&quot;.toCharArray()[2]);//c
+byte[] bytes = &quot;abcde&quot;.getBytes();
+for(int i = 0; i &lt; bytes.length; i++){
+	System.out.println(bytes[i]);
+}
+System.out.println(new String(bytes).toString());
+System.out.println(new String(bytes,0,2).toString());//ab
+System.out.println(new String(bytes,&quot;utf-8&quot;).toString());
+
+System.out.println(&quot;abcde&quot;.startsWith(&quot;ab&quot;));//true
+System.out.println(&quot;abcde&quot;.startsWith(&quot;cd&quot;,2));//true
+System.out.println(&quot;abcde&quot;.endsWith(&quot;de&quot;));//true
+
+System.out.println(&quot;abc,de&quot;.replace(&quot;,&quot;, &quot;:&quot;).toString());//abc:de
+System.out.println(&quot;abcde&quot;.replace(&quot;ab&quot;, &quot;AB&quot;));//ABcde
+		
+//匹配正则表达式中26个字母替换为相应的字符串
+System.out.println(&quot;abcde&quot;.replaceAll(&quot;[a-z]&quot;, &quot;*&quot;));//*****
+System.out.println(&quot;abcde&quot;.replaceFirst(&quot;[a-z]&quot;, &quot;*&quot;));//*bcde
+
+//包括起始位置
+System.out.println(&quot;abcde&quot;.substring(2));//cde
+//包括起始位置，不包括结束位置
+System.out.println(&quot;abcde&quot;.substring(1, 3));//bc 
+
+String[] value = &quot;ab-cde&quot;.split(&quot;-&quot;);//传入的参数为正则表达式
+String[] value2 = &quot;ab-c-de&quot;.split(&quot;-&quot;,3);//拆分成三个字符串数组
+for(String s:value){
+	System.out.print(s);
+}
+System.out.println();
+for(String s:value2){
+	System.out.print(s);
+}
+
+System.out.println(&quot;abcde&quot;.contains(&quot;abc&quot;));//true
+System.out.println(&quot;abcde&quot;.indexOf(&quot;a&quot;));//0  参数虽然为整形，但会转为unicode字符
+System.out.println(&quot;abcde&quot;.indexOf(&quot;bc&quot;));//0 返回首地址
+System.out.println(&quot;abcded&quot;.lastIndexOf(&quot;d&quot;));//5
+System.out.println(&quot;abcdede&quot;.lastIndexOf(&quot;de&quot;));//5
+
+System.out.println(&quot;abcde&quot;.isEmpty());//false
+System.out.println(&quot;abcde&quot;.length());//5
+System.out.println(&quot;abcde&quot;.toUpperCase());//ABCDE
+System.out.println(&quot;ABCDE&quot;.toLowerCase());//abcde
+System.out.println(&quot; abcde &quot;.trim());//abcde
+System.out.println(&quot;abc&quot;.concat(&quot;de&quot;));//abcde
+</code></pre>
+<ul>
+<li>源码</li>
+</ul>
+<pre><code class="language-java">    public char charAt(int index) {
+        if ((index &lt; 0) || (index &gt;= value.length)) {
+            throw new StringIndexOutOfBoundsException(index);
+        }
+        return value[index];
+    }
+    
+    public char[] toCharArray() {
+    // Cannot use Arrays.copyOf because of class initialization order issues
+        char result[] = new char[value.length];
+        System.arraycopy(value, 0, result, 0, value.length);
+        return result;
+    }
+    
+    // 使用平台默认的编码转换成字节数组，默认gbk，根据虚拟机
+    public byte[] getBytes(String charsetName)
+            throws UnsupportedEncodingException {
+        if (charsetName == null) throw new NullPointerException();
+        return StringCoding.encode(charsetName, value, 0, value.length);
+    }
+    
+    public String(byte bytes[]) {
+        this(bytes, 0, bytes.length);
+    }
+    
+    public String(byte bytes[], int offset, int length) {
+        checkBounds(bytes, offset, length);
+        this.value = StringCoding.decode(bytes, offset, length);
+    }
+    
+    public String(byte bytes[], String charsetName)
+            throws UnsupportedEncodingException {
+        this(bytes, 0, bytes.length, charsetName);
+    }
+    
+    public boolean startsWith(String prefix) {
+        return startsWith(prefix, 0);
+    }
+    
+    public boolean startsWith(String prefix, int toffset) {
+        char ta[] = value;//调用该方法的对象的value
+        int to = toffset;//偏移量
+        char pa[] = prefix.value;//前缀的value
+        int po = 0;//前缀的偏移量
+        int pc = prefix.value.length;//前缀的总数
+        // Note: toffset might be near -1&gt;&gt;&gt;1.
+        if ((toffset &lt; 0) || (toffset &gt; value.length - pc)) {
+            return false;
+        }
+        while (--pc &gt;= 0) {
+            if (ta[to++] != pa[po++]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    public boolean endsWith(String suffix) {
+        return startsWith(suffix, value.length - suffix.value.length);
+    }
+    
+    
+    public String replace(char oldChar, char newChar) {
+        if (oldChar != newChar) {
+            int len = value.length;
+            int i = -1;
+            char[] val = value; /* avoid getfield opcode */
+
+            while (++i &lt; len) {
+                if (val[i] == oldChar) {
+                    break;
+                }
+            }
+            if (i &lt; len) {
+                char buf[] = new char[len];
+                for (int j = 0; j &lt; i; j++) {
+                    buf[j] = val[j];
+                }
+                while (i &lt; len) {
+                    char c = val[i];
+                    buf[i] = (c == oldChar) ? newChar : c;
+                    i++;
+                }
+                return new String(buf, true);
+            }
+        }
+        return this;
+    }
+    
+    public String replaceFirst(String regex, String replacement) {
+        return Pattern.compile(regex).matcher(this).replaceFirst(replacement);
+    }
+    
+    public String replaceAll(String regex, String replacement) {
+        return Pattern.compile(regex).matcher(this).replaceAll(replacement);
+    }
+    
+    public String replace(CharSequence target, CharSequence replacement) {
+        return Pattern.compile(target.toString(), Pattern.LITERAL).matcher(
+                this).replaceAll(Matcher.quoteReplacement(replacement.toString()));
+    }
+    
+    public String substring(int beginIndex) {
+        if (beginIndex &lt; 0) {
+            throw new StringIndexOutOfBoundsException(beginIndex);
+        }
+        int subLen = value.length - beginIndex;
+        if (subLen &lt; 0) {
+            throw new StringIndexOutOfBoundsException(subLen);
+        }
+        return (beginIndex == 0) ? this : new String(value, beginIndex, subLen);
+    }
+    
+    public String substring(int beginIndex, int endIndex) {
+        if (beginIndex &lt; 0) {
+            throw new StringIndexOutOfBoundsException(beginIndex);
+        }
+        if (endIndex &gt; value.length) {
+            throw new StringIndexOutOfBoundsException(endIndex);
+        }
+        int subLen = endIndex - beginIndex;
+        if (subLen &lt; 0) {
+            throw new StringIndexOutOfBoundsException(subLen);
+        }
+        return ((beginIndex == 0) &amp;&amp; (endIndex == value.length)) ? this
+                : new String(value, beginIndex, subLen);
+    }
+    
+    public String[] split(String regex, int limit) {
+        /* fastpath if the regex is a
+         (1)one-char String and this character is not one of the
+            RegEx's meta characters &quot;.$|()[{^?*+\\&quot;, or
+         (2)two-char String and the first char is the backslash and
+            the second is not the ascii digit or ascii letter.
+         */
+        char ch = 0;
+        if (((regex.value.length == 1 &amp;&amp;
+             &quot;.$|()[{^?*+\\&quot;.indexOf(ch = regex.charAt(0)) == -1) ||
+             (regex.length() == 2 &amp;&amp;
+              regex.charAt(0) == '\\' &amp;&amp;
+              (((ch = regex.charAt(1))-'0')|('9'-ch)) &lt; 0 &amp;&amp;
+              ((ch-'a')|('z'-ch)) &lt; 0 &amp;&amp;
+              ((ch-'A')|('Z'-ch)) &lt; 0)) &amp;&amp;
+            (ch &lt; Character.MIN_HIGH_SURROGATE ||
+             ch &gt; Character.MAX_LOW_SURROGATE))
+        {
+            int off = 0;
+            int next = 0;
+            boolean limited = limit &gt; 0;
+            ArrayList&lt;String&gt; list = new ArrayList&lt;&gt;();
+            while ((next = indexOf(ch, off)) != -1) {
+                if (!limited || list.size() &lt; limit - 1) {
+                    list.add(substring(off, next));
+                    off = next + 1;
+                } else {    // last one
+                    //assert (list.size() == limit - 1);
+                    list.add(substring(off, value.length));
+                    off = value.length;
+                    break;
+                }
+            }
+            // If no match was found, return this
+            if (off == 0)
+                return new String[]{this};
+
+            // Add remaining segment
+            if (!limited || list.size() &lt; limit)
+                list.add(substring(off, value.length));
+
+            // Construct result
+            int resultSize = list.size();
+            if (limit == 0) {
+                while (resultSize &gt; 0 &amp;&amp; list.get(resultSize - 1).length() == 0) {
+                    resultSize--;
+                }
+            }
+            String[] result = new String[resultSize];
+            return list.subList(0, resultSize).toArray(result);
+        }
+        return Pattern.compile(regex).split(this, limit);
+    }
+    
+    public String[] split(String regex) {
+        return split(regex, 0);
+    }
+    
+    public int indexOf(int ch, int fromIndex) {
+        final int max = value.length;
+        if (fromIndex &lt; 0) {
+            fromIndex = 0;
+        } else if (fromIndex &gt;= max) {
+            // Note: fromIndex might be near -1&gt;&gt;&gt;1.
+            return -1;
+        }
+
+        if (ch &lt; Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+            // handle most cases here (ch is a BMP code point or a
+            // negative value (invalid code point))
+            final char[] value = this.value;
+            for (int i = fromIndex; i &lt; max; i++) {
+                if (value[i] == ch) {
+                    return i;
+                }
+            }
+            return -1;
+        } else {
+            return indexOfSupplementary(ch, fromIndex);
+        }
+    }
+    
+    public int indexOf(String str) {
+        return indexOf(str, 0);
+    }
+    
+    public int indexOf(String str, int fromIndex) {
+        return indexOf(value, 0, value.length,
+                str.value, 0, str.value.length, fromIndex);
+    }
+    
+    public int indexOf(int ch) {
+        return indexOf(ch, 0);
+    }
+    
+    public boolean contains(CharSequence s) {
+        return indexOf(s.toString()) &gt; -1;
+    }
+    
+    public int lastIndexOf(int ch, int fromIndex) {
+        if (ch &lt; Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+            // handle most cases here (ch is a BMP code point or a
+            // negative value (invalid code point))
+            final char[] value = this.value;
+            int i = Math.min(fromIndex, value.length - 1);
+            for (; i &gt;= 0; i--) {
+                if (value[i] == ch) {
+                    return i;
+                }
+            }
+            return -1;
+        } else {
+            return lastIndexOfSupplementary(ch, fromIndex);
+        }
+    }
+    
+    public int lastIndexOf(int ch) {
+        return lastIndexOf(ch, value.length - 1);
+    }
+    
+    public boolean isEmpty() {
+        return value.length == 0;
+    }
+    
+    public int length() {
+        return value.length;
+    }
+    
+    public String trim() {
+        int len = value.length;
+        int st = 0;
+        char[] val = value;    /* avoid getfield opcode */
+
+        while ((st &lt; len) &amp;&amp; (val[st] &lt;= ' ')) {
+            st++;
+        }
+        while ((st &lt; len) &amp;&amp; (val[len - 1] &lt;= ' ')) {
+            len--;
+        }
+        return ((st &gt; 0) || (len &lt; value.length)) ? substring(st, len) : this;
+    }
+    
+    public String concat(String str) {
+        int otherLen = str.length();
+        if (otherLen == 0) {
+            return this;
+        }
+        int len = value.length;
+        char buf[] = Arrays.copyOf(value, len + otherLen);
+        str.getChars(buf, len);
+        return new String(buf, true);
+    }
+</code></pre>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/media/images/she-ji-mo-shi.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/Adapter/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2017-10-06">2017-10-06</time>
+                  <h4 class="title white no-margin">适配器模式</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/media/images/os.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/os-one/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2017-05-01">2017-05-01</time>
+                  <h4 class="title white no-margin">操作系统引论</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/CRaft/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200614213040.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-16">2020-12-16</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/CRaft/">CRaft: An Erasure-coding-supported Version of Raft for Reducing Storage Cost and Network Cost</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Alluxio/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201210191906.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2020-12-10">2020-12-10</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Alluxio/">Alluxio</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-2 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-4 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-6 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-7 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-8 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-9 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-10 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-11 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-12 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-13 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>
