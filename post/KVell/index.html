@@ -20,7 +20,12 @@
     <meta name="description" content="
 
 该篇文章来自于 SOSP2019 的论文 KVell: the Design and Implementation of a Fast Persistent Key-Value Store
-论文提到了一个比较犀利的观点：KV 存储不再像..." />
+
+
+
+
+
+论文提到了一个比较犀利的观点：KV ..." />
     <meta name="keywords" content="Paper,存储,LSM" />
     <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
     <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
@@ -82,7 +87,7 @@
       <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
         <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
           <div class="search-wrapper section">
-            <form id="gridea-search-form" data-update="1611834698443" action="/search/index.html" class="search-form" _lpchecked="1">
+            <form id="gridea-search-form" data-update="1611836077594" action="/search/index.html" class="search-form" _lpchecked="1">
               <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
               <button type="submit" class="submit" aria-label="Submit">
                 <i class="fa fa-search-line"></i>
@@ -128,11 +133,15 @@
                   <blockquote>
 <ul>
 <li>该篇文章来自于 SOSP2019 的论文 KVell: the Design and Implementation of a Fast Persistent Key-Value Store</li>
+</ul>
+</blockquote>
+<!--more-->
+<blockquote>
+<ul>
 <li>论文提到了一个比较犀利的观点：KV 存储不再像以往主要受限于存储设备，而是逐渐更多的受 CPU 的性能影响。即 storage device bound 转移到了 CPU bound</li>
 <li>其实别的文章也略有提及现阶段 KV 存储存在的问题，但这篇文章更多是提出了新的设计范式来指导后续 KVS 的设计，值得一读。</li>
 </ul>
 </blockquote>
-<!--more-->
 <h2 id="abstract">Abstract</h2>
 <ul>
 <li>按块寻址的 NVMe SSD 相比以前的块设备提供了更高的带宽和更相近的随机和顺序读写的性能。持久化的 KV 存储是为早期的存储设备设计的，使用 LSM-tree 或者 B-tree，没有充分利用新型设备的优势。起初设计中为了避免随机访问的逻辑导致了保持磁盘上数据排序这样的开销巨大的操作以及同步操作，这些操作使得这些 KVs 在NVMe SSD 上受到 CPU 限制，成为新的瓶颈。</li>
@@ -608,7 +617,7 @@ jQuery(document).ready(function($){
                   
                   <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
                     <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
-                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png');"></span>
                     </a>
                     <div class="info gradient-effect">
                       <time datetime="2021-01-12">2021-01-12</time>

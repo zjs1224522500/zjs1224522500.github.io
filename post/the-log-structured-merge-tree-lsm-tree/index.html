@@ -20,9 +20,14 @@
     <meta name="description" content="
 
 1996 年发表的 LSM Tree. 原文链接见参考链接【1】
+
+
+
+
+
 作为 KV 存储中应用最为广泛的存储引擎（数据结构），近年来提出了大量新的优化方案。
 此篇为考古文，了解 LSM 设计之初的一些想法以及 LSM 底层原理。
-该篇论文只是..." />
+该..." />
     <meta name="keywords" content="存储,LSM,对象存储" />
     <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
     <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
@@ -84,7 +89,7 @@
       <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
         <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
           <div class="search-wrapper section">
-            <form id="gridea-search-form" data-update="1611834698443" action="/search/index.html" class="search-form" _lpchecked="1">
+            <form id="gridea-search-form" data-update="1611836077594" action="/search/index.html" class="search-form" _lpchecked="1">
               <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
               <button type="submit" class="submit" aria-label="Submit">
                 <i class="fa fa-search-line"></i>
@@ -130,13 +135,17 @@
                   <blockquote>
 <ul>
 <li>1996 年发表的 LSM Tree. 原文链接见参考链接【1】</li>
+</ul>
+</blockquote>
+<!--more-->
+<blockquote>
+<ul>
 <li>作为 KV 存储中应用最为广泛的存储引擎（数据结构），近年来提出了大量新的优化方案。</li>
 <li>此篇为考古文，了解 LSM 设计之初的一些想法以及 LSM 底层原理。</li>
 <li>该篇论文只是数据结构和思想的提出，和实际的实现有一定出入。后续结合 Google BigTable 2006 继续学习。</li>
 <li>其实我只是为了写作业的文献综述才来考古。/:惭愧&lt;</li>
 </ul>
 </blockquote>
-<!--more-->
 <h2 id="abstract">Abstract</h2>
 <ul>
 <li>原文首先介绍了一个场景来引入 LSM 诞生的必要性。针对有高性能要求的交易系统，往往需要历史记录表来用于相关交易记录的查询或者故障恢复。当交易系统数据量较大时，就需要借助索引来保证查询效率的高校了。但索引显然是一种空间换时间的算法，在后期新数据写入时，维护索引数据的变化将会带来很大的开销，最常用的基于磁盘的索引结构 B Tree在实时维护索引时常常会 double IO 开销，整个系统的开销也将有大幅度的增加。故需要一种低开销的维护索引的方案。</li>
@@ -357,7 +366,7 @@ jQuery(document).ready(function($){
                   
                   <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
                     <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
-                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png');"></span>
                     </a>
                     <div class="info gradient-effect">
                       <time datetime="2021-01-12">2021-01-12</time>

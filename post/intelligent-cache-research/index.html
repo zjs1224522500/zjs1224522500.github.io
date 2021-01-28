@@ -20,7 +20,13 @@
     <meta name="description" content="
 
 本篇为智能缓存相关的研究调研，可能涉及 AI for System 以及相关缓存策略的设计
-智能缓存顾名思义为不同的负载下提供相应的缓存策略来保证缓存的高效，主要包含多种缓存策略执行和 IO 负载的捕捉两个方面，同时可能结合不同的缓存层..." />
+
+
+ 
+Smart SSD Cache
+
+
+智能缓存顾名思义为不同的负载下提供相应的缓存策略来保证缓存的高效，主要包含多种缓存策略执行和 IO ..." />
     <meta name="keywords" content="缓存" />
     <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
     <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
@@ -82,7 +88,7 @@
       <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
         <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
           <div class="search-wrapper section">
-            <form id="gridea-search-form" data-update="1611834698443" action="/search/index.html" class="search-form" _lpchecked="1">
+            <form id="gridea-search-form" data-update="1611836077594" action="/search/index.html" class="search-form" _lpchecked="1">
               <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
               <button type="submit" class="submit" aria-label="Submit">
                 <i class="fa fa-search-line"></i>
@@ -124,12 +130,16 @@
                   <blockquote>
 <ul>
 <li>本篇为智能缓存相关的研究调研，可能涉及 AI for System 以及相关缓存策略的设计</li>
-<li>智能缓存顾名思义为不同的负载下提供相应的缓存策略来保证缓存的高效，主要包含多种缓存策略执行和 IO 负载的捕捉两个方面，同时可能结合不同的缓存层级需要进行动态调整。</li>
-<li>缓存策略本身很难有普适的，现有做法和方案常常需要根据 IO 负载来进行决策，而对于 IO 负载的建模往往采用统计或者机器学习的方法</li>
 </ul>
 </blockquote>
  <!-- more -->
 <h2 id="smart-ssd-cache">Smart SSD Cache</h2>
+<blockquote>
+<ul>
+<li>智能缓存顾名思义为不同的负载下提供相应的缓存策略来保证缓存的高效，主要包含多种缓存策略执行和 IO 负载的捕捉两个方面，同时可能结合不同的缓存层级需要进行动态调整。</li>
+<li>缓存策略本身很难有普适的，现有做法和方案常常需要根据 IO 负载来进行决策，而对于 IO 负载的建模往往采用统计或者机器学习的方法</li>
+</ul>
+</blockquote>
 <h3 id="oceanstor-v5-系列-v500r007-smartcache">OceanStor V5 系列 V500R007 SmartCache</h3>
 <ul>
 <li>参考 https://support.huawei.com/enterprise/zh/doc/EDOC1000181455/1064ba78</li>
@@ -404,7 +414,7 @@ jQuery(document).ready(function($){
                   
                   <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
                     <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
-                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png)');"></span>
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png');"></span>
                     </a>
                     <div class="info gradient-effect">
                       <time datetime="2021-01-12">2021-01-12</time>
