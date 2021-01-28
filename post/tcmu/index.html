@@ -100,7 +100,7 @@ T..." />
       <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
         <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
           <div class="search-wrapper section">
-            <form id="gridea-search-form" data-update="1610809361880" action="/search/index.html" class="search-form" _lpchecked="1">
+            <form id="gridea-search-form" data-update="1611834698443" action="/search/index.html" class="search-form" _lpchecked="1">
               <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
               <button type="submit" class="submit" aria-label="Submit">
                 <i class="fa fa-search-line"></i>
@@ -115,7 +115,7 @@ T..." />
         <div class="center content">
           <div class="featured-image cover" style="background-image: url('https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/TCMU-LIO.png?raw=true');">
             <div class="meta top"> 
-              <time class="meta-info" style="float:left;" datetime="2019-07-17"><i class="fa fa-calendar"></i><span class="lately">1 年前</span></time>
+              <time class="meta-info" style="float:left;" datetime="2019-07-17"><i class="fa fa-calendar"></i><span class="lately">2 年前</span></time>
               
               <a href="https://blog.shunzi.tech/post/tcmu/#comments" class="comments meta-info" title="">
                 <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/tcmu/"> </span>
@@ -174,6 +174,15 @@ T..." />
 <ul>
 <li><a href="#%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%B8%80-%E5%85%A8%E6%9D%83%E6%8E%A5%E7%AE%A1%E5%91%BD%E4%BB%A4%E5%A4%84%E7%90%86">实现方式一  全权接管命令处理</a></li>
 <li><a href="#%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%BA%8C-%E4%BB%85%E5%AE%9E%E7%8E%B0%E5%85%B7%E4%BD%93%E7%9A%84io%E6%93%8D%E4%BD%9C">实现方式二  仅实现具体的IO操作</a></li>
+</ul>
+</li>
+<li><a href="#tcmu-%E6%B7%B1%E5%85%A5">TCMU 深入</a>
+<ul>
+<li><a href="#targetcli-fb">targetcli-fb</a>
+<ul>
+<li><a href="#rtslib-fb">rtslib-fb</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -804,6 +813,324 @@ int handler_init(void)
 	return tcmur_register_handler(&amp;file_handler);
 }
 </code></pre>
+<h3 id="tcmu-深入">TCMU 深入</h3>
+<h4 id="targetcli-fb">targetcli-fb</h4>
+<ul>
+<li>A command shell for managing the Linux LIO kernel target</li>
+<li>首先需要了解 <a href="https://github.com/Datera/targetcli">targetcli</a>，然后再了解 <a href="https://github.com/open-iscsi/targetcli-fb">targetcli-fb</a></li>
+<li>tcmu-runner 由 open_iscsi 维护，默认使用 targetcli-fb</li>
+<li>targetcli-fb 又依赖了很多其他魔改后的组件:
+<ul>
+<li><a href="https://github.com/open-iscsi/rtslib-fb">rtslib-fb</a>: A Python object API for managing the Linux LIO kernel target</li>
+<li><a href="https://github.com/open-iscsi/configshell-fb">configshell-fb</a>: A Python library for building configuration shells</li>
+</ul>
+</li>
+</ul>
+<h5 id="rtslib-fb">rtslib-fb</h5>
+<ul>
+<li>关于 tcmu-runner 中对于用户自定义存储后端的创建代码主要位于 <a href="https://github.com/open-iscsi/rtslib-fb/blob/master/rtslib/tcm.py">tcm.py</a></li>
+</ul>
+<pre><code class="language-python">class UserBackedStorageObject(StorageObject):
+    '''
+    An interface to configFS storage objects for userspace-backed backstore.
+    '''
+
+    def __init__(self, name, config=None, size=None, wwn=None,
+                 hw_max_sectors=None, control=None, index=None):
+        '''
+        @param name: The name of the UserBackedStorageObject.
+        @type name: string
+        @param config: user-handler-specific config string.
+            - e.g. &quot;rbd/machine1@snap4&quot;
+        @type config: string
+        @param size: The size of the device to create, in bytes.
+        @type size: int
+        @param wwn: T10 WWN Unit Serial, will generate if None
+        @type wwn: string
+        @hw_max_sectors: Max sectors per command limit to export to initiators.
+        @type hw_max_sectors: int
+        @control: String of control=value tuples separate by a ',' that will
+            passed to the kernel control file.
+        @type: string
+        @return: A UserBackedStorageObject object.
+        '''
+
+        if size is not None:
+            if config is None:
+                raise RTSLibError(&quot;'size' and 'config' must be set when &quot;
+                                  &quot;creating a new UserBackedStorageObject&quot;)
+            if '/' not in config:
+                raise RTSLibError(&quot;'config' must contain a '/' separating subtype &quot;
+                                  &quot;from its configuration string&quot;)
+            super(UserBackedStorageObject, self).__init__(name, 'create', index)
+            try:
+                self._configure(config, size, wwn, hw_max_sectors, control)
+            except:
+                self.delete()
+                raise
+        else:
+            super(UserBackedStorageObject, self).__init__(name, 'lookup', index)
+
+    def _configure(self, config, size, wwn, hw_max_sectors, control):
+        self._check_self()
+
+        if ':' in config:
+            raise RTSLibError(&quot;':' not allowed in config string&quot;)
+        self._control(&quot;dev_config=%s&quot; % config)
+        self._control(&quot;dev_size=%d&quot; % size)
+        if hw_max_sectors is not None:
+            self._control(&quot;hw_max_sectors=%s&quot; % hw_max_sectors)
+        if control is not None:
+            self._control(control)
+        self._enable()
+
+        super(UserBackedStorageObject, self)._configure(wwn)
+
+    def _get_size(self):
+        self._check_self()
+        return int(self._parse_info('Size'))
+
+    def _get_hw_max_sectors(self):
+        self._check_self()
+        return int(self._parse_info('HwMaxSectors'))
+
+    def _get_control_tuples(self):
+        self._check_self()
+        tuples = []
+        # 1. max_data_area_mb
+        val = self._parse_info('MaxDataAreaMB')
+        if val != &quot;NULL&quot;:
+            tuples.append(&quot;max_data_area_mb=%s&quot; % val)
+        val = self.get_attribute('hw_block_size')
+        if val != &quot;NULL&quot;:
+            tuples.append(&quot;hw_block_size=%s&quot; % val)
+        # 3. add next ...
+
+        return &quot;,&quot;.join(tuples)
+
+    def _get_config(self):
+        self._check_self()
+        val = self._parse_info('Config')
+        if val == &quot;NULL&quot;:
+            return None
+        return val
+
+    def _get_alua_supported(self):
+        self._check_self()
+        return storage_object_get_alua_support_attr(self)
+
+    hw_max_sectors = property(_get_hw_max_sectors,
+            doc=&quot;Get the max sectors per command.&quot;)
+    control_tuples = property(_get_control_tuples,
+            doc=&quot;Get the comma separated string containing control=value tuples.&quot;)
+    size = property(_get_size,
+            doc=&quot;Get the size in bytes.&quot;)
+    config = property(_get_config,
+            doc=&quot;Get the TCMU config.&quot;)
+    alua_supported = property(_get_alua_supported,
+            doc=&quot;Returns true if ALUA can be setup. False if not supported.&quot;)
+
+    def dump(self):
+        d = super(UserBackedStorageObject, self).dump()
+        d['wwn'] = self.wwn
+        d['size'] = self.size
+        d['config'] = self.config
+        d['hw_max_sectors'] = self.hw_max_sectors
+        d['control'] = self.control_tuples
+
+        return d
+</code></pre>
+<ul>
+<li>此处我们以分析&quot;对自定义存储后端创建过程中使用的 size 参数为空时的处理”为例：
+<ul>
+<li>如下查找参数处理的流程，无果。只是找到了 create/lookup 的处理流程</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-python">&gt; super(UserBackedStorageObject, self).__init__(name, 'lookup', index) #class UserBackedStorageObject
+  &gt; __init__(self, name, mode, index=None): #class StorageObject
+    &gt; _Backstore(name, type(self), mode, index)
+      &gt; __init__(self, name, storage_object_cls, mode, index=None): #class _Backstore
+	    &gt; self._create_in_cfs_ine(mode) 
+		  &gt;  def _create_in_cfs_ine(self, mode): # class node
+</code></pre>
+<ul>
+<li>通过在 targetcli 中打开日志 loglevel_console（还可以将日志输出到 file，对应 lof_file），设置 loglevel 为 debug，再进行错误命令的执行，查看错误日志来源</li>
+</ul>
+<pre><code class="language-Shell">/&gt; set global loglevel_console=debug
+
+/&gt; set global loglevel_console=info
+</code></pre>
+<ul>
+<li>结果如下：</li>
+</ul>
+<pre><code class="language-Shell">/backstores/user:hcs_obj&gt; create shunzi cfgstring=/iqn-2021-com-tcmu-target/shunzi/1MB
+
+Running command line 'create shunzi cfgstring=/iqn-2021-com-tcmu-target/shunzi/1MB'.
+/usr/lib/python2.7/site-packages/configshell_fb/shell.py:757 _parse_cmdline() Parsing commandline.
+/usr/lib/python2.7/site-packages/configshell_fb/shell.py:775 _parse_cmdline() Parse gave path='' command='create' pparams=['shunzi'] kparams={'cfgstring': '/iqn-2021-com-tcmu-target/shunzi/1MB'}
+/usr/lib/python2.7/site-packages/configshell_fb/node.py:1846 get_node() Looking for path '.'
+/usr/lib/python2.7/site-packages/configshell_fb/node.py:1398 execute_command() Executing command create with pparams ['shunzi'] and kparams {'cfgstring': '/iqn-2021-com-tcmu-target/shunzi/1MB'}.
+/usr/lib/python2.7/site-packages/configshell_fb/node.py:1445 assert_params() Min params: 3
+/usr/lib/python2.7/site-packages/configshell_fb/node.py:1446 assert_params() Max params: 6
+/usr/lib/python2.7/site-packages/configshell_fb/node.py:1447 assert_params() Required params: name, size, cfgstring
+/usr/lib/python2.7/site-packages/configshell_fb/node.py:1448 assert_params() Optional params: wwn, hw_max_sectors, control
+/usr/lib/python2.7/site-packages/configshell_fb/node.py:1449 assert_params() Got 2 standard params.
+/usr/lib/python2.7/site-packages/configshell_fb/node.py:1450 assert_params() Got 0 extended params.
+/usr/lib/python2.7/site-packages/configshell_fb/node.py:1451 assert_params() Variable positional params: None
+/usr/lib/python2.7/site-packages/configshell_fb/node.py:1452 assert_params() Variable keyword params: None
+Missing required parameter size
+/usr/lib/python2.7/site-packages/configshell_fb/node.py:1846 get_node() Looking for path '/backstores/user:hcs_obj'
+/usr/lib/python2.7/site-packages/configshell_fb/node.py:1846 get_node() Looking for path 'backstores/user:hcs_obj'
+/usr/lib/python2.7/site-packages/configshell_fb/node.py:1846 get_node() Looking for path 'user:hcs_obj'
+</code></pre>
+<ul>
+<li>找到对应的参数检查逻辑：
+<ul>
+<li>位于 <a href="https://github.com/open-iscsi/configshell-fb">configshell-fb</a> 中，不难发现该参数校验逻辑获取了对象对应的方法以及参数列表 <code>inspect.getargspec(method)</code></li>
+<li>通过参数列表来确定哪些参数是必须的，从而对参数的必填or可选进行了校验。</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-Python">class ConfigNode(object):
+    ...
+    def assert_params(self, method, pparams, kparams):
+        '''
+        Checks that positional and keyword parameters match a method
+        definition, or raise an ExecutionError.
+        @param method: The method to check call signature against.
+        @type method: method
+        @param pparams: The positional parameters.
+        @type pparams: list
+        @param kparams: The keyword parameters.
+        @type kparams: dict
+        @raise ExecutionError: When the check fails.
+        '''
+        spec = inspect.getargspec(method)
+        args = spec.args[1:]
+        pp = spec.varargs
+        kw = spec.keywords
+
+        if spec.defaults is None:
+            nb_opt_params = 0
+        else:
+            nb_opt_params = len(spec.defaults)
+        nb_max_params = len(args)
+        nb_min_params = nb_max_params - nb_opt_params
+
+        req_params = args[:nb_min_params]
+        opt_params = args[nb_min_params:]
+
+        unexpected_keywords = sorted(set(kparams) - set(args))
+        missing_params = sorted(set(args[len(pparams):])
+                                - set(opt_params)
+                                - set(kparams.keys()))
+
+        nb_params = len(pparams) + len(kparams)
+        nb_standard_params = len(pparams) \
+                + len([param for param in kparams if param in args])
+        nb_extended_params = nb_params - nb_standard_params
+
+        self.shell.log.debug(&quot;Min params: %d&quot; % nb_min_params)
+        self.shell.log.debug(&quot;Max params: %d&quot; % nb_max_params)
+        self.shell.log.debug(&quot;Required params: %s&quot; % &quot;, &quot;.join(req_params))
+        self.shell.log.debug(&quot;Optional params: %s&quot; % &quot;, &quot;.join(opt_params))
+        self.shell.log.debug(&quot;Got %s standard params.&quot; % nb_standard_params)
+        self.shell.log.debug(&quot;Got %s extended params.&quot; %  nb_extended_params)
+        self.shell.log.debug(&quot;Variable positional params: %s&quot; % pp)
+        self.shell.log.debug(&quot;Variable keyword params: %s&quot; % kw)
+
+        if len(missing_params) == 1:
+            raise ExecutionError(
+                &quot;Missing required parameter %s&quot;
+                % missing_params[0])
+        elif missing_params:
+            raise ExecutionError(
+                &quot;Missing required parameters %s&quot;
+                % &quot;, &quot;.join(&quot;'%s'&quot; % missing for missing in missing_params))
+
+        if spec.keywords is None:
+            if len(unexpected_keywords) == 1:
+                raise ExecutionError(
+                    &quot;Unexpected keyword parameter '%s'.&quot;
+                    % unexpected_keywords[0])
+            elif unexpected_keywords:
+                raise ExecutionError(
+                    &quot;Unexpected keyword parameters %s.&quot;
+                    % &quot;, &quot;.join(&quot;'%s'&quot; % kw for kw in unexpected_keywords))
+        all_params = args[:len(pparams)]
+        all_params.extend(kparams.keys())
+        for param in all_params:
+            if all_params.count(param) &gt; 1:
+                raise ExecutionError(
+                    &quot;Duplicate parameter %s.&quot;
+                    % param)
+
+        if nb_opt_params == 0 \
+           and nb_standard_params != nb_min_params \
+           and pp is None:
+            raise ExecutionError(
+                &quot;Got %d positionnal parameters, expected exactly %d.&quot;
+                % (nb_standard_params, nb_min_params))
+
+        if nb_standard_params &gt; nb_max_params and pp is None:
+            raise ExecutionError(
+                &quot;Got %d positionnal parameters, expected at most %d.&quot;
+                % (nb_standard_params, nb_max_params))
+</code></pre>
+<ul>
+<li>对于 method 的获取发现是按照一定的前缀规则进行匹配的，一开始以为会是一个写在配置文件中的 hardcode 的 method，但后来想了想觉得应该是别的实现类里面重新定义实现了。毕竟要支持多种存储后端，每个存储后端可能有不同的规则。</li>
+<li>经过搜索发现，在 <a href="https://github.com/open-iscsi/targetcli-fb">targetcli-fb</a> 有一个新的继承关系 <code>ConfigNode -&gt; UINode -&gt; UIBackstores -&gt; UIUserBackedBackstore</code>，从而定位到具体的后端存储类型</li>
+<li>https://github.com/open-iscsi/targetcli-fb/blob/2c3eccac082a2980aaed371a1fdf0efc6a49dd59/targetcli/ui_backstore.py#L622</li>
+<li>通过和文件存储后端做对比，最终发现 <code>ui_command_create</code> 方法列表中的 <code>size</code> 字段是 mandatory 的</li>
+</ul>
+<pre><code class="language-Python">class UIFileIOBackstore(UIBackstore):
+    def ui_command_create(self, name, file_or_dev, size=None, write_back=None,
+                          sparse=None, wwn=None):
+
+class UIUserBackedBackstore(UIBackstore):
+    def ui_command_create(self, name, size, cfgstring, wwn=None,
+                          hw_max_sectors=None, control=None):
+
+class UIUserBackedBackstore(UIBackstore):
+    ...
+    def ui_command_create(self, name, size, cfgstring, wwn=None,
+                          hw_max_sectors=None, control=None):
+        '''
+        Creates a User-backed storage object.
+        SIZE SYNTAX
+        ===========
+        - If size is an int, it represents a number of bytes.
+        - If size is a string, the following units can be used:
+            - B or no unit present for bytes
+            - k, K, kB, KB for kB (kilobytes)
+            - m, M, mB, MB for MB (megabytes)
+            - g, G, gB, GB for GB (gigabytes)
+            - t, T, tB, TB for TB (terabytes)
+        '''
+
+        size = human_to_bytes(size)
+        wwn = self.ui_eval_param(wwn, 'string', None)
+
+        config = self.handler + &quot;/&quot; + cfgstring
+
+        ok, errmsg = self.iface.CheckConfig('(s)', config)
+        if not ok:
+            raise ExecutionError(&quot;cfgstring invalid: %s&quot; % errmsg)
+
+        try:
+            so = UserBackedStorageObject(name, size=size, config=config,
+                                         wwn=wwn, hw_max_sectors=hw_max_sectors,
+                                         control=control)
+        except:
+            raise ExecutionError(&quot;UserBackedStorageObject creation failed.&quot;)
+
+        ui_so = UIUserBackedStorageObject(so, self)
+        self.shell.log.info(&quot;Created user-backed storage object %s size %d.&quot;
+                            % (name, size))
+        return self.new_node(ui_so)
+
+</code></pre>
 
                 </div>
                 <div class="clear"></div>
@@ -1130,10 +1457,6 @@ jQuery(document).ready(function($){
                   
                   
                   
-                  
-                  
-                  
-                  
                   <div class="clear"></div>
                 </section>
               </div>
@@ -1173,61 +1496,55 @@ jQuery(document).ready(function($){
                     
                       <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-14 ctag-4zx4ysLGro" aria-label="">云计算</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/NgjQJdkc6/" class="ctag ctag-15 ctag-NgjQJdkc6" aria-label="">项目</a>
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-15 ctag-Y_nsOD1At" aria-label="">SSD</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-16 ctag-5h7k39FKw" aria-label="">C语言</a>
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-16 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/c0aMcnBDAh/" class="ctag ctag-17 ctag-c0aMcnBDAh" aria-label="">C++</a>
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-17 ctag-PhD" aria-label="">Ph.D</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/NF-h45xcE/" class="ctag ctag-18 ctag-NF-h45xcE" aria-label="">iscsi</a>
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-18 ctag-ZqEqvRTvl" aria-label="">网络</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-19 ctag-PuY19cs53" aria-label="">仿真</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-20 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-21 ctag-fu-wu-qi" aria-label="">服务器</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-22 ctag-X-lnqf1Ex" aria-label="">容器</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-23 ctag-hbaTDSglx-" aria-label="">工具</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-24 ctag-5h7k39FKw" aria-label="">C语言</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-25 ctag-EO3XpMf_y" aria-label="">Linux</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-26 ctag-diary" aria-label="">Diary</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-27 ctag-hbaTDSglx-" aria-label="">工具</a>
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-27 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-28 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-28 ctag-oqE3oKihb" aria-label="">OpenStack</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-29 ctag-p_z7gKe6R" aria-label="">中间件</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-30 ctag-Test" aria-label="">测试</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-31 ctag-Product-Standard" aria-label="">Product Standard</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-32 ctag-spring" aria-label="">Spring</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-33 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-34 ctag-mian-jing" aria-label="">面经</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-35 ctag-suan-fa" aria-label="">算法</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-36 ctag-redis" aria-label="">Redis</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-37 ctag-javaweb" aria-label="">JavaWeb</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-38 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-39 ctag-javase" aria-label="">JavaSE</a>
                     
                   </div>
                   <div class="clear"></div>
@@ -1273,7 +1590,7 @@ jQuery(document).ready(function($){
           <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
         </div>
         <p class="published border-effect">
-          ©2019 共 107 篇文章
+          ©2019 共 105 篇文章
           <br/>
           Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
         </p>
