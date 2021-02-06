@@ -23,8 +23,9 @@
 
 
 
-### 开源许可长啥样？
-- 我们常常在 Github 上看到关于 License 的信息，仿佛 NB 点的项目都挂了个 License（啊..." />
+开源许可长啥样？
+
+我们常常在 Github 上看到关于 License 的信息，仿佛 NB 点的项目都挂了个 License（啊没有不挂就..." />
     <meta name="keywords" content="工具" />
     <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
     <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
@@ -86,7 +87,7 @@
       <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
         <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
           <div class="search-wrapper section">
-            <form id="gridea-search-form" data-update="1612624626302" action="/search/index.html" class="search-form" _lpchecked="1">
+            <form id="gridea-search-form" data-update="1612624808294" action="/search/index.html" class="search-form" _lpchecked="1">
               <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
               <button type="submit" class="submit" aria-label="Submit">
                 <i class="fa fa-search-line"></i>
@@ -130,19 +131,27 @@
 <li>什么是源代码许可？以及如何选择源代码许可？困扰了很久的问题，查了下资料决定把这个坑埋了。</li>
 </ul>
 </blockquote>
-<!--more->
-### 开源许可长啥样？
-- 我们常常在 Github 上看到关于 License 的信息，仿佛 NB 点的项目都挂了个 License（啊没有不挂就不 NB 的意思），一般都长成下面这样，只是可能协议啥的会有区别。如 RocksDB 的 [repo](https://github.com/facebook/rocksdb)，使用了 [GPLv2](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html) 和 [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0) 协议，然后 repo 内也有相应的协议文件与之对应，COPYING 和 LICENSE.Apache
-![20210206203249](https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206203249.png)
-
-### 到底啥是开源许可？
-- License 可能大家听说的相对于 Copyright 少一点。那么不妨先说啥是 Copyright。
-#### Copyright(C)
-- **Copyright**：中文译作版权，大家在一些数字媒体软件上可能感受的真切一点，比如某首歌只有部分音乐公司拥有其版权，那为什么有的公司没有版权就不能提供相关音乐的播放和下载服务呢，不妨拆词解义 copy + right，即复制的权利，说的简单点就是没有某个产品 Copyright 的公司就无法对该产品进行复制，就更别说进行修改发布了。
-> 百度百科：版权是对计算机程序、文学著作、音乐作品、照片、游戏，电影等的复制权利的合法所有权。除非转让给另一方，版权通常被认为是属于作者的。大多数计算机程序不仅受到版权的保护，还受软件许可证的保护。版权只保护思想的表达形式，而不保护思想本身。算法、数学方法、技术或机器的设计均不在版权的保护之列。
-- 如果有去公司实习或者工作过的同学应该就知道，往往在公司的项目里写相关代码的时候往往会有一条编程规范的限制，即 Copyright 的声明，许多 IDE 也有相关 Copyright 模板和自动生成插件的提供。如下为 RocksDB 源代码中关于 CopyRight 的声明。Copyright 约定了版权归属谁，并归定了这个软件的使用许可证方式。
-```Java
-// Copyright (c) 2011-present, Facebook, Inc.  All rights reserved.
+<!--more-->
+<h3 id="开源许可长啥样">开源许可长啥样？</h3>
+<ul>
+<li>我们常常在 Github 上看到关于 License 的信息，仿佛 NB 点的项目都挂了个 License（啊没有不挂就不 NB 的意思），一般都长成下面这样，只是可能协议啥的会有区别。如 RocksDB 的 <a href="https://github.com/facebook/rocksdb">repo</a>，使用了 <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html">GPLv2</a> 和 <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0 License</a> 协议，然后 repo 内也有相应的协议文件与之对应，COPYING 和 LICENSE.Apache<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206203249.png" alt="20210206203249" loading="lazy"></li>
+</ul>
+<h3 id="到底啥是开源许可">到底啥是开源许可？</h3>
+<ul>
+<li>License 可能大家听说的相对于 Copyright 少一点。那么不妨先说啥是 Copyright。</li>
+</ul>
+<h4 id="copyrightc">Copyright(C)</h4>
+<ul>
+<li><strong>Copyright</strong>：中文译作版权，大家在一些数字媒体软件上可能感受的真切一点，比如某首歌只有部分音乐公司拥有其版权，那为什么有的公司没有版权就不能提供相关音乐的播放和下载服务呢，不妨拆词解义 copy + right，即复制的权利，说的简单点就是没有某个产品 Copyright 的公司就无法对该产品进行复制，就更别说进行修改发布了。</li>
+</ul>
+<blockquote>
+<p>百度百科：版权是对计算机程序、文学著作、音乐作品、照片、游戏，电影等的复制权利的合法所有权。除非转让给另一方，版权通常被认为是属于作者的。大多数计算机程序不仅受到版权的保护，还受软件许可证的保护。版权只保护思想的表达形式，而不保护思想本身。算法、数学方法、技术或机器的设计均不在版权的保护之列。</p>
+</blockquote>
+<ul>
+<li>如果有去公司实习或者工作过的同学应该就知道，往往在公司的项目里写相关代码的时候往往会有一条编程规范的限制，即 Copyright 的声明，许多 IDE 也有相关 Copyright 模板和自动生成插件的提供。如下为 RocksDB 源代码中关于 CopyRight 的声明。Copyright 约定了版权归属谁，并归定了这个软件的使用许可证方式。</li>
+</ul>
+<pre><code class="language-Java">// Copyright (c) 2011-present, Facebook, Inc.  All rights reserved.
 //  This source code is licensed under both the GPLv2 (found in the
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
@@ -154,28 +163,36 @@ public abstract class Cache extends RocksObject {
     super(nativeHandle);
   }
 }
-```
-- Copyright 是作者或者创建者因为其原创性的工作，所拥有的复制，分发，出售以及其他一系列的排他性权利，如上所示代码声明了“这段代码的版权归属于 Facebook”，拥有一切版权保护的相关权利。
-
-
-#### Copyleft(Ɔ)
-- 其实还有个东西叫 **Copyleft(Ɔ)**，
-  - “Copyleft”最初是为反对商业软件而生，但它并不是放弃版权。反对软件一切权利归作者私有，保护知识共享、权利共享。
-  - 软件的版权归原作者所有，其它一切权利归任何人所有。用户和软件的作者享有除版权外的完全同等的权利，包括复制软件和重新发布修改过的软件的权利。
-  - 自由软件在承认著作权的基础上，可以通过许可协议，与公众共享作品的其它权利
-> 百度百科：著佐权（Copyleft）是一个由自由软件运动所发展的概念，是一种利用现有著作权体制来保护所有用户和二次开发者的自由的授权方式。在自由软件授权方式中增加著佐权条款之后，该自由软件除了允许使用者自由使用、散布、修改之外，著佐权许可证更要求使用者修改后的衍生作品必须要以同等的授权方式（除非许可证或者版权声明里面例外条款所规定的外）释出以回馈社会。
-- 所以正是因为 **Copyleft(Ɔ)** 的思想，才逐渐衍生出后来的 **License**。可以简单理解为 `Copyleft = Copyright+GPL`
-
-
-#### License
-- 版权法默认禁止共享，也就是说，没有许可证的软件，就等同于保留版权，虽然开源了，用户只能看看源码，不能用，一用就会侵犯版权。所以软件开源的话，必须明确地授予用户开源许可证。
-- License 是 Copyright 拥有者授予其他人处置其原创性成果的权利，如上代码版权声明所示，“Facebook 授予了这段代码 GPLv2 和 Apache2.0 的许可”。
-- 开放源码许可证是符合开放源码定义的许可证——简而言之，它们允许“**自由**”地使用、修改和共享软件。这里的自由其实是相对的，相应地需要遵守对应 License 下的规定。
-- 软件许可是告诉其他人，他们能够对您的代码做什么，不能做什么。
-- 大多数人将其许可文件放在仓库根目录的文件 `LICENSE.txt`（或 `LICENSE.md`）中，如 RocksDB 中的 COPYING 和 LICENSE.Apache。
-- GPLv2 COPYING
-```txt
-                    GNU GENERAL PUBLIC LICENSE
+</code></pre>
+<ul>
+<li>Copyright 是作者或者创建者因为其原创性的工作，所拥有的复制，分发，出售以及其他一系列的排他性权利，如上所示代码声明了“这段代码的版权归属于 Facebook”，拥有一切版权保护的相关权利。</li>
+</ul>
+<h4 id="copyleftɔ">Copyleft(Ɔ)</h4>
+<ul>
+<li>其实还有个东西叫 <strong>Copyleft(Ɔ)</strong>，
+<ul>
+<li>“Copyleft”最初是为反对商业软件而生，但它并不是放弃版权。反对软件一切权利归作者私有，保护知识共享、权利共享。</li>
+<li>软件的版权归原作者所有，其它一切权利归任何人所有。用户和软件的作者享有除版权外的完全同等的权利，包括复制软件和重新发布修改过的软件的权利。</li>
+<li>自由软件在承认著作权的基础上，可以通过许可协议，与公众共享作品的其它权利</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>百度百科：著佐权（Copyleft）是一个由自由软件运动所发展的概念，是一种利用现有著作权体制来保护所有用户和二次开发者的自由的授权方式。在自由软件授权方式中增加著佐权条款之后，该自由软件除了允许使用者自由使用、散布、修改之外，著佐权许可证更要求使用者修改后的衍生作品必须要以同等的授权方式（除非许可证或者版权声明里面例外条款所规定的外）释出以回馈社会。</p>
+</blockquote>
+<ul>
+<li>所以正是因为 <strong>Copyleft(Ɔ)</strong> 的思想，才逐渐衍生出后来的 <strong>License</strong>。可以简单理解为 <code>Copyleft = Copyright+GPL</code></li>
+</ul>
+<h4 id="license">License</h4>
+<ul>
+<li>版权法默认禁止共享，也就是说，没有许可证的软件，就等同于保留版权，虽然开源了，用户只能看看源码，不能用，一用就会侵犯版权。所以软件开源的话，必须明确地授予用户开源许可证。</li>
+<li>License 是 Copyright 拥有者授予其他人处置其原创性成果的权利，如上代码版权声明所示，“Facebook 授予了这段代码 GPLv2 和 Apache2.0 的许可”。</li>
+<li>开放源码许可证是符合开放源码定义的许可证——简而言之，它们允许“<strong>自由</strong>”地使用、修改和共享软件。这里的自由其实是相对的，相应地需要遵守对应 License 下的规定。</li>
+<li>软件许可是告诉其他人，他们能够对您的代码做什么，不能做什么。</li>
+<li>大多数人将其许可文件放在仓库根目录的文件 <code>LICENSE.txt</code>（或 <code>LICENSE.md</code>）中，如 RocksDB 中的 COPYING 和 LICENSE.Apache。</li>
+<li>GPLv2 COPYING</li>
+</ul>
+<pre><code class="language-txt">                    GNU GENERAL PUBLIC LICENSE
                        Version 2, June 1991
 
  Copyright (C) 1989, 1991 Free Software Foundation, Inc.,
@@ -183,10 +200,11 @@ public abstract class Cache extends RocksObject {
  Everyone is permitted to copy and distribute verbatim copies
  of this license document, but changing it is not allowed.
  ...
-```
-- Apache2.0 LICENSE.Apache
-```txt
-
+</code></pre>
+<ul>
+<li>Apache2.0 LICENSE.Apache</li>
+</ul>
+<pre><code class="language-txt">
 
                                  Apache License
                            Version 2.0, January 2004
@@ -196,42 +214,63 @@ public abstract class Cache extends RocksObject {
 
    1. Definitions.
    ...
-```
-- 上面其实介绍的都是开源 license，但其实在软件市场中还是有大量的**商业 license** 的，毕竟也是要恰饭的嘛。主要就是一些商业软件的使用，常常需要大家购买对应软件的 license 才能使用，而且很多 license 大多都是有时间期限的，例如 IDEA 可能还有一些 license server 的机制，但总体思想都是通过销售 license 来获取盈利。
-  - BTW，很多盗版软件其实就是尝试着去碰撞出一个可能有效的 license，甚至有人共享对应的 license 来进行多用户使用。
+</code></pre>
+<ul>
+<li>上面其实介绍的都是开源 license，但其实在软件市场中还是有大量的<strong>商业 license</strong> 的，毕竟也是要恰饭的嘛。主要就是一些商业软件的使用，常常需要大家购买对应软件的 license 才能使用，而且很多 license 大多都是有时间期限的，例如 IDEA 可能还有一些 license server 的机制，但总体思想都是通过销售 license 来获取盈利。
+<ul>
+<li>BTW，很多盗版软件其实就是尝试着去碰撞出一个可能有效的 license，甚至有人共享对应的 license 来进行多用户使用。</li>
+</ul>
+</li>
+</ul>
+<h3 id="有哪些开源许可">有哪些开源许可</h3>
+<ul>
+<li>https://www.gnu.org/licenses/license-list.zh-cn.html</li>
+<li>几种常见的开源许可：
+<ul>
+<li><a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GPL（GNU General Public License）</a>：GNU 通用公共许可协议，免费使用、引用、修改代码，但不能用在闭源软件中发布及销售。“传染性” 表示如果一个软件使用了 GPL 协议的开源代码，那么这个软件也必须开源，仍然免费使用。不能用于商业产品。</li>
+<li><a href="https://www.gnu.org/licenses/lgpl-3.0.html">LGPL（GNU Lesser General Public License）</a>：宽松GPL，规定：如果A项目采用LGPL许可证，那么基于A开发出来的B项目也必须采用LGPL，即必须也开源，但是，如果B项目不是基于A开发出来的，而仅仅调用了A的接口，那么B项目可不必开源，倘若换做GPL的话，那么B项目也是要开源的（所以叫做宽松的GPL）。</li>
+<li><a href="https://en.wikipedia.org/wiki/BSD_licenses">BSD License（original BSD license、FreeBSD license、Original BSD license）</a>：伯克利软件套装，规定：如果A项目采用BSD许可证，那么基于A开发出来的B项目可以选择闭源，即私有化、商业化，但是必须注明B项目采用了A这个开源项目。<strong>主要限制在于不能用开源代码的作者或机构进行商品推广。</strong></li>
+<li><a href="https://en.wikipedia.org/wiki/MIT_License">MIT(The MIT License)</a>：麻省理工学院许可证，规定：这是一个自由度很高的开源许可证，几乎同意了可以随意使用一个开源项目（使用、复制、修改、合并、出版发行、散布、再授权、贩售软件及软件的副本），只要在你的项目中包含或提及原开源项目的MIT许可证。<strong>至于你会不会通过它进行商品推广，作者并不关心，只想保留版权。</strong></li>
+<li><a href="https://www.apache.org/licenses/">Apache Licence</a>：Apache软件基金会，规定：大致上和BSD许可证类似，只是有一点细微差别，它除了需要注明B项目源于开源项目A，也要在每个修改过的A项目的文件注明此文件已被修改，并且原文件是A开源项目中的哪个文件。<strong>相对于 MIT，如果修改了源代码，需要进行说明</strong>。</li>
+</ul>
+</li>
+<li>不推荐用于商业产品的协议：GPL (eg. Linux), LGPL, MPL</li>
+<li>适用于商业产品的协议：BSD, MIT, Apache (eg. RocksDB)</li>
+<li><strong>Dual-Licensed</strong>: 但是我们在如上的 RocksDB 中的例子观察到，RocksDB 中包含了两个开源许可，一个是不推荐用于商业产品的 GPLv2，一个是推荐用于商业产品的 Apache2.0，而在 RocksDB 关于 License 的介绍中我们发现本身该项目就是基于两个开源协议的，而其他软件开发者可以根据自己的实际需求来决定使用哪一个 License。</li>
+</ul>
+<h4 id="other">Other</h4>
+<ul>
+<li>可能还会有小伙伴看过这样的版权例子，但大多都是一些知识产品，比如博客、slides、文档以及网页等等。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206230938.png" alt="20210206230938" loading="lazy"></li>
+<li><strong>CC License</strong>: Creative Commons license，简称CC许可，是一种公共版权许可协议，知识共享许可协议，其允许分发受版权保护的作品。一个创作共用许可，用于一个作者想给他人分享、使用、甚至创作派生作品的权利。创作共用提供给作者灵活性（例如，他们可以选择允许非商业用途使用他们的作品），保护使用或重新分配他人作品的人，所以他们只要遵守由作者指定的条件，不必担心侵犯版权。</li>
+</ul>
+<blockquote>
+<p>百度百科：知识共享（Creative Commons，简称CC，台湾译名创用CC）是一个非营利组织，也用是一种创作的授权方式。此组织的主要宗旨是增加创意作品的流通可及性，作为其它人据以创作及共享的基础，并寻找适当的法律以确保上述理念。</p>
+</blockquote>
+<ul>
+<li><strong>CC-BY-NC-SA</strong> 本质是几种权利的组合：
+<ul>
+<li><strong>CC</strong>：创作共用</li>
+<li><strong>BY</strong>：署名：您（用户）可以复制、发行、展览、表演、放映、广播或通过信息网络传播本作品；您必须按照作者或者许可人指定的方式对作品进行署名。</li>
+<li><strong>NC</strong>：非商业性使用（英语：Noncommercial，nc）您可以自由复制、散布、展示及演出本作品；您不得为商业目的而使用本作品。</li>
+<li><strong>SA</strong>：相同方式共享（英语：ShareAlike，sa）您可以自由复制、散布、展示及演出本作品；若您改变、转变或更改本作品，仅在遵守与本作品相同的许可条款下，您才能散布由本作品产生的派生作品。（参见copyleft。）</li>
+</ul>
+</li>
+<li>除此以外还包含一种权利：
+<ul>
+<li><strong>ND</strong>：禁止演绎（英语：No Derivative Works，nd)，您可以自由复制、散布、展示及演出本作品；您不得改变、转变或更改本作品。</li>
+</ul>
+</li>
+</ul>
+<h3 id="怎么选开源许可">怎么选开源许可</h3>
+<ul>
+<li>如何选 License: https://www.gnu.org/licenses/license-recommendations.html</li>
+<li>千言万语一大堆，不如一张图。图源阮一峰博客 http://www.ruanyifeng.com/blog/2011/05/how_to_choose_free_software_licenses.html<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206213620.png" alt="20210206213620" loading="lazy"></li>
+<li>https://choosealicense.com/<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206220305.png" alt="20210206220305" loading="lazy"></li>
+</ul>
 
-### 有哪些开源许可
-- https://www.gnu.org/licenses/license-list.zh-cn.html
-- 几种常见的开源许可：
-  - [GPL（GNU General Public License）](https://www.gnu.org/licenses/gpl-3.0.en.html)：GNU 通用公共许可协议，免费使用、引用、修改代码，但不能用在闭源软件中发布及销售。“传染性” 表示如果一个软件使用了 GPL 协议的开源代码，那么这个软件也必须开源，仍然免费使用。不能用于商业产品。
-  - [LGPL（GNU Lesser General Public License）](https://www.gnu.org/licenses/lgpl-3.0.html)：宽松GPL，规定：如果A项目采用LGPL许可证，那么基于A开发出来的B项目也必须采用LGPL，即必须也开源，但是，如果B项目不是基于A开发出来的，而仅仅调用了A的接口，那么B项目可不必开源，倘若换做GPL的话，那么B项目也是要开源的（所以叫做宽松的GPL）。
-  - [BSD License（original BSD license、FreeBSD license、Original BSD license）](https://en.wikipedia.org/wiki/BSD_licenses)：伯克利软件套装，规定：如果A项目采用BSD许可证，那么基于A开发出来的B项目可以选择闭源，即私有化、商业化，但是必须注明B项目采用了A这个开源项目。**主要限制在于不能用开源代码的作者或机构进行商品推广。**
-  - [MIT(The MIT License)](https://en.wikipedia.org/wiki/MIT_License)：麻省理工学院许可证，规定：这是一个自由度很高的开源许可证，几乎同意了可以随意使用一个开源项目（使用、复制、修改、合并、出版发行、散布、再授权、贩售软件及软件的副本），只要在你的项目中包含或提及原开源项目的MIT许可证。**至于你会不会通过它进行商品推广，作者并不关心，只想保留版权。**
-  - [Apache Licence](https://www.apache.org/licenses/)：Apache软件基金会，规定：大致上和BSD许可证类似，只是有一点细微差别，它除了需要注明B项目源于开源项目A，也要在每个修改过的A项目的文件注明此文件已被修改，并且原文件是A开源项目中的哪个文件。**相对于 MIT，如果修改了源代码，需要进行说明**。
-- 不推荐用于商业产品的协议：GPL (eg. Linux), LGPL, MPL
-- 适用于商业产品的协议：BSD, MIT, Apache (eg. RocksDB)
-- **Dual-Licensed**: 但是我们在如上的 RocksDB 中的例子观察到，RocksDB 中包含了两个开源许可，一个是不推荐用于商业产品的 GPLv2，一个是推荐用于商业产品的 Apache2.0，而在 RocksDB 关于 License 的介绍中我们发现本身该项目就是基于两个开源协议的，而其他软件开发者可以根据自己的实际需求来决定使用哪一个 License。
-
-#### Other
-- 可能还会有小伙伴看过这样的版权例子，但大多都是一些知识产品，比如博客、slides、文档以及网页等等。
-![20210206230938](https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206230938.png)
-- **CC License**: Creative Commons license，简称CC许可，是一种公共版权许可协议，知识共享许可协议，其允许分发受版权保护的作品。一个创作共用许可，用于一个作者想给他人分享、使用、甚至创作派生作品的权利。创作共用提供给作者灵活性（例如，他们可以选择允许非商业用途使用他们的作品），保护使用或重新分配他人作品的人，所以他们只要遵守由作者指定的条件，不必担心侵犯版权。
-> 百度百科：知识共享（Creative Commons，简称CC，台湾译名创用CC）是一个非营利组织，也用是一种创作的授权方式。此组织的主要宗旨是增加创意作品的流通可及性，作为其它人据以创作及共享的基础，并寻找适当的法律以确保上述理念。
-- **CC-BY-NC-SA** 本质是几种权利的组合：
-  - **CC**：创作共用
-  - **BY**：署名：您（用户）可以复制、发行、展览、表演、放映、广播或通过信息网络传播本作品；您必须按照作者或者许可人指定的方式对作品进行署名。
-  - **NC**：非商业性使用（英语：Noncommercial，nc）您可以自由复制、散布、展示及演出本作品；您不得为商业目的而使用本作品。
-  - **SA**：相同方式共享（英语：ShareAlike，sa）您可以自由复制、散布、展示及演出本作品；若您改变、转变或更改本作品，仅在遵守与本作品相同的许可条款下，您才能散布由本作品产生的派生作品。（参见copyleft。）
-- 除此以外还包含一种权利：
-  - **ND**：禁止演绎（英语：No Derivative Works，nd)，您可以自由复制、散布、展示及演出本作品；您不得改变、转变或更改本作品。
-
-
-### 怎么选开源许可
-- 如何选 License: https://www.gnu.org/licenses/license-recommendations.html
-- 千言万语一大堆，不如一张图。图源阮一峰博客 http://www.ruanyifeng.com/blog/2011/05/how_to_choose_free_software_licenses.html
-![20210206213620](https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206213620.png)
-- https://choosealicense.com/
-![20210206220305](https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206220305.png)
                 </div>
                 <div class="clear"></div>
               </section>
