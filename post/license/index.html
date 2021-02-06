@@ -2,7 +2,7 @@
   <head>
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>编程语言-教程和案例汇总 | Elvis Zhang</title>
+<title>What is license for source code? | Elvis Zhang</title>
 <meta name="description" content="The easy way or the right way." />
 <link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
 <link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
@@ -19,15 +19,13 @@
     <meta name="referrer" content="never">
     <meta name="description" content="
 
-源于众多朋友、同学和学弟（对没有学妹）请教过 Java 学习路线的相关问题
-在这篇博客中对曾经使用到或者收集的教程和优秀博客进行一个汇总
-主要从各大编程语言入门的角度，同时也更新各个方向的相关技术栈
-持续更新ing
+什么是源代码许可？以及如何选择源代码许可？困扰了很久的问题，查了下资料决定把这个坑埋了。
 
 
+开源许可长啥样？
 
-编程语言导向篇..." />
-    <meta name="keywords" content="编程语言" />
+我们常常在 Github 上看到关于 License 的信息，仿佛 NB 点的项目都挂了个 License（啊没有不挂就不..." />
+    <meta name="keywords" content="工具" />
     <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
     <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
   </head>
@@ -101,23 +99,23 @@
       <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
 
         <div class="center content">
-          <div class="featured-image cover" style="background-image: url('https://blog.shunzi.tech/post-images/tutorial.jpg');">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206231108.png');">
             <div class="meta top"> 
-              <time class="meta-info" style="float:left;" datetime="2019-09-02"><i class="fa fa-calendar"></i><span class="lately">1 年前</span></time>
+              <time class="meta-info" style="float:left;" datetime="2021-02-06"><i class="fa fa-calendar"></i><span class="lately">7 小时前</span></time>
               
-              <a href="https://blog.shunzi.tech/post/tutorial/#comments" class="comments meta-info" title="">
-                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/tutorial/"> </span>
+              <a href="https://blog.shunzi.tech/post/license/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/license/"> </span>
               </a>
-              <span id="/tutorial/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              <span id="/license/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
               
             </div>
             <div class="info">
               <div class="tags ">
                 
-                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-0 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-0 ctag-hbaTDSglx-" aria-label="">工具</a>
                     
               </div>
-              <h1 class="title ularge white bold">编程语言-教程和案例汇总</h1>
+              <h1 class="title ularge white bold">What is license for source code?</h1>
             </div>
           </div>
         </div>  
@@ -129,69 +127,146 @@
                 <div class="text">
                   <blockquote>
 <ul>
-<li>源于众多朋友、同学和学弟（对没有学妹）请教过 Java 学习路线的相关问题</li>
-<li>在这篇博客中对曾经使用到或者收集的教程和优秀博客进行一个汇总</li>
-<li>主要从各大编程语言入门的角度，同时也更新各个方向的相关技术栈</li>
-<li>持续更新ing</li>
+<li>什么是源代码许可？以及如何选择源代码许可？困扰了很久的问题，查了下资料决定把这个坑埋了。</li>
 </ul>
 </blockquote>
-<!-- more -->
-<h2 id="编程语言导向篇">编程语言导向篇</h2>
+<h3 id="开源许可长啥样">开源许可长啥样？</h3>
 <ul>
-<li>对于绝大部分未曾深入了解计算机和软件行业的各领域的人而言，往往可能都是以编程语言为导向开始的；以及在面对众多的招聘广告时，往往也是以 C++/Java/Python/PHP 工程师等字眼来进行岗位的总结，在相关技能描述中往往也会涉及到具体的编程语言；所以很多时候可能大家都是以我要学会“某种或者某几种编程语言”为导向来开始学习的，故在此以编程语言分类的方式来进行展开。</li>
-<li>BTW，在对相关领域以及各类语言都有了一定的了解之后，很容易地就会发现其实编程语言永远都只是一项工具，比起国内很多程序员每天喋喋不休地争论哪种语言是最xxx的，还不如多花时间去了解每门语言自己所对应的独特的魅力。</li>
+<li>我们常常在 Github 上看到关于 License 的信息，仿佛 NB 点的项目都挂了个 License（啊没有不挂就不 NB 的意思），一般都长成下面这样，只是可能协议啥的会有区别。如 RocksDB 的 <a href="https://github.com/facebook/rocksdb">repo</a>，使用了 <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html">GPLv2</a> 和 <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0 License</a> 协议，然后 repo 内也有相应的协议文件与之对应，COPYING 和 LICENSE.Apache<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206203249.png" alt="20210206203249" loading="lazy"></li>
 </ul>
-<h3 id="java">Java</h3>
+<h3 id="到底啥是开源许可">到底啥是开源许可？</h3>
 <ul>
-<li>个人路线推荐：Java 面向对象基础篇 -&gt; 设计模式和常用库 -&gt; Spring全家桶 -&gt; 中间件（消息队列/缓存）-&gt; 微服务/分布式组件 -&gt; JVM 性能调优</li>
-<li>可以多利用 Github，阅读优秀开源项目的源码实现，如有机会可积极参加相关开源项目的实现。</li>
+<li>License 可能大家听说的相对于 Copyright 少一点。那么不妨先说啥是 Copyright。</li>
 </ul>
-<h4 id="学习路线和教程">学习路线和教程</h4>
-<figure data-type="image" tabindex="1"><img src="https://blog.shunzi.tech/post-images/1567411955967.jpg" alt="" loading="lazy"></figure>
-<ol>
-<li>可参考 Github 上的优秀 Java 学习手册 <a href="https://github.com/Snailclimb/JavaGuide">[Snailclimb/JavaGuide]</a>，其中涉及到了方方面面（从 Java 基础到计算机领域相关基础知识，再到实际的框架和中间件等，均有狩猎），甚至是面试相关，且长期维护，值得参考。</li>
-<li>可参考知乎问题 <a href="https://www.zhihu.com/question/56110328">[Java 学习线路图是怎样的？]</a>中 <a href="https://www.zhihu.com/people/hollis-11/activities">Hollis</a> 的 <a href="https://www.zhihu.com/question/56110328/answer/650168688">具体回答 &lt;-Click</a>，该答案详细介绍了各个阶段对应的知识点，十分详细，但也无须全盘照搬，更多的需要结合实际项目中的需要再进行针对性的学习，但在开始阶段对各个知识点也要有一定的概念；</li>
-<li>针对日常开发中最常使用到的 Java 开发框架 Spring，也有优秀的教程。可参考 Github <a href="https://github.com/wuyouzhuguli/SpringAll">[wuyouzhuguli/SpringAll]</a>。主要涉及了 Spring 系列全家桶的某些具体应用，可供参考。</li>
-<li>知乎上有很多 Java 相关的专栏，可以根据需求进行具体的检索。</li>
-</ol>
-<h4 id="入门方式">入门方式</h4>
-<ol>
-<li>对于无太多相关领域基础的童鞋，建议视频入门或者博客入门的方式；</li>
-<li>对于有一定基础以及习惯阅读英文文档的同学，建议从相关工具和框架的官方教程以及手册入手进行深入学习。</li>
-</ol>
-<h5 id="视频篇">视频篇：</h5>
+<h4 id="copyrightc">Copyright(C)</h4>
 <ul>
-<li><a href="https://www.imooc.com/course/list?c=java">[1] 慕课网：Java/Spring篇</a>。该类教程更适合于相关方向的入门，便于了解各个知识点的概念以及应用，教程也相对简单，但在深度方面会有所欠缺。</li>
-<li><a href="http://www.atguigu.com/download.shtml">[2] 尚硅谷：Java 学习路线篇</a>。该类教程是培训机构设置的相关课程，其视频资源可通过百度网盘等方式找到。该类视频类似于手把手教学，适合入门，不适合长远的学习，需要自己进行总结和探索。</li>
-<li>视频方式，最重要的一点是需要跟随视频，自己动手实现相关示例，才能保证学有所得。</li>
+<li><strong>Copyright</strong>：中文译作版权，大家在一些数字媒体软件上可能感受的真切一点，比如某首歌只有部分音乐公司拥有其版权，那为什么有的公司没有版权就不能提供相关音乐的播放和下载服务呢，不妨拆词解义 copy + right，即复制的权利，说的简单点就是没有某个产品 Copyright 的公司就无法对该产品进行复制，就更别说进行修改发布了。</li>
 </ul>
-<h5 id="博客篇">博客篇</h5>
+<blockquote>
+<p>百度百科：版权是对计算机程序、文学著作、音乐作品、照片、游戏，电影等的复制权利的合法所有权。除非转让给另一方，版权通常被认为是属于作者的。大多数计算机程序不仅受到版权的保护，还受软件许可证的保护。版权只保护思想的表达形式，而不保护思想本身。算法、数学方法、技术或机器的设计均不在版权的保护之列。</p>
+</blockquote>
 <ul>
-<li><a href="http://blog.didispace.com/">[1]  程序猿DD</a>。博主翟永超出版过Java和Spring相关的书籍，同时也常常发布系列教程。</li>
-<li><a href="http://www.ityouknow.com/">[2] 纯洁的微笑</a>。博主比较结合前沿，主要针对现在行业内使用到的相关技术（如微服务框架等）做系列教程。</li>
-<li><a href="https://www.baeldung.com/">[3] Baeldung</a>。国外优秀的Java教程博主，更接近原生的方式进行教学，具有一定的特色，同时可以订阅。</li>
-<li>博客的方式，往往更接近实际的操作，所以需要自己动手实现，而不是简单的ctrl+c/v。出现问题时，针对具体问题具体分析，不断归纳总结。</li>
+<li>如果有去公司实习或者工作过的同学应该就知道，往往在公司的项目里写相关代码的时候往往会有一条编程规范的限制，即 Copyright 的声明，许多 IDE 也有相关 Copyright 模板和自动生成插件的提供。如下为 RocksDB 源代码中关于 CopyRight 的声明。Copyright 约定了版权归属谁，并归定了这个软件的使用许可证方式。</li>
 </ul>
-<h4 id="深入学习">深入学习</h4>
+<pre><code class="language-Java">// Copyright (c) 2011-present, Facebook, Inc.  All rights reserved.
+//  This source code is licensed under both the GPLv2 (found in the
+//  COPYING file in the root directory) and Apache 2.0 License
+//  (found in the LICENSE.Apache file in the root directory).
+
+package org.rocksdb;
+
+public abstract class Cache extends RocksObject {
+  protected Cache(final long nativeHandle) {
+    super(nativeHandle);
+  }
+}
+</code></pre>
 <ul>
-<li><a href="https://github.com/doocs/advanced-java">Github：互联网 Java 工程师进阶知识完全扫盲</a>：内容涵盖高并发、分布式、高可用、微服务等领域知识，做了一个系统的整理，也可以在 issue 区查看面试相关的讨论。</li>
-<li><a href="https://github.com/xingshaocheng/architect-awesome">Github：《后端架构师技术图谱》</a> ：内容涵盖计算机科学的方方面面，但住要是以 后端工程师 作为职业导向，从基本的数据结构与算法到实际的应用层面的开发，再到相关基础架构设计和其他除后端以外的系统层面的领域知识。</li>
-<li>深入学习主要参考相关技术的官方文档或者手册。一般都可通过搜索引擎获得。如 <a href="https://spring.io/">[Spring IO]</a>。工具或者框架的新版本特性往往通过官方手册和文档进行发布，国内外优秀的教程也往往都是参考了官方手册并实践进行撰写的。</li>
-<li>针对某些工具的具体模块的实现，往往需要自己去看相关源码实现，可以结合他人博客中对于该模块的理解进行思考。可借助搜索引擎实现。</li>
+<li>Copyright 是作者或者创建者因为其原创性的工作，所拥有的复制，分发，出售以及其他一系列的排他性权利，如上所示代码声明了“这段代码的版权归属于 Facebook”，拥有一切版权保护的相关权利。</li>
 </ul>
-<h3 id="python-篇">Python 篇</h3>
+<h4 id="copyleftɔ">Copyleft(Ɔ)</h4>
 <ul>
-<li>Python 其实不用太多编程语言的基础，只需掌握的基本的数学逻辑相关思想即可。当然有一定的其他的编程语言基础，对Python的上手应该更加有利。由于本人非Python作为主力语言，所以只能根据自己的一些学习路线和实际需求来大致介绍相关流程。</li>
-<li>路线：Python3 基础教程 -&gt; Python 相关库（爬虫、Web等）</li>
+<li>其实还有个东西叫 <strong>Copyleft(Ɔ)</strong>，
+<ul>
+<li>“Copyleft”最初是为反对商业软件而生，但它并不是放弃版权。反对软件一切权利归作者私有，保护知识共享、权利共享。</li>
+<li>软件的版权归原作者所有，其它一切权利归任何人所有。用户和软件的作者享有除版权外的完全同等的权利，包括复制软件和重新发布修改过的软件的权利。</li>
+<li>自由软件在承认著作权的基础上，可以通过许可协议，与公众共享作品的其它权利</li>
 </ul>
-<h4 id="入门教程">入门教程</h4>
-<ul>
-<li>基础教程可以参考 <a href="https://www.liaoxuefeng.com/wiki/1016959663602400">廖雪峰：Python 3 教程</a>，廖老师的教程其实已经涉及到了一部分相对高级的语法和操作，例如连接数据库和简单的 Web 开发等，可以一步步动手按照教程的顺序进行学习。</li>
-<li><a href="https://github.com/jackfrued/Python-100-Days#">Github Python - 100天从新手到大师</a> 该教程除了讲解 Python 的相关知识以外，更多是的以一个 Python 工程师为职业导向的学习路线，如果有志于未来从事 Python 相关的工作可以参考该教程，除了编程语言以外，也涉及到了计算机科学领域其他方方面面的教程。</li>
+</li>
 </ul>
-<h4 id="高级教程">高级教程</h4>
+<blockquote>
+<p>百度百科：著佐权（Copyleft）是一个由自由软件运动所发展的概念，是一种利用现有著作权体制来保护所有用户和二次开发者的自由的授权方式。在自由软件授权方式中增加著佐权条款之后，该自由软件除了允许使用者自由使用、散布、修改之外，著佐权许可证更要求使用者修改后的衍生作品必须要以同等的授权方式（除非许可证或者版权声明里面例外条款所规定的外）释出以回馈社会。</p>
+</blockquote>
 <ul>
-<li>主要是针对现如今 Python 在人工智能领域内不可或缺的地位，很多同学都有志于在算法方向上有长足的发展，故可能需要学习 Python，其实此时更多的是针对 Python 的一些自然语言处理、大数据处理等第三方库的学习和使用，此类教程也不胜枚举。例如 <a href="https://github.com/MorvanZhou/tutorials">Github：莫烦 Python</a> 和 <a href="https://github.com/apachecn/AiLearning">Github ApacheCN：AILearning</a></li>
+<li>所以正是因为 <strong>Copyleft(Ɔ)</strong> 的思想，才逐渐衍生出后来的 <strong>License</strong>。可以简单理解为 <code>Copyleft = Copyright+GPL</code></li>
+</ul>
+<h4 id="license">License</h4>
+<ul>
+<li>版权法默认禁止共享，也就是说，没有许可证的软件，就等同于保留版权，虽然开源了，用户只能看看源码，不能用，一用就会侵犯版权。所以软件开源的话，必须明确地授予用户开源许可证。</li>
+<li>License 是 Copyright 拥有者授予其他人处置其原创性成果的权利，如上代码版权声明所示，“Facebook 授予了这段代码 GPLv2 和 Apache2.0 的许可”。</li>
+<li>开放源码许可证是符合开放源码定义的许可证——简而言之，它们允许“<strong>自由</strong>”地使用、修改和共享软件。这里的自由其实是相对的，相应地需要遵守对应 License 下的规定。</li>
+<li>软件许可是告诉其他人，他们能够对您的代码做什么，不能做什么。</li>
+<li>大多数人将其许可文件放在仓库根目录的文件 <code>LICENSE.txt</code>（或 <code>LICENSE.md</code>）中，如 RocksDB 中的 COPYING 和 LICENSE.Apache。</li>
+<li>GPLv2 COPYING</li>
+</ul>
+<pre><code class="language-txt">                    GNU GENERAL PUBLIC LICENSE
+                       Version 2, June 1991
+
+ Copyright (C) 1989, 1991 Free Software Foundation, Inc.,
+ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ Everyone is permitted to copy and distribute verbatim copies
+ of this license document, but changing it is not allowed.
+ ...
+</code></pre>
+<ul>
+<li>Apache2.0 LICENSE.Apache</li>
+</ul>
+<pre><code class="language-txt">
+
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+   ...
+</code></pre>
+<ul>
+<li>上面其实介绍的都是开源 license，但其实在软件市场中还是有大量的<strong>商业 license</strong> 的，毕竟也是要恰饭的嘛。主要就是一些商业软件的使用，常常需要大家购买对应软件的 license 才能使用，而且很多 license 大多都是有时间期限的，例如 IDEA 可能还有一些 license server 的机制，但总体思想都是通过销售 license 来获取盈利。
+<ul>
+<li>BTW，很多盗版软件其实就是尝试着去碰撞出一个可能有效的 license，甚至有人共享对应的 license 来进行多用户使用。</li>
+</ul>
+</li>
+</ul>
+<h3 id="有哪些开源许可">有哪些开源许可</h3>
+<ul>
+<li>https://www.gnu.org/licenses/license-list.zh-cn.html</li>
+<li>几种常见的开源许可：
+<ul>
+<li><a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GPL（GNU General Public License）</a>：GNU 通用公共许可协议，免费使用、引用、修改代码，但不能用在闭源软件中发布及销售。“传染性” 表示如果一个软件使用了 GPL 协议的开源代码，那么这个软件也必须开源，仍然免费使用。不能用于商业产品。</li>
+<li><a href="https://www.gnu.org/licenses/lgpl-3.0.html">LGPL（GNU Lesser General Public License）</a>：宽松GPL，规定：如果A项目采用LGPL许可证，那么基于A开发出来的B项目也必须采用LGPL，即必须也开源，但是，如果B项目不是基于A开发出来的，而仅仅调用了A的接口，那么B项目可不必开源，倘若换做GPL的话，那么B项目也是要开源的（所以叫做宽松的GPL）。</li>
+<li><a href="https://en.wikipedia.org/wiki/BSD_licenses">BSD License（original BSD license、FreeBSD license、Original BSD license）</a>：伯克利软件套装，规定：如果A项目采用BSD许可证，那么基于A开发出来的B项目可以选择闭源，即私有化、商业化，但是必须注明B项目采用了A这个开源项目。<strong>主要限制在于不能用开源代码的作者或机构进行商品推广。</strong></li>
+<li><a href="https://en.wikipedia.org/wiki/MIT_License">MIT(The MIT License)</a>：麻省理工学院许可证，规定：这是一个自由度很高的开源许可证，几乎同意了可以随意使用一个开源项目（使用、复制、修改、合并、出版发行、散布、再授权、贩售软件及软件的副本），只要在你的项目中包含或提及原开源项目的MIT许可证。<strong>至于你会不会通过它进行商品推广，作者并不关心，只想保留版权。</strong></li>
+<li><a href="https://www.apache.org/licenses/">Apache Licence</a>：Apache软件基金会，规定：大致上和BSD许可证类似，只是有一点细微差别，它除了需要注明B项目源于开源项目A，也要在每个修改过的A项目的文件注明此文件已被修改，并且原文件是A开源项目中的哪个文件。<strong>相对于 MIT，如果修改了源代码，需要进行说明</strong>。</li>
+</ul>
+</li>
+<li>不推荐用于商业产品的协议：GPL (eg. Linux), LGPL, MPL</li>
+<li>适用于商业产品的协议：BSD, MIT, Apache (eg. RocksDB)</li>
+<li><strong>Dual-Licensed</strong>: 但是我们在如上的 RocksDB 中的例子观察到，RocksDB 中包含了两个开源许可，一个是不推荐用于商业产品的 GPLv2，一个是推荐用于商业产品的 Apache2.0，而在 RocksDB 关于 License 的介绍中我们发现本身该项目就是基于两个开源协议的，而其他软件开发者可以根据自己的实际需求来决定使用哪一个 License。</li>
+</ul>
+<h4 id="other">Other</h4>
+<ul>
+<li>可能还会有小伙伴看过这样的版权例子，但大多都是一些知识产品，比如博客、slides、文档以及网页等等。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206230938.png" alt="20210206230938" loading="lazy"></li>
+<li><strong>CC License</strong>: Creative Commons license，简称CC许可，是一种公共版权许可协议，知识共享许可协议，其允许分发受版权保护的作品。一个创作共用许可，用于一个作者想给他人分享、使用、甚至创作派生作品的权利。创作共用提供给作者灵活性（例如，他们可以选择允许非商业用途使用他们的作品），保护使用或重新分配他人作品的人，所以他们只要遵守由作者指定的条件，不必担心侵犯版权。</li>
+</ul>
+<blockquote>
+<p>百度百科：知识共享（Creative Commons，简称CC，台湾译名创用CC）是一个非营利组织，也用是一种创作的授权方式。此组织的主要宗旨是增加创意作品的流通可及性，作为其它人据以创作及共享的基础，并寻找适当的法律以确保上述理念。</p>
+</blockquote>
+<ul>
+<li><strong>CC-BY-NC-SA</strong> 本质是几种权利的组合：
+<ul>
+<li><strong>CC</strong>：创作共用</li>
+<li><strong>BY</strong>：署名：您（用户）可以复制、发行、展览、表演、放映、广播或通过信息网络传播本作品；您必须按照作者或者许可人指定的方式对作品进行署名。</li>
+<li><strong>NC</strong>：非商业性使用（英语：Noncommercial，nc）您可以自由复制、散布、展示及演出本作品；您不得为商业目的而使用本作品。</li>
+<li><strong>SA</strong>：相同方式共享（英语：ShareAlike，sa）您可以自由复制、散布、展示及演出本作品；若您改变、转变或更改本作品，仅在遵守与本作品相同的许可条款下，您才能散布由本作品产生的派生作品。（参见copyleft。）</li>
+</ul>
+</li>
+<li>除此以外还包含一种权利：
+<ul>
+<li><strong>ND</strong>：禁止演绎（英语：No Derivative Works，nd)，您可以自由复制、散布、展示及演出本作品；您不得改变、转变或更改本作品。</li>
+</ul>
+</li>
+</ul>
+<h3 id="怎么选开源许可">怎么选开源许可</h3>
+<ul>
+<li>如何选 License: https://www.gnu.org/licenses/license-recommendations.html</li>
+<li>千言万语一大堆，不如一张图。图源阮一峰博客 http://www.ruanyifeng.com/blog/2011/05/how_to_choose_free_software_licenses.html<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206213620.png" alt="20210206213620" loading="lazy"></li>
+<li>https://choosealicense.com/<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206220305.png" alt="20210206220305" loading="lazy"></li>
 </ul>
 
                 </div>
@@ -202,26 +277,13 @@
 
             <section class="related section">
               
-              <article class="prev grid-50 tablet-grid-50 grid-parent">
-                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/distributed-cache-notes-one.jpg');"></div>
-                 <a href="https://blog.shunzi.tech/post/distributed-cache-notes-one/" class="full-link"></a>
-                 <div class="info">
-                  <time datetime="2019-09-03">2019-09-03</time>
-                  <h4 class="title white no-margin">分布式缓存读书笔记（一）</h4>
-                </div>
-                 <span class="epcl-button red">
-                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
-                </span>
-                <div class="overlay"></div>
-              </article>
-              
               
               <article class="next grid-50 tablet-grid-50 grid-parent">
-                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/basic-concept-of-distributed-system.png');"></div>
-                 <a href="https://blog.shunzi.tech/post/basic-concept-of-distributed-system/" class="full-link"></a>
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="full-link"></a>
                  <div class="info">
-                  <time datetime="2019-08-23">2019-08-23</time>
-                  <h4 class="title white no-margin">分布式系统基本概念</h4>
+                  <time datetime="2021-01-12">2021-01-12</time>
+                  <h4 class="title white no-margin">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</h4>
                 </div>
                  <span class="epcl-button red">
                   <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
