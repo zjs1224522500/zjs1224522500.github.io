@@ -83,7 +83,7 @@ The content is based o..." />
       <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
         <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
           <div class="search-wrapper section">
-            <form id="gridea-search-form" data-update="1612869406508" action="/search/index.html" class="search-form" _lpchecked="1">
+            <form id="gridea-search-form" data-update="1612879783045" action="/search/index.html" class="search-form" _lpchecked="1">
               <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
               <button type="submit" class="submit" aria-label="Submit">
                 <i class="fa fa-search-line"></i>
@@ -139,6 +139,14 @@ The content is based o..." />
 <h4 id="basic-2">Basic</h4>
 <ul>
 <li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/hello.go">[1] Hello world</a></li>
+</ul>
+<pre><code class="language-Go">package main
+import &quot;fmt&quot;
+func main() {
+  fmt.Println(&quot;Hello, Golang World!&quot;)
+}
+</code></pre>
+<ul>
 <li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/package/imports.go">[2] Package</a></li>
 <li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/function/function.go">[3] Function</a></li>
 <li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/variables/variables.go">[4] Variables</a></li>
@@ -161,6 +169,26 @@ The content is based o..." />
 <li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/WordCountEx/map-exercise.go">Exercies: Word Count Solution</a></li>
 </ul>
 </li>
+</ul>
+<pre><code class="language-Go">package main
+import (
+  &quot;strings&quot;
+  &quot;golang.org/x/tour/wc&quot;
+)
+
+func WordCount(s string) map[string]int {
+  m := make(map[string]int)
+  words := strings.Fields(s)
+  for _, v := range words {
+    m[v]++
+  }
+  return m
+}
+func main() {
+  wc.Test(WordCount)
+}
+</code></pre>
+<ul>
 <li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/functionValues/function-value.go">[9] Function As Value</a>
 <ul>
 <li><a href="https://tour.golang.org/moretypes/26">Exercise: Fibonacci closure Description</a></li>
@@ -168,25 +196,483 @@ The content is based o..." />
 </ul>
 </li>
 </ul>
+<pre><code class="language-Go">package main
+import &quot;fmt&quot;
+// fibonacci is a function that returns
+// a function that returns an int.
+func fibonacci() func() int {
+  fib1 := 0
+  fib2 := 1
+  return func() int {
+    fib2 = fib1 + fib2
+    fib1 = fib2 - fib1
+    return fib2 - fib1
+  }
+}
+
+func main() {
+  f := fibonacci()
+  for i := 0; i &lt; 10; i++ {
+    fmt.Println(f())
+  }
+}
+</code></pre>
 <h4 id="methods-and-interfaces">Methods and Interfaces</h4>
 <ul>
-<li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/methods/methods.go">[1] Methods</a></li>
-<li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/interfaces/interface.go">[2] Interfaces</a></li>
+<li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/methods/methods.go">[1] Methods</a>
+<ul>
+<li>注意值传递 还是 引用传递</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-Go">package main
+
+import &quot;fmt&quot;
+
+func main() {
+	/* 定义局部变量 */
+	var a int = 100
+	var b int = 200
+	var c int = 100
+	var d int = 200
+
+	fmt.Printf(&quot;交换前 a 的值为 : %d\n&quot;, a)
+	fmt.Printf(&quot;交换前 b 的值为 : %d\n&quot;, b)
+
+	/* 通过调用函数来交换值 */
+	valueSwap(a, b)
+
+	fmt.Printf(&quot;value_swap 交换后 a 的值 : %d\n&quot;, a)
+	fmt.Printf(&quot;value_swap 交换后 b 的值 : %d\n&quot;, b)
+
+	fmt.Printf(&quot;交换前 c 的值为 : %d\n&quot;, c)
+	fmt.Printf(&quot;交换前 d 的值为 : %d\n&quot;, d)
+
+	refSwap(&amp;c, &amp;d)
+	fmt.Printf(&quot;pref_swap 交换后 c 的值为 : %d\n&quot;, c)
+	fmt.Printf(&quot;pref_swap 交换后 d 的值为 : %d\n&quot;, d)
+}
+
+/* 定义相互交换值的函数 */
+func valueSwap(x, y int) int {
+	var temp int
+
+	temp = x /* 保存 x 的值 */
+	x = y    /* 将 y 值赋给 x */
+	y = temp /* 将 temp 值赋给 y*/
+
+	return temp
+}
+
+/* 定义交换值函数*/
+func refSwap(x *int, y *int) {
+	var temp int
+	temp = *x /* 保持 x 地址上的值 */
+	*x = *y   /* 将 y 值赋给 x */
+	*y = temp /* 将 temp 值赋给 y */
+}
+
+</code></pre>
+<ul>
+<li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/interfaces/interface.go">[2] Interfaces</a>
+<ul>
+<li>根据函数名来确定接口实现关系</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-Go">package main
+
+import &quot;fmt&quot;
+
+type Phone interface {
+    call(param int) string
+    takephoto()
+}
+
+type Huawei struct {
+}
+
+func (huawei Huawei) call(param int) string{
+    fmt.Println(&quot;i am Huawei, i can call you!&quot;, param)
+    return &quot;damon&quot;
+}
+
+func (huawei Huawei) takephoto() {
+    fmt.Println(&quot;i can take a photo for you&quot;)
+}
+
+func main(){
+    var phone Phone
+    phone = new(Huawei)
+    phone.takephoto()
+    r := phone.call(50)
+    fmt.Println(r)
+}
+</code></pre>
+<ul>
 <li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/typeassert/type-assertions.go">[3] Type Assertions</a></li>
+</ul>
+<pre><code class="language-Go">package main
+
+import &quot;fmt&quot;
+
+// type switches
+func do(i interface{}) {
+	switch v := i.(type) {
+	case int:
+		fmt.Printf(&quot;Twice %v is %v\n&quot;, v, v*2)
+	case string:
+		fmt.Printf(&quot;%q is %v bytes long\n&quot;, v, len(v))
+	default:
+		fmt.Printf(&quot;I don't know about type %T!\n&quot;, v)
+	}
+}
+
+func testTypeSwitchs() {
+	do(21)
+	do(&quot;hello&quot;)
+	do(true)
+}
+W
+func testTypeAssert() {
+	var i interface{} = &quot;hello&quot;
+
+	// t := i.(T)
+	s := i.(string)
+	fmt.Println(s)
+
+	// f = i.(float64) // panic
+	// fmt.Println(f)
+
+	// t, ok := i.(T)
+	s, ok := i.(string)
+	fmt.Println(s, ok)
+
+	f, ok := i.(float64)
+	fmt.Println(f, ok)
+}
+
+func main() {
+	testTypeAssert()
+	testTypeSwitchs()
+}
+</code></pre>
+<ul>
 <li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/stringers/stringers.go">[4] Stringers</a></li>
+</ul>
+<pre><code class="language-Go">package main
+
+import &quot;fmt&quot;
+
+// Person struct
+type Person struct {
+	Name string
+	Age  int
+}
+
+func (p Person) String() string {
+	return fmt.Sprintf(&quot;%v (%v years)&quot;, p.Name, p.Age)
+}
+
+func testStringers() {
+	a := Person{&quot;Arthur Dent&quot;, 42}
+	z := Person{&quot;Zaphod Beeblebrox&quot;, 9001}
+	fmt.Println(a, z)
+}
+
+// IPAddr type
+type IPAddr [4]byte
+
+func (ip IPAddr) String() string {
+	return fmt.Sprintf(&quot;%v.%v.%v.%v&quot;, ip[0], ip[1], ip[2], ip[3])
+}
+
+func exerciseTest() {
+	hosts := map[string]IPAddr{
+		&quot;loopback&quot;:  {127, 0, 0, 1},
+		&quot;googleDNS&quot;: {8, 8, 8, 8},
+	}
+	for name, ip := range hosts {
+		fmt.Printf(&quot;%v: %v\n&quot;, name, ip)
+	}
+}
+
+func main() {
+	testStringers()
+	exerciseTest()
+}
+</code></pre>
+<ul>
 <li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/errors/errors.go">[5] Errors</a></li>
+</ul>
+<pre><code class="language-Go">package main
+
+import &quot;fmt&quot;
+func main() {
+  fmt.Println(&quot;外层开始&quot;)
+  defer func() {
+    fmt.Println(&quot;外层准备recover&quot;)
+    if err := recover(); err != nil {
+      fmt.Printf(&quot;%#v-%#v\n&quot;, &quot;外层&quot;, err) // err已经在上一级的函数中捕获了，这里没有异常，只是例行先执行defer，然后执行后面的代码
+    } else {
+      fmt.Println(&quot;外层没做啥事&quot;)
+    }
+    fmt.Println(&quot;外层完成recover&quot;)
+  }()
+  fmt.Println(&quot;外层即将异常&quot;)
+  f()
+  fmt.Println(&quot;外层异常后&quot;)
+  defer func() {
+    fmt.Println(&quot;外层异常后defer&quot;)
+  }()
+}
+
+func f() {
+  fmt.Println(&quot;内层开始&quot;)
+  defer func() {
+    fmt.Println(&quot;内层recover前的defer&quot;)
+  }()
+
+  defer func() {
+    fmt.Println(&quot;内层准备recover&quot;)
+    if err := recover(); err != nil {
+      fmt.Printf(&quot;%#v-%#v\n&quot;, &quot;内层&quot;, err) // 这里err就是panic传入的内容
+    }
+
+    fmt.Println(&quot;内层完成recover&quot;)
+  }()
+
+  defer func() {
+    fmt.Println(&quot;内层异常前recover后的defer&quot;)
+  }()
+
+  panic(&quot;异常信息&quot;)
+
+  defer func() {
+    fmt.Println(&quot;内层异常后的defer&quot;)
+  }()
+
+  fmt.Println(&quot;内层异常后语句&quot;) //recover捕获的一级或者完全不捕获这里开始下面代码不会再执行
+}
+
+</code></pre>
+<ul>
 <li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/readers/readers.go">[6] Readers</a></li>
+</ul>
+<pre><code class="language-Go">package main
+
+import (
+	&quot;fmt&quot;
+	&quot;io&quot;
+	&quot;os&quot;
+	&quot;strings&quot;
+)
+
+func basicReaderTest() {
+	r := strings.NewReader(&quot;Hello, Reader!&quot;)
+
+	b := make([]byte, 8)
+	for {
+		n, err := r.Read(b)
+		fmt.Printf(&quot;n = %v err = %v b = %v\n&quot;, n, err, b)
+		fmt.Printf(&quot;b[:n] = %q\n&quot;, b[:n])
+		if err == io.EOF {
+			break
+		}
+	}
+}
+
+// Implement a Reader type that emits an infinite stream of the ASCII character 'A'.
+// import &quot;golang.org/x/tour/reader&quot;
+// MyReader struct
+type MyReader struct{}
+
+func (r MyReader) Read(b []byte) (int, error) {
+	for i := 0; i &lt; len(b); i++ {
+		b[i] = 'A'
+	}
+	return len(b), nil
+}
+func readerExercise() {
+	// reader.Validate(MyReader{})
+}
+
+type rot13Reader struct {
+	r io.Reader
+}
+
+func (rot *rot13Reader) Read(b []byte) (int, error) {
+	n, e := rot.r.Read(b)
+
+	for i := 0; i &lt; n; i++ {
+		if (b[i] &gt;= 'A' &amp;&amp; b[i] &lt; 'N') || (b[i] &gt;= 'a' &amp;&amp; b[i] &lt; 'n') {
+			b[i] += 13
+		} else if (b[i] &gt; 'M' &amp;&amp; b[i] &lt;= 'Z') || (b[i] &gt; 'm' &amp;&amp; b[i] &lt;= 'z') {
+			b[i] -= 13
+		}
+	}
+	return n, e
+}
+
+func rot13ReaderTest() {
+	// Build string reader
+	s := strings.NewReader(&quot;Lbh penpxrq gur pbqr!&quot;)
+	// Build rot13 reader
+	r := rot13Reader{s}
+	// Call reader.read
+	io.Copy(os.Stdout, &amp;r)
+}
+
+func main() {
+	basicReaderTest()
+	rot13ReaderTest()
+}
+</code></pre>
+<ul>
 <li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/images/images.go">[7] Images</a></li>
 </ul>
+<pre><code class="language-Go">package main
+
+import (
+	&quot;fmt&quot;
+	&quot;image&quot;
+	&quot;image/color&quot;
+	//&quot;golang.org/x/tour/pic&quot;
+)
+
+// package image
+
+// type Image interface {
+//     ColorModel() color.Model
+//     Bounds() Rectangle
+//     At(x, y int) color.Color
+// }
+
+func testImage() {
+	m := image.NewRGBA(image.Rect(0, 0, 100, 100))
+	fmt.Println(m.Bounds())
+	fmt.Println(m.At(0, 0).RGBA())
+}
+
+// Image Struct
+type Image struct{ w, h int }
+
+// ColorModel method
+func (i Image) ColorModel() color.Model {
+	return color.RGBAModel
+}
+
+// Bounds method
+func (i Image) Bounds() image.Rectangle {
+	return image.Rect(0, 0, i.w, i.h)
+}
+
+// At method
+func (i Image) At(x, y int) color.Color {
+	r, g, b := uint8(x*y), uint8(x^y), uint8((x+y)/2)
+	return color.RGBA{r, g, b, 255}
+}
+
+func imageExercise() {
+	// m := Image{1000, 1000}
+	// pic.ShowImage(m)
+}
+
+func main() {
+	testImage()
+}
+</code></pre>
 <h4 id="concurrency">Concurrency</h4>
 <ul>
-<li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/goroutines/goroutines.go">[1] Goroutines</a></li>
+<li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/goroutines/goroutines.go">[1] Goroutines</a>
+<ul>
+<li>关于 Go 的并发相关可以单独再开一篇介绍了，此处不表。</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-Go">package main
+
+import (
+	&quot;fmt&quot;
+	&quot;time&quot;
+)
+
+func say(s string) {
+	for i := 0; i &lt; 5; i++ {
+		time.Sleep(100 * time.Millisecond)
+		fmt.Println(s)
+	}
+}
+
+func goroutinesTest() {
+	go say(&quot;world&quot;)
+	say(&quot;hello&quot;)
+}
+
+func main() {
+	goroutinesTest()
+}
+</code></pre>
+<ul>
 <li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/channels/channels.go">[2] Channels</a>
 <ul>
 <li><a href="https://tour.golang.org/concurrency/8">Exercise Binary Tree Desc</a></li>
 <li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/binaryTrees/binaryTrees.go">Exercise Binary Tree Solution</a></li>
 </ul>
 </li>
+</ul>
+<pre><code class="language-Go">package main
+
+import (
+	&quot;fmt&quot;
+
+	&quot;golang.org/x/tour/tree&quot;
+)
+
+// Walk walks the tree t sending all values
+// from the tree to the channel ch.
+func Walk(t *tree.Tree, ch chan int) {
+	if t != nil {
+		Walk(t.Left, ch)
+		ch &lt;- t.Value
+		Walk(t.Right, ch)
+	}
+}
+
+func goWalk(t *tree.Tree, ch chan int) {
+	Walk(t, ch)
+	close(ch)
+}
+
+// Same determines whether the trees
+// t1 and t2 contain the same values.
+func Same(t1, t2 *tree.Tree) bool {
+	ch1, ch2 := make(chan int, 10), make(chan int, 10)
+	go goWalk(t1, ch1)
+	go goWalk(t2, ch2)
+	for {
+		v1, ok1 := &lt;-ch1
+		v2, ok2 := &lt;-ch2
+		if ok1 != ok2 || v1 != v2 {
+			return false
+		}
+
+		if ok1 == false {
+			break
+		}
+	}
+	return true
+}
+
+func main() {
+	ch := make(chan int)
+	go Walk(tree.New(1), ch)
+	fmt.Println(Same(tree.New(1), tree.New(2)))
+	fmt.Println(Same(tree.New(1), tree.New(1)))
+	fmt.Println(Same(tree.New(2), tree.New(1)))
+}
+</code></pre>
+<ul>
 <li><a href="https://github.com/zjs1224522500/GoLearn/blob/master/mutex/mutex.go">[3] Mutex</a>
 <ul>
 <li><a href="https://tour.golang.org/concurrency/10">Exercise Web Crawler Desc</a></li>
@@ -194,6 +680,123 @@ The content is based o..." />
 </ul>
 </li>
 </ul>
+<pre><code class="language-Go">package main
+
+import (
+	&quot;fmt&quot;
+	// No longer needed for sleeping.
+	//&quot;time&quot;
+	&quot;sync&quot;
+)
+
+type Fetcher interface {
+	// Fetch returns the body of URL and
+	// a slice of URLs found on that page.
+	Fetch(url string) (body string, urls []string, err error)
+}
+type SafeCounter struct {
+	v   map[string]bool
+	mux sync.Mutex
+	wg  sync.WaitGroup
+}
+
+var c SafeCounter = SafeCounter{v: make(map[string]bool)}
+
+func (s SafeCounter) checkvisited(url string) bool {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	_, ok := s.v[url]
+	if ok == false {
+		s.v[url] = true
+		return false
+	}
+	return true
+
+}
+
+// Crawl uses fetcher to recursively crawl
+// pages starting with url, to a maximum of depth.
+func Crawl(url string, depth int, fetcher Fetcher) {
+	// TODO: Fetch URLs in parallel.
+	// TODO: Don't fetch the same URL twice.
+	// This implementation doesn't do either:
+	defer c.wg.Done()
+	if depth &lt;= 0 {
+		return
+	}
+	if c.checkvisited(url) {
+		return
+	}
+	body, urls, err := fetcher.Fetch(url)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Printf(&quot;found: %s %q\n&quot;, url, body)
+	for _, u := range urls {
+		c.wg.Add(1)
+		go Crawl(u, depth-1, fetcher)
+	}
+	return
+}
+
+func main() {
+	c.wg.Add(1)
+	Crawl(&quot;http://golang.org/&quot;, 4, fetcher)
+	c.wg.Wait()
+	// Not ideal to sleep on the main thread.
+	//time.Sleep(5*time.Second)
+}
+
+// fakeFetcher is Fetcher that returns canned results.
+type fakeFetcher map[string]*fakeResult
+
+type fakeResult struct {
+	body string
+	urls []string
+}
+
+func (f fakeFetcher) Fetch(url string) (string, []string, error) {
+	if res, ok := f[url]; ok {
+		return res.body, res.urls, nil
+	}
+	return &quot;&quot;, nil, fmt.Errorf(&quot;not found: %s&quot;, url)
+}
+
+// fetcher is a populated fakeFetcher.
+var fetcher = fakeFetcher{
+	&quot;http://golang.org/&quot;: &amp;fakeResult{
+		&quot;The Go Programming Language&quot;,
+		[]string{
+			&quot;http://golang.org/pkg/&quot;,
+			&quot;http://golang.org/cmd/&quot;,
+		},
+	},
+	&quot;http://golang.org/pkg/&quot;: &amp;fakeResult{
+		&quot;Packages&quot;,
+		[]string{
+			&quot;http://golang.org/&quot;,
+			&quot;http://golang.org/cmd/&quot;,
+			&quot;http://golang.org/pkg/fmt/&quot;,
+			&quot;http://golang.org/pkg/os/&quot;,
+		},
+	},
+	&quot;http://golang.org/pkg/fmt/&quot;: &amp;fakeResult{
+		&quot;Package fmt&quot;,
+		[]string{
+			&quot;http://golang.org/&quot;,
+			&quot;http://golang.org/pkg/&quot;,
+		},
+	},
+	&quot;http://golang.org/pkg/os/&quot;: &amp;fakeResult{
+		&quot;Package os&quot;,
+		[]string{
+			&quot;http://golang.org/&quot;,
+			&quot;http://golang.org/pkg/&quot;,
+		},
+	},
+}
+</code></pre>
 
                 </div>
                 <div class="clear"></div>
