@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://blog.shunzi.tech</id>
     <title>Elvis Zhang</title>
-    <updated>2021-02-06T15:20:18.759Z</updated>
+    <updated>2021-02-09T11:17:03.673Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://blog.shunzi.tech"/>
     <link rel="self" href="https://blog.shunzi.tech/atom.xml"/>
@@ -10,6 +10,298 @@
     <logo>https://blog.shunzi.tech/images/avatar.png</logo>
     <icon>https://blog.shunzi.tech/favicon.ico</icon>
     <rights>All rights reserved 2021, Elvis Zhang</rights>
+    <entry>
+        <title type="html"><![CDATA[MapReduce: Simplified Data Processing on Large Clusters]]></title>
+        <id>https://blog.shunzi.tech/post/MapReduce/</id>
+        <link href="https://blog.shunzi.tech/post/MapReduce/">
+        </link>
+        <updated>2021-02-08T08:37:41.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<ul>
+<li>该篇文章来自于 OSDI2004，Google 当年率先提出的 MapReduce 框架，开启了分布式和大数据的纪元。</li>
+</ul>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<ul>
+<li>该篇文章来自于 OSDI2004，Google 当年率先提出的 MapReduce 框架，开启了分布式和大数据的纪元。</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="before-beginning">Before Beginning</h2>
+<ul>
+<li>为什么要读这篇论文呢？其实这篇文章之前也已经简单看过了，只是最近开始刷 MIT6.824，本来是想直接做相关 Lab 的，但是发现还是有整理不清楚的思路，觉得还是有必要回顾一下，那就多花点时间继续研读吧~</li>
+<li>网上关于 6.824 以及 MapReduce 的资料很多了，我在这里只是做一些简单的记录，如果有发现其他大佬做的比较好的笔记，也会贴在这里，以供膜拜学习。我的 6.824 系列的的博客介绍大抵都是如此。</li>
+<li>话不多说，学习开始~</li>
+</ul>
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li><strong>大致流程</strong>: 用户指定一个 map 函数来处理键/值对以生成一组中间键/值对，以及一个 reduce 函数来合并与同一中间键相关的所有中间值</li>
+<li><strong>为什么这么做？</strong> 是想充分利用不同机器的并行性来处理大量的数据，分别执行 map 和 reduce 任务来完成大数据任务，提高每个 host 的利用率。（也就是分布式系统的原型）</li>
+<li><strong>需要解决的问题：</strong>
+<ul>
+<li>数据输入的切分</li>
+<li>不同机器上执行的任务的调度</li>
+<li>机器故障处理</li>
+<li>机器间通信的管理</li>
+</ul>
+</li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<ul>
+<li><strong>根本矛盾</strong>：少数据量时单机能够直接运行简单的任务来完成相关计算，但面对大数据量的情况下，引入多计算实例组成的系统的复杂性和本身计算任务的简单性之间的矛盾。</li>
+<li><strong>思想起源</strong>：来自于 Lisp 语言的函数式编程思想中的 map/reduce 函数。
+<ul>
+<li>在 lisp 语言中，map 作为一个输入函数接受一个序列，然后处理每个序列中 value 值，然后 reduce 将最终的 map 计算出来的结果整理成最终程序输出。</li>
+</ul>
+</li>
+</ul>
+<h2 id="programming-model">Programming Model</h2>
+<ul>
+<li>MapReduce 本质是一种编程模型
+<ul>
+<li>Map: 由用户编写，接受一个输入对并生成一组中间键/值对</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-Java">// map (k1,v1) → list(k2,v2)
+map(String key, String value): 
+    // key: document name 
+    // value: document contents 
+    for each word w in value: 
+        EmitIntermediate(w, &quot;1&quot;);
+</code></pre>
+<ul>
+<li>Reduce: 也由用户编写，接受一个中间键和该键的一组值。它将这些值合并在一起，形成一个可能更小的值集</li>
+</ul>
+<pre><code class="language-Java">// reduce (k2,list(v2)) → list(v2)
+reduce(String key, Iterator values): 
+    // key: a word 
+    // values: a list of counts 
+    int result = 0; 
+    for each v in values: 
+        result += ParseInt(v); 
+    Emit(AsString(result));
+</code></pre>
+<ul>
+<li><strong>应用实例</strong>：
+<ul>
+<li>Distributed Grep</li>
+<li>Count of URL Access Frequency：map &lt;URL, 1&gt;, reduce &lt;URL, total count&gt;</li>
+<li>Reverse Web-Link Graph: map &lt;target, source&gt;, reduce &lt;target, list(source)&gt;</li>
+<li>Term-Vector per Host</li>
+<li>Inverted Index: map &lt;word, document ID&gt;, reduce &lt;word, list(document ID)&gt;</li>
+<li>Distributed Sort</li>
+</ul>
+</li>
+</ul>
+<h2 id="implementation">Implementation</h2>
+<ul>
+<li>Map 函数分布在多个机器上，相应地自动将输入数据划分为 M 份，然后可以由分布了 Map 函数的机器并行处理这些数据。而对于 Reduce 则是将中间数据划分为 R 份，通常需要使用一个分割函数，常见的就是 <code>hash(key) mod R</code> 来将中间 Key 进行区分。</li>
+<li>下图演示了整个 MapReduce 的流程，当用户程序调用 MapReduce 函数时将按照以下顺序执行：
+<ul>
+<li>
+<ol>
+<li>MapReduce Library 首先将输入文件划分为 M 个分片，每个分片大小通常为 16MB or 64MB，可以由用户控制，然后开始将程序拷贝到各个机器上，也就是图中的 <strong>fork</strong> 过程</li>
+</ol>
+</li>
+<li>
+<ol start="2">
+<li>fork 的过程中会有一个特殊的情况，即 master 节点上运行的程序。剩下的 worker 对应执行的任务都是由 master 分配的，有 M 个 map task 和 R 个 reduce task 需要分配，master 选择空闲的 worker 来执行 map 或者 reduce task。</li>
+</ol>
+</li>
+<li>
+<ol start="3">
+<li>被分配到 map task 的 worker 首先读取分片的数据内容，它从输入数据中解析键/值对，并将每对键/值传递给用户定义的 Map 函数，然后由 Map 产生的中间键值对将被缓冲在内存中；</li>
+</ol>
+</li>
+<li>
+<ol start="4">
+<li>缓冲在内存中的中间数据将定期执行刷回操作写到磁盘，然后再由用户定义的分割函数执行将中间数据分割为 R 个区域，这些原本缓冲在内存中的数据持久化到磁盘之后的地址将传递给 master，然后 master 负责告诉 reduce task worker 这些数据在哪里。</li>
+</ol>
+</li>
+<li>
+<ol start="5">
+<li>执行 reduce task 的 worker 在接收到来自 master 的数据地址的通知之后，使用 RPC 来从 map worker 的本地磁盘中读取数据，当一个 reducer 读取到了所有的中间数据之后，就可以根据中间键对它进行排序，以便将所有出现的相同键组合在一起。之所以需要排序，是因为通常有许多不同的键映射到同一个reduce任务。如果中间数据量太大，无法装入内存，则使用外部排序。</li>
+</ol>
+</li>
+<li>
+<ol start="6">
+<li>reduce worker 迭代已排序的中间数据，对于遇到的每个惟一的中间键，它将键和相应的中间值集传递给用户的 reduce 函数。Reduce 函数的输出被追加到这个 Reduce 分区的最终输出文件中；</li>
+</ol>
+</li>
+<li>
+<ol start="7">
+<li>所有的 map 任务和 reduce 任务都完成后，master 唤醒用户程序。此时，用户程序中的MapReduce 调用返回到用户程序。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210208135434.png" alt="20210208135434" loading="lazy"></li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="master-data-structures">Master Data Structures</h3>
+<ul>
+<li>master 节点保存了几个数据结构：
+<ul>
+<li>对于每个 map 和 reduce task，它存储了 task 对应的状态（idle, in-progress, completed）</li>
+<li>worker machine 的标识（非空闲任务运行所在的机器）</li>
+</ul>
+</li>
+<li>master 是一个管道，通过它将中间文件区域的位置从 map task 传播到 reduce task。因此，对于每个完成的 map task，master 存储了 map task 产生的 R 个中间文件区域的位置和大小，当 map task 完成时，master 将接收对该位置和大小信息的更新。信息被递增地推送给正在进行 reduce task 的 worker。</li>
+</ul>
+<h3 id="fault-tolerance">Fault Tolerance</h3>
+<ul>
+<li>由于 MapReduce 库被设计用来帮助处理使用成百上千台机器的大量数据，所以这个库必须能够优雅地容忍机器故障。</li>
+</ul>
+<h4 id="worker-failure">Worker Failure</h4>
+<ul>
+<li>master 周期地 ping 每个 worker，如果在确定时间内未收到对应的响应，则认为该 worker 宕机，标记该 worker 为 failed，由 worker <strong>已经完成</strong>的任何 map task 都将被重置回初始的空闲 <em>idle</em> 状态，因此有资格对其他 worker 进行重新调度，类似地，在一个失败的 worker 上<strong>正在进行</strong>的任何 map task 或reduce task 也会被重置为空闲，并可以重新调度。</li>
+<li>在发生故障时，完成的 map task 将被重新执行，因为它们的输出存储在故障机器的本地磁盘上，因此无法访问。<strong>已完成的 reduce 任务</strong>不需要重新执行，因为它们的输出存储在全局文件系统中。</li>
+<li>假设一个 map task A 一开始由 A 执行，之后由 B 执行（因为 A failed），所有正在执行 reduce task 的 workers 将被通知重新执行，任何尚未从 worker A 读取数据的 reduce task 都将从 worker B 读取数据。</li>
+</ul>
+<h4 id="master-failure">Master Failure</h4>
+<ul>
+<li>让 master 定期对上面描述的 master 节点存取的数据结构做 checkpoint 很容易。如果 master task 失效，可以从最后一个检查点状态启动一个新的副本。然而，考虑到只有一个主机，它的失败是不太多见，因此，如果 master 失败，我们当前的实现将终止 MapReduce 计算。客户端可以检查这种情况，如果他们愿意，可以重试 MapReduce 操作。</li>
+</ul>
+<h4 id="semantics-in-the-presence-of-failures">Semantics in the Presence of Failures</h4>
+<ul>
+<li>当用户提供的 map 和 reduce 操作符是其输入值的确定性函数时，我们的分布式实现产生的输出与整个程序的非故障顺序执行产生的输出相同。</li>
+<li>我们依赖 map 和 reduce task 输出的原子提交来实现该属性。每个正在进行的任务都将其输出写入私有临时文件。一个 reduce task 生成一个这样的文件，map task 生成 R 个这样的文件(每个 reduce task 一个)。当 map task 完成时，worker 向 master 发送一条消息，并在消息中包含 R 临时文件的名称，如果 master 接收到一个<strong>已经完成</strong>的 map task 的完成消息，它将忽略该消息。否则，它将在主数据结构中记录 R 文件的名称。</li>
+<li>当一个 reduce task 完成之后，reduce worker 自动地将其临时输出文件重命名为最终输出文件。如果在多台机器上执行相同的 reduce 任务，那么将对相同的最终输出文件执行多个 rename 调用。我们依赖于底层文件系统提供的原子重命名操作，以确保最终文件系统状态只包含一次执行 reduce 任务所产生的数据。</li>
+<li>我们的 map 和 reduce 操作符绝大多数都是确定性的，在这种情况下，我们的语义等价于顺序执行，这使得程序员可以很容易地推断他们的程序行为。当 map 或 reduce 操作符是不确定的时，我们提供较弱但仍然合理的语义。在存在非确定性操作符的情况下，特定 reduce 任务 R1 的输出等价于由非确定性程序的顺序执行产生的 R1 的输出。然而，不同 reduce 任务 R2 的输出可能对应于非确定性程序的不同顺序执行产生的 R2 输出。</li>
+<li>考虑 map 任务 M 和 reduce 任务 R1 和 R2。设 e(Ri) 是所承诺的 Ri 的执行(只有一个这样的执行)。由于 e(R1) 可能读取了 M 的一次执行产生的输出，而 e(R2) 可能读取了 M 的另一次执行产生的输出，所以语义较弱。</li>
+</ul>
+<h3 id="locality">Locality</h3>
+<ul>
+<li>在我们的计算环境中，网络带宽是一个相对稀缺的资源。通过利用输入数据(由 GFS 管理)存储在组成集群的机器的本地磁盘这一事实，我们节约了网络带宽。GFS 将每个文件划分为64 MB的块，并在不同的机器上存储每个块的多个副本(通常是3个副本)，MapReduce master 将输入文件的位置信息考虑在内，并尝试在包含相应输入数据副本的机器上调度map任务。如果失败，它将尝试调度靠近该任务输入数据副本的 map 任务(例如，在与包含数据的机器在同一网络交换机上的工作机器上)。当在集群中相当一部分 worker 上运行大型MapReduce 操作时，大部分输入数据都是在本地读取的，不会消耗网络带宽</li>
+</ul>
+<h3 id="task-granularity">Task Granularity</h3>
+<ul>
+<li>如上所述，我们将 map 阶段细分为 M 个部分，将 reduce 阶段细分为 R 个部分。理想情况下，M 和 R 应该远远大于工作机器的数量。让每个 worker 执行许多不同的任务可以改善动态负载平衡，并在 worker 失败时加快恢复速度:它完成的许多 map 任务可以分散到所有其他 worker 机器上。</li>
+<li>在我们的实现中，M 和 R 的大小最多有多大是有实际限制的，因为如上所述，master 必须做出 O(M + R) 调度决策，并在内存中保持 O(M*R) 状态。(内存使用的常量是很小的:状态的 O(M∗R) 部分由每个 map任务/reduce任务对大约一个字节的数据组成。)</li>
+<li>此外，R 常常受到用户的限制，因为每个 reduce 任务的输出都以单独的输出文件结束。在实践中，我们倾向于选择 M，以便每个单独的任务大约有 16MB 到 64MB 的输入数据(以便上面描述的局部性优化最有效)，并且我们将 R 设为预期使用的工作机器数量的小倍数。我们经常使用 2000 台 worker 机器进行 M = 200000 和 R = 5000 的 MapReduce 计算。</li>
+</ul>
+<h3 id="backup-tasks">Backup Tasks</h3>
+<ul>
+<li>导致 MapReduce 操作总时间延长的一个常见原因是“掉线”(straggler)。一种需要异常长时间才能完成计算过程中最后几个 map 或 reduce 任务之一的机器。掉队者出现的原因有很多。例如，磁盘有问题的机器可能会经常出现可纠正错误，导致读性能从 30MB/s 降至 1MB/s。集群调度系统可能已经调度了机器上的其他任务，由于 CPU、内存、本地磁盘或网络带宽的竞争，导致它执行 MapReduce 代码的速度变慢。我们最近遇到的一个问题是，机器初始化代码中的一个bug导致了处理器缓存被禁用:受影响机器的计算速度降低了 100 倍以上。</li>
+<li>我们有一个一般性的机制来缓解掉队者的问题。当 MapReduce 操作接近完成时，master 会对剩余的正在执行的任务进行备份。只要主执行或备份执行完成，任务就被标记为完成。我们已经调优了这种机制，因此它通常不会增加操作使用的计算资源超过几个百分点。我们发现，这大大减少了完成大型 MapReduce 操作的时间。以5.3中所述的排序程序为例，关闭备份机制后，排序程序完成的时间会增加 44%。</li>
+</ul>
+<h2 id="refinements">Refinements</h2>
+<h3 id="partitioning-function">Partitioning Function</h3>
+<ul>
+<li>MapReduce 的用户指定他们想要的 reduce 任务/输出文件的数量(R)，使用中间键上的分区函数在这些任务之间对数据进行分区。提供了一个默认的分区函数，使用哈希(例如&quot; hash(key) mod R &quot;)。这往往会导致相当平衡的分区。然而，在某些情况下，通过键的其他函数来分区数据是有用的。例如，有时输出键是url，我们希望单个主机的所有条目都在同一个输出文件中结束。为了支持这种情况，MapReduce 库的用户可以提供一个特殊的分区函数。例如，使用&quot; hash(Hostname(urlkey)) mod R &quot;作为分区函数会导致来自同一主机的所有 url 最终出现在同一个输出文件中。</li>
+</ul>
+<h3 id="ordering-guarantees">Ordering Guarantees</h3>
+<ul>
+<li>我们保证在给定的分区中，中间键/值对按键的递增顺序进行处理。这种排序保证使得为每个分区生成有序的输出文件变得很容易，当输出文件格式需要支持按键进行有效的随机访问查找，或者输出的用户发现对数据进行排序很方便时，这很有用。</li>
+</ul>
+<h3 id="combiner-function">Combiner Function</h3>
+<ul>
+<li>在某些情况下，每个 map 任务产生的中间键有显著的重复，并且用户指定的 Reduce 函数是可交换的和关联的。单词计数示例就是一个很好的例子。由于单词频率倾向于遵循 Zipf 分布，每个 map 任务将产生数百或数千个 &lt;the, 1&gt; 形式的记录。所有这些计数将通过网络发送到一个 reduce 任务，然后由 reduce 函数相加产生一个数字。我们允许用户指定一个可选的Combiner函数，该函数在通过网络发送数据之前对数据进行部分合并。</li>
+<li>Combiner 函数在每一个执行 map task 上的机器执行，通常使用相同的代码来实现 combiner 和 reduce 函数，reduce 函数和 combiner 函数之间的唯一区别是 MapReduce 库如何处理函数的输出。reduce 函数的输出被写入最终的输出文件。combiner 函数的输出被写入一个中间文件，该文件将被发送到reduce 任务。</li>
+<li>部分 Combine 大大加快了 MapReduce 操作的某些类。</li>
+</ul>
+<h3 id="input-and-output-types">Input and Output Types</h3>
+<ul>
+<li>MapReduce 库支持以几种不同的格式读取输入数据。text 模式的输入将每一行视为键/值对：键是文件中的偏移量，值是行内容。另一种常见的支持格式存储按键排序的键/值对序列。每个输入类型实现都知道如何将自己分割成有意义的范围，以便作为单独的 map 任务进行处理(例如，文本模式的范围分割确保范围分割只发生在行边界)。用户可以通过提供一个简单的 <em>reader</em> 接口的实现来添加对新输入类型的支持，尽管大多数用户只使用少数预定义输入类型中的一种。</li>
+<li><em>reader</em> 并不一定需要提供从文件中读取的数据。例如，很容易定义从数据库或映射在内存中的数据结构中读取记录的 <em>reader</em>。</li>
+<li>以类似的方式，我们支持一组输出类型来生成不同格式的数据，并且用户代码很容易添加对新输出类型的支持。</li>
+</ul>
+<h3 id="side-effects">Side-effects</h3>
+<ul>
+<li>在某些情况下，MapReduce 的用户发现从他们的 map 或 reduce 操作生成辅助文件作为额外的输出是很方便的。我们依靠应用程序 writer 使这些副作用具有原子性和幂等性。通常，应用程序会写入一个临时文件，并在完全生成该文件后自动重命名该文件。</li>
+<li>我们不支持单个任务生成的多个输出文件的原子两阶段提交。因此，产生具有跨文件一致性要求的多个输出文件的任务应该是确定的。这种限制在实践中从来就不是问题。</li>
+</ul>
+<h3 id="skipping-bad-records">Skipping Bad Records</h3>
+<ul>
+<li>有时，用户代码中的错误会导致 Map 或 Reduce 函数在特定记录上崩溃。此类 bug 会导致 MapReduce 操作无法完成。通常的做法是修复 bug，但有时这是不可行的;这个 bug 可能存在于源代码不可用的第三方库中。此外，有时忽略一些记录是可以接受的，例如在对一个大数据集进行统计分析时。我们提供了一个可选的执行模式，MapReduce 库会检测哪些记录导致确定性崩溃，并跳过这些记录以便继续前进。</li>
+<li>每个工作进程都安装一个信号处理程序来捕获分割违规和总线错误。在调用 Map 或 Reduce 操作之前，MapReduce 库会将参数的序号存储在全局变量中。如果用户代码产生信号，信号处理器发送一个包含序列号的“最后一口气” UDP 包给 MapReduce master。当主服务器在一个特定的记录上看到多个失败时，它指示在下一次重新执行对应的 Map 或 Reduce 任务时应该跳过该记录。</li>
+</ul>
+<h3 id="local-execution">Local Execution</h3>
+<ul>
+<li>在 Map 或 Reduce 函数中调试问题可能会很棘手，因为实际的计算发生在分布式系统中，通常在几千台机器上，由 master 动态地做出工作分配决策。为了方便调试、分析和小规模测试，我们开发了 MapReduce 库的替代实现，在本地机器上顺序执行 MapReduce 操作的所有工作。控件提供给用户，以便计算可以限制到特定的映射任务。用户可以用一个特殊的标志来调用他们的程序，然后可以很容易地使用任何他们认为有用的调试或测试工具(例如gdb)。</li>
+</ul>
+<h3 id="status-information">Status Information</h3>
+<ul>
+<li>主服务器运行一个内部HTTP服务器，并导出一组状态页面供人们使用。状态页面显示了计算的进度，例如有多少任务已经完成，有多少任务正在进行，输入字节数，中间数据字节数，输出字节数，处理速率等。这些页面还包含指向每个任务生成的标准错误和标准输出文件的链接。用户可以使用这些数据来预测计算将花费多长时间，以及是否应该向计算中添加更多的资源。这些页面还可以用于计算何时会比预期的慢得多。</li>
+<li>此外，顶级状态页面显示哪些 worker 失败了，以及当他们失败时正在处理哪些 map 和 reduce 任务。当试图诊断用户代码中的错误时，此信息非常有用。</li>
+</ul>
+<h3 id="counters">Counters</h3>
+<ul>
+<li>MapReduce 库提供了一个计数器来计算各种事件的发生次数。例如，用户代码可能需要计算已处理的字的总数或索引的德文文档的数量，等等。</li>
+<li>要使用这个功能，用户代码创建一个命名的计数器对象，然后在 Map 或 Reduce 函数中适当地增加计数器。例如:</li>
+</ul>
+<pre><code class="language-C++">Counter* uppercase; 
+uppercase = GetCounter(&quot;uppercase&quot;);
+map(String name, String contents): 
+  for each word w in contents: 
+    if (IsCapitalized(w)): 
+      uppercase-&gt;Increment(); 
+    EmitIntermediate(w, &quot;1&quot;);
+</code></pre>
+<ul>
+<li>来自各个 worker 机器的计数器值定期传播到 master (在 ping 响应中附带)。master 聚合成功的 map 和 reduce 任务的计数器值，并在 MapReduce 操作完成时将它们返回给用户代码。当前计数器值也显示在 master 状态页面上，以便人们可以观看实时计算的进度。在聚合计数器值时，master 消除了重复执行同一个 map 或 reduce 任务的影响，以避免重复计算。(重复执行可能是由于我们使用了备份任务以及由于失败而重新执行任务引起的。)</li>
+<li>一些计数器值由 MapReduce 库自动维护，例如处理的输入键/值对的数量和产生的输出键/值对的数量。</li>
+<li>用户已经发现 counter 工具对于检查 MapReduce 操作的行为是非常有用的。例如，在一些 MapReduce 操作中，用户代码可能希望确保生成的输出对的数量恰好等于处理的输入对的数量，或者确保处理的德文文档的比例在处理的文档总数的某个可容忍的比例内。</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<ul>
+<li>MapReduce编程模型已经在谷歌上成功地用于许多不同的目的。我们认为这种成功有几个原因。首先，该模型易于使用，即使对于没有并行和分布式系统经验的程序员也是如此，因为它隐藏了并行化、容错、局部性优化和负载平衡的细节。其次，大量的问题可以通过MapReduce计算很容易地表达出来。例如，MapReduce被用于谷歌生产web搜索服务的数据生成、排序、数据挖掘、机器学习以及许多其他系统。第三，我们开发了一个MapReduce的实现，它可以扩展到由数千台机器组成的大型机器集群。该实现有效地利用了这些机器资源，因此适合用于在谷歌中遇到的许多大型计算问题。</li>
+<li>我们从这项工作中学到了一些东西。首先，对编程模型的限制使得并行化和分布式计算变得容易，并使这些计算具有容错性。其次，网络带宽是一种稀缺资源。因此，我们系统中的许多优化都旨在减少通过网络发送的数据量:局部性优化允许我们从本地磁盘读取数据，将中间数据的单个副本写入本地磁盘可以节省网络带宽。第三，冗余执行可以用来减少慢速机器的影响，并处理机器故障和数据丢失。</li>
+</ul>
+<hr>
+<ul>
+<li>论文的部分到此结束，后面展开讲一下 MapReduce 的其他东西。</li>
+</ul>
+<h2 id="other">Other</h2>
+<ul>
+<li>MapReduce 最重要的贡献：MR takes care of, and hides, all aspects of distribution!</li>
+</ul>
+<h3 id="problems">Problems</h3>
+<ul>
+<li><strong>What if the master gives two workers the same Map() task?</strong>
+<ul>
+<li>Perhaps the master incorrectly thinks one worker died. it will tell Reduce workers about only one of them.</li>
+</ul>
+</li>
+<li><strong>What if the master gives two workers the same Reduce() task?</strong>
+<ul>
+<li>they will both try to write the same output file on GFS! atomic GFS rename prevents mixing; one complete file will be visible.</li>
+</ul>
+</li>
+<li><strong>What if a single worker is very slow -- a &quot;straggler&quot;?</strong>
+<ul>
+<li>perhaps due to flakey hardware. master starts a second copy of last few tasks.</li>
+</ul>
+</li>
+<li><strong>What if a worker computes incorrect output, due to broken h/w or s/w?</strong>
+<ul>
+<li>too bad! MR assumes &quot;fail-stop&quot; CPUs and software.</li>
+</ul>
+</li>
+</ul>
+<h3 id="current-status">Current status</h3>
+<ul>
+<li>Hugely influential (Hadoop, Spark, &amp;c).</li>
+<li>Probably no longer in use at Google.
+<ul>
+<li>Replaced by Flume / FlumeJava (see paper by Chambers et al).</li>
+<li>GFS replaced by Colossus (no good description), and BigTable.</li>
+</ul>
+</li>
+</ul>
+<h3 id="conclusion-2">Conclusion</h3>
+<ul>
+<li>MapReduce single-handedly made big cluster computation popular.
+<ul>
+<li>-Not the most efficient or flexible.</li>
+<li>+Scales well.</li>
+<li>+Easy to program -- failures and data movement are hidden.</li>
+</ul>
+</li>
+</ul>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[What is license for source code?]]></title>
         <id>https://blog.shunzi.tech/post/license/</id>
@@ -2903,2144 +3195,6 @@ translation table(MTT)，它保存了系统页表的一部分。</li>
 <ul>
 <li>NVMM 和 RDMA 系统之间元数据管理的冲突会导致昂贵的转换开销，并阻止文件系统更改其布局。这项工作引入了对现有RDMA协议的两个修改：:基于FileMR和范围的转换，从而提供了一种结合内存区域和文件的抽象。它通过消除无关的转换提高了 RDMA 可访问 NVMMs 的性能，同时为 RDMA 提供了其他好处，包括更有效的访问权限和更简单的连接管理。</li>
 </ul>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[RADOS 读写流程]]></title>
-        <id>https://blog.shunzi.tech/post/rados-io-path/</id>
-        <link href="https://blog.shunzi.tech/post/rados-io-path/">
-        </link>
-        <updated>2020-09-22T07:33:52.000Z</updated>
-        <summary type="html"><![CDATA[<blockquote>
-<ul>
-<li>本篇主要总结 RADOS 底层的读写流程，并结合源码进行分析</li>
-<li>考虑基于现有的强一致性模型的读写流程是否有可以优化的点，提升 Ceph 的 IO 性能</li>
-<li></li>
-</ul>
-</blockquote>
-]]></summary>
-        <content type="html"><![CDATA[<blockquote>
-<ul>
-<li>本篇主要总结 RADOS 底层的读写流程，并结合源码进行分析</li>
-<li>考虑基于现有的强一致性模型的读写流程是否有可以优化的点，提升 Ceph 的 IO 性能</li>
-<li></li>
-</ul>
-</blockquote>
-<!-- more -->
-<h2 id="osd-读写流程">OSD 读写流程</h2>
-<p><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200924171959.png" alt="20200924171959" loading="lazy"><br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200924172030.png" alt="20200924172030" loading="lazy"></p>
-<ul>
-<li>大致分为三个阶段：
-<ul>
-<li>接受请求：主要是网络模块相关</li>
-<li>OSD 的 op_wq 处理：在工作队列 op_wq 的线程池中处理，检查 PG 状态，封装请求为事务</li>
-<li>PGBackend 的处理：仍然在 op_wq 的线程池中处理，将事务进行分发，由对应的 PGBackend 来实现本地事务处理</li>
-</ul>
-</li>
-</ul>
-<h2 id="pg">PG</h2>
-<ul>
-<li>Placement Group (PG)，是一些对象的集合，对象和 PG 的对应关系其实就是对象标识 HASH 之后取模得到对应的 pg_id（模值为对应存储池对应的 PG 数目）。</li>
-</ul>
-<pre><code class="language-Python">locator = object_name
-obj_hash = hash(locator)
-pg = obj_hash % num_pg
-OSDs_for_pg = crush(pg)  # returns a list of OSDs
-primary = osds_for_pg[0]
-replicas = osds_for_pg[1:]
-</code></pre>
-<ul>
-<li>以 PG 为单位进行组织的目的是为了使用有限的、可控数目的 PG 来管理无限扩张的对象数据，并控制节点资源的分配。</li>
-<li>PG 是数据备份、同步、迁移等操作的基本单位。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200923115445.png" alt="20200923115445" loading="lazy"></li>
-</ul>
-<h3 id="常见的-pg-级别的操作">常见的 PG 级别的操作</h3>
-<h4 id="peering">Peering</h4>
-<ul>
-<li>指（当前或者过去曾经）归属于同一个 PG 所有的 PG 实例就本 PG 所存储的全部对象及对象相关的元数据进行协商并最终达成一致的过程。</li>
-<li>Peering 基于 Info 和 Log 进行。Log 是指权威日志，作为数据同步的依据。Info 是指 PG 的基本元数据信息，在 Peering 过程中通过交换 Info，可以由 Primary 选举得到权威日志。</li>
-<li>此处说的一致，并不意味着每个 PG 实例都实时拥有每个对象的最新内容</li>
-<li><strong>Golden Rule</strong>: 对任何 PG 的写操作只有在该 PG 的操作集的所有成员都持久化后，才会向客户端确认，且在 Peering 期间不能进行任何 IO 操作，且不能做 Recovery</li>
-</ul>
-<h5 id="涉及的其他概念">涉及的其他概念</h5>
-<ul>
-<li><em>Acting Set</em>：负责特定 PG 的(或在某些 epoch 时) OSD 的有序列表。列表第一个 OSD 为主 OSD，其余为 Replica OSD</li>
-<li><em>Up Set</em>：通常情况下和 Acting Set 相同，出现 PG temp 时有所不同。Acting Set 完全由 CRUSH 决定，Up Set 会受到 PG temp 的影响</li>
-<li><em>PG temp</em>：假设一个 PG 的 acting set 为 [0,1,2] 列表。此时如果 osd0 出现故障，导致 CRUSH 算法重新分配该 PG 的 acting set 为 [3,1,2]。此时 osd3 为该 PG 的主 OSD，但是 osd3 为新加入的 OSD，并不能负担该 PG 上的读操作。所以 PG 向 Monitor 申请一个临时的 PG，osd1 为临时的主 OSD，这时 up set 变为 [1,3,2]，acting set 依然为 [3,1,2]，导致 acting set 和 up set 不同。当 osd3 完成 Backfill 过程之后，临时 PG 被取消，该 PG 的 up set 修复为 acting set，此时 acting set 和 up set 都为 [3,1,2] 列表。</li>
-<li><em>Epoch</em>：OSDMap 的版本号，Monitor 管理生成，单增。OSDMap 发生了变化，Epoch 相应地增加，但为了防止 Epoch 的剧烈变化和较快的消耗，一个特定时间段内的修改会被折叠进入一个 Epoch</li>
-<li><em>Interval</em>：OSDMap 的一个连续 Epoch 间隔，该期间内的 PG 的 Active Set 和 Up Set 没有发生变化，也就意味着和 PG 是绑定的。每个 Interval 的起始 Epoch 称之为 <em>same_interval_since</em></li>
-</ul>
-<h5 id="触发时机">触发时机</h5>
-<ul>
-<li>系统初始化时，OSD 重新启动导致 PG 重新加载</li>
-<li>PG 新创建时，PG 会发起一次 Peering 的过程</li>
-<li>当有 OSD 失效，OSD 的增加或者删除等导致 PG 的 acting set 发生了变化，该 PG 就会重新发起一次 Peering 过程</li>
-</ul>
-<h4 id="recovery">Recovery</h4>
-<ul>
-<li>当 PG 完成了 Peering 过程后，处于 Active 状态的 PG 就已经可以对外提供服务了。如果该 PG 的各个副本上有不一致的对象，就需要进行修复。Ceph 的修复过程有两种：Recovery 和 Backfill。本质是针对 PG 某些实例进行数据同步的过程，最终目标是将 PG 变成 Active+Clean 状态</li>
-</ul>
-<h5 id="过程">过程</h5>
-<ul>
-<li>Peering 过程产生关于缺失对象的信息，主副本和从副本对应的缺失对象信息有所不同，存储的位置不同。主 OSD  缺失的对象存储在权威日志 pg_log 的相关数据结构中，副本上缺失的对象存储在 OSD 对应的 peer_missing 的数据结构中。</li>
-<li>对于主 OSD 缺失的对象，随机选择一个拥有该对象的 OSD，拉取数据（PULL）。（先修复主 OSD，再修复从 OSD）</li>
-<li>对于 replica 数据缺失的情况，从主副本上把缺失的对象数据推送到副本上完成数据修复（PUSH）</li>
-<li>快照对象有一些单独的处理</li>
-</ul>
-<h5 id="场景">场景</h5>
-<ul>
-<li>OSD 暂时下线，然后又上线</li>
-<li>OSD 硬件故障下线，更换硬盘重新上线</li>
-</ul>
-<h4 id="pullpush">Pull/Push</h4>
-<ul>
-<li>Recovery 由 Primary 主导进行，期间 Primary 通过 Pull 或者 Push 的方式进行对象间的数据同步</li>
-</ul>
-<h4 id="backfill">Backfill</h4>
-<ul>
-<li>是 Recovery 的一种特殊场景，指 Peering 完成后，如果基于当前权威日志无法对 Up Set 当中的某些 PG 实例实施增量同步（例如承载这些 PG 实例的 OSD 离线太久，或者是新的 OSD 加入集群导致的 PG 实例整体迁移），则通过完全拷贝当前 Primary 所有对象的方式进行全量同步。</li>
-</ul>
-<h4 id="scrub">Scrub</h4>
-<ul>
-<li>Ceph 内部实现的数据一致性检查工具 Ceph Scrub。原理为：通过对比各个对象副本的数据和元数据完成副本的一致性检查。后台执行检查操作，可以设置相应的调度策略来触发 Scrub（立即启动/间隔一定的时间/定时）</li>
-<li>主要包括scrub 和 deep-scrub。
-<ul>
-<li>其中 scrub 只对元数据信息进行扫描，相对比较快；</li>
-<li>而 deep-scrub 不仅对元数据进行扫描，还会对存储的数据进行扫描，几乎要扫描磁盘上的所有数据并计算 crc32 校验值，相对比较慢。</li>
-</ul>
-</li>
-</ul>
-<h2 id="primarylogpgdo_request">PrimaryLogPG::do_request</h2>
-<ul>
-<li>该步骤主要是做一些 PG 级别的检查，以及一些 PG 级别的操作的分发处理。</li>
-<li>操作最终可能因为各种各样的原因被加入到响应队列推迟处理，对应了很多种重试队列，用于区分不同的场景。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200923164805.png" alt="20200923164805" loading="lazy"><br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200923164817.png" alt="20200923164817" loading="lazy"></li>
-<li>为了保证 OP 之间不会乱序，上述队列均为 FIFO 队列，且队列之间也严格有序。当对应的限制接触后，PG 会触发关联的 OP 重新进入 op_shardedwq 队列排队，等候再次被 PG 执行</li>
-<li>最终许多普通的操作都会进入 do_op 执行</li>
-</ul>
-<pre><code class="language-C++">void PrimaryLogPG::do_request(
-    OpRequestRef &amp;op,
-    ThreadPool::TPHandle &amp;handle)
-{
-  // Trace 相关配置检查
-  if (op-&gt;osd_trace)
-  {
-    op-&gt;pg_trace.init(&quot;pg op&quot;, &amp;trace_endpoint, &amp;op-&gt;osd_trace);
-    op-&gt;pg_trace.event(&quot;do request&quot;);
-  }
-
-  // make sure we have a new enough map
-  // 判断 waiting_for_map 队列中是否有来自相同客户端的操作
-  auto p = waiting_for_map.find(op-&gt;get_source());
-  if (p != waiting_for_map.end())
-  {
-    // 有则将当前 Op 加入 waiting_for_map 队列，然后直接返回
-    // preserve ordering
-    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; waiting_for_map &quot;
-             &lt;&lt; p-&gt;first &lt;&lt; &quot; not empty, queueing&quot; &lt;&lt; dendl;
-    p-&gt;second.push_back(op);
-    op-&gt;mark_delayed(&quot;waiting_for_map not empty&quot;);
-    return;
-  }
-
-  // 判断当前 op 携带的 Epoch 信息是否是最新的 op-&gt;min_epoch &lt;= get_osdmap_epoch()
-  if (!have_same_or_newer_map(op-&gt;min_epoch))
-  {
-    // 如果 Op 携带的 epoch 更新，则将当前 Op 加入 waiting_for_map 队列，然后直接返回
-    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; min &quot; &lt;&lt; op-&gt;min_epoch
-             &lt;&lt; &quot;, queue on waiting_for_map &quot; &lt;&lt; op-&gt;get_source() &lt;&lt; dendl;
-    waiting_for_map[op-&gt;get_source()].push_back(op);
-    op-&gt;mark_delayed(&quot;op must wait for map&quot;);
-    osd-&gt;request_osdmap_update(op-&gt;min_epoch);
-    return;
-  }
-
-  // 判断是否可以丢弃掉该 op
-  //   1. op 对应的客户端链路断开
-  //   2. 收到 op 时，PG 当前已经切换到一个更新的 Interval (即 PG 此时的 same_interval_since 比 op 携带的 Epoch 要大，后续客户端会重发)
-  //   3. op 在 PG 分裂之前发送（后续客户端会进行重发）
-  //   4. ...
-  if (can_discard_request(op))
-  {
-    return;
-  }
-
-  // pg-wide backoffs
-  const Message *m = op-&gt;get_req();
-  int msg_type = m-&gt;get_type();
-  if (m-&gt;get_connection()-&gt;has_feature(CEPH_FEATURE_RADOS_BACKOFF))
-  {
-    auto session = ceph::ref_cast&lt;Session&gt;(m-&gt;get_connection()-&gt;get_priv());
-    if (!session)
-      return; // drop it.
-
-    if (msg_type == CEPH_MSG_OSD_OP)
-    {
-      if (session-&gt;check_backoff(cct, info.pgid,
-                                 info.pgid.pgid.get_hobj_start(), m))
-      {
-        return;
-      }
-
-      bool backoff =
-          is_down() ||
-          is_incomplete() ||
-          (!is_active() &amp;&amp; is_peered());
-      if (g_conf()-&gt;osd_backoff_on_peering &amp;&amp; !backoff)
-      {
-        if (is_peering())
-        {
-          backoff = true;
-        }
-      }
-      if (backoff)
-      {
-        add_pg_backoff(session);
-        return;
-      }
-    }
-    // pg backoff acks at pg-level
-    if (msg_type == CEPH_MSG_OSD_BACKOFF)
-    {
-      const MOSDBackoff *ba = static_cast&lt;const MOSDBackoff *&gt;(m);
-      if (ba-&gt;begin != ba-&gt;end)
-      {
-        handle_backoff(op);
-        return;
-      }
-    }
-  }
-
-  // PG 是否处于 Active 或者 Peer 状态？
-  if (!is_peered())
-  {
-    // 不处于上述状态，判断是否可以由后端直接处理。
-    // 1. ECBackend 该情况下不能处理
-    // 2. ReplicatedBackend 判断如果是 PULL 操作则可以进行处理
-    // Delay unless PGBackend says it's ok
-    if (pgbackend-&gt;can_handle_while_inactive(op))
-    {
-      bool handled = pgbackend-&gt;handle_message(op);
-      ceph_assert(handled);
-      return;
-    }
-    else
-    {
-      // 不能处理则加入 waiting_for_peered 队列，然后返回。
-      waiting_for_peered.push_back(op);
-      op-&gt;mark_delayed(&quot;waiting for peered&quot;);
-      return;
-    }
-  }
-
-  // PG 处于 Active 或者 Peer 状态，判断是否正在进行刷回
-  if (recovery_state.needs_flush())
-  {
-    // 正在刷回则将该 op 加入 waiting_for_flush 队列，并返回
-    dout(20) &lt;&lt; &quot;waiting for flush on &quot; &lt;&lt; op &lt;&lt; dendl;
-    waiting_for_flush.push_back(op);
-    op-&gt;mark_delayed(&quot;waiting for flush&quot;);
-    return;
-  }
-
-  ceph_assert(is_peered() &amp;&amp; !recovery_state.needs_flush());
-
-  // 由 PGBackend 直接处理然后返回，此处只处理以下操作
-  // 1. MSG_OSD_PG_RECOVERY_DELETE (Common)
-  // 2. MSG_OSD_PG_RECOVERY_DELETE_REPLY (Common)
-  // 3. MSG_OSD_PG_PUSH (副本)
-  // 4. MSG_OSD_PG_PULL (副本)
-  // 5. MSG_OSD_PG_PUSH_REPLY (副本)
-  // 6. MSG_OSD_REPOP (副本)
-  // 7. MSG_OSD_REPOPREPLY (副本)
-  // 8. MSG_OSD_EC_WRITE (EC)
-  // 9. MSG_OSD_EC_WRITE_REPLY (EC)
-  // 10. MSG_OSD_EC_READ (EC)
-  // 11. MSG_OSD_EC_READ_REPLY (EC)
-  // 12. MSG_OSD_PG_PUSH (EC)
-  // 13. MSG_OSD_PG_PUSH_REPLY (EC)
-  if (pgbackend-&gt;handle_message(op))
-    return;
-
-  // 其余操作如下处理：
-  switch (msg_type)
-  {
-  case CEPH_MSG_OSD_OP:
-  case CEPH_MSG_OSD_BACKOFF:
-    // 判断是否是 Active 状态
-    if (!is_active())
-    {
-      // 即 Peer 状态，加入 waiting_for_active 队列并返回
-      dout(20) &lt;&lt; &quot; peered, not active, waiting for active on &quot; &lt;&lt; op &lt;&lt; dendl;
-      waiting_for_active.push_back(op);
-      op-&gt;mark_delayed(&quot;waiting for active&quot;);
-      return;
-    }
-
-    // 为 Active 状态
-    switch (msg_type)
-    {
-      // 处理 CEPH_MSG_OSD_OP
-      // 如果为 tier 相关直接报错，否则 do_op
-    case CEPH_MSG_OSD_OP:
-      // verify client features
-      if ((pool.info.has_tiers() || pool.info.is_tier()) &amp;&amp;
-          !op-&gt;has_feature(CEPH_FEATURE_OSD_CACHEPOOL))
-      {
-        osd-&gt;reply_op_error(op, -EOPNOTSUPP);
-        return;
-      }
-      do_op(op);
-      break;
-      
-      
-      // 处理 CEPH_MSG_OSD_BACKOFF
-    case CEPH_MSG_OSD_BACKOFF:
-      // object-level backoff acks handled in osdop context
-      handle_backoff(op);
-      break;
-    }
-    break;
-
-  // 其他操作的处理
-  case MSG_OSD_PG_SCAN:
-    do_scan(op, handle);
-    break;
-
-  case MSG_OSD_PG_BACKFILL:
-    do_backfill(op);
-    break;
-
-  case MSG_OSD_PG_BACKFILL_REMOVE:
-    do_backfill_remove(op);
-    break;
-
-  case MSG_OSD_SCRUB_RESERVE:
-  {
-    auto m = op-&gt;get_req&lt;MOSDScrubReserve&gt;();
-    switch (m-&gt;type)
-    {
-    case MOSDScrubReserve::REQUEST:
-      handle_scrub_reserve_request(op);
-      break;
-    case MOSDScrubReserve::GRANT:
-      handle_scrub_reserve_grant(op, m-&gt;from);
-      break;
-    case MOSDScrubReserve::REJECT:
-      handle_scrub_reserve_reject(op, m-&gt;from);
-      break;
-    case MOSDScrubReserve::RELEASE:
-      handle_scrub_reserve_release(op);
-      break;
-    }
-  }
-  break;
-
-  case MSG_OSD_REP_SCRUB:
-    replica_scrub(op, handle);
-    break;
-
-  case MSG_OSD_REP_SCRUBMAP:
-    do_replica_scrub_map(op);
-    break;
-
-  case MSG_OSD_PG_UPDATE_LOG_MISSING:
-    do_update_log_missing(op);
-    break;
-
-  case MSG_OSD_PG_UPDATE_LOG_MISSING_REPLY:
-    do_update_log_missing_reply(op);
-    break;
-
-  default:
-    ceph_abort_msg(&quot;bad message type in do_request&quot;);
-  }
-}
-</code></pre>
-<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200922103400.png" alt="20200922103400" loading="lazy"></figure>
-<h2 id="primarylogpgdo_op">PrimaryLogPG::do_op</h2>
-<pre><code class="language-C++">/** do_op - do an op
- * pg lock will be held (if multithreaded)
- * osd_lock NOT held.
- */
-void PrimaryLogPG::do_op(OpRequestRef &amp;op)
-{
-  FUNCTRACE(cct);
-
-  // 使用一个指针进行指向对应的请求，后续操作都使用该指针
-  // NOTE: take a non-const pointer here; we must be careful not to
-  // change anything that will break other reads on m (operator&lt;&lt;).
-  MOSDOp *m = static_cast&lt;MOSDOp *&gt;(op-&gt;get_nonconst_req());
-  
-  // op 参数校验
-  ceph_assert(m-&gt;get_type() == CEPH_MSG_OSD_OP);
-
-  // decode 请求解码状态判断，从 bufferlist 中解析数据
-  if (m-&gt;finish_decode())
-  {
-    op-&gt;reset_desc(); // for TrackedOp
-    m-&gt;clear_payload();
-  }
-
-  dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: op &quot; &lt;&lt; *m &lt;&lt; dendl;
-
-  const hobject_t head = m-&gt;get_hobj().get_head();
-
-  // 【PG 参数检查】判断是否包含 op 所携带的对象
-  if (!info.pgid.pgid.contains(
-          info.pgid.pgid.get_split_bits(pool.info.get_pg_num()), head))
-  {
-    derr &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; info.pgid.pgid &lt;&lt; &quot; does not contain &quot;
-         &lt;&lt; head &lt;&lt; &quot; pg_num &quot; &lt;&lt; pool.info.get_pg_num() &lt;&lt; &quot; hash &quot;
-         &lt;&lt; std::hex &lt;&lt; head.get_hash() &lt;&lt; std::dec &lt;&lt; dendl;
-    osd-&gt;clog-&gt;warn() &lt;&lt; info.pgid.pgid &lt;&lt; &quot; does not contain &quot; &lt;&lt; head
-                      &lt;&lt; &quot; op &quot; &lt;&lt; *m;
-    ceph_assert(!cct-&gt;_conf-&gt;osd_debug_misdirected_ops);
-    return;
-  }
-
-  bool can_backoff =
-      m-&gt;get_connection()-&gt;has_feature(CEPH_FEATURE_RADOS_BACKOFF);
-  ceph::ref_t&lt;Session&gt; session;
-  if (can_backoff)
-  {
-    session = static_cast&lt;Session *&gt;(m-&gt;get_connection()-&gt;get_priv().get());
-    if (!session.get())
-    {
-      dout(10) &lt;&lt; __func__ &lt;&lt; &quot; no session&quot; &lt;&lt; dendl;
-      return;
-    }
-
-    if (session-&gt;check_backoff(cct, info.pgid, head, m))
-    {
-      return;
-    }
-  }
-
-
-  // op 携带了 CEPH_OSD_FLAG_PARALLELEXEC 标志，指示可以并发执行
-  if (m-&gt;has_flag(CEPH_OSD_FLAG_PARALLELEXEC))
-  {
-    // not implemented.
-    dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: PARALLELEXEC not implemented &quot; &lt;&lt; *m &lt;&lt; dendl;
-    osd-&gt;reply_op_error(op, -EINVAL);
-    return;
-  }
-
-  {
-    int r = op-&gt;maybe_init_op_info(*get_osdmap());
-    if (r)
-    {
-      osd-&gt;reply_op_error(op, r);
-      return;
-    }
-  }
-
-
-  // op 携带了 CEPH_OSD_FLAG_BALANCE_READS 或者 CEPH_OSD_FLAG_LOCALIZE_READS 标志，
-  // 指示可以读取别的 OSD 节点，不一定是主 OSD，或者执行本地读
-  // 注意：该 Flag 支持读操作，且不支持缓存
-  if ((m-&gt;get_flags() &amp; (CEPH_OSD_FLAG_BALANCE_READS |
-                         CEPH_OSD_FLAG_LOCALIZE_READS)) &amp;&amp;
-      op-&gt;may_read() &amp;&amp;
-      !(op-&gt;may_write() || op-&gt;may_cache()))
-  {
-    // 当前节点既不是主节点，也不是 replicated 节点时，譬如 Stray，则报错
-    // balanced reads; any replica will do
-    if (!(is_primary() || is_nonprimary()))
-    {
-      osd-&gt;handle_misdirected_op(this, op);
-      return;
-    }
-  }
-  else
-  {
-    // 正常操作的时候必须是主节点，否则报错
-    // normal case; must be primary
-    if (!is_primary())
-    {
-      osd-&gt;handle_misdirected_op(this, op);
-      return;
-    }
-  }
-
-  // 判断是否为 laggy 状态
-  // https://docs.ceph.com/en/latest/dev/osd_internals/stale_read/
-  if (!check_laggy(op))
-  {
-    return;
-  }
-
-  // 检查权限 caps
-  if (!op_has_sufficient_caps(op))
-  {
-    osd-&gt;reply_op_error(op, -EPERM);
-    return;
-  }
-
-  // 如果包含 includes_pg_op 操作（对 PG 的操作，主要是获取 PG 相关信息），则执行 do_pg_op
-  if (op-&gt;includes_pg_op())
-  {
-    return do_pg_op(op);
-  }
-
-  // 对象名称超过、key、命名空间等数据信息超过最大限制会影响存储后端
-  // 检查 oid 是否为空，检查对象 key
-  // object name too long?
-  if (m-&gt;get_oid().name.size() &gt; cct-&gt;_conf-&gt;osd_max_object_name_len)
-  {
-    dout(4) &lt;&lt; &quot;do_op name is longer than &quot;
-            &lt;&lt; cct-&gt;_conf-&gt;osd_max_object_name_len
-            &lt;&lt; &quot; bytes&quot; &lt;&lt; dendl;
-    osd-&gt;reply_op_error(op, -ENAMETOOLONG);
-    return;
-  }
-  if (m-&gt;get_hobj().get_key().size() &gt; cct-&gt;_conf-&gt;osd_max_object_name_len)
-  {
-    dout(4) &lt;&lt; &quot;do_op locator is longer than &quot;
-            &lt;&lt; cct-&gt;_conf-&gt;osd_max_object_name_len
-            &lt;&lt; &quot; bytes&quot; &lt;&lt; dendl;
-    osd-&gt;reply_op_error(op, -ENAMETOOLONG);
-    return;
-  }
-  if (m-&gt;get_hobj().nspace.size() &gt; cct-&gt;_conf-&gt;osd_max_object_namespace_len)
-  {
-    dout(4) &lt;&lt; &quot;do_op namespace is longer than &quot;
-            &lt;&lt; cct-&gt;_conf-&gt;osd_max_object_namespace_len
-            &lt;&lt; &quot; bytes&quot; &lt;&lt; dendl;
-    osd-&gt;reply_op_error(op, -ENAMETOOLONG);
-    return;
-  }
-  if (m-&gt;get_hobj().oid.name.empty())
-  {
-    dout(4) &lt;&lt; &quot;do_op empty oid name is not allowed&quot; &lt;&lt; dendl;
-    osd-&gt;reply_op_error(op, -EINVAL);
-    return;
-  }
-
-  if (int r = osd-&gt;store-&gt;validate_hobject_key(head))
-  {
-    dout(4) &lt;&lt; &quot;do_op object &quot; &lt;&lt; head &lt;&lt; &quot; invalid for backing store: &quot;
-            &lt;&lt; r &lt;&lt; dendl;
-    osd-&gt;reply_op_error(op, r);
-    return;
-  }
-
-  // 客户端被禁止访问
-  // blocklisted?
-  if (get_osdmap()-&gt;is_blocklisted(m-&gt;get_source_addr()))
-  {
-    dout(10) &lt;&lt; &quot;do_op &quot; &lt;&lt; m-&gt;get_source_addr() &lt;&lt; &quot; is blocklisted&quot; &lt;&lt; dendl;
-    osd-&gt;reply_op_error(op, -EBLOCKLISTED);
-    return;
-  }
-
-  // order this op as a write?
-  bool write_ordered = op-&gt;rwordered();
-
-  // 检查集群是否已被标记为 FULL，并检查 op 是否有携带 CEPH_OSD_FLAG_FULL_TRY 和 CEPH_OSD_FLAG_FULL_FORCE 标志
-  // discard due to cluster full transition?  (we discard any op that
-  // originates before the cluster or pool is marked full; the client
-  // will resend after the full flag is removed or if they expect the
-  // op to succeed despite being full).  The except is FULL_FORCE and
-  // FULL_TRY ops, which there is no reason to discard because they
-  // bypass all full checks anyway.  If this op isn't write or
-  // read-ordered, we skip.
-  // FIXME: we exclude mds writes for now.
-  if (write_ordered &amp;&amp; !(m-&gt;get_source().is_mds() || m-&gt;has_flag(CEPH_OSD_FLAG_FULL_TRY) || m-&gt;has_flag(CEPH_OSD_FLAG_FULL_FORCE)) &amp;&amp;
-      info.history.last_epoch_marked_full &gt; m-&gt;get_map_epoch())
-  {
-    dout(10) &lt;&lt; __func__ &lt;&lt; &quot; discarding op sent before full &quot; &lt;&lt; m &lt;&lt; &quot; &quot;
-             &lt;&lt; *m &lt;&lt; dendl;
-    return;
-  }
-
-  // 检查 PG 所在 OSD 可用存储空间情况
-  // mds should have stopped writing before this point.
-  // We can't allow OSD to become non-startable even if mds
-  // could be writing as part of file removals.
-  if (write_ordered &amp;&amp; osd-&gt;check_failsafe_full(get_dpp()) &amp;&amp;
-      !m-&gt;has_flag(CEPH_OSD_FLAG_FULL_TRY))
-  {
-    dout(10) &lt;&lt; __func__ &lt;&lt; &quot; fail-safe full check failed, dropping request.&quot; &lt;&lt; dendl;
-    return;
-  }
-  int64_t poolid = get_pgid().pool();
-  
-  // 判断 op 是否为写操作
-  if (op-&gt;may_write())
-  {
-    // 获取对应的 pool 并检查
-    const pg_pool_t *pi = get_osdmap()-&gt;get_pg_pool(poolid);
-    if (!pi)
-    {
-      return;
-    }
-
-    // invalid?
-    // 判断是否访问快照对象，若访问则报错，快照不允许写
-    if (m-&gt;get_snapid() != CEPH_NOSNAP)
-    {
-      dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: write to clone not valid &quot; &lt;&lt; *m &lt;&lt; dendl;
-      osd-&gt;reply_op_error(op, -EINVAL);
-      return;
-    }
-
-    // too big?
-    // 判断写入的数据大小并校验，osd_max_write_size
-    if (cct-&gt;_conf-&gt;osd_max_write_size &amp;&amp;
-        m-&gt;get_data_len() &gt; cct-&gt;_conf-&gt;osd_max_write_size &lt;&lt; 20)
-    {
-      // journal can't hold commit!
-      derr &lt;&lt; &quot;do_op msg data len &quot; &lt;&lt; m-&gt;get_data_len()
-           &lt;&lt; &quot; &gt; osd_max_write_size &quot; &lt;&lt; (cct-&gt;_conf-&gt;osd_max_write_size &lt;&lt; 20)
-           &lt;&lt; &quot; on &quot; &lt;&lt; *m &lt;&lt; dendl;
-      osd-&gt;reply_op_error(op, -OSD_WRITETOOBIG);
-      return;
-    }
-  }
-
-  dout(10) &lt;&lt; &quot;do_op &quot; &lt;&lt; *m
-           &lt;&lt; (op-&gt;may_write() ? &quot; may_write&quot; : &quot;&quot;)
-           &lt;&lt; (op-&gt;may_read() ? &quot; may_read&quot; : &quot;&quot;)
-           &lt;&lt; (op-&gt;may_cache() ? &quot; may_cache&quot; : &quot;&quot;)
-           &lt;&lt; &quot; -&gt; &quot; &lt;&lt; (write_ordered ? &quot;write-ordered&quot; : &quot;read-ordered&quot;)
-           &lt;&lt; &quot; flags &quot; &lt;&lt; ceph_osd_flag_string(m-&gt;get_flags())
-           &lt;&lt; dendl;
-
-  // missing object?
-  // 检查对象是否不可读，
-  // 1. 如果对象在 missing 列表（恢复过程中检查 PGLog 构建的 missing 列表）中，不可读
-  // 2. 数据修复过程中，在当前 acting set 对应的多个 OSD 上该对象不可读
-  // bool is_unreadable_object(const hobject_t &amp;oid) const
-  // {
-  //   return is_missing_object(oid) ||
-  //          !recovery_state.get_missing_loc().readable_with_acting(
-  //              oid, get_actingset());
-  // }
-  if (is_unreadable_object(head))
-  {
-    // 不是主节点 报错
-    if (!is_primary())
-    {
-      osd-&gt;reply_op_error(op, -EAGAIN);
-      return;
-    }
-
-    // 是主节点相应地判断 OSD backoff 状态
-    if (can_backoff &amp;&amp;
-        (g_conf()-&gt;osd_backoff_on_degraded ||
-         (g_conf()-&gt;osd_backoff_on_unfound &amp;&amp;
-          recovery_state.get_missing_loc().is_unfound(head))))
-    {
-      add_backoff(session, head, head);
-      maybe_kick_recovery(head);
-    }
-    else
-    {
-      // 等待对象恢复完成
-      wait_for_unreadable_object(head, op);
-    }
-    return;
-  }
-
-
-  // 顺序写
-  if (write_ordered)
-  {
-    // 对象处于降级状态（恢复状态）
-    // degraded object?
-    if (is_degraded_or_backfilling_object(head))
-    {
-      if (can_backoff &amp;&amp; g_conf()-&gt;osd_backoff_on_degraded)
-      {
-        // 尝试启动 recovery
-        add_backoff(session, head, head);
-        maybe_kick_recovery(head);
-      }
-      else
-      {
-        wait_for_degraded_object(head, op);
-      }
-      return;
-    }
-
-    // 对象正在被 scrub，加入相应的队列 waiting_for_scrub
-    if (scrubber.is_chunky_scrub_active() &amp;&amp; write_blocked_by_scrub(head))
-    {
-      dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: waiting for scrub&quot; &lt;&lt; dendl;
-      waiting_for_scrub.push_back(op);
-      op-&gt;mark_delayed(&quot;waiting for scrub&quot;);
-      return;
-    }
-    if (!check_laggy_requeue(op))
-    {
-      return;
-    }
-
-    // 对象被 snap
-    // objects_blocked_on_degraded_snap 保存了 head 对象则需要等待
-    // head 对象在 rollback 到某个版本的快照时，该版本的 snap 对象处于确实状态，则需要等待 snap 对象恢复
-    // blocked on snap?
-    if (auto blocked_iter = objects_blocked_on_degraded_snap.find(head);
-        blocked_iter != std::end(objects_blocked_on_degraded_snap))
-    {
-      hobject_t to_wait_on(head);
-      to_wait_on.snap = blocked_iter-&gt;second;
-      wait_for_degraded_object(to_wait_on, op);
-      return;
-    }
-
-    // objects_blocked_on_snap_promotion 里的对象表示 head 对象 rollback 到某个版本的快照时
-    // 该版本的快照对象在 cache pool 层中没有，需要到 data pool 层获取
-    if (auto blocked_snap_promote_iter = objects_blocked_on_snap_promotion.find(head);
-        blocked_snap_promote_iter != std::end(objects_blocked_on_snap_promotion))
-    {
-      wait_for_blocked_object(blocked_snap_promote_iter-&gt;second-&gt;obs.oi.soid, op);
-      return;
-    }
-
-    // objects_blocked_on_cache_full 该队列中的对象因为 cache pool 层空间满而阻塞了写操作
-    if (objects_blocked_on_cache_full.count(head))
-    {
-      block_write_on_full_cache(head, op);
-      return;
-    }
-  }
-
-  // 检查 op 是否为重发
-  // dup/resent?
-  if (op-&gt;may_write() || op-&gt;may_cache())
-  {
-    // warning: we will get back *a* request for this reqid, but not
-    // necessarily the most recent.  this happens with flush and
-    // promote ops, but we can't possible have both in our log where
-    // the original request is still not stable on disk, so for our
-    // purposes here it doesn't matter which one we get.
-    eversion_t version;
-    version_t user_version;
-    int return_code = 0;
-    vector&lt;pg_log_op_return_item_t&gt; op_returns;
-    bool got = check_in_progress_op(
-        m-&gt;get_reqid(), &amp;version, &amp;user_version, &amp;return_code, &amp;op_returns);
-    if (got)
-    {
-      dout(3) &lt;&lt; __func__ &lt;&lt; &quot; dup &quot; &lt;&lt; m-&gt;get_reqid()
-              &lt;&lt; &quot; version &quot; &lt;&lt; version &lt;&lt; dendl;
-      if (already_complete(version))
-      {
-        osd-&gt;reply_op_error(op, return_code, version, user_version, op_returns);
-      }
-      else
-      {
-        dout(10) &lt;&lt; &quot; waiting for &quot; &lt;&lt; version &lt;&lt; &quot; to commit&quot; &lt;&lt; dendl;
-        // always queue ondisk waiters, so that we can requeue if needed
-        waiting_for_ondisk[version].emplace_back(op, user_version, return_code,
-                                                 op_returns);
-        op-&gt;mark_delayed(&quot;waiting for ondisk&quot;);
-      }
-      return;
-    }
-  }
-
-  ObjectContextRef obc;
-  bool can_create = op-&gt;may_write();
-  hobject_t missing_oid;
-
-  // kludge around the fact that LIST_SNAPS sets CEPH_SNAPDIR for LIST_SNAPS
-  const hobject_t &amp;oid =
-      m-&gt;get_snapid() == CEPH_SNAPDIR ? head : m-&gt;get_hobj();
-
-  // make sure LIST_SNAPS is on CEPH_SNAPDIR and nothing else
-  for (vector&lt;OSDOp&gt;::iterator p = m-&gt;ops.begin(); p != m-&gt;ops.end(); ++p)
-  {
-    OSDOp &amp;osd_op = *p;
-
-    if (osd_op.op.op == CEPH_OSD_OP_LIST_SNAPS)
-    {
-      if (m-&gt;get_snapid() != CEPH_SNAPDIR)
-      {
-        dout(10) &lt;&lt; &quot;LIST_SNAPS with incorrect context&quot; &lt;&lt; dendl;
-        osd-&gt;reply_op_error(op, -EINVAL);
-        return;
-      }
-    }
-    else
-    {
-      if (m-&gt;get_snapid() == CEPH_SNAPDIR)
-      {
-        dout(10) &lt;&lt; &quot;non-LIST_SNAPS on snapdir&quot; &lt;&lt; dendl;
-        osd-&gt;reply_op_error(op, -EINVAL);
-        return;
-      }
-    }
-  }
-
-  // io blocked on obc?
-  if (!m-&gt;has_flag(CEPH_OSD_FLAG_FLUSH) &amp;&amp;
-      maybe_await_blocked_head(oid, op))
-  {
-    return;
-  }
-
-
-  // 当前节点不是主节点
-  if (!is_primary())
-  {
-    // 判断当前状态下是否能处理副本节点的读请求
-    if (!recovery_state.can_serve_replica_read(oid))
-    {
-      dout(20) &lt;&lt; __func__
-               &lt;&lt; &quot;: unstable write on replica, bouncing to primary &quot;
-               &lt;&lt; *m &lt;&lt; dendl;
-      osd-&gt;reply_op_error(op, -EAGAIN);
-      return;
-    }
-    dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: serving replica read on oid &quot; &lt;&lt; oid
-             &lt;&lt; dendl;
-  }
-
-  int r = find_object_context(
-      oid, &amp;obc, can_create,
-      m-&gt;has_flag(CEPH_OSD_FLAG_MAP_SNAP_CLONE),
-      &amp;missing_oid);
-
-  // LIST_SNAPS needs the ssc too
-  if (obc &amp;&amp;
-      m-&gt;get_snapid() == CEPH_SNAPDIR &amp;&amp;
-      !obc-&gt;ssc)
-  {
-    obc-&gt;ssc = get_snapset_context(oid, true);
-  }
-
-  if (r == -EAGAIN)
-  {
-    // If we're not the primary of this OSD, we just return -EAGAIN. Otherwise,
-    // we have to wait for the object.
-    if (is_primary())
-    {
-      // missing the specific snap we need; requeue and wait.
-      ceph_assert(!op-&gt;may_write()); // only happens on a read/cache
-      wait_for_unreadable_object(missing_oid, op);
-      return;
-    }
-  }
-  else if (r == 0)
-  {
-    // 检查 snapdir 对象是否可读
-    if (is_unreadable_object(obc-&gt;obs.oi.soid))
-    {
-      dout(10) &lt;&lt; __func__ &lt;&lt; &quot;: clone &quot; &lt;&lt; obc-&gt;obs.oi.soid
-               &lt;&lt; &quot; is unreadable, waiting&quot; &lt;&lt; dendl;
-      wait_for_unreadable_object(obc-&gt;obs.oi.soid, op);
-      return;
-    }
-
-    // 如果是写操作需要检查 snapdir 对象是否缺失
-    // degraded object?  (the check above was for head; this could be a clone)
-    if (write_ordered &amp;&amp;
-        obc-&gt;obs.oi.soid.snap != CEPH_NOSNAP &amp;&amp;
-        is_degraded_or_backfilling_object(obc-&gt;obs.oi.soid))
-    {
-      dout(10) &lt;&lt; __func__ &lt;&lt; &quot;: clone &quot; &lt;&lt; obc-&gt;obs.oi.soid
-               &lt;&lt; &quot; is degraded, waiting&quot; &lt;&lt; dendl;
-      wait_for_degraded_object(obc-&gt;obs.oi.soid, op);
-      return;
-    }
-  }
-
-  bool in_hit_set = false;
-
-  // hitset 不为空，进入 cache tiering 流程
-  if (hit_set)
-  {
-    if (obc.get())
-    {
-      if (obc-&gt;obs.oi.soid != hobject_t() &amp;&amp; hit_set-&gt;contains(obc-&gt;obs.oi.soid))
-        in_hit_set = true;
-    }
-    else
-    {
-      if (missing_oid != hobject_t() &amp;&amp; hit_set-&gt;contains(missing_oid))
-        in_hit_set = true;
-    }
-    if (!op-&gt;hitset_inserted)
-    {
-      hit_set-&gt;insert(oid);
-      op-&gt;hitset_inserted = true;
-      if (hit_set-&gt;is_full() ||
-          hit_set_start_stamp + pool.info.hit_set_period &lt;= m-&gt;get_recv_stamp())
-      {
-        hit_set_persist();
-      }
-    }
-  }
-
-  if (agent_state)
-  {
-    if (agent_choose_mode(false, op))
-      return;
-  }
-
-  if (obc.get() &amp;&amp; obc-&gt;obs.exists &amp;&amp; obc-&gt;obs.oi.has_manifest())
-  {
-    if (maybe_handle_manifest(op,
-                              write_ordered,
-                              obc))
-      return;
-  }
-
-  if (maybe_handle_cache(op,
-                         write_ordered,
-                         obc,
-                         r,
-                         missing_oid,
-                         false,
-                         in_hit_set))
-    return;
-
-  if (r &amp;&amp; (r != -ENOENT || !obc))
-  {
-    // copy the reqids for copy get on ENOENT
-    if (r == -ENOENT &amp;&amp;
-        (m-&gt;ops[0].op.op == CEPH_OSD_OP_COPY_GET))
-    {
-      fill_in_copy_get_noent(op, oid, m-&gt;ops[0]);
-      return;
-    }
-    dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: find_object_context got error &quot; &lt;&lt; r &lt;&lt; dendl;
-    if (op-&gt;may_write() &amp;&amp;
-        get_osdmap()-&gt;require_osd_release &gt;= ceph_release_t::kraken)
-    {
-      record_write_error(op, oid, nullptr, r);
-    }
-    else
-    {
-      osd-&gt;reply_op_error(op, r);
-    }
-    return;
-  }
-
-  // 验证 object_locator 和 msg 中的是否相同
-  // make sure locator is consistent
-  object_locator_t oloc(obc-&gt;obs.oi.soid);
-  if (m-&gt;get_object_locator() != oloc)
-  {
-    dout(10) &lt;&lt; &quot; provided locator &quot; &lt;&lt; m-&gt;get_object_locator()
-             &lt;&lt; &quot; != object's &quot; &lt;&lt; obc-&gt;obs.oi.soid &lt;&lt; dendl;
-    osd-&gt;clog-&gt;warn() &lt;&lt; &quot;bad locator &quot; &lt;&lt; m-&gt;get_object_locator()
-                      &lt;&lt; &quot; on object &quot; &lt;&lt; oloc
-                      &lt;&lt; &quot; op &quot; &lt;&lt; *m;
-  }
-
-  // 检查该对象是否被阻塞
-  // io blocked on obc?
-  if (obc-&gt;is_blocked() &amp;&amp;
-      !m-&gt;has_flag(CEPH_OSD_FLAG_FLUSH))
-  {
-    wait_for_blocked_object(obc-&gt;obs.oi.soid, op);
-    return;
-  }
-
-  dout(25) &lt;&lt; __func__ &lt;&lt; &quot; oi &quot; &lt;&lt; obc-&gt;obs.oi &lt;&lt; dendl;
-
-
-
-  // 获取对象上下文，创建 OpContext 对 op 进行跟踪
-  OpContext *ctx = new OpContext(op, m-&gt;get_reqid(), &amp;m-&gt;ops, obc, this);
-
-  // 根据对应的 flag 决定锁的处理方式
-  if (m-&gt;has_flag(CEPH_OSD_FLAG_SKIPRWLOCKS))
-  {
-    dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: skipping rw locks&quot; &lt;&lt; dendl;
-  }
-  else if (m-&gt;get_flags() &amp; CEPH_OSD_FLAG_FLUSH)
-  {
-    dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: part of flush, will ignore write lock&quot; &lt;&lt; dendl;
-
-    // verify there is in fact a flush in progress
-    // FIXME: we could make this a stronger test.
-    map&lt;hobject_t, FlushOpRef&gt;::iterator p = flush_ops.find(obc-&gt;obs.oi.soid);
-    if (p == flush_ops.end())
-    {
-      dout(10) &lt;&lt; __func__ &lt;&lt; &quot; no flush in progress, aborting&quot; &lt;&lt; dendl;
-      reply_ctx(ctx, -EINVAL);
-      return;
-    }
-  }
-  else if (!get_rw_locks(write_ordered, ctx))
-  {
-    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; waiting for rw locks &quot; &lt;&lt; dendl;
-    op-&gt;mark_delayed(&quot;waiting for rw locks&quot;);
-    close_op_ctx(ctx);
-    return;
-  }
-  dout(20) &lt;&lt; __func__ &lt;&lt; &quot; obc &quot; &lt;&lt; *obc &lt;&lt; dendl;
-
-  if (r)
-  {
-    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; returned an error: &quot; &lt;&lt; r &lt;&lt; dendl;
-    if (op-&gt;may_write() &amp;&amp;
-        get_osdmap()-&gt;require_osd_release &gt;= ceph_release_t::kraken)
-    {
-      record_write_error(op, oid, nullptr, r,
-                         ctx-&gt;op-&gt;allows_returnvec() ? ctx : nullptr);
-    }
-    else
-    {
-      osd-&gt;reply_op_error(op, r);
-    }
-    close_op_ctx(ctx);
-    return;
-  }
-
-  if (m-&gt;has_flag(CEPH_OSD_FLAG_IGNORE_CACHE))
-  {
-    ctx-&gt;ignore_cache = true;
-  }
-
-  if ((op-&gt;may_read()) &amp;&amp; (obc-&gt;obs.oi.is_lost()))
-  {
-    // This object is lost. Reading from it returns an error.
-    dout(20) &lt;&lt; __func__ &lt;&lt; &quot;: object &quot; &lt;&lt; obc-&gt;obs.oi.soid
-             &lt;&lt; &quot; is lost&quot; &lt;&lt; dendl;
-    reply_ctx(ctx, -ENFILE);
-    return;
-  }
-  if (!op-&gt;may_write() &amp;&amp;
-      !op-&gt;may_cache() &amp;&amp;
-      (!obc-&gt;obs.exists ||
-       ((m-&gt;get_snapid() != CEPH_SNAPDIR) &amp;&amp;
-        obc-&gt;obs.oi.is_whiteout())))
-  {
-    // copy the reqids for copy get on ENOENT
-    if (m-&gt;ops[0].op.op == CEPH_OSD_OP_COPY_GET)
-    {
-      fill_in_copy_get_noent(op, oid, m-&gt;ops[0]);
-      close_op_ctx(ctx);
-      return;
-    }
-    reply_ctx(ctx, -ENOENT);
-    return;
-  }
-
-  op-&gt;mark_started();
-
-
-  // 真正开始执行 op
-  execute_ctx(ctx);
-  utime_t prepare_latency = ceph_clock_now();
-  prepare_latency -= op-&gt;get_dequeued_time();
-  osd-&gt;logger-&gt;tinc(l_osd_op_prepare_lat, prepare_latency);
-  if (op-&gt;may_read() &amp;&amp; op-&gt;may_write())
-  {
-    osd-&gt;logger-&gt;tinc(l_osd_op_rw_prepare_lat, prepare_latency);
-  }
-  else if (op-&gt;may_read())
-  {
-    osd-&gt;logger-&gt;tinc(l_osd_op_r_prepare_lat, prepare_latency);
-  }
-  else if (op-&gt;may_write() || op-&gt;may_cache())
-  {
-    osd-&gt;logger-&gt;tinc(l_osd_op_w_prepare_lat, prepare_latency);
-  }
-
-  // force recovery of the oldest missing object if too many logs
-  maybe_force_recovery();
-}
-</code></pre>
-<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200923165351.png" alt="20200923165351" loading="lazy"></figure>
-<h2 id="execute_ctx">execute_ctx</h2>
-<pre><code class="language-C++">void PrimaryLogPG::execute_ctx(OpContext *ctx)
-{
-  FUNCTRACE(cct);
-  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; ctx &lt;&lt; dendl;
-  ctx-&gt;reset_obs(ctx-&gt;obc);
-  ctx-&gt;update_log_only = false; // reset in case finish_copyfrom() is re-running execute_ctx
-  OpRequestRef op = ctx-&gt;op;
-  auto m = op-&gt;get_req&lt;MOSDOp&gt;();
-  ObjectContextRef obc = ctx-&gt;obc;
-  const hobject_t &amp;soid = obc-&gt;obs.oi.soid;
-
-  // this method must be idempotent since we may call it several times
-  // before we finally apply the resulting transaction.
-  ctx-&gt;op_t.reset(new PGTransaction);
-
- 
-  // 写操作
-  if (op-&gt;may_write() || op-&gt;may_cache())
-  {
-    // snap
-    // 对于快照进行一些处理
-    if (!(m-&gt;has_flag(CEPH_OSD_FLAG_ENFORCE_SNAPC)) &amp;&amp;
-        pool.info.is_pool_snaps_mode())
-    {
-      // 更新 ctx-&gt;snapc，该值保存了该操作的客户端附带的快照相关信息
-      // use pool's snapc
-      ctx-&gt;snapc = pool.snapc;
-    }
-    else
-    {
-      // 用户特定快照，通常为 RBD 快照，此时设置为消息中携带的信息
-      // client specified snapc
-      ctx-&gt;snapc.seq = m-&gt;get_snap_seq();
-      ctx-&gt;snapc.snaps = m-&gt;get_snaps();
-      filter_snapc(ctx-&gt;snapc.snaps);
-    }
-
-    // 比较 SNAP_SEQ，如果客户端的更小则报错
-    if ((m-&gt;has_flag(CEPH_OSD_FLAG_ORDERSNAP)) &amp;&amp;
-        ctx-&gt;snapc.seq &lt; obc-&gt;ssc-&gt;snapset.seq)
-    {
-      dout(10) &lt;&lt; &quot; ORDERSNAP flag set and snapc seq &quot; &lt;&lt; ctx-&gt;snapc.seq
-               &lt;&lt; &quot; &lt; snapset seq &quot; &lt;&lt; obc-&gt;ssc-&gt;snapset.seq
-               &lt;&lt; &quot; on &quot; &lt;&lt; obc-&gt;obs.oi.soid &lt;&lt; dendl;
-      reply_ctx(ctx, -EOLDSNAPC);
-      return;
-    }
-
-    // 更新 OpContext 版本号
-    // version
-    ctx-&gt;at_version = get_next_version();
-    ctx-&gt;mtime = m-&gt;get_mtime();
-
-    dout(10) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; soid &lt;&lt; &quot; &quot; &lt;&lt; *ctx-&gt;ops
-             &lt;&lt; &quot; ov &quot; &lt;&lt; obc-&gt;obs.oi.version &lt;&lt; &quot; av &quot; &lt;&lt; ctx-&gt;at_version
-             &lt;&lt; &quot; snapc &quot; &lt;&lt; ctx-&gt;snapc
-             &lt;&lt; &quot; snapset &quot; &lt;&lt; obc-&gt;ssc-&gt;snapset
-             &lt;&lt; dendl;
-  }
-  else
-  {
-    dout(10) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; soid &lt;&lt; &quot; &quot; &lt;&lt; *ctx-&gt;ops
-             &lt;&lt; &quot; ov &quot; &lt;&lt; obc-&gt;obs.oi.version
-             &lt;&lt; dendl;
-  }
-
-  if (!ctx-&gt;user_at_version)
-    ctx-&gt;user_at_version = obc-&gt;obs.oi.user_version;
-  dout(30) &lt;&lt; __func__ &lt;&lt; &quot; user_at_version &quot; &lt;&lt; ctx-&gt;user_at_version &lt;&lt; dendl;
-
-  {
-#ifdef WITH_LTTNG
-    osd_reqid_t reqid = ctx-&gt;op-&gt;get_reqid();
-#endif
-    tracepoint(osd, prepare_tx_enter, reqid.name._type,
-               reqid.name._num, reqid.tid, reqid.inc);
-  }
-
-  // 准备事务
-  // 1. 通过 do_osd_ops 生成原始 op 对应的 PG 事务
-  // 2. 如果 op 针对 head 对象进行操作，通过 make_writable 检查是否需要预先执行克隆操作
-  // 3. 通过 finish_ctx 检查是否需要创建或者删除 snapdir 对象，生成日志，并更新对象的 OI（object_info_t） 和 SS（SnapSet） 属性
-  // 其中涉及了大量的对克隆和快照的处理
-  int result = prepare_transaction(ctx);
-
-  {
-#ifdef WITH_LTTNG
-    osd_reqid_t reqid = ctx-&gt;op-&gt;get_reqid();
-#endif
-    tracepoint(osd, prepare_tx_exit, reqid.name._type,
-               reqid.name._num, reqid.tid, reqid.inc);
-  }
-
-  // 异步读则将 op 加入 in_progress_async_reads 队列，完成之后再向客户端应答
-  bool pending_async_reads = !ctx-&gt;pending_async_reads.empty();
-  if (result == -EINPROGRESS || pending_async_reads)
-  {
-    // come back later.
-    if (pending_async_reads)
-    {
-      ceph_assert(pool.info.is_erasure());
-      in_progress_async_reads.push_back(make_pair(op, ctx));
-      // 完成异步读取
-      ctx-&gt;start_async_reads(this);
-    }
-    return;
-  }
-
-  if (result == -EAGAIN)
-  {
-    // clean up after the ctx
-    close_op_ctx(ctx);
-    return;
-  }
-
-  bool ignore_out_data = false;
-  if (!ctx-&gt;op_t-&gt;empty() &amp;&amp;
-      op-&gt;may_write() &amp;&amp;
-      result &gt;= 0)
-  {
-    // successful update
-    if (ctx-&gt;op-&gt;allows_returnvec())
-    {
-      // enforce reasonable bound on the return buffer sizes
-      for (auto &amp;i : *ctx-&gt;ops)
-      {
-        if (i.outdata.length() &gt; cct-&gt;_conf-&gt;osd_max_write_op_reply_len)
-        {
-          dout(10) &lt;&lt; __func__ &lt;&lt; &quot; op &quot; &lt;&lt; i &lt;&lt; &quot; outdata overflow&quot; &lt;&lt; dendl;
-          result = -EOVERFLOW; // overall result is overflow
-          i.rval = -EOVERFLOW;
-          i.outdata.clear();
-        }
-      }
-    }
-    else
-    {
-      // legacy behavior -- zero result and return data etc.
-      ignore_out_data = true;
-      result = 0;
-    }
-  }
-
-  // prepare the reply
-  ctx-&gt;reply = new MOSDOpReply(m, result, get_osdmap_epoch(), 0,
-                               ignore_out_data);
-  dout(20) &lt;&lt; __func__ &lt;&lt; &quot; alloc reply &quot; &lt;&lt; ctx-&gt;reply
-           &lt;&lt; &quot; result &quot; &lt;&lt; result &lt;&lt; dendl;
-
-  // 只包含读操作或者 失败，是则向客户端发送应答
-  // read or error?
-  if ((ctx-&gt;op_t-&gt;empty() || result &lt; 0) &amp;&amp; !ctx-&gt;update_log_only)
-  {
-    // finish side-effects
-    if (result &gt;= 0)
-      do_osd_op_effects(ctx, m-&gt;get_connection());
-
-    // 同步读取调用以下方法完成读操作
-    complete_read_ctx(result, ctx);
-    return;
-  }
-
-  ctx-&gt;reply-&gt;set_reply_versions(ctx-&gt;at_version, ctx-&gt;user_at_version);
-
-
-  // 后续均为写操作
-  ceph_assert(op-&gt;may_write() || op-&gt;may_cache());
-
-  // trim log?
-  // 将旧的日志进行 trim
-  // calc_trim_to_aggressive()
-  // calc_trim_to()
-  recovery_state.update_trim_to();
-
-  // verify that we are doing this in order?
-  if (cct-&gt;_conf-&gt;osd_debug_op_order &amp;&amp; m-&gt;get_source().is_client() &amp;&amp;
-      !pool.info.is_tier() &amp;&amp; !pool.info.has_tiers())
-  {
-    map&lt;client_t, ceph_tid_t&gt; &amp;cm = debug_op_order[obc-&gt;obs.oi.soid];
-    ceph_tid_t t = m-&gt;get_tid();
-    client_t n = m-&gt;get_source().num();
-    map&lt;client_t, ceph_tid_t&gt;::iterator p = cm.find(n);
-    if (p == cm.end())
-    {
-      dout(20) &lt;&lt; &quot; op order client.&quot; &lt;&lt; n &lt;&lt; &quot; tid &quot; &lt;&lt; t &lt;&lt; &quot; (first)&quot; &lt;&lt; dendl;
-      cm[n] = t;
-    }
-    else
-    {
-      dout(20) &lt;&lt; &quot; op order client.&quot; &lt;&lt; n &lt;&lt; &quot; tid &quot; &lt;&lt; t &lt;&lt; &quot; last was &quot; &lt;&lt; p-&gt;second &lt;&lt; dendl;
-      if (p-&gt;second &gt; t)
-      {
-        derr &lt;&lt; &quot;bad op order, already applied &quot; &lt;&lt; p-&gt;second &lt;&lt; &quot; &gt; this &quot; &lt;&lt; t &lt;&lt; dendl;
-        ceph_abort_msg(&quot;out of order op&quot;);
-      }
-      p-&gt;second = t;
-    }
-  }
-
-  if (ctx-&gt;update_log_only)
-  {
-    if (result &gt;= 0)
-      do_osd_op_effects(ctx, m-&gt;get_connection());
-
-    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; update_log_only -- result=&quot; &lt;&lt; result &lt;&lt; dendl;
-    // save just what we need from ctx
-    MOSDOpReply *reply = ctx-&gt;reply;
-    ctx-&gt;reply = nullptr;
-    reply-&gt;get_header().data_off = (ctx-&gt;data_off ? *ctx-&gt;data_off : 0);
-
-    if (result == -ENOENT)
-    {
-      reply-&gt;set_enoent_reply_versions(info.last_update,
-                                       info.last_user_version);
-    }
-    reply-&gt;add_flags(CEPH_OSD_FLAG_ACK | CEPH_OSD_FLAG_ONDISK);
-    // append to pg log for dup detection - don't save buffers for now
-    record_write_error(op, soid, reply, result,
-                       ctx-&gt;op-&gt;allows_returnvec() ? ctx : nullptr);
-    close_op_ctx(ctx);
-    return;
-  }
-
-  // 写操作则注册如下的回调函数：按照如下顺序要求
-  // 1. on_commit: 执行时，向客户端发送写入完成应答
-  // 2. on_success: 执行时，进行 Watch/Notify 相关的处理
-  // 3. on_finish: 执行时，删除 OpContext
-  // no need to capture PG ref, repop cancel will handle that
-  // Can capture the ctx by pointer, it's owned by the repop
-  ctx-&gt;register_on_commit(
-      [m, ctx, this]() {
-        if (ctx-&gt;op)
-          log_op_stats(*ctx-&gt;op, ctx-&gt;bytes_written, ctx-&gt;bytes_read);
-
-        if (m &amp;&amp; !ctx-&gt;sent_reply)
-        {
-          MOSDOpReply *reply = ctx-&gt;reply;
-          ctx-&gt;reply = nullptr;
-          reply-&gt;add_flags(CEPH_OSD_FLAG_ACK | CEPH_OSD_FLAG_ONDISK);
-          dout(10) &lt;&lt; &quot; sending reply on &quot; &lt;&lt; *m &lt;&lt; &quot; &quot; &lt;&lt; reply &lt;&lt; dendl;
-          osd-&gt;send_message_osd_client(reply, m-&gt;get_connection());
-          ctx-&gt;sent_reply = true;
-          ctx-&gt;op-&gt;mark_commit_sent();
-        }
-      });
-  ctx-&gt;register_on_success(
-      [ctx, this]() {
-        do_osd_op_effects(
-            ctx,
-            ctx-&gt;op ? ctx-&gt;op-&gt;get_req()-&gt;get_connection() : ConnectionRef());
-      });
-  ctx-&gt;register_on_finish(
-      [ctx]() {
-        delete ctx;
-      });
-
-  // 事务准备完成，由 Primary 进行副本间的本地事务分发和整体同步
-  // issue replica writes
-  ceph_tid_t rep_tid = osd-&gt;get_tid();
-
-  // 创建一个 RepGather
-  RepGather *repop = new_repop(ctx, obc, rep_tid);
-
-  // 将 RepGather 提交到 PGBackend，由 PGBackend 负责将 PG 事务转为每个副本的本地事务，然后分发
-  // 即向各个副本发送同步操作请求
-  issue_repop(repop, ctx);
-
-  // 评估 RepGather 是否真正完成，真正完成后则依次执行 RepGather 中注册过的一系列回调函数，最后删除 RepGather
-  // 检查各个副本的同步操作是否已经 reply 成功
-  eval_repop(repop);
-  repop-&gt;put();
-}
-</code></pre>
-<figure data-type="image" tabindex="3"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200924154633.png" alt="20200924154633" loading="lazy"></figure>
-<h2 id="issue_repop">issue_repop</h2>
-<ul>
-<li>真正的分发逻辑，和 OSD 本地事务处理都封装在该方法中。回顾上述主流程中关于多副本写操作的处理：</li>
-</ul>
-<pre><code class="language-C++">
-  // 写操作则注册如下的回调函数：按照如下顺序要求
-  // 1. on_commit: 执行时，向客户端发送写入完成应答
-  // 2. on_success: 执行时，进行 Watch/Notify 相关的处理
-  // 3. on_finish: 执行时，删除 OpContext
-  // no need to capture PG ref, repop cancel will handle that
-  // Can capture the ctx by pointer, it's owned by the repop
-  ctx-&gt;register_on_commit(
-      [m, ctx, this]() {
-        if (ctx-&gt;op)
-          log_op_stats(*ctx-&gt;op, ctx-&gt;bytes_written, ctx-&gt;bytes_read);
-
-        if (m &amp;&amp; !ctx-&gt;sent_reply)
-        {
-          MOSDOpReply *reply = ctx-&gt;reply;
-          ctx-&gt;reply = nullptr;
-          reply-&gt;add_flags(CEPH_OSD_FLAG_ACK | CEPH_OSD_FLAG_ONDISK);
-          dout(10) &lt;&lt; &quot; sending reply on &quot; &lt;&lt; *m &lt;&lt; &quot; &quot; &lt;&lt; reply &lt;&lt; dendl;
-          osd-&gt;send_message_osd_client(reply, m-&gt;get_connection());
-          ctx-&gt;sent_reply = true;
-          ctx-&gt;op-&gt;mark_commit_sent();
-        }
-      });
-  ctx-&gt;register_on_success(
-      [ctx, this]() {
-        do_osd_op_effects(
-            ctx,
-            ctx-&gt;op ? ctx-&gt;op-&gt;get_req()-&gt;get_connection() : ConnectionRef());
-      });
-  ctx-&gt;register_on_finish(
-      [ctx]() {
-        delete ctx;
-      });
-
-  // 事务准备完成，由 Primary 进行副本间的本地事务分发和整体同步
-  // issue replica writes
-  ceph_tid_t rep_tid = osd-&gt;get_tid();
-
-  // 创建一个 RepGather
-  RepGather *repop = new_repop(ctx, obc, rep_tid);
-
-  // 将 RepGather 提交到 PGBackend，由 PGBackend 负责将 PG 事务转为每个副本的本地事务，然后分发
-  // 即向各个副本发送同步操作请求
-  issue_repop(repop, ctx);
-
-  // 评估 RepGather 是否真正完成，真正完成后则依次执行 RepGather 中注册过的一系列回调函数，最后删除 RepGather
-  // 检查各个副本的同步操作是否已经 reply 成功
-  eval_repop(repop);
-  repop-&gt;put();
-</code></pre>
-<ul>
-<li>其中 issue_repopn 主要是调用了 <code>submit_transaction</code> 让对应的 PGBackend 来执行事务</li>
-</ul>
-<pre><code class="language-C++">pgbackend-&gt;submit_transaction(
-      soid,
-      ctx-&gt;delta_stats,
-      ctx-&gt;at_version,
-      std::move(ctx-&gt;op_t),
-      recovery_state.get_pg_trim_to(),
-      recovery_state.get_min_last_complete_ondisk(),
-      std::move(ctx-&gt;log),
-      ctx-&gt;updated_hset_history,
-      on_all_commit,
-      repop-&gt;rep_tid,
-      ctx-&gt;reqid,
-      ctx-&gt;op);
-}
-</code></pre>
-<h3 id="submit_transaction">submit_transaction</h3>
-<ul>
-<li>此处暂时只讨论 ReplicatedBackend，即多副本情况下的事务提交
-<ul>
-<li>副本方式：核心处理流程是把封装好的事务分发到该 PG 对应的其他从 OSD 上</li>
-<li>纠删码方式：核心处理流程是为主 chunk 向各个分片 chunk 分发数据的过程</li>
-</ul>
-</li>
-<li>通过 <code>issue_op</code> 分发消息到副本 OSD（异步），当前 OSD 相应地执行日志操作以及完成本地 OSD 请求的处理<code>queue_transactions</code>。</li>
-</ul>
-<pre><code class="language-C++">void ReplicatedBackend::submit_transaction(
-    const hobject_t &amp;soid,
-    const object_stat_sum_t &amp;delta_stats,
-    const eversion_t &amp;at_version,
-    PGTransactionUPtr &amp;&amp;_t,
-    const eversion_t &amp;trim_to,
-    const eversion_t &amp;min_last_complete_ondisk,
-    vector&lt;pg_log_entry_t&gt; &amp;&amp;_log_entries,
-    std::optional&lt;pg_hit_set_history_t&gt; &amp;hset_history,
-    Context *on_all_commit,
-    ceph_tid_t tid,
-    osd_reqid_t reqid,
-    OpRequestRef orig_op)
-{
-  parent-&gt;apply_stats(
-      soid,
-      delta_stats);
-
-  vector&lt;pg_log_entry_t&gt; log_entries(_log_entries);
-  ObjectStore::Transaction op_t;
-  PGTransactionUPtr t(std::move(_t));
-  set&lt;hobject_t&gt; added, removed;
-
-  // 根据具体的操作类型生成相应的事务
-  generate_transaction(
-      t,
-      coll,
-      log_entries,
-      &amp;op_t,
-      &amp;added,
-      &amp;removed,
-      get_osdmap()-&gt;require_osd_release);
-  ceph_assert(added.size() &lt;= 1);
-  ceph_assert(removed.size() &lt;= 1);
-
-  // 构建处理中的请求记录 in_progress_ops
-  auto insert_res = in_progress_ops.insert(
-      make_pair(
-          tid,
-          ceph::make_ref&lt;InProgressOp&gt;(
-              tid, on_all_commit,
-              orig_op, at_version)));
-  ceph_assert(insert_res.second);
-  InProgressOp &amp;op = *insert_res.first-&gt;second;
-
-  // 统计 commit 的副本操作数量，等待副本操作完成回调时进行清除，使用该结构方便统计是不是所有的副本都完成了操作。
-  op.waiting_for_commit.insert(
-      parent-&gt;get_acting_recovery_backfill_shards().begin(),
-      parent-&gt;get_acting_recovery_backfill_shards().end());
-
-  // 把请求发送出去
-  issue_op(
-      soid,
-      at_version,
-      tid,
-      reqid,
-      trim_to,
-      min_last_complete_ondisk,
-      added.size() ? *(added.begin()) : hobject_t(),
-      removed.size() ? *(removed.begin()) : hobject_t(),
-      log_entries,
-      hset_history,
-      &amp;op,
-      op_t);
-
-  add_temp_objs(added);
-  clear_temp_objs(removed);
-
-  //进行日志操作，开始记录本端操作 object 的 log
-  parent-&gt;log_operation(
-      std::move(log_entries),
-      hset_history,
-      trim_to,
-      at_version,
-      min_last_complete_ondisk,
-      true,
-      op_t);
-
-  // 开始注册本端的 commit 回调函数，这里回调后直接向上返回
-  op_t.register_on_commit(
-      parent-&gt;bless_context(
-          new C_OSD_OnOpCommit(this, &amp;op)));
-
-  vector&lt;ObjectStore::Transaction&gt; tls;
-  tls.push_back(std::move(op_t));
-
-  // 完成本地 OSD 的请求处理
-  parent-&gt;queue_transactions(tls, op.op);
-  if (at_version != eversion_t())
-  {
-    parent-&gt;op_applied(at_version);
-  }
-}
-</code></pre>
-<h3 id="issue_op">issue_op</h3>
-<ul>
-<li>该方法构造相应的写请求，以消息的方式发送到该主 OSD 对应的副本 OSD 上。</li>
-</ul>
-<pre><code class="language-C++">void ReplicatedBackend::issue_op(
-    const hobject_t &amp;soid,
-    const eversion_t &amp;at_version,
-    ceph_tid_t tid,
-    osd_reqid_t reqid,
-    eversion_t pg_trim_to,
-    eversion_t min_last_complete_ondisk,
-    hobject_t new_temp_oid,
-    hobject_t discard_temp_oid,
-    const vector&lt;pg_log_entry_t&gt; &amp;log_entries,
-    std::optional&lt;pg_hit_set_history_t&gt; &amp;hset_hist,
-    InProgressOp *op,
-    ObjectStore::Transaction &amp;op_t)
-{
-  // 副本节点数量 &gt; 1
-  if (parent-&gt;get_acting_recovery_backfill_shards().size() &gt; 1)
-  {
-    if (op-&gt;op)
-    {
-      op-&gt;op-&gt;pg_trace.event(&quot;issue replication ops&quot;);
-      ostringstream ss;
-      set&lt;pg_shard_t&gt; replicas = parent-&gt;get_acting_recovery_backfill_shards();
-      replicas.erase(parent-&gt;whoami_shard());
-      ss &lt;&lt; &quot;waiting for subops from &quot; &lt;&lt; replicas;
-      op-&gt;op-&gt;mark_sub_op_sent(ss.str());
-    }
-
-    // avoid doing the same work in generate_subop
-    bufferlist logs;
-    encode(log_entries, logs);
-
-    // 遍历所有的 replica OSDs
-    for (const auto &amp;shard : get_parent()-&gt;get_acting_recovery_backfill_shards())
-    {
-      // 如果该节点是主节点，跳过
-      if (shard == parent-&gt;whoami_shard())
-        continue;
-
-      // 获取副本节点对应的 pg
-      const pg_info_t &amp;pinfo = parent-&gt;get_shard_info().find(shard)-&gt;second;
-
-      Message *wr;
-
-      // 使用相应的参数构造 REPOP 请求
-      wr = generate_subop(
-          soid,
-          at_version,
-          tid,
-          reqid,
-          pg_trim_to,
-          min_last_complete_ondisk,
-          new_temp_oid,
-          discard_temp_oid,
-          logs,
-          hset_hist,
-          op_t,
-          shard,
-          pinfo);
-      if (op-&gt;op &amp;&amp; op-&gt;op-&gt;pg_trace)
-        wr-&gt;trace.init(&quot;replicated op&quot;, nullptr, &amp;op-&gt;op-&gt;pg_trace);
-
-      // 将消息发送出去到整个集群
-      // void OSDService::send_message_osd_cluster(int peer, Message *m, epoch_t from_epoch)
-      // 写操作的消息发送给对应副本节点对应的 osd
-      get_parent()-&gt;send_message_osd_cluster(
-          shard.osd, wr, get_osdmap_epoch());
-    }
-  }
-}
-</code></pre>
-<h3 id="do_repop">do_repop</h3>
-<ul>
-<li>相应的副本 OSD 收到消息时，继续上述流程，从头到尾，直到执行对应的 <code>do_request</code> 方法。在 <code>do_request</code> 方法中曾介绍有对部分请求的处理，截取如下：</li>
-</ul>
-<pre><code class="language-C++">  // 由 PGBackend 直接处理然后返回，此处只处理以下操作
-  // 1. MSG_OSD_PG_RECOVERY_DELETE (Common)
-  // 2. MSG_OSD_PG_RECOVERY_DELETE_REPLY (Common)
-  // 3. MSG_OSD_PG_PUSH (副本)
-  // 4. MSG_OSD_PG_PULL (副本)
-  // 5. MSG_OSD_PG_PUSH_REPLY (副本)
-  // 6. MSG_OSD_REPOP (副本)
-  // 7. MSG_OSD_REPOPREPLY (副本)
-  // 8. MSG_OSD_EC_WRITE (EC)
-  // 9. MSG_OSD_EC_WRITE_REPLY (EC)
-  // 10. MSG_OSD_EC_READ (EC)
-  // 11. MSG_OSD_EC_READ_REPLY (EC)
-  // 12. MSG_OSD_PG_PUSH (EC)
-  // 13. MSG_OSD_PG_PUSH_REPLY (EC)
-  if (pgbackend-&gt;handle_message(op))
-    return;
-</code></pre>
-<ul>
-<li>其中就包含 MSG_OSD_REPOP 和 MSG_OSD_REPOPREPLY 的处理（针对多副本）。又相应地调用了 <code>do_repop</code> 和 <code>do_repop_reply</code> 方法</li>
-</ul>
-<pre><code class="language-C++">bool ReplicatedBackend::_handle_message(
-    OpRequestRef op)
-{
-  dout(10) &lt;&lt; __func__ &lt;&lt; &quot;: &quot; &lt;&lt; op &lt;&lt; dendl;
-  switch (op-&gt;get_req()-&gt;get_type())
-  {
-  case MSG_OSD_PG_PUSH:
-    do_push(op);
-    return true;
-
-  case MSG_OSD_PG_PULL:
-    do_pull(op);
-    return true;
-
-  case MSG_OSD_PG_PUSH_REPLY:
-    do_push_reply(op);
-    return true;
-
-  case MSG_OSD_REPOP:
-  {
-    do_repop(op);
-    return true;
-  }
-
-  case MSG_OSD_REPOPREPLY:
-  {
-    do_repop_reply(op);
-    return true;
-  }
-
-  default:
-    break;
-  }
-  return false;
-}
-</code></pre>
-<ul>
-<li><code>do_repop</code> 用于处理 repop 类型的 msg，相应地检查参数和当前 OSD 对应的状态，记录日志，注册回调函数，并执行本地事务更新。</li>
-</ul>
-<pre><code class="language-C++">// sub op modify
-void ReplicatedBackend::do_repop(OpRequestRef op)
-{
-  static_cast&lt;MOSDRepOp *&gt;(op-&gt;get_nonconst_req())-&gt;finish_decode();
-  // 获取当前消息
-  auto m = op-&gt;get_req&lt;MOSDRepOp&gt;();
-  // 检查消息类型
-  int msg_type = m-&gt;get_type();
-  ceph_assert(MSG_OSD_REPOP == msg_type);
-
-  const hobject_t &amp;soid = m-&gt;poid;
-
-  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; &quot; &lt;&lt; soid
-           &lt;&lt; &quot; v &quot; &lt;&lt; m-&gt;version
-           &lt;&lt; (m-&gt;logbl.length() ? &quot; (transaction)&quot; : &quot; (parallel exec&quot;)
-           &lt;&lt; &quot; &quot; &lt;&lt; m-&gt;logbl.length()
-           &lt;&lt; dendl;
-
-  // 检查版本号和 interval
-  // sanity checks
-  ceph_assert(m-&gt;map_epoch &gt;= get_info().history.same_interval_since);
-
-  // 检查该副本节点是否在进行 scrub 操作
-  dout(30) &lt;&lt; __func__ &lt;&lt; &quot; missing before &quot; &lt;&lt; get_parent()-&gt;get_log().get_missing().get_items() &lt;&lt; dendl;
-  parent-&gt;maybe_preempt_replica_scrub(soid);
-
-  // 获取消息来源
-  int ackerosd = m-&gt;get_source().num();
-
-  // 标记当前操作开始，设置相关参数
-  op-&gt;mark_started();
-
-  RepModifyRef rm(std::make_shared&lt;RepModify&gt;());
-  rm-&gt;op = op;
-  rm-&gt;ackerosd = ackerosd;
-  rm-&gt;last_complete = get_info().last_complete;
-  rm-&gt;epoch_started = get_osdmap_epoch();
-
-  ceph_assert(m-&gt;logbl.length());
-  // shipped transaction and log entries
-  vector&lt;pg_log_entry_t&gt; log;
-
-  auto p = const_cast&lt;bufferlist &amp;&gt;(m-&gt;get_data()).cbegin();
-  decode(rm-&gt;opt, p);
-
-  if (m-&gt;new_temp_oid != hobject_t())
-  {
-    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; start tracking temp &quot; &lt;&lt; m-&gt;new_temp_oid &lt;&lt; dendl;
-    add_temp_obj(m-&gt;new_temp_oid);
-  }
-  if (m-&gt;discard_temp_oid != hobject_t())
-  {
-    dout(20) &lt;&lt; __func__ &lt;&lt; &quot; stop tracking temp &quot; &lt;&lt; m-&gt;discard_temp_oid &lt;&lt; dendl;
-    if (rm-&gt;opt.empty())
-    {
-      dout(10) &lt;&lt; __func__ &lt;&lt; &quot;: removing object &quot; &lt;&lt; m-&gt;discard_temp_oid
-               &lt;&lt; &quot; since we won't get the transaction&quot; &lt;&lt; dendl;
-      rm-&gt;localt.remove(coll, ghobject_t(m-&gt;discard_temp_oid));
-    }
-    clear_temp_obj(m-&gt;discard_temp_oid);
-  }
-
-  p = const_cast&lt;bufferlist &amp;&gt;(m-&gt;logbl).begin();
-  decode(log, p);
-  rm-&gt;opt.set_fadvise_flag(CEPH_OSD_OP_FLAG_FADVISE_DONTNEED);
-
-  bool update_snaps = false;
-  if (!rm-&gt;opt.empty())
-  {
-    // If the opt is non-empty, we infer we are before
-    // last_backfill (according to the primary, not our
-    // not-quite-accurate value), and should update the
-    // collections now.  Otherwise, we do it later on push.
-    update_snaps = true;
-  }
-
-  // flag set to true during async recovery
-  bool async = false;
-  pg_missing_tracker_t pmissing = get_parent()-&gt;get_local_missing();
-  if (pmissing.is_missing(soid))
-  {
-    async = true;
-    dout(30) &lt;&lt; __func__ &lt;&lt; &quot; is_missing &quot; &lt;&lt; pmissing.is_missing(soid) &lt;&lt; dendl;
-    for (auto &amp;&amp;e : log)
-    {
-      dout(30) &lt;&lt; &quot; add_next_event entry &quot; &lt;&lt; e &lt;&lt; dendl;
-      get_parent()-&gt;add_local_next_event(e);
-      dout(30) &lt;&lt; &quot; entry is_delete &quot; &lt;&lt; e.is_delete() &lt;&lt; dendl;
-    }
-  }
-
-  parent-&gt;update_stats(m-&gt;pg_stats);
-
-  // 更新日志
-  parent-&gt;log_operation(
-      std::move(log),
-      m-&gt;updated_hit_set_history,
-      m-&gt;pg_trim_to,
-      m-&gt;version, /* Replicated PGs don't have rollback info */
-      m-&gt;min_last_complete_ondisk,
-      update_snaps,
-      rm-&gt;localt,
-      async);
-
-  // 注册回调函数 C_OSD_RepModifyCommit，回调完成后调用 pg-&gt;repop_commit(rm)
-  // C_OSD_RepModifyCommit(ReplicatedBackend *pg, RepModifyRef r)
-  //     : pg(pg), rm(r) {}
-  // void finish(int r) override
-  // {
-  //   pg-&gt;repop_commit(rm);
-  // }
-  rm-&gt;opt.register_on_commit(
-      parent-&gt;bless_context(
-          new C_OSD_RepModifyCommit(this, rm)));
-  vector&lt;ObjectStore::Transaction&gt; tls;
-  tls.reserve(2);
-  tls.push_back(std::move(rm-&gt;localt));
-  tls.push_back(std::move(rm-&gt;opt));
-
-  // 本地事务更新
-  parent-&gt;queue_transactions(tls, op);
-  // op is cleaned up by oncommit/onapply when both are executed
-  dout(30) &lt;&lt; __func__ &lt;&lt; &quot; missing after&quot; &lt;&lt; get_parent()-&gt;get_log().get_missing().get_items() &lt;&lt; dendl;
-}
-</code></pre>
-<h3 id="queue_transactions">queue_transactions</h3>
-<ul>
-<li>无论是一开始的主节点还是后面描述的副本节点执行写操作都调用了 <code>queue_transactions</code> 该方法，该方法是ObjectStore 层的统一入口，KVStore、MemStore、FileStore、BlueStore都相应的实现了这个接口。</li>
-<li>该方法相应地创建事务上下文并进行保序，并执行事务状态机，事务提交后相应地执行上文注册的一系列回调函数。</li>
-</ul>
-<pre><code class="language-C++">// ---------------------------
-// transactions
-
-int BlueStore::queue_transactions(
-    CollectionHandle &amp;ch,
-    vector&lt;Transaction&gt; &amp;tls,
-    TrackedOpRef op,
-    ThreadPool::TPHandle *handle)
-{
-  FUNCTRACE(cct);
-
-  // on_commoit: 事务提交完成之后的回调函数
-  // on_applied_sync: 同步调用执行，事务应用完成之后的回调函数
-  // on_applied: 在 Finisher 线程里异步调用执行，事务应用完成之后的回调函数
-  list&lt;Context *&gt; on_applied, on_commit, on_applied_sync;
-  ObjectStore::Transaction::collect_contexts(
-      tls, &amp;on_applied, &amp;on_commit, &amp;on_applied_sync);
-
-  // 计时开始
-  auto start = mono_clock::now();
-
-  Collection *c = static_cast&lt;Collection *&gt;(ch.get());
-
-  // 获取操作序列号，用于保序。
-  // 会判断 PG 是否已经关联 OpSeq，未关联则新建并关联 PG
-  OpSequencer *osr = c-&gt;osr.get();
-  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; ch &quot; &lt;&lt; c &lt;&lt; &quot; &quot; &lt;&lt; c-&gt;cid &lt;&lt; dendl;
-
-  // 创建 TransContext，并关联回调函数 on_commit
-  // prepare
-  TransContext *txc = _txc_create(static_cast&lt;Collection *&gt;(ch.get()), osr,
-                                  &amp;on_commit, op);
-
-  // With HM-SMR drives (and ZNS SSDs) we want the I/O allocation and I/O
-  // submission to happen atomically because if I/O submission happens in a
-  // different order than I/O allocation, we end up issuing non-sequential
-  // writes to the drive.  This is a temporary solution until ZONE APPEND
-  // support matures in the kernel.  For more information please see:
-  // https://www.usenix.org/conference/vault20/presentation/bjorling
-  if (bdev-&gt;is_smr())
-  {
-    atomic_alloc_and_submit_lock.lock();
-  }
-
-  // 将所有的写操作添加到 TransContext，并记录操作字节数
-  for (vector&lt;Transaction&gt;::iterator p = tls.begin(); p != tls.end(); ++p)
-  {
-    txc-&gt;bytes += (*p).get_num_bytes();
-    _txc_add_transaction(txc, &amp;(*p));
-  }
-
-  // 计算开销
-  _txc_calc_cost(txc);
-
-  // 更新 ONodes， shared_blobs
-  _txc_write_nodes(txc, txc-&gt;t);
-
-  // journal deferred items
-  if (txc-&gt;deferred_txn)
-  {
-    txc-&gt;deferred_txn-&gt;seq = ++deferred_seq;
-    bufferlist bl;
-    encode(*txc-&gt;deferred_txn, bl);
-    string key;
-    get_deferred_key(txc-&gt;deferred_txn-&gt;seq, &amp;key);
-    txc-&gt;t-&gt;set(PREFIX_DEFERRED, key, bl);
-  }
-
-  _txc_finalize_kv(txc, txc-&gt;t);
-
-#ifdef WITH_BLKIN
-  if (txc-&gt;trace)
-  {
-    txc-&gt;trace.event(&quot;txc encode finished&quot;);
-  }
-#endif
-
-  if (handle)
-    handle-&gt;suspend_tp_timeout();
-
-  // 记录 throttle 开始的时间
-  auto tstart = mono_clock::now();
-
-  // 事务提交到 Throttle (内部流控机制)
-  if (!throttle.try_start_transaction(
-          *db,
-          *txc,
-          tstart))
-  {
-    // ensure we do not block here because of deferred writes
-    dout(10) &lt;&lt; __func__ &lt;&lt; &quot; failed get throttle_deferred_bytes, aggressive&quot;
-             &lt;&lt; dendl;
-    ++deferred_aggressive;
-    deferred_try_submit();
-    {
-      // wake up any previously finished deferred events
-      std::lock_guard l(kv_lock);
-      if (!kv_sync_in_progress)
-      {
-        kv_sync_in_progress = true;
-        kv_cond.notify_one();
-      }
-    }
-    throttle.finish_start_transaction(*db, *txc, tstart);
-    --deferred_aggressive;
-  }
-
-  // 记录 throttle 完成时间
-  auto tend = mono_clock::now();
-
-  if (handle)
-    handle-&gt;reset_tp_timeout();
-
-  logger-&gt;inc(l_bluestore_txc);
-
-  // 处理事务状态，执行状态机，将 IO 请求交给块设备执行
-  // 该方法中为一系列事务状态机的转换，最终写操作完成后会执行 oncommit 的回调
-  // execute (start)
-  _txc_state_proc(txc);
-
-  if (bdev-&gt;is_smr())
-  {
-    atomic_alloc_and_submit_lock.unlock();
-  }
-
-  // 针对写完日志之后的回调操作，也就是所谓的 on_readable
-  // BliueStore 只会产生少量 WAL 到 RocksDB，所以写日志先于写数据完成
-  // we're immediately readable (unlike FileStore)
-  for (auto c : on_applied_sync)
-  {
-    c-&gt;complete(0);
-  }
-  if (!on_applied.empty())
-  {
-    if (c-&gt;commit_queue)
-    {
-      c-&gt;commit_queue-&gt;queue(on_applied);
-    }
-    else
-    {
-      finisher.queue(on_applied);
-    }
-  }
-
-#ifdef WITH_BLKIN
-  if (txc-&gt;trace)
-  {
-    txc-&gt;trace.event(&quot;txc applied&quot;);
-  }
-#endif
-
-  log_latency(&quot;submit_transact&quot;,
-              l_bluestore_submit_lat,
-              mono_clock::now() - start,
-              cct-&gt;_conf-&gt;bluestore_log_op_age);
-  log_latency(&quot;throttle_transact&quot;,
-              l_bluestore_throttle_lat,
-              tend - tstart,
-              cct-&gt;_conf-&gt;bluestore_log_op_age);
-  return 0;
-}
-</code></pre>
-<h3 id="repop_commit">repop_commit</h3>
-<ul>
-<li>在写完成后的回调函数中对应地执行 <code>repop_commit</code>，相应地构造 MOSDRepOpReply，再发送到集群。</li>
-</ul>
-<pre><code class="language-C++">void ReplicatedBackend::repop_commit(RepModifyRef rm)
-{
-  rm-&gt;op-&gt;mark_commit_sent();
-  rm-&gt;op-&gt;pg_trace.event(&quot;sup_op_commit&quot;);
-  rm-&gt;committed = true;
-
-  // send commit.
-  auto m = rm-&gt;op-&gt;get_req&lt;MOSDRepOp&gt;();
-  ceph_assert(m-&gt;get_type() == MSG_OSD_REPOP);
-  dout(10) &lt;&lt; __func__ &lt;&lt; &quot; on op &quot; &lt;&lt; *m
-           &lt;&lt; &quot;, sending commit to osd.&quot; &lt;&lt; rm-&gt;ackerosd
-           &lt;&lt; dendl;
-  ceph_assert(get_osdmap()-&gt;is_up(rm-&gt;ackerosd));
-
-  get_parent()-&gt;update_last_complete_ondisk(rm-&gt;last_complete);
-
-  MOSDRepOpReply *reply = new MOSDRepOpReply(
-      m,
-      get_parent()-&gt;whoami_shard(),
-      0, get_osdmap_epoch(), m-&gt;get_min_epoch(), CEPH_OSD_FLAG_ONDISK);
-  reply-&gt;set_last_complete_ondisk(rm-&gt;last_complete);
-  reply-&gt;set_priority(CEPH_MSG_PRIO_HIGH); // this better match ack priority!
-  reply-&gt;trace = rm-&gt;op-&gt;pg_trace;
-  get_parent()-&gt;send_message_osd_cluster(
-      rm-&gt;ackerosd, reply, get_osdmap_epoch());
-
-  log_subop_stats(get_parent()-&gt;get_logger(), rm-&gt;op, l_osd_sop_w);
-}
-</code></pre>
-<h3 id="do_repop_reply">do_repop_reply</h3>
-<ul>
-<li>MSG_OSD_REPOPREPLY 消息发送到了集群，又开始从头到尾的消息处理逻辑，在 _handle_message 中对该类型的消息进行处理，相应地执行 <code>do_repop_reply</code></li>
-</ul>
-<pre><code class="language-C++">void ReplicatedBackend::do_repop_reply(OpRequestRef op)
-{
-  static_cast&lt;MOSDRepOpReply *&gt;(op-&gt;get_nonconst_req())-&gt;finish_decode();
-
-  // 获取上文构造的 Reply Msg
-  auto r = op-&gt;get_req&lt;MOSDRepOpReply&gt;();
-  ceph_assert(r-&gt;get_header().type == MSG_OSD_REPOPREPLY);
-
-  op-&gt;mark_started();
-
-  // must be replication.
-  ceph_tid_t rep_tid = r-&gt;get_tid();
-  pg_shard_t from = r-&gt;from;
-
-  auto iter = in_progress_ops.find(rep_tid);
-  if (iter != in_progress_ops.end())
-  {
-    // 获取副本节点上正在处理的 op InProgressOp
-    InProgressOp &amp;ip_op = *iter-&gt;second;
-    const MOSDOp *m = nullptr;
-    if (ip_op.op)
-      m = ip_op.op-&gt;get_req&lt;MOSDOp&gt;();
-
-    if (m)
-      dout(7) &lt;&lt; __func__ &lt;&lt; &quot;: tid &quot; &lt;&lt; ip_op.tid &lt;&lt; &quot; op &quot; //&lt;&lt; *m
-              &lt;&lt; &quot; ack_type &quot; &lt;&lt; (int)r-&gt;ack_type
-              &lt;&lt; &quot; from &quot; &lt;&lt; from
-              &lt;&lt; dendl;
-    else
-      dout(7) &lt;&lt; __func__ &lt;&lt; &quot;: tid &quot; &lt;&lt; ip_op.tid &lt;&lt; &quot; (no op) &quot;
-              &lt;&lt; &quot; ack_type &quot; &lt;&lt; (int)r-&gt;ack_type
-              &lt;&lt; &quot; from &quot; &lt;&lt; from
-              &lt;&lt; dendl;
-
-    // oh, good.
-    // 检查响应消息中的 ACK 类型
-    if (r-&gt;ack_type &amp; CEPH_OSD_FLAG_ONDISK)
-    {
-      ceph_assert(ip_op.waiting_for_commit.count(from));
-      ip_op.waiting_for_commit.erase(from);
-      if (ip_op.op)
-      {
-        ip_op.op-&gt;mark_event(&quot;sub_op_commit_rec&quot;);
-        ip_op.op-&gt;pg_trace.event(&quot;sub_op_commit_rec&quot;);
-      }
-    }
-    else
-    {
-      // legacy peer; ignore
-    }
-
-    parent-&gt;update_peer_last_complete_ondisk(
-        from,
-        r-&gt;get_last_complete_ondisk());
-
-    // 检查 waiting_for_commit 是否为空
-    // 如果为空，继续向上回调。C_OSD_RepopCommit
-//   C_OSD_RepopCommit(PrimaryLogPG *pg, PrimaryLogPG::RepGather *repop)
-//       : pg(pg), repop(repop) {}
-//   void finish(int) override
-//   {
-//     pg-&gt;repop_all_committed(repop.get());
-//   }
-// };
-    if (ip_op.waiting_for_commit.empty() &amp;&amp;
-        ip_op.on_commit)
-    {
-      ip_op.on_commit-&gt;complete(0);
-      ip_op.on_commit = 0;
-      in_progress_ops.erase(iter);
-    }
-  }
-}
-</code></pre>
-<h3 id="repop_all_committed">repop_all_committed</h3>
-<ul>
-<li><code>PrimaryLogPG::repop_all_committed</code> 准备于客户端进行交互，调用 <code>eval_repop</code></li>
-</ul>
-<pre><code class="language-C++">void PrimaryLogPG::repop_all_committed(RepGather *repop)
-{
-  dout(10) &lt;&lt; __func__ &lt;&lt; &quot;: repop tid &quot; &lt;&lt; repop-&gt;rep_tid &lt;&lt; &quot; all committed &quot;
-           &lt;&lt; dendl;
-  repop-&gt;all_committed = true;
-  if (!repop-&gt;rep_aborted)
-  {
-    if (repop-&gt;v != eversion_t())
-    {
-      recovery_state.complete_write(repop-&gt;v, repop-&gt;pg_local_last_complete);
-    }
-    eval_repop(repop);
-  }
-}
-</code></pre>
-<h3 id="eval_repop">eval_repop</h3>
-<ul>
-<li>通过执行在 <code>execute_ctx</code> 函数中注册的 commit 回调，从而向客户端发送应答消息。</li>
-</ul>
-<pre><code class="language-C++">void PrimaryLogPG::eval_repop(RepGather *repop)
-{
-  dout(10) &lt;&lt; &quot;eval_repop &quot; &lt;&lt; *repop
-           &lt;&lt; (repop-&gt;op &amp;&amp; repop-&gt;op-&gt;get_req&lt;MOSDOp&gt;() ? &quot;&quot; : &quot; (no op)&quot;) &lt;&lt; dendl;
-
-  // 所有副本应答写入磁盘完成
-  // ondisk?
-  if (repop-&gt;all_committed)
-  {
-    dout(10) &lt;&lt; &quot; commit: &quot; &lt;&lt; *repop &lt;&lt; dendl;
-    for (auto p = repop-&gt;on_committed.begin();
-         p != repop-&gt;on_committed.end();
-         repop-&gt;on_committed.erase(p++))
-    {
-      // 执行回调
-      // ctx-&gt;register_on_commit(
-      // [m, ctx, this]() {
-      //   if (ctx-&gt;op)
-      //     log_op_stats(*ctx-&gt;op, ctx-&gt;bytes_written, ctx-&gt;bytes_read);
-
-      //   if (m &amp;&amp; !ctx-&gt;sent_reply)
-      //   {
-      //     MOSDOpReply *reply = ctx-&gt;reply;
-      //     ctx-&gt;reply = nullptr;
-      //     reply-&gt;add_flags(CEPH_OSD_FLAG_ACK | CEPH_OSD_FLAG_ONDISK);
-      //     dout(10) &lt;&lt; &quot; sending reply on &quot; &lt;&lt; *m &lt;&lt; &quot; &quot; &lt;&lt; reply &lt;&lt; dendl;
-      //     osd-&gt;send_message_osd_client(reply, m-&gt;get_connection());
-      //     ctx-&gt;sent_reply = true;
-      //     ctx-&gt;op-&gt;mark_commit_sent();
-      //   }
-      // });
-      (*p)();
-    }
-    // send dup commits, in order
-    auto it = waiting_for_ondisk.find(repop-&gt;v);
-    if (it != waiting_for_ondisk.end())
-    {
-      ceph_assert(waiting_for_ondisk.begin()-&gt;first == repop-&gt;v);
-      for (auto &amp;i : it-&gt;second)
-      {
-        int return_code = repop-&gt;r;
-        if (return_code &gt;= 0)
-        {
-          return_code = std::get&lt;2&gt;(i);
-        }
-        osd-&gt;reply_op_error(std::get&lt;0&gt;(i), return_code, repop-&gt;v,
-                            std::get&lt;1&gt;(i), std::get&lt;3&gt;(i));
-      }
-      waiting_for_ondisk.erase(it);
-    }
-
-    publish_stats_to_osd();
-
-    dout(10) &lt;&lt; &quot; removing &quot; &lt;&lt; *repop &lt;&lt; dendl;
-    ceph_assert(!repop_queue.empty());
-    dout(20) &lt;&lt; &quot;   q front is &quot; &lt;&lt; *repop_queue.front() &lt;&lt; dendl;
-    if (repop_queue.front() == repop)
-    {
-      RepGather *to_remove = nullptr;
-      while (!repop_queue.empty() &amp;&amp;
-             (to_remove = repop_queue.front())-&gt;all_committed)
-      {
-        repop_queue.pop_front();
-        for (auto p = to_remove-&gt;on_success.begin();
-             p != to_remove-&gt;on_success.end();
-             to_remove-&gt;on_success.erase(p++))
-        {
-          (*p)();
-        }
-        remove_repop(to_remove);
-      }
-    }
-  }
-}
-</code></pre>
 ]]></content>
     </entry>
 </feed>

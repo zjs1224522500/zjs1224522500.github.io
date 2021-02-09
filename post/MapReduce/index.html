@@ -1,0 +1,900 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MapReduce: Simplified Data Processing on Large Clusters | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+该篇文章来自于 OSDI2004，Google 当年率先提出的 MapReduce 框架，开启了分布式和大数据的纪元。
+
+
+
+Before Beginning
+
+为什么要读这篇论文呢？其实这篇文章之前也已经简单看过了，只是最近开始刷 M..." />
+    <meta name="keywords" content="cs-course,6.824,Paper,分布式" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1612869406508" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210208135434.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2021-02-08"><i class="fa fa-calendar"></i><span class="lately">1 天前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/MapReduce/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/MapReduce/"> </span>
+              </a>
+              <span id="/MapReduce/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/wAFV_pvXZ/" class="ctag ctag-0 ctag-wAFV_pvXZ" aria-label="">cs-course</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/VqiGqmxbod/" class="ctag ctag-1 ctag-VqiGqmxbod" aria-label="">6.824</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-2 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">MapReduce: Simplified Data Processing on Large Clusters</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>该篇文章来自于 OSDI2004，Google 当年率先提出的 MapReduce 框架，开启了分布式和大数据的纪元。</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="before-beginning">Before Beginning</h2>
+<ul>
+<li>为什么要读这篇论文呢？其实这篇文章之前也已经简单看过了，只是最近开始刷 MIT6.824，本来是想直接做相关 Lab 的，但是发现还是有整理不清楚的思路，觉得还是有必要回顾一下，那就多花点时间继续研读吧~</li>
+<li>网上关于 6.824 以及 MapReduce 的资料很多了，我在这里只是做一些简单的记录，如果有发现其他大佬做的比较好的笔记，也会贴在这里，以供膜拜学习。我的 6.824 系列的的博客介绍大抵都是如此。</li>
+<li>话不多说，学习开始~</li>
+</ul>
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li><strong>大致流程</strong>: 用户指定一个 map 函数来处理键/值对以生成一组中间键/值对，以及一个 reduce 函数来合并与同一中间键相关的所有中间值</li>
+<li><strong>为什么这么做？</strong> 是想充分利用不同机器的并行性来处理大量的数据，分别执行 map 和 reduce 任务来完成大数据任务，提高每个 host 的利用率。（也就是分布式系统的原型）</li>
+<li><strong>需要解决的问题：</strong>
+<ul>
+<li>数据输入的切分</li>
+<li>不同机器上执行的任务的调度</li>
+<li>机器故障处理</li>
+<li>机器间通信的管理</li>
+</ul>
+</li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<ul>
+<li><strong>根本矛盾</strong>：少数据量时单机能够直接运行简单的任务来完成相关计算，但面对大数据量的情况下，引入多计算实例组成的系统的复杂性和本身计算任务的简单性之间的矛盾。</li>
+<li><strong>思想起源</strong>：来自于 Lisp 语言的函数式编程思想中的 map/reduce 函数。
+<ul>
+<li>在 lisp 语言中，map 作为一个输入函数接受一个序列，然后处理每个序列中 value 值，然后 reduce 将最终的 map 计算出来的结果整理成最终程序输出。</li>
+</ul>
+</li>
+</ul>
+<h2 id="programming-model">Programming Model</h2>
+<ul>
+<li>MapReduce 本质是一种编程模型
+<ul>
+<li>Map: 由用户编写，接受一个输入对并生成一组中间键/值对</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-Java">// map (k1,v1) → list(k2,v2)
+map(String key, String value): 
+    // key: document name 
+    // value: document contents 
+    for each word w in value: 
+        EmitIntermediate(w, &quot;1&quot;);
+</code></pre>
+<ul>
+<li>Reduce: 也由用户编写，接受一个中间键和该键的一组值。它将这些值合并在一起，形成一个可能更小的值集</li>
+</ul>
+<pre><code class="language-Java">// reduce (k2,list(v2)) → list(v2)
+reduce(String key, Iterator values): 
+    // key: a word 
+    // values: a list of counts 
+    int result = 0; 
+    for each v in values: 
+        result += ParseInt(v); 
+    Emit(AsString(result));
+</code></pre>
+<ul>
+<li><strong>应用实例</strong>：
+<ul>
+<li>Distributed Grep</li>
+<li>Count of URL Access Frequency：map &lt;URL, 1&gt;, reduce &lt;URL, total count&gt;</li>
+<li>Reverse Web-Link Graph: map &lt;target, source&gt;, reduce &lt;target, list(source)&gt;</li>
+<li>Term-Vector per Host</li>
+<li>Inverted Index: map &lt;word, document ID&gt;, reduce &lt;word, list(document ID)&gt;</li>
+<li>Distributed Sort</li>
+</ul>
+</li>
+</ul>
+<h2 id="implementation">Implementation</h2>
+<ul>
+<li>Map 函数分布在多个机器上，相应地自动将输入数据划分为 M 份，然后可以由分布了 Map 函数的机器并行处理这些数据。而对于 Reduce 则是将中间数据划分为 R 份，通常需要使用一个分割函数，常见的就是 <code>hash(key) mod R</code> 来将中间 Key 进行区分。</li>
+<li>下图演示了整个 MapReduce 的流程，当用户程序调用 MapReduce 函数时将按照以下顺序执行：
+<ul>
+<li>
+<ol>
+<li>MapReduce Library 首先将输入文件划分为 M 个分片，每个分片大小通常为 16MB or 64MB，可以由用户控制，然后开始将程序拷贝到各个机器上，也就是图中的 <strong>fork</strong> 过程</li>
+</ol>
+</li>
+<li>
+<ol start="2">
+<li>fork 的过程中会有一个特殊的情况，即 master 节点上运行的程序。剩下的 worker 对应执行的任务都是由 master 分配的，有 M 个 map task 和 R 个 reduce task 需要分配，master 选择空闲的 worker 来执行 map 或者 reduce task。</li>
+</ol>
+</li>
+<li>
+<ol start="3">
+<li>被分配到 map task 的 worker 首先读取分片的数据内容，它从输入数据中解析键/值对，并将每对键/值传递给用户定义的 Map 函数，然后由 Map 产生的中间键值对将被缓冲在内存中；</li>
+</ol>
+</li>
+<li>
+<ol start="4">
+<li>缓冲在内存中的中间数据将定期执行刷回操作写到磁盘，然后再由用户定义的分割函数执行将中间数据分割为 R 个区域，这些原本缓冲在内存中的数据持久化到磁盘之后的地址将传递给 master，然后 master 负责告诉 reduce task worker 这些数据在哪里。</li>
+</ol>
+</li>
+<li>
+<ol start="5">
+<li>执行 reduce task 的 worker 在接收到来自 master 的数据地址的通知之后，使用 RPC 来从 map worker 的本地磁盘中读取数据，当一个 reducer 读取到了所有的中间数据之后，就可以根据中间键对它进行排序，以便将所有出现的相同键组合在一起。之所以需要排序，是因为通常有许多不同的键映射到同一个reduce任务。如果中间数据量太大，无法装入内存，则使用外部排序。</li>
+</ol>
+</li>
+<li>
+<ol start="6">
+<li>reduce worker 迭代已排序的中间数据，对于遇到的每个惟一的中间键，它将键和相应的中间值集传递给用户的 reduce 函数。Reduce 函数的输出被追加到这个 Reduce 分区的最终输出文件中；</li>
+</ol>
+</li>
+<li>
+<ol start="7">
+<li>所有的 map 任务和 reduce 任务都完成后，master 唤醒用户程序。此时，用户程序中的MapReduce 调用返回到用户程序。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210208135434.png" alt="20210208135434" loading="lazy"></li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="master-data-structures">Master Data Structures</h3>
+<ul>
+<li>master 节点保存了几个数据结构：
+<ul>
+<li>对于每个 map 和 reduce task，它存储了 task 对应的状态（idle, in-progress, completed）</li>
+<li>worker machine 的标识（非空闲任务运行所在的机器）</li>
+</ul>
+</li>
+<li>master 是一个管道，通过它将中间文件区域的位置从 map task 传播到 reduce task。因此，对于每个完成的 map task，master 存储了 map task 产生的 R 个中间文件区域的位置和大小，当 map task 完成时，master 将接收对该位置和大小信息的更新。信息被递增地推送给正在进行 reduce task 的 worker。</li>
+</ul>
+<h3 id="fault-tolerance">Fault Tolerance</h3>
+<ul>
+<li>由于 MapReduce 库被设计用来帮助处理使用成百上千台机器的大量数据，所以这个库必须能够优雅地容忍机器故障。</li>
+</ul>
+<h4 id="worker-failure">Worker Failure</h4>
+<ul>
+<li>master 周期地 ping 每个 worker，如果在确定时间内未收到对应的响应，则认为该 worker 宕机，标记该 worker 为 failed，由 worker <strong>已经完成</strong>的任何 map task 都将被重置回初始的空闲 <em>idle</em> 状态，因此有资格对其他 worker 进行重新调度，类似地，在一个失败的 worker 上<strong>正在进行</strong>的任何 map task 或reduce task 也会被重置为空闲，并可以重新调度。</li>
+<li>在发生故障时，完成的 map task 将被重新执行，因为它们的输出存储在故障机器的本地磁盘上，因此无法访问。<strong>已完成的 reduce 任务</strong>不需要重新执行，因为它们的输出存储在全局文件系统中。</li>
+<li>假设一个 map task A 一开始由 A 执行，之后由 B 执行（因为 A failed），所有正在执行 reduce task 的 workers 将被通知重新执行，任何尚未从 worker A 读取数据的 reduce task 都将从 worker B 读取数据。</li>
+</ul>
+<h4 id="master-failure">Master Failure</h4>
+<ul>
+<li>让 master 定期对上面描述的 master 节点存取的数据结构做 checkpoint 很容易。如果 master task 失效，可以从最后一个检查点状态启动一个新的副本。然而，考虑到只有一个主机，它的失败是不太多见，因此，如果 master 失败，我们当前的实现将终止 MapReduce 计算。客户端可以检查这种情况，如果他们愿意，可以重试 MapReduce 操作。</li>
+</ul>
+<h4 id="semantics-in-the-presence-of-failures">Semantics in the Presence of Failures</h4>
+<ul>
+<li>当用户提供的 map 和 reduce 操作符是其输入值的确定性函数时，我们的分布式实现产生的输出与整个程序的非故障顺序执行产生的输出相同。</li>
+<li>我们依赖 map 和 reduce task 输出的原子提交来实现该属性。每个正在进行的任务都将其输出写入私有临时文件。一个 reduce task 生成一个这样的文件，map task 生成 R 个这样的文件(每个 reduce task 一个)。当 map task 完成时，worker 向 master 发送一条消息，并在消息中包含 R 临时文件的名称，如果 master 接收到一个<strong>已经完成</strong>的 map task 的完成消息，它将忽略该消息。否则，它将在主数据结构中记录 R 文件的名称。</li>
+<li>当一个 reduce task 完成之后，reduce worker 自动地将其临时输出文件重命名为最终输出文件。如果在多台机器上执行相同的 reduce 任务，那么将对相同的最终输出文件执行多个 rename 调用。我们依赖于底层文件系统提供的原子重命名操作，以确保最终文件系统状态只包含一次执行 reduce 任务所产生的数据。</li>
+<li>我们的 map 和 reduce 操作符绝大多数都是确定性的，在这种情况下，我们的语义等价于顺序执行，这使得程序员可以很容易地推断他们的程序行为。当 map 或 reduce 操作符是不确定的时，我们提供较弱但仍然合理的语义。在存在非确定性操作符的情况下，特定 reduce 任务 R1 的输出等价于由非确定性程序的顺序执行产生的 R1 的输出。然而，不同 reduce 任务 R2 的输出可能对应于非确定性程序的不同顺序执行产生的 R2 输出。</li>
+<li>考虑 map 任务 M 和 reduce 任务 R1 和 R2。设 e(Ri) 是所承诺的 Ri 的执行(只有一个这样的执行)。由于 e(R1) 可能读取了 M 的一次执行产生的输出，而 e(R2) 可能读取了 M 的另一次执行产生的输出，所以语义较弱。</li>
+</ul>
+<h3 id="locality">Locality</h3>
+<ul>
+<li>在我们的计算环境中，网络带宽是一个相对稀缺的资源。通过利用输入数据(由 GFS 管理)存储在组成集群的机器的本地磁盘这一事实，我们节约了网络带宽。GFS 将每个文件划分为64 MB的块，并在不同的机器上存储每个块的多个副本(通常是3个副本)，MapReduce master 将输入文件的位置信息考虑在内，并尝试在包含相应输入数据副本的机器上调度map任务。如果失败，它将尝试调度靠近该任务输入数据副本的 map 任务(例如，在与包含数据的机器在同一网络交换机上的工作机器上)。当在集群中相当一部分 worker 上运行大型MapReduce 操作时，大部分输入数据都是在本地读取的，不会消耗网络带宽</li>
+</ul>
+<h3 id="task-granularity">Task Granularity</h3>
+<ul>
+<li>如上所述，我们将 map 阶段细分为 M 个部分，将 reduce 阶段细分为 R 个部分。理想情况下，M 和 R 应该远远大于工作机器的数量。让每个 worker 执行许多不同的任务可以改善动态负载平衡，并在 worker 失败时加快恢复速度:它完成的许多 map 任务可以分散到所有其他 worker 机器上。</li>
+<li>在我们的实现中，M 和 R 的大小最多有多大是有实际限制的，因为如上所述，master 必须做出 O(M + R) 调度决策，并在内存中保持 O(M*R) 状态。(内存使用的常量是很小的:状态的 O(M∗R) 部分由每个 map任务/reduce任务对大约一个字节的数据组成。)</li>
+<li>此外，R 常常受到用户的限制，因为每个 reduce 任务的输出都以单独的输出文件结束。在实践中，我们倾向于选择 M，以便每个单独的任务大约有 16MB 到 64MB 的输入数据(以便上面描述的局部性优化最有效)，并且我们将 R 设为预期使用的工作机器数量的小倍数。我们经常使用 2000 台 worker 机器进行 M = 200000 和 R = 5000 的 MapReduce 计算。</li>
+</ul>
+<h3 id="backup-tasks">Backup Tasks</h3>
+<ul>
+<li>导致 MapReduce 操作总时间延长的一个常见原因是“掉线”(straggler)。一种需要异常长时间才能完成计算过程中最后几个 map 或 reduce 任务之一的机器。掉队者出现的原因有很多。例如，磁盘有问题的机器可能会经常出现可纠正错误，导致读性能从 30MB/s 降至 1MB/s。集群调度系统可能已经调度了机器上的其他任务，由于 CPU、内存、本地磁盘或网络带宽的竞争，导致它执行 MapReduce 代码的速度变慢。我们最近遇到的一个问题是，机器初始化代码中的一个bug导致了处理器缓存被禁用:受影响机器的计算速度降低了 100 倍以上。</li>
+<li>我们有一个一般性的机制来缓解掉队者的问题。当 MapReduce 操作接近完成时，master 会对剩余的正在执行的任务进行备份。只要主执行或备份执行完成，任务就被标记为完成。我们已经调优了这种机制，因此它通常不会增加操作使用的计算资源超过几个百分点。我们发现，这大大减少了完成大型 MapReduce 操作的时间。以5.3中所述的排序程序为例，关闭备份机制后，排序程序完成的时间会增加 44%。</li>
+</ul>
+<h2 id="refinements">Refinements</h2>
+<h3 id="partitioning-function">Partitioning Function</h3>
+<ul>
+<li>MapReduce 的用户指定他们想要的 reduce 任务/输出文件的数量(R)，使用中间键上的分区函数在这些任务之间对数据进行分区。提供了一个默认的分区函数，使用哈希(例如&quot; hash(key) mod R &quot;)。这往往会导致相当平衡的分区。然而，在某些情况下，通过键的其他函数来分区数据是有用的。例如，有时输出键是url，我们希望单个主机的所有条目都在同一个输出文件中结束。为了支持这种情况，MapReduce 库的用户可以提供一个特殊的分区函数。例如，使用&quot; hash(Hostname(urlkey)) mod R &quot;作为分区函数会导致来自同一主机的所有 url 最终出现在同一个输出文件中。</li>
+</ul>
+<h3 id="ordering-guarantees">Ordering Guarantees</h3>
+<ul>
+<li>我们保证在给定的分区中，中间键/值对按键的递增顺序进行处理。这种排序保证使得为每个分区生成有序的输出文件变得很容易，当输出文件格式需要支持按键进行有效的随机访问查找，或者输出的用户发现对数据进行排序很方便时，这很有用。</li>
+</ul>
+<h3 id="combiner-function">Combiner Function</h3>
+<ul>
+<li>在某些情况下，每个 map 任务产生的中间键有显著的重复，并且用户指定的 Reduce 函数是可交换的和关联的。单词计数示例就是一个很好的例子。由于单词频率倾向于遵循 Zipf 分布，每个 map 任务将产生数百或数千个 &lt;the, 1&gt; 形式的记录。所有这些计数将通过网络发送到一个 reduce 任务，然后由 reduce 函数相加产生一个数字。我们允许用户指定一个可选的Combiner函数，该函数在通过网络发送数据之前对数据进行部分合并。</li>
+<li>Combiner 函数在每一个执行 map task 上的机器执行，通常使用相同的代码来实现 combiner 和 reduce 函数，reduce 函数和 combiner 函数之间的唯一区别是 MapReduce 库如何处理函数的输出。reduce 函数的输出被写入最终的输出文件。combiner 函数的输出被写入一个中间文件，该文件将被发送到reduce 任务。</li>
+<li>部分 Combine 大大加快了 MapReduce 操作的某些类。</li>
+</ul>
+<h3 id="input-and-output-types">Input and Output Types</h3>
+<ul>
+<li>MapReduce 库支持以几种不同的格式读取输入数据。text 模式的输入将每一行视为键/值对：键是文件中的偏移量，值是行内容。另一种常见的支持格式存储按键排序的键/值对序列。每个输入类型实现都知道如何将自己分割成有意义的范围，以便作为单独的 map 任务进行处理(例如，文本模式的范围分割确保范围分割只发生在行边界)。用户可以通过提供一个简单的 <em>reader</em> 接口的实现来添加对新输入类型的支持，尽管大多数用户只使用少数预定义输入类型中的一种。</li>
+<li><em>reader</em> 并不一定需要提供从文件中读取的数据。例如，很容易定义从数据库或映射在内存中的数据结构中读取记录的 <em>reader</em>。</li>
+<li>以类似的方式，我们支持一组输出类型来生成不同格式的数据，并且用户代码很容易添加对新输出类型的支持。</li>
+</ul>
+<h3 id="side-effects">Side-effects</h3>
+<ul>
+<li>在某些情况下，MapReduce 的用户发现从他们的 map 或 reduce 操作生成辅助文件作为额外的输出是很方便的。我们依靠应用程序 writer 使这些副作用具有原子性和幂等性。通常，应用程序会写入一个临时文件，并在完全生成该文件后自动重命名该文件。</li>
+<li>我们不支持单个任务生成的多个输出文件的原子两阶段提交。因此，产生具有跨文件一致性要求的多个输出文件的任务应该是确定的。这种限制在实践中从来就不是问题。</li>
+</ul>
+<h3 id="skipping-bad-records">Skipping Bad Records</h3>
+<ul>
+<li>有时，用户代码中的错误会导致 Map 或 Reduce 函数在特定记录上崩溃。此类 bug 会导致 MapReduce 操作无法完成。通常的做法是修复 bug，但有时这是不可行的;这个 bug 可能存在于源代码不可用的第三方库中。此外，有时忽略一些记录是可以接受的，例如在对一个大数据集进行统计分析时。我们提供了一个可选的执行模式，MapReduce 库会检测哪些记录导致确定性崩溃，并跳过这些记录以便继续前进。</li>
+<li>每个工作进程都安装一个信号处理程序来捕获分割违规和总线错误。在调用 Map 或 Reduce 操作之前，MapReduce 库会将参数的序号存储在全局变量中。如果用户代码产生信号，信号处理器发送一个包含序列号的“最后一口气” UDP 包给 MapReduce master。当主服务器在一个特定的记录上看到多个失败时，它指示在下一次重新执行对应的 Map 或 Reduce 任务时应该跳过该记录。</li>
+</ul>
+<h3 id="local-execution">Local Execution</h3>
+<ul>
+<li>在 Map 或 Reduce 函数中调试问题可能会很棘手，因为实际的计算发生在分布式系统中，通常在几千台机器上，由 master 动态地做出工作分配决策。为了方便调试、分析和小规模测试，我们开发了 MapReduce 库的替代实现，在本地机器上顺序执行 MapReduce 操作的所有工作。控件提供给用户，以便计算可以限制到特定的映射任务。用户可以用一个特殊的标志来调用他们的程序，然后可以很容易地使用任何他们认为有用的调试或测试工具(例如gdb)。</li>
+</ul>
+<h3 id="status-information">Status Information</h3>
+<ul>
+<li>主服务器运行一个内部HTTP服务器，并导出一组状态页面供人们使用。状态页面显示了计算的进度，例如有多少任务已经完成，有多少任务正在进行，输入字节数，中间数据字节数，输出字节数，处理速率等。这些页面还包含指向每个任务生成的标准错误和标准输出文件的链接。用户可以使用这些数据来预测计算将花费多长时间，以及是否应该向计算中添加更多的资源。这些页面还可以用于计算何时会比预期的慢得多。</li>
+<li>此外，顶级状态页面显示哪些 worker 失败了，以及当他们失败时正在处理哪些 map 和 reduce 任务。当试图诊断用户代码中的错误时，此信息非常有用。</li>
+</ul>
+<h3 id="counters">Counters</h3>
+<ul>
+<li>MapReduce 库提供了一个计数器来计算各种事件的发生次数。例如，用户代码可能需要计算已处理的字的总数或索引的德文文档的数量，等等。</li>
+<li>要使用这个功能，用户代码创建一个命名的计数器对象，然后在 Map 或 Reduce 函数中适当地增加计数器。例如:</li>
+</ul>
+<pre><code class="language-C++">Counter* uppercase; 
+uppercase = GetCounter(&quot;uppercase&quot;);
+map(String name, String contents): 
+  for each word w in contents: 
+    if (IsCapitalized(w)): 
+      uppercase-&gt;Increment(); 
+    EmitIntermediate(w, &quot;1&quot;);
+</code></pre>
+<ul>
+<li>来自各个 worker 机器的计数器值定期传播到 master (在 ping 响应中附带)。master 聚合成功的 map 和 reduce 任务的计数器值，并在 MapReduce 操作完成时将它们返回给用户代码。当前计数器值也显示在 master 状态页面上，以便人们可以观看实时计算的进度。在聚合计数器值时，master 消除了重复执行同一个 map 或 reduce 任务的影响，以避免重复计算。(重复执行可能是由于我们使用了备份任务以及由于失败而重新执行任务引起的。)</li>
+<li>一些计数器值由 MapReduce 库自动维护，例如处理的输入键/值对的数量和产生的输出键/值对的数量。</li>
+<li>用户已经发现 counter 工具对于检查 MapReduce 操作的行为是非常有用的。例如，在一些 MapReduce 操作中，用户代码可能希望确保生成的输出对的数量恰好等于处理的输入对的数量，或者确保处理的德文文档的比例在处理的文档总数的某个可容忍的比例内。</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<ul>
+<li>MapReduce编程模型已经在谷歌上成功地用于许多不同的目的。我们认为这种成功有几个原因。首先，该模型易于使用，即使对于没有并行和分布式系统经验的程序员也是如此，因为它隐藏了并行化、容错、局部性优化和负载平衡的细节。其次，大量的问题可以通过MapReduce计算很容易地表达出来。例如，MapReduce被用于谷歌生产web搜索服务的数据生成、排序、数据挖掘、机器学习以及许多其他系统。第三，我们开发了一个MapReduce的实现，它可以扩展到由数千台机器组成的大型机器集群。该实现有效地利用了这些机器资源，因此适合用于在谷歌中遇到的许多大型计算问题。</li>
+<li>我们从这项工作中学到了一些东西。首先，对编程模型的限制使得并行化和分布式计算变得容易，并使这些计算具有容错性。其次，网络带宽是一种稀缺资源。因此，我们系统中的许多优化都旨在减少通过网络发送的数据量:局部性优化允许我们从本地磁盘读取数据，将中间数据的单个副本写入本地磁盘可以节省网络带宽。第三，冗余执行可以用来减少慢速机器的影响，并处理机器故障和数据丢失。</li>
+</ul>
+<hr>
+<ul>
+<li>论文的部分到此结束，后面展开讲一下 MapReduce 的其他东西。</li>
+</ul>
+<h2 id="other">Other</h2>
+<ul>
+<li>MapReduce 最重要的贡献：MR takes care of, and hides, all aspects of distribution!</li>
+</ul>
+<h3 id="problems">Problems</h3>
+<ul>
+<li><strong>What if the master gives two workers the same Map() task?</strong>
+<ul>
+<li>Perhaps the master incorrectly thinks one worker died. it will tell Reduce workers about only one of them.</li>
+</ul>
+</li>
+<li><strong>What if the master gives two workers the same Reduce() task?</strong>
+<ul>
+<li>they will both try to write the same output file on GFS! atomic GFS rename prevents mixing; one complete file will be visible.</li>
+</ul>
+</li>
+<li><strong>What if a single worker is very slow -- a &quot;straggler&quot;?</strong>
+<ul>
+<li>perhaps due to flakey hardware. master starts a second copy of last few tasks.</li>
+</ul>
+</li>
+<li><strong>What if a worker computes incorrect output, due to broken h/w or s/w?</strong>
+<ul>
+<li>too bad! MR assumes &quot;fail-stop&quot; CPUs and software.</li>
+</ul>
+</li>
+</ul>
+<h3 id="current-status">Current status</h3>
+<ul>
+<li>Hugely influential (Hadoop, Spark, &amp;c).</li>
+<li>Probably no longer in use at Google.
+<ul>
+<li>Replaced by Flume / FlumeJava (see paper by Chambers et al).</li>
+<li>GFS replaced by Colossus (no good description), and BigTable.</li>
+</ul>
+</li>
+</ul>
+<h3 id="conclusion-2">Conclusion</h3>
+<ul>
+<li>MapReduce single-handedly made big cluster computation popular.
+<ul>
+<li>-Not the most efficient or flexible.</li>
+<li>+Scales well.</li>
+<li>+Easy to program -- failures and data movement are hidden.</li>
+</ul>
+</li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206231108.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/license/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2021-02-06">2021-02-06</time>
+                  <h4 class="title white no-margin">What is license for source code?</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/MapReduce/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210208135434.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-02-08">2021-02-08</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/MapReduce/">MapReduce: Simplified Data Processing on Large Clusters</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/license/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206231108.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-02-06">2021-02-06</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/license/">What is license for source code?</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/Dostoevsky/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210112173749.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-01-12">2021-01-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/Dostoevsky/">Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Key-Value Stores via Adaptive Removal of Superfluous Merging</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/wAFV_pvXZ/" class="ctag ctag-0 ctag-wAFV_pvXZ" aria-label="">cs-course</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/VqiGqmxbod/" class="ctag ctag-1 ctag-VqiGqmxbod" aria-label="">6.824</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-2 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-3 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-4 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-5 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-6 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-7 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-8 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-9 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-10 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-11 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-12 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-13 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-14 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-15 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-16 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-17 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-18 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-19 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-20 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-21 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-22 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-23 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-24 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-25 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-26 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-27 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-28 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-29 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-30 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-31 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-32 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-33 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-34 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-35 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-36 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-37 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-38 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-39 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-40 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-41 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 107 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>
