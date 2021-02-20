@@ -2,7 +2,7 @@
   <head>
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>AI | Elvis Zhang</title>
+<title>Reading Group Notes | Elvis Zhang</title>
 <meta name="description" content="The easy way or the right way." />
 <link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
 <link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
@@ -16,11 +16,21 @@
 <script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
 <script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
 <script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+参加 Systems Reading Group 记录的论文笔记。
+
+
+
+System Reading Group
+
+Group 介绍以及 Presentation 安排： https://learn-sys.github.io/cn/..." />
+    <meta name="keywords" content="cs-course,Paper" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
   </head>
   <body>
-    <!-- start: #wrapper -->
-    <div class="wrapper">
-      
             <header id="header" class="grid-container">
         <!-- start: .menu-wrapper -->
         <div class="menu-mobile"> 
@@ -87,45 +97,186 @@
         </div>
       </div>
 
-      <main id="home" class="main fullcover no-sidebar content">
-        <div class="grid-container module-wrapper enable-masonry aos-init aos-animate" data-aos="fade-up">
-        <div class="epcl-page-wrapper">
-          <div class="left-content grid-70 np-mobile widget_epcl_related_articles">
-                
-            <!-- start: .articles -->
-            <div class="main-article post">
-  <h2 class="year"># AI</h2>
-    
-      <article class="item default grid-33 tablet-grid-50 np-mobile">
-        <a href="https://blog.shunzi.tech/post/AI-for-Systems-index/" class="thumb hover-effect">
-          <span class="fullimage cover" style="display: block;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200714203149.png');"></span>
-        </a>
-        <div class="info gradient-effect">
-          <time datetime="2020-07-14">2020-07-14</time>
-          <h4 class="title usmall">
-            <a href="https://blog.shunzi.tech/post/AI-for-Systems-index/">AI For System Papers Index</a>
-          </h4>
-        </div>
-      </article>
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
 
-    
-    <div class="clear"></div>
-</div>
-            <!-- end: .articles -->
-            
-                        <div class="epcl-pagination section">
-              <div class="nav">
-                
-                
-              </div>
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210220221954.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2021-02-19"><i class="fa fa-calendar"></i><span class="lately">1 天前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/ReadingGroup/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/ReadingGroup/"> </span>
+              </a>
+              <span id="/ReadingGroup/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
             </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/wAFV_pvXZ/" class="ctag ctag-0 ctag-wAFV_pvXZ" aria-label="">cs-course</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-1 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Reading Group Notes</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>参加 Systems Reading Group 记录的论文笔记。</li>
+</ul>
+</blockquote>
+<!--more-->
+<h1 id="system-reading-group">System Reading Group</h1>
+<ul>
+<li>Group 介绍以及 Presentation 安排： https://learn-sys.github.io/cn/reading/</li>
+<li>THU AOS 2020: http://os.cs.tsinghua.edu.cn/oscourse/AOS2020</li>
+</ul>
+<h2 id="week-1-operating-system">Week 1: Operating System</h2>
+<h3 id="course-notes">Course Notes</h3>
+<ul>
+<li>Video: THU AOS P7 - P11</li>
+</ul>
+<h4 id="os-architecture-structure">OS Architecture &amp; Structure</h4>
+<ul>
+<li><strong>OS Structure</strong>:
+<ul>
+<li>Simple kernel</li>
+<li>Monolithic kernel</li>
+<li>Micro kernel</li>
+<li>Exokernel</li>
+<li>VMM(Virtual Machine Monitor), etc...</li>
+</ul>
+</li>
+<li><strong>Monolithic kernel</strong>
+<ul>
+<li>UNIX Arch<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210219163131.png" alt="20210219163131" loading="lazy"></li>
+<li>Linux Arch<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210219163153.png" alt="20210219163153" loading="lazy"></li>
+</ul>
+</li>
+<li><strong>Micro kernel</strong>
+<ul>
+<li><strong>微内核：功能相对较少的内核，只提供某些核心功能。从而相比于单体内核，把很多单体内核中的事情放到用户空间去做，解耦了内核的各个 features，让整个系统的稳定性和灵活性得到了提升。但也就因为 IPC 的开销导致性能表现不尽如人意。</strong></li>
+<li>Kernel with minimal features</li>
+<li>Moves as much from the kernel into user space
+<ul>
+<li>Address spaces</li>
+<li>Interprocess communication (IPC)</li>
+<li>Scheduling</li>
+</ul>
+</li>
+<li>Benefits
+<ul>
+<li>Flexibility</li>
+<li>Safety</li>
+<li>Modularity</li>
+</ul>
+</li>
+<li>Detriments (Poor Performance)
+<ul>
+<li>Address spaces</li>
+<li>Interprocess communication (IPC)</li>
+<li>Scheduling</li>
+</ul>
+</li>
+<li><strong>Mach</strong><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210219165141.png" alt="20210219165141" loading="lazy"></li>
+<li><strong>L4</strong> - Microkernel– L4Second generation microkernel
+<ul>
+<li>synchronous IPCs –&gt; async IPCs (like epoll in Linux)</li>
+<li>smaller, Mach 3(330 KB) –&gt; L4 (12KB)</li>
+<li>IPC security checks moved to user process</li>
+<li>IPC is hardware dependent</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>Exokernel</strong>
+<ul>
+<li><strong>Exokernel 要做的事情其实是把内核也近乎给 PASS 掉，尽可能减少抽象层次，允许应用程序直接访问硬件，而ExoKernel只负责保护和分配系统资源。说白了就是把硬件资源都直接交给应用程序自己来组织了，因为有大量的应用程序想要自己独立控制可管理硬件，而不需要你操作系统层面的过多干涉。</strong><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210219165849.png" alt="20210219165849" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210219165610.png" alt="20210219165610" loading="lazy"></li>
+</ul>
+</li>
+</ul>
+<h3 id="paper-1-the-multikernel-a-new-os-architecture-for-scalable-multicore-systems">Paper 1: The Multikernel: A new OS architecture for scalable multicore systems</h3>
+<ul>
+<li><strong>SOSP09</strong></li>
+</ul>
+<h4 id="abstract">Abstract</h4>
+<ul>
+<li>普通计算机系统包含越来越多的处理器核心，并呈现出越来越多的架构权衡，包括内存层次结构、互连、指令集和变体，以及IO配置。 以前的高性能计算系统在特定情况下进行了扩展，但是现代客户机和服务器工作负载的动态特性，加上不可能针对所有工作负载和硬件变体静态地优化操作系统，对操作系统结构构成了严重的挑战。</li>
+<li>我们认为，迎接未来多核硬件挑战的最好方法是拥抱机器的网络化本质，重新思考使用来自分布式系统的思想的操作系统架构。我们研究了一种新的操作系统结构，即 Multikernel，它将机器视为一个由独立核心组成的网络，假定在最低层次上没有核间共享，并将传统的操作系统功能转移到一个通过消息传递进行通信的分布式进程系统。</li>
+<li>我们已经实现了一个多内核操作系统来证明这种方法是有前途的，并且我们描述了操作系统的传统的可伸缩性问题(如内存管理)是如何通过消息有效地重新解决的，以及如何利用分布式系统和网络的洞察力。在多核系统上对我们的原型的评估表明，即使在现在的机器上，多内核的性能也可以与传统的相媲美，并且可以更好地扩展以支持未来的硬件。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210220221342.png" alt="20210220221342" loading="lazy"></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210208135434.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/MapReduce/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2021-02-08">2021-02-08</time>
+                  <h4 class="title white no-margin">MapReduce: Simplified Data Processing on Large Clusters</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
             
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
           </div>
-          </div>
-        </div>
       </main>
 
-        <footer id="footer" class="grid-container">
+          <footer id="footer" class="grid-container">
         <div class="widgets row gradient-effect">
             <div class="default-sidebar border-effect">
               <div class="grid-33 tablet-grid-50 mobile-grid-100">
@@ -550,6 +701,9 @@
     })
 </script>
     
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
 
     </div>
     <!-- end: #wrapper -->
