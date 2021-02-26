@@ -87,7 +87,7 @@ Group 介绍以及 Presentation 安排： https://learn-sys.github.io/cn/..." />
       <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
         <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
           <div class="search-wrapper section">
-            <form id="gridea-search-form" data-update="1613831126016" action="/search/index.html" class="search-form" _lpchecked="1">
+            <form id="gridea-search-form" data-update="1614329837722" action="/search/index.html" class="search-form" _lpchecked="1">
               <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
               <button type="submit" class="submit" aria-label="Submit">
                 <i class="fa fa-search-line"></i>
@@ -102,7 +102,7 @@ Group 介绍以及 Presentation 安排： https://learn-sys.github.io/cn/..." />
         <div class="center content">
           <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210220221954.png');">
             <div class="meta top"> 
-              <time class="meta-info" style="float:left;" datetime="2021-02-19"><i class="fa fa-calendar"></i><span class="lately">1 天前</span></time>
+              <time class="meta-info" style="float:left;" datetime="2021-02-19"><i class="fa fa-calendar"></i><span class="lately">7 天前</span></time>
               
               <a href="https://blog.shunzi.tech/post/ReadingGroup/#comments" class="comments meta-info" title="">
                 <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/ReadingGroup/"> </span>
@@ -211,13 +211,50 @@ Group 介绍以及 Presentation 安排： https://learn-sys.github.io/cn/..." />
 <h3 id="paper-1-the-multikernel-a-new-os-architecture-for-scalable-multicore-systems">Paper 1: The Multikernel: A new OS architecture for scalable multicore systems</h3>
 <ul>
 <li><strong>SOSP09</strong></li>
+<li><strong>SIGOPS Hall of Fame Award 2020</strong></li>
 </ul>
 <h4 id="abstract">Abstract</h4>
 <ul>
 <li>普通计算机系统包含越来越多的处理器核心，并呈现出越来越多的架构权衡，包括内存层次结构、互连、指令集和变体，以及IO配置。 以前的高性能计算系统在特定情况下进行了扩展，但是现代客户机和服务器工作负载的动态特性，加上不可能针对所有工作负载和硬件变体静态地优化操作系统，对操作系统结构构成了严重的挑战。</li>
 <li>我们认为，迎接未来多核硬件挑战的最好方法是拥抱机器的网络化本质，重新思考使用来自分布式系统的思想的操作系统架构。我们研究了一种新的操作系统结构，即 Multikernel，它将机器视为一个由独立核心组成的网络，假定在最低层次上没有核间共享，并将传统的操作系统功能转移到一个通过消息传递进行通信的分布式进程系统。</li>
-<li>我们已经实现了一个多内核操作系统来证明这种方法是有前途的，并且我们描述了操作系统的传统的可伸缩性问题(如内存管理)是如何通过消息有效地重新解决的，以及如何利用分布式系统和网络的洞察力。在多核系统上对我们的原型的评估表明，即使在现在的机器上，多内核的性能也可以与传统的相媲美，并且可以更好地扩展以支持未来的硬件。<br>
+<li>我们已经实现了一个多内核操作系统来证明这种方法是有前途的，并且我们描述了操作系统的传统的可伸缩性问题(如内存管理)是如何通过消息有效地重新解决的，以及如何利用分布式系统和网络的洞察力。在多核系统上对我们的原型的评估表明，即使在现在的机器上，多内核的性能也可以与传统的相媲美，并且可以更好地扩展以支持未来的硬件。</li>
+</ul>
+<h4 id="problems">Problems</h4>
+<ul>
+<li>随着不断变化的技术对摩尔定律的限制，处理器架构变得越来越多样化，且逐渐转向异构化，并向可扩展的架构发展，以适应高性能的应用。传统的单体操作系统在解决可伸缩性问题和针对不同硬件结构进行优化方面面临着巨大的挑战。
+<ul>
+<li>Systems are increasingly diverse</li>
+<li>Cores are increasingly diverse</li>
+<li>The interconnect matters</li>
+<li>Messages cost less than shared memory</li>
+<li>Cache coherence is not a panacea</li>
+<li>Messages are getting easier</li>
+</ul>
+</li>
+<li>本文作者尝试通过在内核之间使用显式消息传递和在内核之间复制内核状态来解决这个问题，而不是使用共享内存模型。他们的另一个主要目标是使这个操作系统与硬件无关，不针对任何机器架构。<br>
 <img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210220221342.png" alt="20210220221342" loading="lazy"></li>
+</ul>
+<h4 id="contributions">Contributions</h4>
+<ul>
+<li>多内核操作系统的主要贡献嵌入在它们的三个设计原则中：
+<ul>
+<li>通过消息传递显式地实现内核间通信</li>
+<li>使操作系统结构与硬件无关</li>
+<li>在内核之间复制内核状态</li>
+</ul>
+</li>
+<li>该系统侧重于非共享内存模型，通过消息的显式通信来维护缓存的一致性。基于以上原则，设计实现了 MultiKernel 原型 Barrelfish<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210224113033.png" alt="20210224113033" loading="lazy"></li>
+</ul>
+<h2 id="week-2-virtualization">Week 2: Virtualization</h2>
+<h3 id="course-notes-2">Course Notes</h3>
+<ul>
+<li>Video
+<ul>
+<li>THU AOS P12 - P21</li>
+<li>IPADS MOS P70 - P87</li>
+</ul>
+</li>
 </ul>
 
                 </div>
