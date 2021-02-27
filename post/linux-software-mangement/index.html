@@ -2,7 +2,7 @@
   <head>
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Fast RDMA-based Ordered Key-Value Store using Remote Learned Caches | Elvis Zhang</title>
+<title>Linux Software Management | Elvis Zhang</title>
 <meta name="description" content="The easy way or the right way." />
 <link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
 <link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
@@ -19,14 +19,16 @@
     <meta name="referrer" content="never">
     <meta name="description" content="
 
-该篇文章来自于 OSDI2020 Fast RDMA-based Ordered Key-Value Store using Remote Learned Cache
+Linux 软件包管理安装。
 
 
 
+参考书目/链接
 
-
-很久没看 LSM tree 的文章了，恰好这几天 OSDI..." />
-    <meta name="keywords" content="Paper,存储,LSM" />
+Linux 就该这么学：Linux软件包管理基本操作入门
+segmentfault: Linux系统中软件的“四”种安装原理详解
+博客园：Linux下rpm、yum和源码三种安装方式..." />
+    <meta name="keywords" content="工具,Linux" />
     <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
     <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
   </head>
@@ -100,27 +102,25 @@
       <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
 
         <div class="center content">
-          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201107165512.png');">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210226165557.png');">
             <div class="meta top"> 
-              <time class="meta-info" style="float:left;" datetime="2020-11-06"><i class="fa fa-calendar"></i><span class="lately">4 个月前</span></time>
+              <time class="meta-info" style="float:left;" datetime="2021-02-26"><i class="fa fa-calendar"></i><span class="lately">17 小时前</span></time>
               
-              <a href="https://blog.shunzi.tech/post/osdi-xstore/#comments" class="comments meta-info" title="">
-                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/osdi-xstore/"> </span>
+              <a href="https://blog.shunzi.tech/post/linux-software-mangement/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/linux-software-mangement/"> </span>
               </a>
-              <span id="/osdi-xstore/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              <span id="/linux-software-mangement/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
               
             </div>
             <div class="info">
               <div class="tags ">
                 
-                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-0 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-0 ctag-hbaTDSglx-" aria-label="">工具</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-1 ctag-3zCwFWPHxH" aria-label="">存储</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-2 ctag-_jfuTNqah" aria-label="">LSM</a>
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-1 ctag-EO3XpMf_y" aria-label="">Linux</a>
                     
               </div>
-              <h1 class="title ularge white bold">Fast RDMA-based Ordered Key-Value Store using Remote Learned Caches</h1>
+              <h1 class="title ularge white bold">Linux Software Management</h1>
             </div>
           </div>
         </div>  
@@ -132,17 +132,447 @@
                 <div class="text">
                   <blockquote>
 <ul>
-<li>该篇文章来自于 OSDI2020 Fast RDMA-based Ordered Key-Value Store using Remote Learned Cache</li>
+<li>Linux 软件包管理安装。</li>
 </ul>
 </blockquote>
 <!--more-->
-<blockquote>
+<h2 id="参考书目链接">参考书目/链接</h2>
 <ul>
-<li>很久没看 LSM tree 的文章了，恰好这几天 OSDI2020 开了，果不其然还是有 LSM-tree 相关的，而且是和学习索引结合的，之前对  Learned Index 也是一知半解，所以拜读了一下。</li>
-<li>这篇文章从写作和行文的角度讲写的特别的清楚，实验做的可能是我见过的最充分的，从一开始发现问题就开始用了大量实验来证明，后续的负载测试也极其丰富，回答了读者可能会有的各种各样的问题。值得一读。</li>
+<li><a href="https://www.linuxprobe.com/linux-basic-manage.html">Linux 就该这么学：Linux软件包管理基本操作入门</a></li>
+<li><a href="https://segmentfault.com/a/1190000011325357">segmentfault: Linux系统中软件的“四”种安装原理详解</a></li>
+<li><a href="https://www.cnblogs.com/zwj-linux/p/11643033.html">博客园：Linux下rpm、yum和源码三种安装方式简介</a></li>
+<li><a href="https://www.ibm.com/developerworks/cn/linux/l-rpm1/index.html">IBM Developer - 构建和分发包</a></li>
 </ul>
+<h2 id="软件包">软件包</h2>
+<h3 id="windows">Windows</h3>
+<ul>
+<li>开始介绍 Linux 软件包之前，先大致回忆一下 Windows 场景下的我们常常使用的软件包形态。</li>
+<li>Win 环境下：
+<ul>
+<li>大量的软件应用程序都是使用诸如 .exe/.msi 等类型的文件进行安装，直接运行该安装程序，按照步骤勾选相应的可选配置就能安装对应的软件。
+<ul>
+<li>MSI 就是 microsoft installer 的简写，msi 文件就是 window installer 的数据包，把所有和安装文件相关的内容封装在一个包里。</li>
+<li>exe 是一个安装引导程序。主要是用于检查安装的环境，当检查成功后，会自动再安装 msi 文件。</li>
+</ul>
+</li>
+<li>除了安装程序以外，常常还有一些压缩包的形式来安装软件（也就是所谓的绿色版），本质就是把程序的全部数据以及依赖的环境给压缩到一个文件夹中，而下载该文件夹就可以直接执行其中保存的可执行程序。</li>
+</ul>
+</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210225220304.png" alt="20210225220304" loading="lazy"></figure>
+<h3 id="linux">Linux</h3>
+<ul>
+<li>大多数现代类 Unix 操作系统都提供了一个集中的软件包管理机制，以帮助用户搜索、安装和管理软件。而软件通常以「包」的形式存储在仓库「repository」中，对软件包的使用和管理被称为包管理。</li>
+<li>Linux 包的基本组成部分通常有：共享库、应用程序、服务和文档。</li>
+<li>Linux 软件包分类:
+<ul>
+<li>源码包</li>
+<li>二进制包（RPM/DEB包）</li>
+<li>yum/apt 源在线安装</li>
+<li>脚本安装包（本质还是源码包和二进制包）</li>
+</ul>
+</li>
+</ul>
+<h2 id="linux-软件包管理">Linux 软件包管理</h2>
+<h3 id="软件包管理系统">软件包管理系统</h3>
+<ul>
+<li>大多数包管理系统是建立在包文件上的集合，包文件通常包含编译好的二进制文件和其它资源组成的：软件、安装脚本、元数据及其所需的依赖列表。</li>
+<li>因为 Linux 有很多发行版，各自的管理系统也有一定的差异</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>系统</th>
+<th>格式</th>
+<th>工具</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Debian</td>
+<td>.deb</td>
+<td>apt, apt-cache、apt-get、dpkg</td>
+</tr>
+<tr>
+<td>Ubuntu</td>
+<td>.deb</td>
+<td>apt、apt-cache、apt-get、dpkg</td>
+</tr>
+<tr>
+<td>CentOS</td>
+<td>.rpm</td>
+<td>yum</td>
+</tr>
+<tr>
+<td>Fedora</td>
+<td>.rpm</td>
+<td>dnf</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Debian 及其衍生产品如：Ubuntu、Linux Mint 和 Raspbian 的包格式为.deb文件，APT 是最常见包操作命令，可：搜索库、安装包及其依赖和管理升级。而要直接安装现成.deb包时需要使用dpkg命令。</li>
+<li>CentOS、Fedora 及 Red Hat 系列 Linux 使用RPM包文件，并使用yum命令管理包文件及与软件库交互。在最新的 Fedora 版本中，yum命令已被dnf取代进行包管理。</li>
+</ul>
+<h3 id="常见操作">常见操作</h3>
+<ul>
+<li>更新本地包数据库列表：
+<ul>
+<li>apt-get update</li>
+<li>yum check-update</li>
+<li>dnf check-update</li>
+</ul>
+</li>
+<li>升级已安装的包：
+<ul>
+<li>apt-get upgrade</li>
+<li>apt-get dist-upgrade</li>
+<li>yum update /dnf upgrade</li>
+</ul>
+</li>
+<li>查找/搜索软件包：
+<ul>
+<li>apt-cache search xxx</li>
+<li>yum search xxx</li>
+<li>yum search all xxx</li>
+<li>dnf search xxx</li>
+<li>dnf search all xxx</li>
+</ul>
+</li>
+<li>查看某个软件包信息:
+<ul>
+<li>apt-cache show [pkg_name]</li>
+<li>dpkg -s [pkg_name] (显示包的安装状态)</li>
+<li>yum info [pkg_name]</li>
+<li>yum deplist [pkg_name] （列出包的依赖）</li>
+<li>dnf info  [pkg_name]</li>
+<li>dnf repoquery –requires [pkg_name]</li>
+</ul>
+</li>
+<li>安装包：
+<ul>
+<li>apt-get install xxx</li>
+<li>yum instal xxx</li>
+<li>dnf install xxx</li>
+</ul>
+</li>
+<li>移除包：
+<ul>
+<li>apt-get remove xxx</li>
+<li>apt-get autoremove (自动移除已知不需要的包)</li>
+<li>yum remove xxx</li>
+<li>dnf erase xxx</li>
+</ul>
+</li>
+</ul>
+<h3 id="本地文件系统安装">本地文件系统安装</h3>
+<ul>
+<li>首先简要介绍本地安装软件包的场景和主要命令，然后以 RPM 为例详细说明。</li>
+</ul>
+<h4 id="从本地文件系统直接安装包">从本地文件系统直接安装包</h4>
+<ul>
+<li>很多时候，我们在进行测试或从某个地方直接拿到软件包之后需要从本地文件系统直接安装包。（特别是针对一些无公网的环境，无法直接使用包管理工具直接安装相关依赖）</li>
+<li>Debian 及衍生系统可以使用 dpkg 进行安装，CentOS 和 Fedora 系统使用 yum 和 dnf 命令进行安装。</li>
+</ul>
+<h5 id="本地安装命令">本地安装命令</h5>
+<ul>
+<li>dpkg -i [pkg_name].deb</li>
+<li>apt-get install -y gdebi&amp;&amp; sudo gdebi [pkg_name].deb （使用gdebi检索缺少的依赖关系）</li>
+<li>yum install [pkg_name].rpm</li>
+<li>dnf install [pkg_name].rpm</li>
+</ul>
+<h3 id="rpm">RPM</h3>
+<ul>
+<li>RPM命名“RedHat Package Manager”，简称则为RPM。这个机制最早由Red Hat这家公司开发出来的，后来实在很好用，因此很多distributons就使用这个机制来作为软件安装的管理方式，包括Fedora，CentOS，SuSE等知名的开发商都是用它。</li>
+<li>RPM最大的特点就是需要安装的软件已经编译过，并已经打包成RPM机制的安装包，通过里头默认的数据库记录这个软件安装时需要的依赖软件。当安装在你的Linux主机时，RPM会先依照软件里头的数据查询Linux主机的依赖属性软件是否满足，若满足则予以安装，若不满足则不予安装。</li>
+</ul>
+<h4 id="构建流程">构建流程</h4>
+<p>要构建 RPM，必须：</p>
+<ul>
+<li>依照 rpmbuild 规范设定一个目录结构。</li>
+<li>将源代码和附带文件放在目录中合适的位置。</li>
+<li>创建 spec 文件。</li>
+<li>编译 RPM。可以选择编译源 RPM，以与其他人共享您的源代码。</li>
+</ul>
+<h5 id="目录结构">目录结构</h5>
+<ul>
+<li><strong>BUILD</strong>。BUILD 用作实际编译软件的暂存空间。</li>
+<li><strong>RPMS</strong>。RPMS 包含 rpmbuild 所编译的二进制 RPM。</li>
+<li><strong>SOURCES</strong>。SOURCES 存储源代码。</li>
+<li><strong>SPECS</strong>。SPECS 包含您的 spec 文件，您想要构建的一个 RPM 对应一个 spec 文件。</li>
+<li><strong>SRPMS</strong>。SRPMS 包含在这个过程中构建的源 RPM。</li>
+</ul>
+<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210226153713.png" alt="20210226153713" loading="lazy"></figure>
+<h5 id="准备文件">准备文件</h5>
+<ul>
+<li><strong>step1</strong>. 将源代码（理想情况下应捆绑为一个 tarball 压缩文件）复制到 SOURCES 目录</li>
+<li><strong>step2</strong>. 创建 spec 文件。spec 文件只是一个具有特殊语法的文本文件。
+<ul>
+<li>此处举一个简单例子 wget 打包</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-shell"># This is a sample spec file for wget
+
+# 定义了五个变量 
+%define _topdir     /home/strike/mywget
+%define name            wget 
+%define release     1
+%define version     1.12
+%define buildroot %{_topdir}/%{name}-%{version}-root
+ 
+# 设置若干关键参数
+BuildRoot:  %{buildroot}
+Summary:        GNU wget
+License:        GPL
+Name:           %{name}
+Version:        %{version}
+Release:        %{release}
+Source:         %{name}-%{version}.tar.gz
+Prefix:         /usr
+Group:          Development/Tools
+
+# 简单明了地描述软件。这一行将在用户运行 rpm -qi 来查询 RPM 数据库时显示。您可以说明包的用途，描述任何警告或额外的配置说明等。
+%description
+The GNU wget program downloads files from the Internet using the command-line.
+
+# 生成一个 shell 脚本，该脚本嵌入到 RPM 中，随后作为安装的一部分运行
+# 准备源代码
+# %setup -q 是一个 %prep 宏，用于自动解压 Source 中的特定 tarball 压缩文件
+%prep
+%setup -q
+
+# 生成一个 shell 脚本，该脚本嵌入到 RPM 中，随后作为安装的一部分运行
+# 手动配置和启动构建过程的步骤 
+%build
+./configure
+make
+
+# 生成一个 shell 脚本，该脚本嵌入到 RPM 中，随后作为安装的一部分运行
+%install
+make install prefix=$RPM_BUILD_ROOT/usr
+
+# 列出应该捆绑到 RPM 中的文件，还可以设置权限和其他信息。
+%files
+%defattr(-,root,root)
+/usr/local/bin/wget
+
+# %doc 告诉 RPM 该文件为一个文档文件，所以如果用户使用 --excludedocs 安装包，将不会安装该文件。
+%doc %attr(0444,root,root) /usr/local/share/man/man1/wget.1
+</code></pre>
+<ul>
+<li>再来看 tcmu-runner.spec 的例子</li>
+</ul>
+<pre><code class="language-spec">%global _hardened_build 1
+
+# 运行 rpmbuild 时读取的一些条件参数
+# without rbd dependency
+# if you wish to exclude rbd handlers in RPM, use below command
+# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without rbd
+%bcond_without rbd
+
+# without glusterfs dependency
+# if you wish to exclude glfs handlers in RPM, use below command
+# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without glfs
+%bcond_without glfs
+
+# without qcow dependency
+# if you wish to exclude qcow handlers in RPM, use below command
+# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without qcow
+%bcond_without qcow
+
+# without zbc dependency
+# if you wish to exclude zbc handlers in RPM, use below command
+# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without zbc
+%bcond_without zbc
+
+# without file backed optical dependency
+# if you wish to exclude fbo handlers in RPM, use below command
+# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without fbo
+%bcond_without fbo
+
+# without tcmalloc dependency
+# if you wish to exclude tcmalloc, use below command
+# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without tcmalloc
+%bcond_without tcmalloc
+
+# 设置若干关键参数
+Name:          tcmu-runner
+Summary:       A daemon that handles the userspace side of the LIO TCM-User backstore
+Group:         System Environment/Daemons
+License:       ASL 2.0 or LGPLv2+
+Version:       1.0
+URL:           https://github.com/open-iscsi/tcmu-runner
+
+Release:       0%{dist}
+BuildRoot:     %(mktemp -udp %{_tmppath}/%{name}-%{version})
+Source:       %{name}-%{version}.tar.gz
+ExclusiveOS:   Linux
+
+BuildRequires: cmake make gcc
+BuildRequires: libnl3-devel glib2-devel zlib-devel kmod-devel
+
+# 针对不同条件参数下的依赖处理
+%if %{with rbd}
+BuildRequires: librbd1-devel librados2-devel
+Requires(pre): librados2, librbd1
+%endif
+
+%if %{with glfs}
+BuildRequires: glusterfs-api-devel
+Requires(pre): glusterfs-api
+%endif
+
+%if %{with tcmalloc}
+BuildRequires: gperftools-devel
+Requires:      gperftools-libs
+%endif
+
+# 基本依赖
+Requires(pre): kmod, zlib, libnl3, glib2, logrotate, rsyslog
+Requires:      libtcmu = %{version}-%{release}
+
+# 软件描述
+%description
+A daemon that handles the userspace side of the LIO TCM-User backstore.
+
+LIO is the SCSI target in the Linux kernel. It is entirely kernel code, and
+allows exported SCSI logical units (LUNs) to be backed by regular files or
+block devices. But, if we want to get fancier with the capabilities of the
+device we're emulating, the kernel is not necessarily the right place. While
+there are userspace libraries for compression, encryption, and clustered
+storage solutions like Ceph or Gluster, these are not accessible from the
+kernel.
+
+The TCMU userspace-passthrough backstore allows a userspace process to handle
+requests to a LUN. But since the kernel-user interface that TCMU provides
+must be fast and flexible, it is complex enough that we'd like to avoid each
+userspace handler having to write boilerplate code.
+
+tcmu-runner handles the messy details of the TCMU interface -- UIO, netlink,
+pthreads, and DBus -- and exports a more friendly C plugin module API. Modules
+using this API are called &quot;TCMU handlers&quot;. Handler authors can write code just
+to handle the SCSI commands as desired, and can also link with whatever
+userspace libraries they like.
+
+# 生成的 RPM 包 libtcmu
+%package -n libtcmu
+Summary:       A library supporting LIO TCM-User backstores processing
+Group:         Development/Libraries
+
+%description -n libtcmu
+libtcmu provides a library for processing SCSI commands exposed by the
+LIO kernel target's TCM-User backend.
+
+# 生成的 RPM 包 libtcmu-devel
+%package -n libtcmu-devel
+Summary:       Development headers for libtcmu
+Group:         Development/Libraries
+Requires:      %{name} = %{version}-%{release}
+Requires:      libtcmu = %{version}-%{release}
+
+%description -n libtcmu-devel
+Development header(s) for developing against libtcmu.
+
+%global debug_package %{nil}
+
+# 准备源代码
+%prep
+%setup -n %{name}-%{version}
+
+# 手动配置和启动构建
+%build
+%{__cmake} \
+ -DSUPPORT_SYSTEMD=ON -DCMAKE_INSTALL_PREFIX=%{_usr} \
+ %{?_without_rbd:-Dwith-rbd=false} \
+ %{?_without_zbc:-Dwith-zbc=false} \
+ %{?_without_qcow:-Dwith-qcow=false} \
+ %{?_without_glfs:-Dwith-glfs=false} \
+ %{?_without_fbo:-Dwith-fbo=false} \
+ %{?_without_tcmalloc:-Dwith-tcmalloc=false} \
+ .
+%{__make}
+
+%install
+%{__make} DESTDIR=%{buildroot} install
+%{__rm} -f %{buildroot}/etc/tcmu/tcmu.conf.old
+%{__rm} -f %{buildroot}/etc/logrotate.d/tcmu-runner.bak/tcmu-runner
+
+# 列出应该捆绑到 RPM 中的文件
+%files
+%{_bindir}/tcmu-runner
+%dir %{_sysconfdir}/dbus-1/
+%dir %{_sysconfdir}/dbus-1/system.d
+%config %{_sysconfdir}/dbus-1/system.d/tcmu-runner.conf
+%dir %{_datadir}/dbus-1/
+%dir %{_datadir}/dbus-1/system-services/
+%{_datadir}/dbus-1/system-services/org.kernel.TCMUService1.service
+%{_unitdir}/tcmu-runner.service
+%dir %{_libdir}/tcmu-runner/
+%{_libdir}/tcmu-runner/*.so
+%{_mandir}/man8/*
+%doc README.md LICENSE.LGPLv2.1 LICENSE.Apache2
+%dir %{_sysconfdir}/tcmu/
+%config %{_sysconfdir}/tcmu/tcmu.conf
+%config(noreplace) %{_sysconfdir}/logrotate.d/tcmu-runner
+%ghost %attr(0644,-,-) %{_sysconfdir}/tcmu/tcmu.conf.old
+%ghost %attr(0644,-,-) %{_sysconfdir}/logrotate.d/tcmu-runner.bak/tcmu-runner
+
+%files -n libtcmu
+%{_libdir}/libtcmu*.so.*
+
+%files -n libtcmu-devel
+%{_libdir}/libtcmu*.so
+
+</code></pre>
+<h5 id="构建-rpm">构建 RPM</h5>
+<ul>
+<li>例如构建 wget:</li>
+</ul>
+<blockquote>
+<p><code>rpmbuild -v -bb --clean SPECS/wget.spec</code></p>
 </blockquote>
-<h2 id="abstract">Abstract</h2>
+<p>此命令使用指定的 spec 文件构建一个二进制包（-bb 表示 “构建二进制包”），还会生成详细的输出（-v）。构建实用程序在生成包之后删除构建树（--clean）。如果还希望构建源 RPM，指定 -ba（“构建所有包”）来代替 -bb。（查看 rpmbuild 清单页面，了解完整的选项列表。）</p>
+<ul>
+<li>rpmbuild 执行以下步骤：
+<ul>
+<li>读取并解析 wget.spec 文件。</li>
+<li>运行 %prep 节，将源代码解压到临时目录。在这里，临时目录为 BUILD。</li>
+<li>运行 %build 节，编译代码。</li>
+<li>运行 %install 节，将代码安装到构建机器上的目录中。</li>
+<li>从 %files 节读取文件列表，将它们收集到一起，然后创建一个二进制 RPM（和源 RPM 文件，如果已选择）。</li>
+</ul>
+</li>
+</ul>
+<h4 id="安装流程">安装流程</h4>
+<figure data-type="image" tabindex="3"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210226151530.png" alt="20210226151530" loading="lazy"></figure>
+<ul>
+<li><code>rpm -ivh package-name</code>
+<ul>
+<li>-i：install的意思，安装</li>
+<li>-v：查看更详细的安装信息画面（provide more detailed output）</li>
+<li>-h：以安装信息栏显示安装进度</li>
+</ul>
+</li>
+</ul>
+<h5 id="错误处理">错误处理</h5>
+<ul>
+<li>安装rpm包时提示错误：依赖检测失败: <code>--nodeps --force</code></li>
+</ul>
+<pre><code class="language-cmd">[root@localhost ~]# rpm -ivh tcmu-runner-2.0.1-0.el7.x86_64.rpm 
+错误：依赖检测失败：
+	libhcs_obj_util.so()(64bit) 被 tcmu-runner-2.0.1-0.el7.x86_64 需要
+
+[root@localhost ~]# rpm -ivh tcmu-runner-2.0.1-0.el7.x86_64.rpm --nodeps --force
+准备中...                          ################################# [100%]
+正在升级/安装...
+   1:tcmu-runner-2.0.1-0.el7          ################################# [100%]
+[root@localhost ~]# systemctl status tcmu-runner
+● tcmu-runner.service - LIO Userspace-passthrough daemon
+   Loaded: loaded (/usr/lib/systemd/system/tcmu-runner.service; disabled; vendor preset: disabled)
+   Active: inactive (dead)
+     Docs: man:tcmu-runner(8)
+</code></pre>
 
                 </div>
                 <div class="clear"></div>
@@ -152,6 +582,19 @@
 
             <section class="related section">
               
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210220221954.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/ReadingGroup/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2021-02-19">2021-02-19</time>
+                  <h4 class="title white no-margin">Reading Group Notes</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
               
 
                 <div class="clear"></div>
