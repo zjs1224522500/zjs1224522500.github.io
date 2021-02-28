@@ -91,7 +91,7 @@
       <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
         <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
           <div class="search-wrapper section">
-            <form id="gridea-search-form" data-update="1614389479850" action="/search/index.html" class="search-form" _lpchecked="1">
+            <form id="gridea-search-form" data-update="1614524140697" action="/search/index.html" class="search-form" _lpchecked="1">
               <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
               <button type="submit" class="submit" aria-label="Submit">
                 <i class="fa fa-search-line"></i>
@@ -178,6 +178,27 @@
 <li>正向代理根据协议划分主要有HTTP、HTTP over TLS(HTTPS)、Socks、Socks over TLS几种。其中，HTTP和Socks无法用于翻墙，HTTPS和Socks over TLS可以用于翻墙。</li>
 <li>四种代理协议都可以通过“用户先将数据发给代理服务器，再由代理服务器转发给目的服务器”的方法达到翻墙目的。但由于HTTP和Socks都是明文协议，GFW可以通过检查数据包内的内容得知用户的真实意图，进而拦截数据包。所以，HTTP和Socks一般只用作本地代理。而HTTPS协议是加密通讯，GFW无法得知数据包内的真实内容，类似于关键词过滤的手段无法施展。HTTPS代理的流量特征和我们平时访问网站时所产生的HTTPS流量几乎一模一样，GFW无法分辨，稳定性爆表。</li>
 </ul>
+<h4 id="常见正向代理软件">常见正向代理软件</h4>
+<h5 id="tinyproxy">tinyproxy</h5>
+<ul>
+<li>tinyproxy 是一款轻量级的正向代理软件，主要是比较轻量，常用在一些嵌入式设备以及移动终端中，性能表现一般。</li>
+<li><a href="https://github.com/tinyproxy/tinyproxy">Github Repo</a></li>
+<li>Tinyproxy 安装配置教程请移步 <a href="https://chaosd.github.io/2021/01/19/tinyproxy%E9%85%8D%E7%BD%AE%E5%B1%80%E5%9F%9F%E7%BD%91%E4%BB%A3%E7%90%86/">Chaos' Blog：centos 7使用tinyproxy配置局域网代理</a></li>
+</ul>
+<h5 id="gost">gost</h5>
+<ul>
+<li>GO 语言实现的安全隧道</li>
+<li><a href="https://github.com/ginuerzh/gost">Github Repo</a></li>
+<li><a href="https://docs.ginuerzh.xyz/gost/getting-started/">官方教程</a></li>
+<li>经过简单对比，gost 代理性能要比 tinyproxy 好很多。</li>
+<li>运行教程：</li>
+</ul>
+<pre><code>wget http://github.com/ginuerzh/gost/releases/download/v2.11.1/gost-linux-amd64-2.11.1.gz
+gunzip gost-linux-amd64-2.11.1.gz
+mv gost-linux-amd64-2.11.1 gost
+chmod +x gost
+nohup ./gost -L :9002 &gt; ./gost.log &amp;
+</code></pre>
 <h3 id="反向代理">反向代理</h3>
 <h4 id="基本原理-2">基本原理</h4>
 <ul>
