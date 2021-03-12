@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://blog.shunzi.tech</id>
     <title>Elvis Zhang</title>
-    <updated>2021-03-01T09:18:27.607Z</updated>
+    <updated>2021-03-12T03:44:11.093Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://blog.shunzi.tech"/>
     <link rel="self" href="https://blog.shunzi.tech/atom.xml"/>
@@ -10,6 +10,321 @@
     <logo>https://blog.shunzi.tech/images/avatar.png</logo>
     <icon>https://blog.shunzi.tech/favicon.ico</icon>
     <rights>All rights reserved 2021, Elvis Zhang</rights>
+    <entry>
+        <title type="html"><![CDATA[SpanDB: A Fast, Cost-Effective LSM-tree Based KV Store on Hybrid Storage]]></title>
+        <id>https://blog.shunzi.tech/post/SpanDB/</id>
+        <link href="https://blog.shunzi.tech/post/SpanDB/">
+        </link>
+        <updated>2021-03-11T12:07:09.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<ul>
+<li>FAST 2021 的文章《SpanDB: A Fast, Cost-Effective LSM-tree Based KV Store on Hybrid Storage》</li>
+</ul>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<ul>
+<li>FAST 2021 的文章《SpanDB: A Fast, Cost-Effective LSM-tree Based KV Store on Hybrid Storage》</li>
+</ul>
+</blockquote>
+<!--more-->
+<ul>
+<li>SpanDB: A Fast, Cost-Effective LSM-tree Based KV Store on Hybrid Storage</li>
+</ul>
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li>键值(KV)存储支持许多关键的应用程序和服务。它们在内存中执行的速度很快，但仍然经常受到I/O性能的限制。最近出现的高速商业NVMe ssd推动了利用其超低延迟和高带宽优势的新kv系统设计。与此同时，转换到全新的数据布局并将整个数据库扩展到高端 SSD 需要大量的投资。</li>
+<li>作为一种折衷方案，我们提出了SpanDB，一种基于 LSM 树的 KV 存储，适应流行的RocksDB 系统，利用高速 SSD 选择性部署。SpanDB 允许用户将大量数据存储在更便宜、更大的SSD上，同时将预写日志(WAL)和 LSM 树的顶层重新定位到更小、更快的NVMe SSD上。为了更好地利用这个快速磁盘，SpanDB通过SPDK提供了高速、并行的WAL写入，并支持异步请求处理，以减轻线程间同步开销，并有效地使用基于轮询的I/O工作。我们的测试结果显示，SpanDB 同时将 RocksDB 的吞吐量提高了8.8x，并将延迟降低了9.5% - 58.3%。与专为高端 SSD 设计的 KVell 系统相比，SpanDB的吞吐量达到 96-140%，延迟 2.3-21.6x 更低，存储配置更便宜。</li>
+<li><a href="https://github.com/SpanDB/SpanDB">Github Repo</a></li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<ul>
+<li>LSM 树应用广泛，它仍然具有吸引力，因为生产KV环境经常被发现是写密集型的，特别是由于积极的内存缓存。正如最近的系统所证明的那样，最近快速的、商业NVMe SSD可以显著提高KV性能，如 KVell、KVSSD，通过丢弃为硬盘设计的LSM-tree数据结构或将KV数据管理卸载到专门的硬件，这些系统提供了高吞吐量和可伸缩性，整个数据集托管在高端设备上。</li>
+<li>相反，这项工作的目标是将主流基于lsm树的KV设计适应于快速NVMe ssd和I/O接口，并特别关注在生产环境中具有成本效益的部署，因为我们发现当前基于 LSM 树的 KV 存储未能充分挖掘 NVMe SSD 的潜力（对比 NVMe SSD 和 SATA SSD），特别是，常见的KV存储设计的I/O路径严重地未充分利用超低延迟NVMe ssd，特别是对于小的写操作（对比 ext4 和 SPDK）</li>
+<li>这对写前日志记录(WAL)尤为不利，WAL 它对数据持久性和事务原子性至关重要，位于写的关键路径上，是主要瓶颈。其次，现有的KV请求处理采用慢速设备，如果切换到快速的基于轮询的I/O，工作流设计将引入高软件开销或浪费CPU周期</li>
+<li>此外，新的NVMe接口附带了访问约束(例如要求绑定整个设备以进行SPDK访问，或者建议将线程固定在core上)。这使得使用高端 SSD 来处理不同类型的KV I/O的KV设计变得复杂，并降低了当前的常见实践(如同步请求处理)的效率。</li>
+<li>像Optane这样的顶级ssd对于大规模部署来说是昂贵的。由于大型的、写密集型的KV存储不可避免地拥有大量的冷数据，在这些相对较小和昂贵的设备上托管所有数据可能超出用户或云数据库服务提供商的预算。</li>
+<li>针对这些挑战，我们提出了SpanDB，一个基于LSM tree的KV系统，采用高端NVMe ssd进行部分部署，对使用 SPDK I/O 的 KV 系统的瓶颈和挑战进行了全面分析。
+<ul>
+<li>它通过合并一个相对较小但速度较快的磁盘(SD)来扩大对最新数据的所有读写处理，同时将数据存储扩展到一个或多个更大、更便宜的磁盘(CD)上。</li>
+<li>它可以通过SPDK实现快速并行访问，从而更好地利用SD，绕过Linux I/O堆栈，特别是允许高速WAL写入。(据作者描述，这是研究KV存储的SPDK支持的第一个工作。)</li>
+<li>它设计了一个适合基于轮询的I/O的异步请求处理管道，它消除了不必要的同步，积极地将I/O等待与内存中处理重叠，并自适应地协调前台/后台I/O。</li>
+<li>它根据实际的KV工作负载有策略地自适应地划分数据，积极地将CD的I/O资源，特别是带宽纳入其中，以帮助共享当代KV系统中常见的写放大</li>
+</ul>
+</li>
+<li>SpanDB重新设计了RocksDB的KV请求处理、存储管理和组WAL写，利用快速SPDK接口，保留了RocksDB的lsm树组织、后台I/O机制、事务支持等数据结构和算法。 因此，它的设计与RocksDB的许多其他优化方案是互补的。添加SD后，可以将现有的RocksDB数据库迁移到SpanDB</li>
+<li>我们使用YCSB和LinkBench进行的评估显示，SpanDB在所有测试用例中(吞吐量、平均延迟和尾部延迟)的性能都显著优于RocksDB，特别是在写密集型测试用例中。相对于最近设计用来利用高端ssd的KVell系统，SpanDB在大多数情况下提供了更高的吞吐量(只占KVell延迟的一小部分)，而不牺牲事务支持。</li>
+</ul>
+<h2 id="background-motivation">Background &amp; Motivation</h2>
+<h3 id="lsm-tree-based-kv-stores">LSM-tree based KV Stores</h3>
+<ul>
+<li>整体架构不再赘述。</li>
+<li>几个观点：
+<ul>
+<li>WAL 仍然是面向客户的数据库的一个组成部分，并且位于处理写请求的关键路径上</li>
+<li>读操作可能会在 LSM 的很多层上产生随机数据访问，尽管有很多系统采用内存缓存来优化读性能，但是对于数据量较大的情况或者局部性较差的情况还是会产生 I/O 操作，严重增加了尾延迟，影响整体性能。</li>
+<li>flush 和 compaction 操作都会产生较大的顺序 I/O，它对前台请求处理的影响体现在 I/O 争用和写停滞(当用户写需要等待刷新以清空MemTable空间时)。</li>
+<li>RocksDB和LevelDB通过用户可配置的flush/compaction线程数量来控制后台I/O速率，当有后台I/O任务时，它们被激活，否则休眠。研究人员已经注意到后台线程设置对性能的影响，并提出了相关的优化 （SILK）。然而，现有的解决方案仍然保留了后台线程设计，假定I/O速度较慢和基于中断的同步，这在新的基于轮询的I/O接口(将在下面讨论)中不能很好地工作。</li>
+</ul>
+</li>
+</ul>
+<h3 id="group-wal-writes">Group WAL Writes</h3>
+<ul>
+<li>
+<p>当前写 WAL 的常见做法是分组日志记录(group logging)，即对一次日志数据写入批量处理多个写请求。在很多常见的数据库系统中都使用了该技术，除了容错之外，组日志还通过促进顺序写操作，在速度较慢的存储设备(其中随机访问往往更慢)上提供了更好的写性能。</p>
+</li>
+<li>
+<p>图 1 展示了批量写 WAL 的流程。WAL 的写入过程是顺序的，任何时候最多只有一个 group 在写 log。</p>
+<ul>
+<li>当有一个正在进行中的写操作时，处理写请求的 workers 线程通过加入一个共享队列组成一个新的组，第一个进入队列的线程被指定为组的 leader。图示 1 - 3</li>
+<li>leader 从 peers 中收集日志项，直到前一个组的 leader (刚刚完成写入)通知它继续执行。这将关闭当前组的大门，随后到达的线程将启动一个新的组。</li>
+<li>leader 以单个同步 I/O 步骤(使用fsync/fdatasync, 4)将日志条目写入持久存储。然后，leader 唤醒组成员，启动 MemTables 中的更新，使这样的写入对后续的请求可见 5 - 6</li>
+<li>通过将最后一个可见序列推进到其条目中的最新序列号来完成组提交 7</li>
+<li>解散组 8，然后唤醒下一个 leader<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301214350.png" alt="20210301214350" loading="lazy"></li>
+</ul>
+</li>
+<li>
+<p>使用高端 NVMe SSD 的话，上图中的步骤 4 的时间可以大幅减少。与此同时批处理写操作合并了小 IO。因此，同步组日志导致的软件开销增加，导致大多数线程将时间浪费在不同类型的等待上 （步骤 1-3 和 7）</p>
+</li>
+<li>
+<p>例如，我们测量了RocksDB在通过ext4访问的SATA SSD上的这4个步骤上平均花费了68.1%的写请求处理时间，而在Optane上通过 SPDK 则增长到了81.0%。（因为总花费的时间减少了，等待的时间所占据的比重就增加了）</p>
+</li>
+<li>
+<p><strong>如果上面的 Group Logging 流程不够清晰，可以看下面这个图</strong></p>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/161797527">图源：知乎 bluesky - RocksDB 写入流程</a><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210311152453.png" alt="20210311152453" loading="lazy"></li>
+</ul>
+</li>
+</ul>
+<h3 id="high-performance-ssds-interfaces">High-Performance SSDs Interfaces</h3>
+<ul>
+<li>高性能 SSD Intel Optane、Toshiba XL-Flash、Samsung Z-SSD 提供了更低的延迟和更高的吞吐量。考虑到Linux内核I/O堆栈开销在总I/O延迟中不再是可以忽略的，Intel 开发了 SPDK，一组用户态的库/工具来访问高速的 NVMe 设备。<strong>SPDK 把驱动移动到了用户空间，避免了系统调用并支持了零拷贝访问。它轮询硬件完成，而不是使用中断，并避免I/O路径中的锁</strong>。在这里我们总结了在本研究中发现的与KV存储相关的SPDK性能行为和策略限制</li>
+</ul>
+<h4 id="spdk-整体性能">SPDK 整体性能</h4>
+<ul>
+<li>Intel Optane P4800X and P4610</li>
+<li>使用不同类型和不同大小的 IO 组合来模拟 I/O，下图展示了 P4800X 的结果，P4160 展示的测试结果趋势类似。ext4 使用了 write 调用，每一个都进行了 fdatasync，SPDK 使用了内建的 perf tool (spdk_nvme_perf)</li>
+<li>结果表明：（<strong>此处无随机写测试</strong>）
+<ul>
+<li><strong>顺序读</strong>下 ext4 和 SPDK 接近</li>
+<li>通过ext4进行的4KB<strong>顺序写</strong>操作(WAL-style)只实现了硬件潜力的一小部分，延迟时间比SPDK高4.05x(IOPS相应降低)。</li>
+<li>4KB的<strong>随机读</strong>和64KB的<strong>顺序写</strong>测试可以看到这两个极端之间的ext4-SPDK差距</li>
+</ul>
+</li>
+<li>这些结果突出表明，SPDK可以显著改善KV I/O，特别是日志和写密集型工作负载<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301220514.png" alt="20210301220514" loading="lazy"></li>
+</ul>
+<h4 id="spdk-concurrency">SPDK concurrency</h4>
+<ul>
+<li>为了评估SPDK服务并发顺序写的能力，我们分析了各个SPDK请求，并发现7-8µs的单线程延迟中的大部分确实被busy-wait占用，由于争用下的I/O变慢，busy-wait随着并发写的线程增多而增加。</li>
+<li>然后我们设计了一个 pipeline 方案，其中每个线程管理多个并发的SPDK请求。它允许“窃取”I/O等待时间来发出新请求，并检查未完成请求的完成状态(每个请求的完成时间低于1µs)。</li>
+<li>图3 给出了Intel上的延迟和吞吐量结果P4610 (N)和Intel Optane (O) ssd硬盘。我们改变线程的数量(“3-N”有3个线程写入SSD N)和每个线程并发请求的上限(“CR=2”，每个线程最多发出2个请求)。NVMe ssd提供了目前RocksDB/LevelDB single-WAL-writer设计所没有的并行性。特别是，Optane (O)显示出比P4610 (N)更高的并发性，在更多的写入的情况下，具有更低的延迟和更快的吞吐量增长。然而，即使使用O，超过3个并发写入也不能提供更高的SPDK IOPS:使用3个loggers，每个CR=3似乎可以提供峰值的WAL速度，我们表示为3L3R。另一方面，N在2L4R处饱和。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301220356.png" alt="20210301220356" loading="lazy"></li>
+</ul>
+<h4 id="spdk-access-restrictions">SPDK access restrictions</h4>
+<ul>
+<li>快速使用spdk访问高端NVMe ssd带来的性能好处体现在：
+<ul>
+<li>一旦某个SSD被一个进程绑定到SPDK上，其他进程(无论是通过SPDK还是通过Linux I/O堆栈)都无法访问它。这简化了与用户级访问相关的工作负载间隔离，但也禁止将文件系统部分部署到通过SPDK访问的SSD上。</li>
+<li>此外，建议用户将spdk access线程绑定到特定的内核。我们验证了不这样做会带来显著的I/O性能损失。这一点，再加上基于轮询的I/O模式，使得使用后台刷新/压缩线程的常见做法不适合SPDK访问:未绑定线程的I/O很慢，而绑定线程在空闲时不能轻松释放核心资源</li>
+</ul>
+</li>
+</ul>
+<h2 id="spandb-overview">SpanDB Overview</h2>
+<h3 id="design-rationale">Design rationale</h3>
+<ul>
+<li>我们提出了SpanDB，一个高性能，经济有效的基于lsm树的KV存储使用异构存储设备。SpanDB提倡使用小型、快速且通常更昂贵的NVMe SSD作为快速磁盘(SD)，同时部署更大、更慢、更便宜的SSD(或此类设备的阵列)作为容量磁盘(CD)。SpanDB使用SD有两个目的:<strong>(1)对WAL进行写操作(2)存储RocksDB的LSM-tree的顶层</strong>。</li>
+<li>由于WAL的处理成本是用户可见的，并且直接影响延迟，我们预留了足够的资源(内核和并发的SPDK请求，以及足够的SPDK队列)，以最大化其性能。同时，WAL数据只需要维护到相应的flush操作，通常需要GBs的空间，而今天的“小型”高端ssd，如Optane，提供超过300GB的空间，这促使SpanDB将RocksDB的LSM-tree的顶层移至SD。这还会从CD上卸载大量的刷新/压缩流量，CD上驻留着大量较冷的数据</li>
+</ul>
+<h3 id="spandb-architecture">SpanDB architecture</h3>
+<ul>
+<li>下图展示了 SpanDB 的架构。在 DRAM 中保留了 RocksDB Memtable 的相关设计，使用一个可变和多个不可变memtable。SpanDB 几乎不会对 RocksDB 的 KV 数据结构、算法或者操作语义进行修改。这里的主要区别在于它的异步处理模型，以减少同步开销和自适应调度任务。</li>
+<li>磁盘上的数据分布在 CD 和 SD 上，两个物理存储分区。
+<ul>
+<li>SD 进一步被分区，一个小部分为 WAL 区域，另一个部分为数据区域。SpanDB 通过 SPDK 将 SD 当作裸设备管理并重新设计了 RocksDB 的 WAL 批量写入，以实现快速、并行的日志记录，将日志记录带宽提高 10x。为了最小化 RocksDB 的修改，SpanDB 实现了一个轻量级的自带缓存的文件系统 <em>TopFS</em>，允许简单和动态的 LSM levels 重定位。</li>
+<li>CD 分区同时存储了 tree stump，经常包含较冷的大部分数据。SpanDB 的管理还是与RocksDB一样，通过文件系统访问，并借助操作系统页面缓存进行辅助。</li>
+</ul>
+</li>
+<li>下图还对 SpanDB 不同类型的流量进行了区分。WAL 区域只进行 log 的操作，SD 的数据区域接受所有 flush 操作。此外，SD 数据区和 CD 都可以容纳用户读和压缩读/写，SpanDB 执行额外的优化，以支持在两个分区上同时进行压缩，并自动协调前台/后台任务。最后，SpanDB 能够基于对两个分区的实时带宽监控实现动态 tree level 布局。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301222754.png" alt="20210301222754" loading="lazy"></li>
+</ul>
+<h3 id="sources-of-performance-benefits">Sources of performance benefits</h3>
+<ul>
+<li>通过采用一个通过SPDK访问的小而快的SD，它加快了WAL的速度，并行WAL写入。</li>
+<li>通过将SD也用于数据存储，它优化了这种快速ssd的带宽利用率</li>
+<li>通过启用工作负载自适应的SD-CD数据分发，它积极地聚合设备间可用的I/O资源(而不是仅仅将CD用作“溢出层”)。</li>
+<li>虽然主要是通过将I/O卸载到SD来优化写，但它减少了读密集型工作负载的尾部延迟</li>
+<li>通过减少同步和主动平衡前台/后台I/O需求，它利用了快速轮询I/O，同时节省CPU资源</li>
+</ul>
+<h3 id="limitations">Limitations</h3>
+<ul>
+<li>由于前面提到的SPDK访问约束，SD需要绑定到一个进程，这使得共享资源 SD 变得困难</li>
+<li>对于全读的工作负载，SpanDB在异步处理中产生的速度提升很小，并带来轻微的开销。</li>
+</ul>
+<h2 id="design-and-implementation">Design and Implementation</h2>
+<h3 id="asynchronous-request-processing">Asynchronous Request Processing</h3>
+<ul>
+<li>很多 KV 系统都使用了嵌入式的 DB 处理，所有前端任务都被假设成客户端，每次同步处理一个KV请求。这样的处理通常是 I/O 限制(特别是WAL写)，用户通常通过线程过度配置获得更高的总体吞吐量(每秒请求数)，拥有比 cores 更多的客户端线程。具有快速NVMe ssd和SPDK等接口，线程同步(比如睡眠和唤醒)很容易花费比 I/O 请求更长的时间。在这种情况下，线程过度配置不仅增加了延迟，还会降低总体资源利用率，从而降低吞吐量。</li>
+<li>此外，使用基于轮询的SPDK I/O，让线程在相同的 cores 上共存就失去了在 I/O 等待期间提高 CPU 利用率的吸引力。这也适用于使用后台线程管理LSM-tree刷新/压缩任务的常见实践。特别是，由于SPDK I/O的“fsync”涉及到忙等待，现有的 RocksDB 设计可能会释放许多后台线程，这会对其他线程造成巨大的破坏，并浪费 CPU 周期。</li>
+<li>认识到这些，SpanDB采用异步请求处理。在 n 核机器上，用户将客户端线程的数量配置为N client，每个线程占用一个核。剩下的 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>n</mi><mo>−</mo><msub><mi>N</mi><mrow><mi>c</mi><mi>l</mi><mi>i</mi><mi>e</mi><mi>n</mi><mi>t</mi></mrow></msub></mrow><annotation encoding="application/x-tex">n - N_{client}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.66666em;vertical-align:-0.08333em;"></span><span class="mord mathdefault">n</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.10903em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">c</span><span class="mord mathdefault mtight" style="margin-right:0.01968em;">l</span><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight">e</span><span class="mord mathdefault mtight">n</span><span class="mord mathdefault mtight">t</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 个核心处理 SpanDB 内部服务线程，相应地被分为两个角色：<em>loggers</em> and <em>workers</em>。这些线程都被绑定到他们分配的核心上。 Loggers 主要执行 WAL 写入，Workers 处理后台任务处理（flush/compaction）以及一些非 I/O 任务，例如 Memtables 的写入和更新，WAL 日志项的准备，相关事务的加锁/同步。根据观察到的写强度，head-server 线程自动自适应地决定logger 的数量，这些 logger 被绑定到分配了 SPDK 队列的核上，从而保证 WAL 的写带宽<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210302114726.png" alt="20210302114726" loading="lazy"></li>
+</ul>
+<h4 id="asynchronous-apis">Asynchronous APIs</h4>
+<ul>
+<li>SpanDB 提供了简单、直观的异步 api。对于现有的 RocksDB 同步 get 和 put 操作，它增加了异步对等对象A_get和A_put，再加上A_check来检查请求状态。类似的API扩展适用于扫描和删除。相应地，SpanDB扩展了RocksDB的 status 枚举。</li>
+<li>如下代码示例大致描述了异步请求的流程。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210302143805.png" alt="20210302143805" loading="lazy"></li>
+</ul>
+<h4 id="spandb-request-processing">SpanDB request processing</h4>
+<ul>
+<li>SpanDB管理前台请求处理的各个阶段，以及多个队列中的后台刷新/压缩任务。这些队列在线程之间传递子任务，还提供关于某个系统组件的压力级别的反馈。根据这些反馈，SpanDB可以调节客户端请求发出率(通过上述IsBusy接口)，也可以动态调整内部 workers 的任务分配</li>
+<li>图 5 描绘了 SpanDB 中的相关队列。flush 和 compaction 队列本身就是来自于 RocksDB 的设计，即便 SpanDB 修改了实际的操作来使用 SPDK I/O。SPDK 还额外加了四个队列，读队列、以及写相关的三个队列（ProLog、Log、EpiLog）</li>
+<li>对于<strong>异步读</strong>，当请求不需要进行 I/O 时，SpanDB 保持了原有 RocksDB 的同步模型，在KV应用程序中，由于具有典型的局部性，许多读操作都是从MemTable中进行的，特别是在今天由 DRAM 支持的更大的 MemTable 的场景下。给定一个 Key，能够快速在检查 Memtables 是否命中，如果命中直接完成读请求。命中的情况下大概只花费 4-6 微秒，相反即使在争用的情况下从 Optane 上读取也只花费 30 微妙，相应地会把读请求插入到读请求等待队列中然后返回。之后会有 worker 从队列中取出该请求，完成剩下的和 RocksDB 相同的读任务并设置他的完成状态。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210302114726.png" alt="20210302114726" loading="lazy"></li>
+<li>对于<strong>异步写</strong>，SpanDB 将处理过程划分成了三个部分。
+<ul>
+<li>
+<ol>
+<li>客户端先将请求 dump 到 ProLog 队列中，由 worker 来处理。</li>
+</ol>
+</li>
+<li>
+<ol start="2">
+<li>worker 相应地生成 WAL 日志项，按顺序传递到 Log 队列中。这两个队列都旨在促进批处理日志：一个 worker/logger 在这些队列中收集所有的日志项。除了批处理之外，logger 还将写日志流水线化，最大限度地提高了SPDK写并发性</li>
+</ol>
+</li>
+<li>
+<ol start="3">
+<li>当将一个组写入到了 SD 之后，logger 把相应的请求添加到 EpiLog 队列中，以便 worker 能够完成最终的处理。主要包括实际 MemTable 的更新。像读操作一样，这里的任务需要单独的注意力，不可能通过批量执行来加速。</li>
+</ol>
+</li>
+</ul>
+</li>
+<li><strong>如上图所示，ProLog 和 Log 队列都是 flat 的无锁队列，也就很容易地抓取所有请求进行出队。 Read、Epilog 都是环形队列，只在出队的时候要求加锁。</strong></li>
+</ul>
+<h4 id="task-scheduling">Task scheduling</h4>
+<ul>
+<li>上述SpanDB队列为调整内部资源分配提供了自然反馈。我们的SPDK基准测试结果表明 NVMe SSD 提供了并行性但是可能会被每个核心发出好几个并发请求使其饱和。因此 SpanDB 从一个 logger 开始，根据当前的写入强度在 1 到 3 之间增加和减少这个分配。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301220356.png" alt="20210301220356" loading="lazy"></li>
+<li>对于 Worker 因为需要处理所有其他的队列，所以比较灵活。在三个前端任务队列之间，SpanDB 根据队列的实际长度和每个任务的处理时间的加权来执行负载均衡。在前端队列和后端队列之间，SpanDB 以处理前台任务优先，使用一个合适的阈值来监控后台队列长度，从而主动执行清理，特别是在写密集型工作负载下。</li>
+</ul>
+<h4 id="transaction-support">Transaction support</h4>
+<ul>
+<li>SpanDB 完整支持了事务并提供了一个异步提交接口 <code>A_commit</code>，对 RocksDB 做了一些小改动。注意在 RocksDB 的事务模式，写操作将在一个内部 Buffer 中生成 WAL 项，只会在提交的时候才会被写入。而 SpanDB 异步提交操作则是将相应的写任务插入到了 ProLog 队列。</li>
+</ul>
+<h3 id="high-speed-logging-via-spdk">High-speed Logging via SPDK</h3>
+<h4 id="enabling-parallelism-and-pipelining">Enabling parallelism and pipelining</h4>
+<ul>
+<li>SpanDB 保留了 group logging 机制，但也允许多个 WAL 流并发写入。它不是让一个客户端作为 leader (并迫使 follower 等待)，而是使用专用的 logger，并发地发出批处理写操作。每个 logger 抓取它在 QLog 中看到的所有请求，并将这些 WAL 条目聚合为尽可能少的 4KB 块。它通过为一个请求窃取 SPDK 繁忙等待时间准备/检查其他请求来执行 pipeline。例如，对于 2L4R，有多达 8 个未完成的 WAL 写组</li>
+</ul>
+<h4 id="log-data-management">Log data management</h4>
+<ul>
+<li>并行的 WAL 写入让日志数据的管理变得复杂，特别是针对没有文件系统的裸设备。幸运的是，使用原子的 4KB SPDK 写操作，协调并发的 WAL 流只增加了很少的开销。</li>
+<li>SpanDB 首先在 SD 上分配可配置数量的 Pages 给相应的 WAL 区域（测试中分配了 10GB），每个都会有一个逻辑页号 LPN。这些页中的一个会被设置为元数据页，在任何时候只会有一个可变的 Memtable，其对应的日志文件会不断增大。我们会分配固定数量的逻辑页 groups，每个组会包含连续的页，而且足够大可以装下一个 Memtable 的日志数据。被使用了的日志页和对应的 Memtable 给组织在一起：SpanDB 重用了 RocksDB Memtable 的日志文件号 LFN 作为日志标签号 LTN，嵌入在所有日志页的开头以便进行故障恢复。</li>
+<li>下图给了一个包含四个 Memtable 的例子，一个 mutable 三个 immutable，对应元数据页中的 Active 和 InActive 状态。</li>
+<li>在一个 Memtable 被 flush 之后，日志页的整个分片将被回收，保证 Memtable 日志的连续性。对于每个 Immutable Memtable，元数据页都记录了对应日志页的起始和终止 LPN。假设典型的 KV 存储使用少量 memtable，一个页面就足够容纳这样的元数据了。</li>
+<li>Logger 发出并发请求，每个 Logger 提供一个 WAL 数据缓冲区和大小，唯一的同步点是日志页面的分配。我们使用比较和交换(CAS)操作实现了轻量级的原子页面分配。下图中的淡蓝色部分显示了三个请求的日志页分配过程，分别分配了 1，3，2 个页面，可以并行地进行分配。这些 WAL 写入不会修改元数据页，在元数据页中，只有当MemTable变得不可变时，per-MemTable end LPN 才会被追加。</li>
+<li>在日志 Page 中，logger 首先记录当前 LTN，然后是一组日志条目，每个条目都有其大小的注释。图7中的放大部分描述了这种布局，包括每个条目的校验和(已经在RocksDB中计算过了)。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210302153627.png" alt="20210302153627" loading="lazy"></li>
+</ul>
+<h4 id="correctness">Correctness</h4>
+<ul>
+<li>SpanDB的并行WAL写设计保留了RocksDB一致性语义。它不会改变用于协调和排序客户机请求的并发控制机制。因此，带有happened-before限制的事务在日志页面中不会出现顺序错误，如下面的简要解释。RocksDB 默认的隔离保证是 READ COMMITTED，也会检查写与写操作之间的冲突并序列化两个并发事务（假定两个更新相同 KV 项）。对于任何两个更新事务T1 和 T2，使用这两个隔离保证，READ COMMITTED 表明如果 T1 发生在 T2 之前，即 T2 看到了 T1 的效果，那么 T1 在 T2 开始执行之前必须提交。通过RocksDB group WAL写协议的设计，可以看出T1和T2的日志记录应该分两批出现，其中T1的批提交早于T2的批提交，在T2的批提交之前完成。当批量日志并行写入到 SpanDB 时，传递一个序列化的point 以便进行原子的页分配。因此 T1 的批任务仍然保证了比 T2 获得的序列号更小，后者就能看见前者的更新。相似的，从 WAL 中恢复的时候，SpanDB 总是按序列号升序执行 redo。</li>
+</ul>
+<h4 id="log-recovery">Log recovery</h4>
+<ul>
+<li>恢复操作首先读元数据页，检索出 log page groups 的数量以及相应的页地址范围。实际的从 log page group 恢复和从 RocksDB 的日志文件中恢复是一致的。同样，每个页面中的LTN号帮助标识 Active 日志 log group 的“结束”。</li>
+<li>一个难点是 SpanDB 回收日志页 groups 时，有的 group 包含一些老的日志页，在恢复过程中 SpanDB 需要知道当前组中哪些页已经被重写了。RocksDB 依赖文件系统进行故障恢复：读取数据是否包含在活跃的 log file 中。没有文件系统，SpanDB 在回收之前可以持久化一个单独的元数据更新或者将老的日志页 wipe out(写 0)。会影响 SD 的 WAL 写带宽，降低到一半。而我们重用了每个 Memtable 的 LTN 作为日志页的 color。因为 SSD 可以保证 4K 原子写，LTN 通常又都是在页的开始写的，这些页已经暗含了最后一次成功写的位置信息了。元数据页维护了当前活跃的 LTN，在这个组中，具有过时LTN的页面还没有从当前MemTable中被覆盖写。</li>
+</ul>
+<h3 id="offloading-lsm-tree-levels-to-sd">Offloading LSM-tree Levels to SD</h3>
+<ul>
+<li>为了 KV 服务器的持续均衡的运行，SpanDB将RocksDB的lsm树的顶层迁移到SD，为用户提供更多的硬件投资回报。下面我们讨论所涉及的主要挑战和解决办法</li>
+</ul>
+<h4 id="data-area-storage-organization">Data area storage organization</h4>
+<ul>
+<li>在NVMe SSD上使用SPDK的一个限制是，整个设备必须与本机内核驱动程序解除绑定，并且不能通过传统的I/O堆栈访问。因此不能对SD进行分区，只能使用SPDK将WAL写入一个区域，在另一个区域安装文件系统。</li>
+<li>SpanDB 实现的 TopFS，这是一个精简的文件系统，在SPDK I/O之上提供熟悉的文件接口包装器。SST 文件的仅追加和此后不可变的特性，加上它们的单 writer 访问模式，简化了TopFS设计。比如文件在创建的时候就知道了大小或者有有一个已知的大小限制。而且每个 SST 只会被单个线程写一次。大多数场景下，输入的数据不会被删除直到 SST 文件写入成功完成。此外，TopFS 保证了文件 close 时的数据的一致性。从而支持了每个文件连续的 LPN 范围分配，和前面提到的日志 groups 相似。元数据管理也比较简单：一个哈希表，按文件名进行索引，存储文件的起始和结束 LPN。TopFS 使用一个 LPN 空闲列表管理空闲空间，相应的连续的 LPN 范围被合并。</li>
+</ul>
+<h4 id="ensuring-wal-write-priority">Ensuring WAL write priority</h4>
+<ul>
+<li>flush/Compaction 操作是会影响前台负载的，但他们的延迟很多时候都对用户是透明的，因此 SD 可以完全更充分利用其带宽，比如在 WAL 写上，因为 WAL 的写入延迟用户时能感知到的。SPDK 提供了足够的 NVMe Queue Pairs，这允许对不同的请求类型进行单独管理。不幸的是，没有一个现有的通用 SSD 实现对这些队列的优先级管理。此外，这些队列提供的操作非常有限:用户只能发出请求和检查完成状态。</li>
+<li>因此除了前后端任务在队列上的协调以外，SpanDB 还对 WAL 写请求赋予了优先级。我们发现他们的优先级可以有效地保护通过以下步骤：
+<ul>
+<li>(1) 分配到每个日志请求 slot 专用队列(例如,8 个 L2R4 队列)</li>
+<li>(2) 减少 flush/compaction 的 I/O 请求的大小从 1MB 到 64KB 来减小有 WAL 时的 I/O 争用</li>
+<li>(3) 限制执行 flush/compaction 的 worker 线程数量</li>
+</ul>
+</li>
+</ul>
+<h4 id="spandb-spdk-cache">SpanDB SPDK cache</h4>
+<ul>
+<li>SPDK bypass 了 OS page cache，如果无人看管，这会带来出色的原始 I/O，但会带来灾难性的应用程序 I/O 性能。为了克服这个问题，我们在 TopFS 上实现了 SpanDB 自己的缓存。注意，对于SPDK I/O，传递的所有数据缓冲区必须通过 <code>spdk_dma_malloc()</code> 在固定内存中分配。SpanDB重用这样的缓冲区作为缓存，从而节省额外的内存复制。</li>
+<li>在SpanDB初始化时，它在hugepage中分配一个大内存缓存(大小可配置)。在创建SST文件时，SpanDB在缓存中保留适当数量的连续64KB缓冲区(文件大小或大小限制是已知的)。SpanDB使用另一个哈希表来管理这个缓存，同样以RocksDB SST文件名作为键。value字段是一个数组，存储每个文件块的缓存项，如果块被缓存，则存储相应的内存地址，否则为空。块大小配置显然涉及到缓存数据粒度和元数据开销之间的权衡。我们的评估使用SpanDB默认块大小64KB，对100GB的数据库产生&lt;500KB的元数据开销。</li>
+</ul>
+<h4 id="dynamic-level-placement">Dynamic level placement</h4>
+<ul>
+<li>通过上述所有机制，我们可以动态地调整SD上驻留的树级别的数量。最初，我们使用一个分析模型来直接计算最佳SD-CD级别分区，从而最大限度地提高整个系统的吞吐量。然而，我们无法找到与我们的测量结果一致的精确的 LSM-tree 写放大模型。特别是，最先进的工作在这前端的似乎没有考虑写速度和它的变化。我们的测试表明，这些因素会严重影响暂态的“树状结构”(最高层在不同程度上超出其大小限制)，进而影响写/读放大级别。</li>
+<li>因此，SpanDB 使用了临时的动态分区，通过观察 SD 和 CD 之间持续的资源利用率的不平衡，它的 head-server 线程监视 SD 带宽使用情况，并在低于 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mrow><mi>B</mi><mi>W</mi></mrow><mi>L</mi></msub></mrow><annotation encoding="application/x-tex">{BW}_L</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord"><span class="mord mathdefault" style="margin-right:0.05017em;">B</span><span class="mord mathdefault" style="margin-right:0.13889em;">W</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.32833099999999993em;"><span style="top:-2.5500000000000003em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">L</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 时触发SST文件重定位，直到达到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mrow><mi>B</mi><mi>W</mi></mrow><mi>H</mi></msub></mrow><annotation encoding="application/x-tex">{BW}_H</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord"><span class="mord mathdefault" style="margin-right:0.05017em;">B</span><span class="mord mathdefault" style="margin-right:0.13889em;">W</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.32833099999999993em;"><span style="top:-2.5500000000000003em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.08125em;">H</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 或 SD 满，其中 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mrow><mi>B</mi><mi>W</mi></mrow><mi>L</mi></msub></mrow><annotation encoding="application/x-tex">{BW}_L</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord"><span class="mord mathdefault" style="margin-right:0.05017em;">B</span><span class="mord mathdefault" style="margin-right:0.13889em;">W</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.32833099999999993em;"><span style="top:-2.5500000000000003em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">L</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 和 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mrow><mi>B</mi><mi>W</mi></mrow><mi>H</mi></msub></mrow><annotation encoding="application/x-tex">{BW}_H</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord"><span class="mord mathdefault" style="margin-right:0.05017em;">B</span><span class="mord mathdefault" style="margin-right:0.13889em;">W</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.32833099999999993em;"><span style="top:-2.5500000000000003em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.08125em;">H</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 是两个可配置的阈值。</li>
+<li><strong>由于SST文件不断地进行合并，SpanDB并没有在SD和CD之间迁移数据，而是通过将文件创建重定向到不同的目标，逐步“提升”或“降级”整个级别</strong>。它有一个指针，指示当前哪些级别应该转到快速NVMe设备。例如，指针 3 覆盖了所有的前3个级别。然而，该指针仅确定新SST文件的目的地。因此，在SD上有一个新的L3文件，在CD上有一个旧的L2文件是可能的，尽管这种“倒置”是罕见的，因为顶层更小，他们的文件更新更频繁。</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210312113832.png" alt="20210312113832" loading="lazy"></figure>
+<h2 id="evaluation">Evaluation</h2>
+<p><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210312113934.png" alt="20210312113934" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210302200522.png" alt="20210302200522" loading="lazy"></p>
+<h2 id="related-work">Related Work</h2>
+<h3 id="tiered-storage">Tiered storage</h3>
+<ul>
+<li>NVMFS, Strata, Ziggurat:  File system based on heterogeneous devices</li>
+<li>HiLSM, MatrixKV: Hybrid storage devices for KV</li>
+<li>Mutant: ranks SST files by popularity and places them on different cloud storage devices</li>
+<li>PrismDB: makes LSM-trees “read-aware” by pinning hot objects to fast devices.</li>
+</ul>
+<h3 id="kv-stores-optimizations-for-fast-homogeneous-storage">KV stores optimizations for fast, homogeneous storage</h3>
+<h4 id="homogeneous-storage">homogeneous storage</h4>
+<ul>
+<li>UniKV</li>
+<li>LSM-trie</li>
+<li>SlimDB</li>
+<li>FloDB</li>
+<li>PebblesDB</li>
+<li>KVell</li>
+<li>SplinterDB</li>
+</ul>
+<h4 id="fpga">FPGA</h4>
+<ul>
+<li><strong>X-Engine</strong></li>
+<li><strong>KVSSD</strong></li>
+<li><strong>ATC20 PinK</strong></li>
+</ul>
+<h4 id="pm">PM</h4>
+<ul>
+<li>HiKV</li>
+<li>NoveLSM</li>
+<li>NVMRocks</li>
+<li>Bullet</li>
+<li>SLM-DB</li>
+<li>FlatStore</li>
+<li>MyNVM</li>
+<li>MyRocks</li>
+</ul>
+<h3 id="logging-optimizations">Logging optimizations</h3>
+<ul>
+<li>NVLogging</li>
+<li>NVWAL</li>
+</ul>
+<h3 id="other-related-work">Other related work</h3>
+<ul>
+<li>SILK</li>
+<li>Monkey</li>
+<li>ElasticBF</li>
+<li>TRIAD</li>
+<li>WiscKey</li>
+<li>HashKV</li>
+</ul>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Linux Software Management]]></title>
         <id>https://blog.shunzi.tech/post/linux-software-mangement/</id>
@@ -2359,124 +2674,6 @@ ValidateHdfsVersion
 </li>
 <li>在实际工作负载下的实验结果表明，模型达到了一个平均值绝对误差(MAE)，可与现有的最先进的技术相媲美，但同时可以做到没有跟踪收集和处理的开销。由于命中率的提高，相对于在相同缓存内存的情况下对所有实例的等分配策略，OSCA 减少了到后端存储服务器的 IO 流量 13.2%<br>
 <img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201021194032.png" alt="20201021194032" loading="lazy"></li>
-</ul>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Ceph FS 介绍和使用]]></title>
-        <id>https://blog.shunzi.tech/post/CephFS/</id>
-        <link href="https://blog.shunzi.tech/post/CephFS/">
-        </link>
-        <updated>2020-10-14T12:32:20.000Z</updated>
-        <summary type="html"><![CDATA[<blockquote>
-<ul>
-<li>一个项目测试使用到了 CephFS，故简要整理 CephFS 资料和相关文档</li>
-</ul>
-</blockquote>
-]]></summary>
-        <content type="html"><![CDATA[<blockquote>
-<ul>
-<li>一个项目测试使用到了 CephFS，故简要整理 CephFS 资料和相关文档</li>
-</ul>
-</blockquote>
-<!--more-->
-<h2 id="cephfs">CephFS</h2>
-<ul>
-<li><a href="https://github.com/zjs1224522500/BlogIssue/issues/18">Ceph 常用命令</a></li>
-<li><a href="https://chaosd.github.io/2020/08/17/Deploy%20a%20Ceph%20Cluster%20Manually/">Deploy a Ceph Cluster Manually</a></li>
-</ul>
-<h3 id="overview">Overview</h3>
-<ul>
-<li>CephFS 应用相比于 RBD/RGW 不够广泛主要是因为文件系统采用树状结构管理数据（文件和目录）、基于查表寻址的设计理念与 Ceph 扁平化的数据管理方式、基于计算进行寻址的设计理念有些违背；其次文件系统的支持常常需要集中的元数据管理服务器来作为树状结构的统一入口，这又与 Ceph 去中心化、追求近乎无限的横向扩展能力的设计思想冲突。</li>
-<li>由于分布式文件系统的需求仍旧很大，应用场景尤为广泛，在 Ceph 不断的版本迭代中，CephFS 也取得了越来越好的支持。</li>
-</ul>
-<h3 id="背景">背景</h3>
-<ul>
-<li>要想实现分布式文件系统，那么就必须实现分布式文件系统的特点，即具有良好的横向扩展性，性能能够随着存储规模呈线性增长，为了实现这样的目标则需要对文件系统命名空间分而治之，即实现相应的负荷分担和负载均衡，采用相应的数据路由算法。</li>
-</ul>
-<h4 id="文件系统数据负载均衡分区">文件系统数据负载均衡分区</h4>
-<h5 id="静态子树分区">静态子树分区</h5>
-<ul>
-<li>手工分区，数据直接分配到某个固定的服务节点，负载不均衡时再手动调整。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201013150928.png" alt="20201013150928" loading="lazy"></li>
-</ul>
-<h5 id="hash-计算分区">HASH 计算分区</h5>
-<ul>
-<li>HASH 计算数据的存储位置，保证了数据分布的均衡，但如果环境变化（集群规模变化）此时需要固定原有的数据分区而减少数据的迁移，或者根据元数据的访问频率，要想保证 MDS 负载均衡，需要重新决定元数据的分布，此时则不适合使用 HASH</li>
-</ul>
-<h5 id="动态子树分区">动态子树分区</h5>
-<ul>
-<li>通过实时监控集群节点的负载，动态调整子树分布于不同的节点。这种方式适合各种异常场景，能根据负载的情况，动态的调整数据分布，不过如果大量数据的迁移肯定会导致业务抖动，影响性能。在元数据存储、流量控制和灵活的资源利用策略方面，动态分区比其他技术有许多优势。</li>
-<li>https://ceph.com/wp-content/uploads/2016/08/weil-mds-sc04.pdf<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20201013151347.png" alt="20201013151347" loading="lazy"></li>
-<li>动态子树分区方法的核心是将文件系统作为层次结构处理。通过将层次结构的子树的权限委托给不同的元数据服务器，对文件系统进行分区。委托可以嵌套:例如，/usr可以分配给一个MDS，而/usr/local可以分配给另一个MDS。但是，在没有显式分配子树的情况下，嵌套在某个点下的整个目录树被假定驻留在同一台服务器上。</li>
-<li>这个结构中隐含着层次结构遍历的过程，以便找到并打开嵌套的索引节点，以便随后下降到文件层次结构中。这样的路径遍历对于验证POSIX语义所要求的嵌套项的用户访问权限也是必要的，对于在目录层次结构深处定位一个文件来说，这个过程可能代价很高。</li>
-<li>为了允许有效地处理客户机请求(以及正确响应它们所需的路径遍历)，每个MDS都缓存缓存中所有项的前缀索引节点，以便在任何时候缓存的层次结构子集仍然是树结构。也就是说，只有叶子项可以从缓存中过期;在目录中包含的项首先过期之前，不能删除目录。这允许对所有已知项进行权限验证，而不需要任何额外的I/O成本，并保持层次一致性。</li>
-<li>为了适应文件系统发展和工作负载变化的要求，MDS集群必须调整目录分区，以保持工作负载的最佳分布。动态分布是必要的，因为层次结构部分的大小和流行度都以一种不均匀和不可预测的方式随时间变化。通过允许MDS节点传输目录层次结构的子树的权限，元数据分区会随着时间的推移进行修改。MDS节点定期交换心跳消息，其中包括对其当前负载级别的描述。此时，忙碌的节点可以识别层次结构中适当流行的部分，并发起一个双重提交事务，将权限传递给非繁忙节点。在此交换过程中，所有活动状态和缓存的元数据都被转移到新的权威节点，这既是为了保持一致性，也是为了避免磁盘I/O，否则，新权威节点将需要磁盘I/O来重新读取它，而磁盘I/O会慢上几个数量级。</li>
-</ul>
-<h4 id="cephfs-mds-特点">CephFS MDS 特点</h4>
-<ul>
-<li>采用多实例消除性能瓶颈并提升可靠性</li>
-<li>采用大型日志文件和延迟删除日志机制提升元数据读写性能</li>
-<li>讲 Inode 内嵌至 Dentry 中来提升文件索引率</li>
-<li>采用目录分片重新定义命名空间层次结构，并且目录分片可以在 MDS 实例之间动态迁移，从而实现细粒度的流控和负载均衡机制</li>
-</ul>
-<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200831094239.png" alt="20200831094239" loading="lazy"></figure>
-<h3 id="架构">架构</h3>
-<ul>
-<li>
-<p>虽然 Ceph 文件系统中的 inode 数据存储在 RADOS 中并由客户端直接访问，但是 inode 元数据和目录信息由Ceph metadata server (MDS)管理。MDS 充当所有与元数据相关的活动的中介，将结果信息存储在与文件数据不同的RADOS 池中。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200830135706.png" alt="20200830135706" loading="lazy"></p>
-</li>
-<li>
-<p>CephFS中的所有文件数据都存储为RADOS对象。CephFS客户端可以直接访问RADOS对文件数据进行操作。MDS只处理元数据操作。</p>
-</li>
-<li>
-<p>要读/写CephFS文件，客户端需要有相应inode的“文件读/写”功能。如果客户端没有需要的功能 caps，它发送一个“cap消息”给MDS，告诉MDS它想要什么。MDS将在可能的情况下向客户发布功能 caps。一旦客户端有了“文件读/写”功能，它就可以直接访问 RADOS 来读/写文件数据。文件数据以 <inode number>, <object index> 的形式存储为RADOS对象。如果文件只由一个客户端打开，MDS还会向唯一的客户端提供“文件缓存/缓冲区”功能。“文件缓存”功能意味着客户端缓存可以满足文件读取要求。“文件缓冲区”功能意味着可以在客户端缓存中缓冲文件写。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200831094239.png" alt="20200831094239" loading="lazy"></p>
-</li>
-</ul>
-<h4 id="cepgfs-client-访问示例">CepgFS Client 访问示例</h4>
-<ul>
-<li>Client 发送 open file 请求给 MDS</li>
-<li>MDS 返回 file node, file size, capability 和 stripe 信息</li>
-<li>Client 直接 READ/WRITE 数据到 OSDs（如果无 caps 信息需要先向 MDS 请求 caps）</li>
-<li>MDS 管理 Client 对该 file 的 capabilities</li>
-<li>Client 发送 close file 请求给 MDS，释放 file 的 capabilities，更新 file 的详细信息</li>
-</ul>
-<h4 id="mds-文件锁">MDS 文件锁</h4>
-<ul>
-<li>当客户机希望在 inode 上操作时，它将以各种方式查询 MDS，然后授予客户机一组功能。它们授予客户端以各种方式操作 inode 的权限。与其他网络文件系统(例如 NFS 或 SMB)的主要区别之一是，所授予的功能非常细粒度，多个客户机可能在同一个 inode 上拥有不同的功能。</li>
-<li>CephFS 客户机可以请求MDS代表它获取或更改 inode 元数据，但是MDS还可以为每个 inode 授予客户机功能 (caps)</li>
-</ul>
-<pre><code class="language-C">/* generic cap bits */
-#define CEPH_CAP_GSHARED     1  /* client can reads (s) */
-#define CEPH_CAP_GEXCL       2  /* client can read and update (x) */
-#define CEPH_CAP_GCACHE      4  /* (file) client can cache reads (c) */
-#define CEPH_CAP_GRD         8  /* (file) client can read (r) */
-#define CEPH_CAP_GWR        16  /* (file) client can write (w) */
-#define CEPH_CAP_GBUFFER    32  /* (file) client can buffer writes (b) */
-#define CEPH_CAP_GWREXTEND  64  /* (file) client can extend EOF (a) */
-#define CEPH_CAP_GLAZYIO   128  /* (file) client can perform lazy io (l) */
-</code></pre>
-<ul>
-<li>然后通过特定数量的位进行移位。这些表示 inode 的数据或元数据的一部分，在这些数据或元数据上被授予能力:</li>
-</ul>
-<pre><code class="language-C">/* per-lock shift */
-#define CEPH_CAP_SAUTH      2 /* A */
-#define CEPH_CAP_SLINK      4 /* L */
-#define CEPH_CAP_SXATTR     6 /* X */
-#define CEPH_CAP_SFILE      8 /* F */
-</code></pre>
-<ul>
-<li>一个 Cap 授予客户端 缓存和操作与 inode 关联的部分数据或元数据的能力。当另一个客户机需要访问相同的信息时，MDS 将撤销该 cap，而客户机最终将返回该功能，以及 inode 元数据的更新版本(如果它在保留功能时对其进行了更改)。</li>
-<li>客户机可以请求 cap，并且通常会获得这些 cap，但是当 MDS 面临竞争访问或内存压力时，这些 cap 可能会被 revoke。当一个 cap 被 revoke 时，客户端负责尽快返回它。未能及时这样做的客户端可能最终被阻塞并无法与集群通信。</li>
-<li>由于缓存是分布式的，所以 MDS 必须非常小心，以确保没有客户机拥有可能与其他客户机的 cap 或它自己执行的操作发生冲突的 cap。这使得 cephfs 客户机比 NFS 这样的文件系统依赖于更大的缓存一致性，在 NFS 中，客户机可以缓存数据和元数据，而这些数据和元数据在服务器上已经更改了。</li>
-<li>基于 caps，构建了 ceph 的分布式文件锁，分布式文件锁保证了多个客户端并发且细粒度访问同一文件、目录、文件系统，同时保证一致性、可靠性。ceph 实现的分布式文件系统锁，客户端可见部分是 caps，服务端可见部分包括 caps和各种 lock，每个类型的 lock 又有多种状态，根据客户端的请求、持有、释放情况，lock 转换自身状态，并和客户端同步 caps 信息。最终实现分布式锁的访问。</li>
-</ul>
-<h3 id="参考链接">参考链接</h3>
-<ul>
-<li><a href="https://www.jianshu.com/p/e7d79a0d5314">[1] CephFS 介绍及使用经验分享</a></li>
 </ul>
 ]]></content>
     </entry>

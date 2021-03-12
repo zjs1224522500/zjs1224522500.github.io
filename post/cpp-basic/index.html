@@ -84,7 +84,7 @@
       <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
         <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
           <div class="search-wrapper section">
-            <form id="gridea-search-form" data-update="1614590299024" action="/search/index.html" class="search-form" _lpchecked="1">
+            <form id="gridea-search-form" data-update="1615520510286" action="/search/index.html" class="search-form" _lpchecked="1">
               <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
               <button type="submit" class="submit" aria-label="Submit">
                 <i class="fa fa-search-line"></i>
@@ -249,7 +249,7 @@ int func()
 <li>在函数参数的定义中声明的变量，称为形式参数。</li>
 <li>在所有函数外部声明的变量，称为全局变量。</li>
 </ul>
-<pre><code>#include &lt;iostream&gt;
+<pre><code class="language-C++">#include &lt;iostream&gt;
 using namespace std;
  
 // 全局变量声明
@@ -337,7 +337,7 @@ auto x1 = 5, x2 = 5.0, x3='r';//错误，必须是初始化为同一类型
 <ul>
 <li>指示编译器在程序的生命周期内保持局部变量的存在，而不需要在每次它进入和离开作用域时进行创建和销毁。因此，使用 static 修饰局部变量可以在函数调用之间保持局部变量的值。也可以应用于全局变量。当 static 修饰全局变量时，会使变量的作用域限制在声明它的文件内。</li>
 </ul>
-<pre><code>#include &lt;iostream&gt;
+<pre><code class="language-C++">#include &lt;iostream&gt;
  
 // 函数声明 
 void func(void);
@@ -414,7 +414,7 @@ void write_extern(void)
 <li>thread_local 说明符可以与 static 或 extern 合并。</li>
 <li>可以将 thread_local 仅应用于数据声明和定义，thread_local 不能用于函数声明或定义。</li>
 </ul>
-<pre><code>thread_local int x;  // 命名空间下的全局变量
+<pre><code class="language-C++">thread_local int x;  // 命名空间下的全局变量
 class X
 {
     static thread_local std::string s; // 类的static成员变量
@@ -446,7 +446,7 @@ void foo()
 <ul>
 <li>定义一个函数，您可以为参数列表中后边的每一个参数指定默认值。当调用函数时，如果实际参数的值留空，则使用这个默认值。</li>
 </ul>
-<pre><code>int sum(int a, int b=20)
+<pre><code class="language-C++">int sum(int a, int b=20)
 </code></pre>
 <h4 id="lamda">lamda</h4>
 <ul>
@@ -454,7 +454,7 @@ void foo()
 <li>Lambda 表达式把函数看作对象。Lambda 表达式可以像对象一样使用，比如可以将它们赋给变量和作为参数传递，还可以像函数一样对其求值。</li>
 <li>Lambda 表达式本质上与函数声明非常类似。</li>
 </ul>
-<pre><code>// [capture](parameters)-&gt;return-type{body}
+<pre><code class="language-C++">// [capture](parameters)-&gt;return-type{body}
 [](int x, int y){ return x &lt; y ; }
 
 // [capture](parameters){body}
@@ -471,11 +471,11 @@ void foo()
 <ul>
 <li>另外有一点需要注意。对于[=]或[&amp;]的形式，lambda 表达式可以直接使用 this 指针。但是，对于[]的形式，如果要使用 this 指针，必须显式传入：</li>
 </ul>
-<pre><code>[this]() { this-&gt;someFunc(); }();
+<pre><code class="language-C++">[this]() { this-&gt;someFunc(); }();
 </code></pre>
 <h3 id="数字">数字</h3>
 <h4 id="cmath"><cmath></h4>
-<pre><code>double cos(double);
+<pre><code class="language-C++">double cos(double);
 double sin(double);
 double tan(double);
 double log(double); // 自然对数
@@ -487,7 +487,7 @@ double fabs(double);
 double floor(double); // 向下取整
 </code></pre>
 <h4 id="随机数">随机数</h4>
-<pre><code>#include &lt;iostream&gt;
+<pre><code class="language-C++">#include &lt;iostream&gt;
 #include &lt;ctime&gt;
 #include &lt;cstdlib&gt;
  
@@ -519,10 +519,10 @@ int main ()
 <h4 id="c-风格">C 风格</h4>
 <ul>
 <li><code>char greeting[6] = {'H', 'e', 'l', 'l', 'o', '\0'};</code></li>
-<li>`char greeting[] = &quot;Hello&quot;;</li>
+<li><code>char greeting[] = &quot;Hello&quot;</code>;</li>
 </ul>
 <h5 id="cstring">cstring</h5>
-<pre><code>#include &lt;iostream&gt;
+<pre><code class="language-C++">#include &lt;iostream&gt;
 #include &lt;cstring&gt;
  
 using namespace std;
@@ -551,7 +551,7 @@ int main ()
 </code></pre>
 <h4 id="c">C++</h4>
 <h5 id="string">string</h5>
-<pre><code>#include &lt;iostream&gt;
+<pre><code class="language-C++">#include &lt;iostream&gt;
 #include &lt;string&gt;
  
 using namespace std;
@@ -587,7 +587,7 @@ int main ()
 <li>C++ 标准库没有提供所谓的日期类型。C++ 继承了 C 语言用于日期和时间操作的结构和函数。为了使用日期和时间相关的函数和结构，需要在 C++ 程序中引用 <ctime> 头文件。</li>
 <li>有四个与时间相关的类型：clock_t、time_t、size_t 和 tm。类型 clock_t、size_t 和 time_t 能够把系统时间和日期表示为某种整数。</li>
 </ul>
-<pre><code>struct tm {
+<pre><code class="language-C++">struct tm {
   int tm_sec;   // 秒，正常范围从 0 到 59，但允许至 61
   int tm_min;   // 分，范围从 0 到 59
   int tm_hour;  // 小时，范围从 0 到 23
@@ -603,7 +603,7 @@ int main ()
 <ul>
 <li>获取当前时间</li>
 </ul>
-<pre><code>#include &lt;iostream&gt;
+<pre><code class="language-C++">#include &lt;iostream&gt;
 #include &lt;ctime&gt;
  
 using namespace std;
@@ -627,7 +627,7 @@ int main( )
 <ul>
 <li>格式化时间</li>
 </ul>
-<pre><code>#include &lt;iostream&gt;
+<pre><code class="language-C++">#include &lt;iostream&gt;
 #include &lt;ctime&gt;
  
 using namespace std;
@@ -652,11 +652,11 @@ int main( )
 </code></pre>
 <h3 id="输入输出">输入/输出</h3>
 <ul>
-<li><iostream> ： 该文件定义了 cin、cout、cerr 和 clog 对象，分别对应于标准输入流、标准输出流、非缓冲标准错误流和缓冲标准错误流。</li>
-<li><iomanip> ： 该文件通过所谓的参数化的流操纵器（比如 setw 和 setprecision），来声明对执行标准化 I/O 有用的服务。</li>
-<li><fstream> ： 该文件为用户控制的文件处理声明服务。我们将在文件和流的相关章节讨论它的细节。</li>
+<li><code>&lt;iostream&gt;</code> ： 该文件定义了 cin、cout、cerr 和 clog 对象，分别对应于标准输入流、标准输出流、非缓冲标准错误流和缓冲标准错误流。</li>
+<li><code>&lt;iomanip&gt;</code> ： 该文件通过所谓的参数化的流操纵器（比如 setw 和 setprecision），来声明对执行标准化 I/O 有用的服务。</li>
+<li><code>&lt;fstream&gt;</code> ： 该文件为用户控制的文件处理声明服务。我们将在文件和流的相关章节讨论它的细节。</li>
 </ul>
-<pre><code>#include &lt;iostream&gt;
+<pre><code class="language-C++">#include &lt;iostream&gt;
 #include &lt;iomanip&gt;
 using namespace std;
 int main()
@@ -683,12 +683,7 @@ int main()
 <ul>
 <li>直接看实例</li>
 </ul>
-<pre><code>#include &lt;iostream&gt;
-#include &lt;cstring&gt;
- 
-using namespace std;
- 
-// 声明一个结构体类型 Books 
+<pre><code class="language-C++">// 声明一个结构体类型 Books 
 #include &lt;iostream&gt;
 #include &lt;cstring&gt;
  
@@ -742,7 +737,7 @@ void printBook( struct Books *book )
 <ul>
 <li>基础实例</li>
 </ul>
-<pre><code>#include &lt;iostream&gt;
+<pre><code class="language-C++">#include &lt;iostream&gt;
  
 using namespace std;
  
@@ -808,7 +803,7 @@ int main( )
 <li>友元可以是一个函数，该函数被称为友元函数；友元也可以是一个类，该类被称为友元类，在这种情况下，整个类及其所有成员都是友元。</li>
 <li>如果要声明函数为一个类的友元，需要在类定义中该函数原型前使用关键字 friend</li>
 </ul>
-<pre><code>#include &lt;iostream&gt;
+<pre><code class="language-C++">#include &lt;iostream&gt;
 
 using namespace std;
 
@@ -875,7 +870,7 @@ int main()
 <ul>
 <li>引入内联函数的目的是为了解决程序中函数调用的效率问题，这么说吧，程序在编译器编译的时候，编译器将程序中出现的内联函数的调用表达式用内联函数的函数体进行替换，而对于其他的函数，都是在运行时候才被替代。这其实就是个空间代价换时间的i节省。所以内联函数一般都是1-5行的小函数。在使用内联函数时要留神：
 <ul>
-<li>1.在内联函数内不允许使用循环语句和开关语句；</li>
+<li>1.在内联函数内<strong>不允许使用循环语句和开关语句</strong>；</li>
 <li>2.内联函数的定义必须出现在内联函数第一次调用之前；</li>
 <li>3.类结构中所在的类说明内部定义的函数是内联函数。</li>
 </ul>
@@ -886,7 +881,7 @@ int main()
 <li>使用 static 关键字来把类成员定义为静态的。当我们声明类的成员为静态时，这意味着无论创建多少个类的对象，静态成员都只有一个副本。</li>
 <li>静态成员在类的所有对象中是共享的。如果不存在其他的初始化语句，在创建第一个对象时，所有的静态数据都会被初始化为零。我们不能把静态成员的初始化放置在类的定义中，但是可以在类的外部通过使用范围解析运算符 :: 来重新声明静态变量从而对它进行初始化。</li>
 </ul>
-<pre><code>#include &lt;iostream&gt;
+<pre><code class="language-C++">#include &lt;iostream&gt;
  
 using namespace std;
  
@@ -937,7 +932,7 @@ int main(void)
 }
 </code></pre>
 <h3 id="继承">继承</h3>
-<pre><code>#include &lt;iostream&gt;
+<pre><code class="language-C++">#include &lt;iostream&gt;
  
 using namespace std;
  
@@ -1003,7 +998,7 @@ int main(void)
 <li>虚函数 是在基类中使用关键字 virtual 声明的函数。在派生类中重新定义基类中定义的虚函数时，会告诉编译器不要静态链接到该函数。</li>
 <li>我们想要的是在程序中任意点可以根据所调用的对象类型来选择调用的函数，这种操作被称为动态链接，或后期绑定。</li>
 </ul>
-<pre><code>class Shape {
+<pre><code class="language-C++">class Shape {
    protected:
       int width, height;
    public:
@@ -1019,7 +1014,7 @@ int main(void)
 <ul>
 <li>抽象类：等同于 Java 的接口</li>
 </ul>
-<pre><code>#include &lt;iostream&gt;
+<pre><code class="language-C++">#include &lt;iostream&gt;
  
 using namespace std;
  
@@ -1076,6 +1071,192 @@ int main(void)
    cout &lt;&lt; &quot;Total Triangle area: &quot; &lt;&lt; Tri.getArea() &lt;&lt; endl; 
  
    return 0;
+}
+</code></pre>
+<h2 id="指针">指针</h2>
+<h3 id="智能指针">智能指针</h3>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/54078587?from_voters_page=true">知乎：C++智能指针</a></li>
+<li>简而言之就是不需要程序员每次去负责指针的释放，而是采用诸如引用计数的方法来自动释放指针。</li>
+<li>C++里面的四个智能指针: auto_ptr, unique_ptr,shared_ptr, weak_ptr 其中后三个是C++11支持，并且第一个已经被C++11弃用。</li>
+<li>智能指针主要用于管理在堆上分配的内存，它将普通的指针封装为一个栈对象。当栈对象的生存周期结束后，会在析构函数中释放掉申请的内存，从而防止内存泄漏。C++ 11中最常用的智能指针类型为shared_ptr,它采用引用计数的方法，记录当前内存资源被多少个智能指针引用。该引用计数的内存在堆上分配。当新增一个时引用计数加1，当过期时引用计数减一。只有引用计数为0时，智能指针才会自动释放引用的内存资源。对shared_ptr进行初始化时不能将一个普通指针直接赋值给智能指针，因为一个是指针，一个是类。可以通过make_shared函数或者通过构造函数传入普通指针。并可以通过get函数获得普通指针。</li>
+<li>智能指针的作用是管理一个指针，因为存在以下这种情况：申请的空间在函数结束时忘记释放，造成内存泄漏。使用智能指针可以很大程度上的避免这个问题，因为智能指针是一个类，当超出了类的实例对象的作用域时，会自动调用对象的析构函数，析构函数会自动释放资源。所以智能指针的作用原理就是在函数结束时自动释放内存空间，不需要手动释放内存空间。</li>
+</ul>
+<h4 id="stdunique_ptr">std::unique_ptr</h4>
+<ul>
+<li>std::unique_ptr是std::auto_ptr的替代品，其用于不能被多个实例共享的内存管理。这就是说，仅有一个实例拥有内存所有权。它的使用很简单：</li>
+</ul>
+<pre><code class="language-C++">class Fraction
+{
+private:
+    int m_numerator = 0;
+    int m_denominator = 1;
+
+public:
+    Fraction(int numerator = 0, int denominator = 1) :
+        m_numerator(numerator), m_denominator(denominator)
+    {
+    }
+
+    friend std::ostream&amp; operator&lt;&lt;(std::ostream&amp; out, const Fraction &amp;f1)
+    {
+        out &lt;&lt; f1.m_numerator &lt;&lt; &quot;/&quot; &lt;&lt; f1.m_denominator;
+        return out;
+    }
+};
+
+int main()
+{
+
+    std::unique_ptr&lt;Fraction&gt; f1{ new Fraction{ 3, 5 } };
+    cout &lt;&lt; *f1 &lt;&lt; endl; // output: 3/5
+
+    std::unique_ptr&lt;Fraction&gt; f2; // 初始化为nullptr
+
+    // f2 = f1 // 非法，不允许左值赋值
+    f2 = std::move(f1);  // 此时f1转移到f2，f1变为nullptr
+
+    // C++14 可以使用 make_unique函数
+    auto f3 = std::make_unique&lt;Fraction&gt;(2, 7);
+    cout &lt;&lt; *f3 &lt;&lt; endl;  // output: 2/7
+
+    // 处理数组，但是尽量不用这样做，因为你可以用std::array或者std::vector
+    auto f4 = std::make_unique&lt;Fraction[]&gt;(4);
+    std::cout &lt;&lt; f4[0] &lt;&lt; endl; // output: 0/1
+
+    cin.ignore(10);
+    return 0;
+}
+</code></pre>
+<h4 id="stdshared_ptr">std::shared_ptr</h4>
+<ul>
+<li>std::shared_ptr与std::unique_ptr的主要区别在于前者是使用引用计数的智能指针。引用计数的智能指针可以跟踪引用同一个真实指针对象的智能指针实例的数目。这意味着，可以有多个std::shared_ptr实例可以指向同一块动态分配的内存，当最后一个引用对象离开其作用域时，才会释放这块内存。</li>
+</ul>
+<pre><code class="language-C++">#include &lt;iostream&gt;
+#include &lt;memory&gt; // for std::shared_ptr
+ 
+class Resource
+{
+public:
+	Resource() { std::cout &lt;&lt; &quot;Resource acquired\n&quot;; }
+	~Resource() { std::cout &lt;&lt; &quot;Resource destroyed\n&quot;; }
+};
+
+int main()
+{
+    auto ptr1 = std::make_shared&lt;Resource&gt;();
+    cout &lt;&lt; ptr1.use_count() &lt;&lt; endl;  // output: 1
+    {
+        auto ptr2 = ptr1;  // 通过复制构造函数使两个对象管理同一块内存
+        std::shared_ptr&lt;Resource&gt; ptr3;   // 初始化为空
+        ptr3 = ptr1;   // 通过赋值，共享内存
+        cout &lt;&lt; ptr1.use_count() &lt;&lt; endl;  // output: 3
+        cout &lt;&lt; ptr2.use_count() &lt;&lt; endl;  // output: 3
+        cout &lt;&lt; ptr3.use_count() &lt;&lt; endl;  // output: 3
+    }
+    // 此时ptr2与ptr3对象析构了
+    cout &lt;&lt; ptr1.use_count() &lt;&lt; endl;  // output: 1
+
+    cin.ignore(10);
+    return 0;
+}
+</code></pre>
+<h4 id="stdweak_ptr">std::weak_ptr</h4>
+<ul>
+<li>std::shared_ptr可以实现多个对象共享同一块内存，当最后一个对象离开其作用域时，这块内存被释放。但是仍然有可能出现内存无法被释放的情况，联想一下“死锁”现象，对于std::shared_ptr会出现类似的“循环引用”现象：</li>
+</ul>
+<pre><code class="language-C++">class Person
+{
+public:
+    Person(const string&amp; name):
+        m_name{name}
+    {
+        cout &lt;&lt; m_name &lt;&lt; &quot; created&quot; &lt;&lt; endl;
+    }
+
+    virtual ~Person()
+    {
+        cout &lt;&lt; m_name &lt;&lt; &quot; destoryed&quot; &lt;&lt; endl;
+    }
+
+    friend bool partnerUp(std::shared_ptr&lt;Person&gt;&amp; p1, std::shared_ptr&lt;Person&gt;&amp; p2)
+    {
+        if (!p1 || !p2)
+        {
+            return false;
+        }
+
+        p1-&gt;m_partner = p2;
+        p2-&gt;m_partner = p1;
+
+        cout &lt;&lt; p1-&gt;m_name &lt;&lt; &quot; is now partenered with &quot; &lt;&lt; p2-&gt;m_name &lt;&lt; endl;
+        return true;
+    }
+
+private:
+    string m_name;
+    std::shared_ptr&lt;Person&gt; m_partner;
+};
+
+int main()
+{
+    {
+        auto p1 = std::make_shared&lt;Person&gt;(&quot;Lucy&quot;);
+        auto p2 = std::make_shared&lt;Person&gt;(&quot;Ricky&quot;);
+        partnerUp(p1, p2);  // 互相设为伙伴
+    }
+
+    cin.ignore(10);
+    return 0;
+}
+</code></pre>
+<ul>
+<li>对象没有被析构！出现内存泄露！仔细想想std::shared_ptr对象是什么时候才能被析构，就是引用计数变为0时，但是当你想析构p1时，p2内部却引用了p1，无法析构；反过来也无法析构。互相引用造成了“死锁”，最终内存泄露！</li>
+<li>std::weak_ptr可以包含由std::shared_ptr所管理的内存的引用。但是它仅仅是旁观者，并不是所有者。那就是std::weak_ptr不拥有这块内存，当然不会计数，也不会阻止std::shared_ptr释放其内存。但是它可以通过lock()方法返回一个std::shared_ptr对象，从而访问这块内存。这样我们可以用std::weak_ptr来解决上面的“循环引用”问题</li>
+</ul>
+<pre><code class="language-C++">class Person
+{
+public:
+    Person(const string&amp; name):
+        m_name{name}
+    {
+        cout &lt;&lt; m_name &lt;&lt; &quot; created&quot; &lt;&lt; endl;
+    }
+
+    virtual ~Person()
+    {
+        cout &lt;&lt; m_name &lt;&lt; &quot; destoryed&quot; &lt;&lt; endl;
+    }
+
+    friend bool partnerUp(std::shared_ptr&lt;Person&gt;&amp; p1, std::shared_ptr&lt;Person&gt;&amp; p2)
+    {
+        if (!p1 || !p2)
+        {
+            return false;
+        }
+
+        p1-&gt;m_partner = p2;  // weak_ptr重载的赋值运算符中可以接收shared_ptr对象
+        p2-&gt;m_partner = p1;
+
+        cout &lt;&lt; p1-&gt;m_name &lt;&lt; &quot; is now partenered with &quot; &lt;&lt; p2-&gt;m_name &lt;&lt; endl;
+        return true;
+    }
+
+private:
+    string m_name;
+    std::weak_ptr&lt;Person&gt; m_partner;
+};
+
+int main()
+{
+    {
+        auto p1 = std::make_shared&lt;Person&gt;(&quot;Lucy&quot;);
+        auto p2 = std::make_shared&lt;Person&gt;(&quot;Ricky&quot;);
+        partnerUp(p1, p2);  // 互相设为伙伴
+    }
+
+    cin.ignore(10);
+    return 0;
 }
 </code></pre>
 
@@ -1157,6 +1338,21 @@ jQuery(document).ready(function($){
                   
                   
                   <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/SpanDB/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301222754.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-03-11">2021-03-11</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/SpanDB/">SpanDB: A Fast, Cost-Effective LSM-tree Based KV Store on Hybrid Storage</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
                     <a href="https://blog.shunzi.tech/post/linux-software-mangement/" class="thumb hover-effect">
                       <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210226165557.png');"></span>
                     </a>
@@ -1171,7 +1367,7 @@ jQuery(document).ready(function($){
                   
                   
                   
-                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
                     <a href="https://blog.shunzi.tech/post/ReadingGroup/" class="thumb hover-effect">
                       <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210220221954.png');"></span>
                     </a>
@@ -1185,19 +1381,6 @@ jQuery(document).ready(function($){
                   </article>
                   
                   
-                  
-                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
-                    <a href="https://blog.shunzi.tech/post/MapReduce/" class="thumb hover-effect">
-                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210208135434.png');"></span>
-                    </a>
-                    <div class="info gradient-effect">
-                      <time datetime="2021-02-08">2021-02-08</time>
-                      <h4 class="title usmall">
-                        <a href="https://blog.shunzi.tech/post/MapReduce/">MapReduce: Simplified Data Processing on Large Clusters</a>
-                      </h4>
-                    </div>
-                    <div class="clear"></div>
-                  </article>
                   
                   
                   
@@ -1421,25 +1604,25 @@ jQuery(document).ready(function($){
                   <h4 class="widget-title title white bordered">标签云</h4>
                   <div class="tagcloud">
                     
-                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-0 ctag-hbaTDSglx-" aria-label="">工具</a>
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-0 ctag-5uQUdLlSC" aria-label="">Paper</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-1 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-1 ctag-3zCwFWPHxH" aria-label="">存储</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/wAFV_pvXZ/" class="ctag ctag-2 ctag-wAFV_pvXZ" aria-label="">cs-course</a>
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-2 ctag-_jfuTNqah" aria-label="">LSM</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-3 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-3 ctag-hbaTDSglx-" aria-label="">工具</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/VqiGqmxbod/" class="ctag ctag-4 ctag-VqiGqmxbod" aria-label="">6.824</a>
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-4 ctag-EO3XpMf_y" aria-label="">Linux</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-5 ctag-geK0jEW-T" aria-label="">分布式</a>
+                      <a href="https://blog.shunzi.tech/tag/wAFV_pvXZ/" class="ctag ctag-5 ctag-wAFV_pvXZ" aria-label="">cs-course</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-6 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                      <a href="https://blog.shunzi.tech/tag/VqiGqmxbod/" class="ctag ctag-6 ctag-VqiGqmxbod" aria-label="">6.824</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-7 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-7 ctag-geK0jEW-T" aria-label="">分布式</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-8 ctag-9msH-lUaA" aria-label="">缓存</a>
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-8 ctag-l8sKsLUAi" aria-label="">KVS</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-9 ctag-_jfuTNqah" aria-label="">LSM</a>
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-9 ctag-9msH-lUaA" aria-label="">缓存</a>
                     
                       <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-10 ctag-i2b42Y2j6" aria-label="">Ceph</a>
                     
@@ -1549,7 +1732,7 @@ jQuery(document).ready(function($){
           <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
         </div>
         <p class="published border-effect">
-          ©2019 共 109 篇文章
+          ©2019 共 110 篇文章
           <br/>
           Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
         </p>
