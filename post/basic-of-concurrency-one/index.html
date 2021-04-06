@@ -1,0 +1,1057 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Series Three of Basic of Concurrency - Condition Variables | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+威斯康辛州大学操作系统书籍《Operating Systems: Three Easy Pieces》读书笔记系列之 Concurrency（并发）。本篇为并发技术的基础篇系列第三篇（Condition Variables），条件变量。..." />
+    <meta name="keywords" content="存储,读书笔记,OS" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1617691177922" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2021-04-05"><i class="fa fa-calendar"></i><span class="lately">1 天前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/basic-of-concurrency-one/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/basic-of-concurrency-one/"> </span>
+              </a>
+              <span id="/basic-of-concurrency-one/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-1 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-2 ctag-os" aria-label="">OS</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">Series Three of Basic of Concurrency - Condition Variables</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>威斯康辛州大学操作系统书籍《Operating Systems: Three Easy Pieces》读书笔记系列之 Concurrency（并发）。本篇为并发技术的基础篇系列第三篇（Condition Variables），条件变量。</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="chapter-index">Chapter Index</h2>
+<ul>
+<li><a href="">Series One of Basic of Concurrency - Concurrency and Threads</a></li>
+<li><a href="../lock/">Series Two of Basic of Concurrency - Lock</a></li>
+<li><a href="">Series Three of Basic of Concurrency - Condition Variables</a></li>
+<li><a href="">Series Four of Basic of Concurrency - Semaphores</a></li>
+<li><a href="">Series Five of Basic of Concurrency - Bugs and Event-Based Concurrency</a></li>
+</ul>
+<h2 id="condition-variables">Condition Variables</h2>
+<ul>
+<li>到目前为止，我们已经形成了锁的概念，看到了如何通过硬件和操作系统支持的正确组合来实现锁。然而，锁并不是并发程序设计所需的唯一原语。</li>
+<li>具体来说，在很多情况下，线程需要检查某一条件（condition）满足之后，才会继续运行。例如，父线程需要检查子线程是否执行完毕 [这常被称为 join()]。这种等待如何实现呢？我们来看如下所示的代码。</li>
+</ul>
+<pre><code class="language-C">1 void *child(void *arg) {
+2   printf(&quot;child\n&quot;);
+3   // XXX how to indicate we are done?
+4   return NULL;
+5 }
+6
+7 int main(int argc, char *argv[]) {
+8   printf(&quot;parent: begin\n&quot;);
+9   pthread_t c;
+10  Pthread_create(&amp;c, NULL, child, NULL); // create child
+11  // XXX how to wait for child?
+12  printf(&quot;parent: end\n&quot;);
+13  return 0;
+14 }
+</code></pre>
+<ul>
+<li>我们期望能看到这样的输出：</li>
+</ul>
+<pre><code>parent: begin
+child
+parent: end 
+</code></pre>
+<ul>
+<li>我们可以尝试用一个共享变量，如下所示。这种解决方案一般能工作，但是效率低下，因为主线程会自旋检查，浪费 CPU 时间。我们希望有某种方式让父线程休眠，直到等待的条件满足（即子线程完成执行）。</li>
+</ul>
+<pre><code class="language-C">1 volatile int done = 0;
+2
+3 void *child(void *arg) {
+4   printf(&quot;child\n&quot;);
+5   done = 1;
+6   return NULL;
+7 }
+8
+9 int main(int argc, char *argv[]) {
+10  printf(&quot;parent: begin\n&quot;);
+11  pthread_t c;
+12  Pthread_create(&amp;c, NULL, child, NULL); // create child
+13  while (done == 0)
+14      ; // spin
+15  printf(&quot;parent: end\n&quot;);
+16  return 0;
+17 }
+</code></pre>
+<ul>
+<li><strong>CRUX: 多线程程序中，一个线程等待某些条件是很常见的。简单的方案是自旋直到条件满足，这是极其低效的，某些情况下甚至是错误的。那么，线程应该如何等待一个条件？</strong></li>
+</ul>
+<h3 id="definition-and-routines">Definition and Routines</h3>
+<ul>
+<li>线程可以使用条件变量（condition variable），来等待一个条件变成真。条件变量是一个显式队列，当某些执行状态（即条件，condition）不满足时，线程可以把自己加入队列，等待（waiting）该条件。另外某个线程，当它改变了上述状态时，就可以唤醒一个或者多个等待线程（通过在该条件上发信号），让它们继续执行。Dijkstra 最早在“私有信号量”中提出这种思想。Hoare 后来在关于观察者的工作中，将类似的思想称为条件变量。</li>
+<li>要声明这样的条件变量，只要像这样写：pthread_cond_t c;，这里声明 c 是一个条件变量（注意：还需要适当的初始化）。条件变量有两种相关操作：wait() 和 signal()。线程要睡眠的时候，调用 wait()。当线程想唤醒等待在某个条件变量上的睡眠线程时，调用 signal()。具体来说，POSIX 调用如下所示。</li>
+</ul>
+<pre><code class="language-C">pthread_cond_wait(pthread_cond_t *c, pthread_mutex_t *m);
+pthread_cond_signal(pthread_cond_t *c);
+</code></pre>
+<ul>
+<li>我们常简称为 wait()和 signal()。你可能注意到一点，wait()调用有一个参数，它是互斥量。它假定在 wait()调用时，这个互斥量是已上锁状态。wait()的职责是释放锁，并让调用线程休眠（原子地）。当线程被唤醒时（在另外某个线程发信号给它后），它必须重新获取锁，再返回调用者。这样复杂的步骤也是为了避免在线程陷入休眠时，产生一些竞态条件。我们观察一下如下所示代码中 join 问题的解决方法，以加深理解。</li>
+</ul>
+<pre><code class="language-C">1 int done = 0;
+2 pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+3 pthread_cond_t c = PTHREAD_COND_INITIALIZER;
+4
+5 void thr_exit() {
+6   Pthread_mutex_lock(&amp;m);
+7   done = 1;
+8   Pthread_cond_signal(&amp;c);
+9   Pthread_mutex_unlock(&amp;m);
+10 }
+11
+12 void *child(void *arg) {
+13  printf(&quot;child\n&quot;);
+14  thr_exit();
+15  return NULL;
+16 }
+17
+18 void thr_join() {
+19  Pthread_mutex_lock(&amp;m);
+20  while (done == 0)
+21      Pthread_cond_wait(&amp;c, &amp;m);
+22  Pthread_mutex_unlock(&amp;m);
+23 }
+24
+25 int main(int argc, char *argv[]) {
+26  printf(&quot;parent: begin\n&quot;);
+27  pthread_t p;
+28  Pthread_create(&amp;p, NULL, child, NULL);
+29  thr_join();
+30  printf(&quot;parent: end\n&quot;);
+31  return 0;
+32 }
+</code></pre>
+<ul>
+<li>有两种情况需要考虑。
+<ul>
+<li>第一种情况是父线程创建出子线程，但自己继续运行（假设只有一个处理器），然后马上调用 thr_join()等待子线程。在这种情况下，它会先获取锁，检查子进程是否完成（还没有完成），然后调用 wait()，让自己休眠。子线程最终得以运行，打印出“child”，并调用 thr_exit()函数唤醒父进程，这段代码会在获得锁后设置状态变量 done，然后向父线程发信号唤醒它。最后，父线程会运行（从 wait()调用返回并持有锁），释放锁，打印出“parent:end”。</li>
+<li>第二种情况是，子线程在创建后，立刻运行，设置变量 done 为 1，调用 signal 函数唤醒其他线程（这里没有其他线程），然后结束。父线程运行后，调用 thr_join()时，发现 done 已经是 1 了，就直接返回。</li>
+</ul>
+</li>
+<li>最后一点说明：你可能看到父线程使用了一个 while 循环，而不是 if 语句来判断是否需要等待。虽然从逻辑上来说没有必要使用循环语句，但这样做总是好的（后面我们会加以说明）。</li>
+<li>为了确保理解 thr_exit()和 thr_join()中每个部分的重要性，我们来看一些其他的实现。首先，你可能会怀疑状态变量 done 是否需要。代码像下面这样如何？正确吗？</li>
+</ul>
+<pre><code class="language-C">1 void thr_exit() {
+2   Pthread_mutex_lock(&amp;m);
+3   Pthread_cond_signal(&amp;c);
+4   Pthread_mutex_unlock(&amp;m);
+5 }
+6
+7 void thr_join() {
+8   Pthread_mutex_lock(&amp;m);
+9   Pthread_cond_wait(&amp;c, &amp;m);
+10  Pthread_mutex_unlock(&amp;m);
+11 }
+
+</code></pre>
+<ul>
+<li>这段代码是有问题的。假设子线程立刻运行，并且调用 thr_exit()。在这种情况下，子线程发送信号，但此时却没有在条件变量上睡眠等待的线程。父线程运行时，就会调用 wait 并卡在那里，没有其他线程会唤醒它。通过这个例子，你应该认识到变量 done 的重要性，它记录了线程有兴趣知道的值。睡眠、唤醒和锁都离不开它。</li>
+<li>下面是另一个糟糕的实现。在这个例子中，我们假设线程在发信号和等待时都不加锁。会发生什么问题？想想看！</li>
+</ul>
+<pre><code class="language-C">1 void thr_exit() {
+2   done = 1;
+3   Pthread_cond_signal(&amp;c);
+4 }
+5
+6 void thr_join() {
+7   if (done == 0)
+8       Pthread_cond_wait(&amp;c);
+9 }
+
+</code></pre>
+<ul>
+<li>这里的问题是一个微妙的竞态条件。具体来说，如果父进程调用 thr_join()，然后检查完 done 的值为 0，然后试图睡眠。但在调用 wait 进入睡眠之前，父进程被中断。子线程修改变量 done 为 1，发出信号，同样没有等待线程。父线程再次运行时，就会长眠不醒，这就惨了。</li>
+</ul>
+<blockquote>
+<ul>
+<li><strong>提示：发信号时总是持有锁</strong></li>
+<li>尽管并不是所有情况下都严格需要，但有效且简单的做法，还是在使用条件变量发送信号时持有锁。虽然上面的例子是必须加锁的情况，但也有一些情况可以不加锁，而这可能是你应该避免的。因此，为了简单，请在调用 signal 时持有锁（hold the lock when calling signal）。</li>
+<li>这个提示的反面，即调用 wait 时持有锁，不只是建议，而是 wait 的语义强制要求的。因为 wait 调用总是假设你调用它时已经持有锁、调用者睡眠之前会释放锁以及返回前重新持有锁。因此，这个提示的一般化形式是正确的：调用 signal 和 wait 时要持有锁（hold the lock when calling signal or wait），你会保持身心健康的。</li>
+</ul>
+</blockquote>
+<ul>
+<li>希望通过这个简单的 join 示例，你可以看到使用条件变量的一些基本要求。为了确保你能理解，我们现在来看一个更复杂的例子：生产者/消费者（producer/consumer）或有界缓冲区（bounded-buffer）问题。</li>
+</ul>
+<h3 id="the-producerconsumer-bounded-buffer-problem">The Producer/Consumer (Bounded Buffer) Problem</h3>
+<ul>
+<li>本章要面对的下一个问题，是生产者/消费者（producer/consumer）问题，也叫作有界缓冲区（bounded buffer）问题。这一问题最早由 Dijkstra 提出。实际上也正是通过研究这一问题，Dijkstra 和他的同事发明了通用的信号量（它可用作锁或条件变量）。</li>
+<li>假设有一个或多个生产者线程和一个或多个消费者线程。生产者把生成的数据项放入缓冲区；消费者从缓冲区取走数据项，以某种方式消费。很多实际的系统中都会有这种场景。例如，在多线程的网络服务器中，一个生产者将 HTTP 请求放入工作队列（即有界缓冲区），消费线程从队列中取走请求并处理。</li>
+<li>我们在使用管道连接不同程序的输出和输入时，也会使用有界缓冲区，例如 grep foo file.txt | wc -l。这个例子并发执行了两个进程，grep 进程从 file.txt 中查找包括“foo”的行，写到标准输出；UNIX shell 把输出重定向到管道（通过 pipe 系统调用创建）。管道的另一端是 wc 进程的标准输入，wc 统计完行数后打印出结果。因此，grep 进程是生产者，wc 是进程是消费者，它们之间是内核中的有界缓冲区，而你在这个例子里只是一个开心的用户。</li>
+<li>因为有界缓冲区是共享资源，所以我们必须通过同步机制来访问它，以免产生竞态条件。为了更好地理解这个问题，我们来看一些实际的代码。- 首先需要一个共享缓冲区，让生产者放入数据，消费者取出数据。简单起见，我们就拿一个整数来做缓冲区（你当然可以想到用一个指向数据结构的指针来代替），两个内部函数将值放入缓冲区，从缓冲区取值。</li>
+</ul>
+<pre><code class="language-C">1 int buffer;
+2 int count = 0; // initially, empty
+3
+4 void put(int value) {
+5   assert(count == 0);
+6   count = 1;
+7   buffer = value;
+8 }
+9
+10 int get() {
+11  assert(count == 1);
+12  count = 0;
+13  return buffer;
+14 }
+
+</code></pre>
+<ul>
+<li>很简单，不是吗？put()函数会假设缓冲区是空的，把一个值存在缓冲区，然后把 count 设置为 1 表示缓冲区满了。get()函数刚好相反，把缓冲区清空后（即将 count 设置为 0），并返回该值。不用担心这个共享缓冲区只能存储一条数据，稍后我们会一般化，用队列保存更多数据项，这会比听起来更有趣。</li>
+<li>现在我们需要编写一些函数，知道何时可以访问缓冲区，以便将数据放入缓冲区或从缓冲区取出数据。条件是显而易见的：仅在 count 为 0 时（即缓冲器为空时），才将数据放入缓冲器中。仅在计数为 1 时（即缓冲器已满时），才从缓冲器获得数据。如果我们编写同步代码，让生产者将数据放入已满的缓冲区，或消费者从空的数据获取数据，就做错了（在这段代码中，断言将触发）。</li>
+<li>这项工作将由两种类型的线程完成，其中一类我们称之为生产者（producer）线程，另<br>
+一类我们称之为消费者（consumer）线程。下面展示了一个生产者的代码，它将一个整<br>
+数放入共享缓冲区 loops 次，以及一个消费者，它从该共享缓冲区中获取数据（永远不停），每次打印出从共享缓冲区中提取的数据项。</li>
+</ul>
+<pre><code class="language-C">1 void *producer(void *arg) {
+2   int i;
+3   int loops = (int) arg;
+4   for (i = 0; i &lt; loops; i++) {
+5       put(i);
+6   }
+7 }
+8
+9 void *consumer(void *arg) {
+10  while (1) {
+11      int tmp = get();
+12      printf(&quot;%d\n&quot;, tmp);
+13  }
+14 }
+</code></pre>
+<h4 id="a-broken-solution">A Broken Solution</h4>
+<ul>
+<li>假设只有一个生产者和一个消费者。显然，put()和 get()函数之中会有临界区，因为 put() 更新缓冲区，get()读取缓冲区。但是，给代码加锁没有用，我们还需别的东西。不奇怪，别的东西就是某些条件变量。在这个（有问题的）首次尝试中，我们用了条件变量 cond 和相关的锁 mutex。</li>
+</ul>
+<pre><code class="language-C">1 int loops; // must initialize somewhere...
+2 cond_t cond;
+3 mutex_t mutex;
+4
+5 void *producer(void *arg) {
+6   int i;
+7   for (i = 0; i &lt; loops; i++) {
+8       Pthread_mutex_lock(&amp;mutex); // p1
+9       if (count == 1) // p2
+10          Pthread_cond_wait(&amp;cond, &amp;mutex); // p3
+11      put(i); // p4
+12      Pthread_cond_signal(&amp;cond); // p5
+13      Pthread_mutex_unlock(&amp;mutex); // p6
+14  }
+15 }
+16
+17 void *consumer(void *arg) {
+18  int i;
+19  for (i = 0; i &lt; loops; i++) {
+20      Pthread_mutex_lock(&amp;mutex); // c1
+21      if (count == 0) // c2
+22          Pthread_cond_wait(&amp;cond, &amp;mutex); // c3
+23      int tmp = get(); // c4
+24      Pthread_cond_signal(&amp;cond); // c5
+25      Pthread_mutex_unlock(&amp;mutex); // c6
+26      printf(&quot;%d\n&quot;, tmp);
+27  }
+28 }
+
+</code></pre>
+<ul>
+<li>来看看生产者和消费者之间的信号逻辑。当生产者想要填充缓冲区时，它等待缓冲区变空（p1～p3）。消费者具有完全相同的逻辑，但等待不同的条件——变满（c1～c3）。当只有一个生产者和一个消费者时，上图中的代码能够正常运行。但如果有超过一个线程（例如两个消费者），这个方案会有两个严重的问题。哪两个问题？</li>
+<li>……（暂停思考一下）……</li>
+<li>我们来理解第一个问题，它与等待之前的 if 语句有关。假设有两个消费者（Tc1 和 Tc2），一个生产者（Tp）。首先，一个消费者（Tc1）先开始执行，它获得锁（c1），检查缓冲区是否可以消费（c2），然后等待（c3）（这会释放锁）。</li>
+<li>接着生产者（Tp）运行。它获取锁（p1），检查缓冲区是否满（p2），发现没满就给缓冲区加入一个数字（p4）。然后生产者发出信号，说缓冲区已满（p5）。关键的是，这让第一个消费者（Tc1）不再睡在条件变量上，进入就绪队列。Tc1 现在可以运行（但还未运行）。生产者继续执行，直到发现缓冲区满后睡眠（p6,p1-p3）。</li>
+<li>这时问题发生了：另一个消费者（Tc2）抢先执行，消费了缓冲区中的值（c1,c2,c4,c5,c6，跳过了 c3 的等待，因为缓冲区是满的）。现在假设 Tc1 运行，在从 wait 返回之前，它获取了锁，然后返回。然后它调用了 get() (p4)，但缓冲区已无法消费！断言触发，代码不能像预期那样工作。显然，我们应该设法阻止 Tc1 去消费，因为 Tc2 插进来，消费了缓冲区中之前生产的一个值。下表展示了每个线程的动作，以及它的调度程序状态（就绪、运行、睡眠）随时间的变化。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210405165844.png" alt="20210405165844" loading="lazy"></li>
+<li>问题产生的原因很简单：在 Tc1 被生产者唤醒后，但在它运行之前，缓冲区的状态改变了（由于 Tc2）。发信号给线程只是唤醒它们，暗示状态发生了变化（在这个例子中，就是值已被放入缓冲区），但并不会保证在它运行之前状态一直是期望的情况。信号的这种释义常称为Mesa 语义（Mesa semantic），为了纪念以这种方式建立条件变量的首次研究。另一种释义是 Hoare 语义（Hoare semantic），虽然实现难度大，但是会保证被唤醒线程立刻执行。实际上，几乎所有系统都采用了 Mesa 语义。</li>
+</ul>
+<h4 id="better-but-still-broken-while-not-if">Better, But Still Broken: While, Not If</h4>
+<ul>
+<li>幸运的是，修复这个问题很简单：把 if 语句改为 while。当消费者 Tc1 被唤醒后，立刻再次检查共享变量（c2）。如果缓冲区此时为空，消费者就会回去继续睡眠（c3）。生产者中相应的 if 也改为 while（p2）。</li>
+</ul>
+<pre><code class="language-C">1 int loops; // must initialize somewhere...
+2 cond_t cond;
+3 mutex_t mutex;
+4
+5 void *producer(void *arg) {
+6   int i;
+7   for (i = 0; i &lt; loops; i++) {
+8       Pthread_mutex_lock(&amp;mutex); // p1
+9       while (count == 1) // p2
+10          Pthread_cond_wait(&amp;cond, &amp;mutex); // p3
+11      put(i); // p4
+12      Pthread_cond_signal(&amp;cond); // p5
+13      Pthread_mutex_unlock(&amp;mutex); // p6
+14  }
+15 }
+16
+17 void *consumer(void *arg) {
+18  int i;
+19  for (i = 0; i &lt; loops; i++) {
+20      Pthread_mutex_lock(&amp;mutex); // c1
+21      while (count == 0) // c2
+22          Pthread_cond_wait(&amp;cond, &amp;mutex); // c3
+23      int tmp = get(); // c4
+24      Pthread_cond_signal(&amp;cond); // c5
+25      Pthread_mutex_unlock(&amp;mutex); // c6
+26      printf(&quot;%d\n&quot;, tmp);
+27  }
+28 }
+
+</code></pre>
+<ul>
+<li>由于 Mesa 语义，我们要记住一条关于条件变量的简单规则：总是使用 while 循环（always use while loop）。虽然有时候不需要重新检查条件，但这样做总是安全的，做了就开心了。</li>
+<li>但是，这段代码仍然有一个问题，也是上文提到的两个问题之一。你能想到吗？它和我们只用了一个条件变量有关。尝试弄清楚这个问题是什么，再继续阅读。想一下！</li>
+<li>……（暂停想一想，或者闭一下眼）……</li>
+<li>我们来确认一下你想得对不对。假设两个消费者（Tc1 和 Tc2）先运行，都睡眠了（c3）。生产者开始运行，在缓冲区放入一个值，唤醒了一个消费者（假定是 Tc1），并开始睡眠。现在是一个消费者马上要运行（Tc1），两个线程（Tc2 和 Tp）都等待在同一个条件变量上。问题马上就要出现了</li>
+<li>消费者 Tc1 醒过来并从 wait()调用返回（c3），重新检查条件（c2），发现缓冲区是满的，消费了这个值（c4）。这个消费者然后在该条件上发信号（c5），唤醒一个在睡眠的线程。但是，应该唤醒哪个线程呢？</li>
+<li>因为消费者已经清空了缓冲区，很显然，应该唤醒生产者。但是，如果它唤醒了 Tc2（这绝对是可能的，取决于等待队列是如何管理的），问题就出现了。具体来说，消费者 Tc2 会醒过来，发现队列为空（c2），又继续回去睡眠（c3）。生产者 Tp 刚才在缓冲区中放了一个值，现在在睡眠。另一个消费者线程 Tc1 也回去睡眠了。3 个线程都在睡眠，显然是一个缺陷。由表可以看到这个可怕灾难的步骤。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210405170637.png" alt="20210405170637" loading="lazy"></li>
+<li>信号显然需要，但必须更有指向性。消费者不应该唤醒消费者，而应该只唤醒生产者，反之亦然。</li>
+</ul>
+<h4 id="the-single-buffer-producerconsumer-solution">The Single Buffer Producer/Consumer Solution</h4>
+<ul>
+<li>解决方案也很简单：使用两个条件变量，而不是一个，以便正确地发出信号，在系统状态改变时，哪类线程应该唤醒。</li>
+</ul>
+<pre><code class="language-C">1 cond_t empty, fill;
+2 mutex_t mutex;
+3
+4 void *producer(void *arg) {
+5 int i;
+6 for (i = 0; i &lt; loops; i++) {
+7   Pthread_mutex_lock(&amp;mutex);
+8   while (count == 1)
+9       Pthread_cond_wait(&amp;empty, &amp;mutex);
+10  put(i);
+11  Pthread_cond_signal(&amp;fill);
+12  Pthread_mutex_unlock(&amp;mutex);
+13  }
+14 }
+15
+16 void *consumer(void *arg) {
+17  int i;
+18  for (i = 0; i &lt; loops; i++) {
+19      Pthread_mutex_lock(&amp;mutex);
+20      while (count == 0)
+21          Pthread_cond_wait(&amp;fill, &amp;mutex);
+22      int tmp = get();
+23      Pthread_cond_signal(&amp;empty);
+24      Pthread_mutex_unlock(&amp;mutex);
+25      printf(&quot;%d\n&quot;, tmp);
+26  }
+27 }
+</code></pre>
+<ul>
+<li>在上述代码中，生产者线程等待条件变量 empty，发信号给变量 fill。相应地，消费者线程等待 fill，发信号给 empty。这样做，从设计上避免了上述第二个问题：消费者再也不会唤醒消费者，生产者也不会唤醒生产者。</li>
+</ul>
+<h4 id="the-correct-producerconsumer-solution">The Correct Producer/Consumer Solution</h4>
+<ul>
+<li>我们现在有了可用的生产者/消费者方案，但不太通用。我们最后的修改是提高并发和效率。具体来说，增加更多缓冲区槽位，这样在睡眠之前，可以生产多个值。同样，睡眠之前可以消费多个值。单个生产者和消费者时，这种方案因为上下文切换少，提高了效率。多个生产者和消费者时，它甚至支持并发生产和消费，从而提高了并发。幸运的是，和现有方案相比，改动也很小。</li>
+<li>第一处修改是缓冲区结构本身，以及对应的 put() 和 get()方法。</li>
+</ul>
+<pre><code class="language-C">1 int buffer[MAX];
+2 int fill_ptr = 0;
+3 int use_ptr = 0;
+4 int count = 0;
+5
+6 void put(int value) {
+7   buffer[fill_ptr] = value;
+8   fill_ptr = (fill_ptr + 1) % MAX;
+9   count++;
+10 }
+11
+12 int get() {
+13  int tmp = buffer[use_ptr];
+14  use_ptr = (use_ptr + 1) % MAX;
+15  count--;
+16  return tmp;
+17 }
+
+</code></pre>
+<ul>
+<li>我们还稍稍修改了生产者和消费者的检查条件，以便决定是否要睡眠。展示了最终的等待和信号逻辑。生产者只有在缓冲区满了的时候才会睡眠（p2），消费者也只有在队列为空的时候睡眠（c2）。至此，我们解决了生产者/消费者问题。</li>
+</ul>
+<pre><code class="language-C">1 cond_t empty, fill;
+2 mutex_t mutex;
+3
+4 void *producer(void *arg) {
+5   int i;
+6   for (i = 0; i &lt; loops; i++) {
+7       Pthread_mutex_lock(&amp;mutex); // p1
+8       while (count == MAX) // p2
+9           Pthread_cond_wait(&amp;empty, &amp;mutex); // p3
+10      put(i); // p4
+11      Pthread_cond_signal(&amp;fill); // p5
+12      Pthread_mutex_unlock(&amp;mutex); // p6
+13  }
+14 }
+15
+16 void *consumer(void *arg) {
+17  int i;
+18  for (i = 0; i &lt; loops; i++) {
+19      Pthread_mutex_lock(&amp;mutex); // c1
+20      while (count == 0) // c2
+21          Pthread_cond_wait(&amp;fill, &amp;mutex); // c3
+22      int tmp = get(); // c4
+23      Pthread_cond_signal(&amp;empty); // c5
+24      Pthread_mutex_unlock(&amp;mutex); // c6
+25      printf(&quot;%d\n&quot;, tmp);
+26  }
+27 }
+
+</code></pre>
+<blockquote>
+<ul>
+<li><strong>提示：对条件变量使用 while（不是 if）</strong></li>
+<li>多线程程序在检查条件变量时，使用 while 循环总是对的。if 语句可能会对，这取决于发信号的语义。因此，总是使用 while，代码就会符合预期。</li>
+<li>对条件变量使用 while 循环，这也解决了假唤醒（spurious wakeup）的情况。某些线程库中，由于实现的细节，有可能出现一个信号唤醒两个线程的情况。再次检查线程的等待条件，假唤醒是另一个原因。</li>
+</ul>
+</blockquote>
+<h3 id="covering-conditions">Covering Conditions</h3>
+<ul>
+<li>现在再来看条件变量的一个例子。这段代码摘自 Lampson 和 Redell 关于飞行员的论文，同一个小组首次提出了上述的 Mesa 语义（Mesa semantic，他们使用的语言是 Mesa，因此而得名）。</li>
+<li>他们遇到的问题通过一个简单的例子就能说明，在这个例子中，是一个简单的多线程内存分配库。</li>
+</ul>
+<pre><code class="language-C">1 // how many bytes of the heap are free?
+2 int bytesLeft = MAX_HEAP_SIZE;
+3
+4 // need lock and condition too
+5 cond_t c;
+6 mutex_t m;
+7
+8 void *
+9 allocate(int size) {
+10  Pthread_mutex_lock(&amp;m);
+11  while (bytesLeft &lt; size)
+12      Pthread_cond_wait(&amp;c, &amp;m);
+13  void *ptr = ...; // get mem from heap
+14  bytesLeft -= size;
+15  Pthread_mutex_unlock(&amp;m);
+16  return ptr;
+17 }
+18
+19 void free(void *ptr, int size) {
+20  Pthread_mutex_lock(&amp;m);
+21  bytesLeft += size;
+22  Pthread_cond_signal(&amp;c); // whom to signal??
+23  Pthread_mutex_unlock(&amp;m);
+24 }
+
+</code></pre>
+<ul>
+<li>从代码中可以看出，当线程调用进入内存分配代码时，它可能会因为内存不足而等待。相应的，线程释放内存时，会发信号说有更多内存空闲。但是，代码中有一个问题：应该唤醒哪个等待线程（可能有多个线程）？</li>
+<li>考虑以下场景。假设目前没有空闲内存，线程 Ta 调用 allocate(100)，接着线程 Tb 请求较少的内存，调用 allocate(10)。Ta 和 Tb 都等待在条件上并睡眠，没有足够的空闲内存来满足它们的请求。这时，假定第三个线程 Tc调用了 free(50)。遗憾的是，当它发信号唤醒等待线程时，可能不会唤醒申请 10 字节的 Tb 线程。而 Ta 线程由于内存不够，仍然等待。因为不知道唤醒哪个（或哪些）线程，所以图中代码无法正常工作。</li>
+<li>Lampson 和 Redell 的解决方案也很直接：用 pthread_cond_broadcast()代替上述代码中的 pthread_cond_signal()，唤醒所有的等待线程。这样做，确保了所有应该唤醒的线程都被唤醒。当然，不利的一面是可能会影响性能，因为不必要地唤醒了其他许多等待的线程，它们本来（还）不应该被唤醒。这些线程被唤醒后，重新检查条件，马上再次睡眠。</li>
+<li>Lampson 和 Redell 把这种条件变量叫作覆盖条件（covering condition），因为它能覆盖所有需要唤醒线程的场景（保守策略）。成本如上所述，就是太多线程被唤醒。聪明的读者可能发现，在单个条件变量的生产者/消费者问题中，也可以使用这种方法。但是，在这个例子中，我们有更好的方法，因此用了它。一般来说，如果你发现程序只有改成广播信号时才能工作（但你认为不需要），可能是程序有缺陷，修复它！但在上述内存分配的例子中，广播可能是最直接有效的方案。</li>
+</ul>
+<h3 id="summary">Summary</h3>
+<ul>
+<li>我们看到了引入锁之外的另一个重要同步原语：条件变量。当某些程序状态不符合要求时，通过允许线程进入休眠状态，条件变量使我们能够漂亮地解决许多重要的同步问题，包括著名的（仍然重要的）生产者/消费者问题，以及覆盖条件。</li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/lock/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2021-04-01">2021-04-01</time>
+                  <h4 class="title white no-margin">Lock of Programming</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/basic-of-concurrency-one/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-04-05">2021-04-05</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/basic-of-concurrency-one/">Series Three of Basic of Concurrency - Condition Variables</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/lock/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-04-01">2021-04-01</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/lock/">Lock of Programming</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/basic-of-concurrency-three/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-03-28">2021-03-28</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/basic-of-concurrency-three/">Series One of Basic of Concurrency - Concurrency and Threads</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-0 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-1 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-2 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-3 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-4 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-5 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-6 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/wAFV_pvXZ/" class="ctag ctag-7 ctag-wAFV_pvXZ" aria-label="">cs-course</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/VqiGqmxbod/" class="ctag ctag-8 ctag-VqiGqmxbod" aria-label="">6.824</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-9 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-10 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-11 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-12 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-13 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-14 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-15 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-16 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-17 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-18 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-27 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-28 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-29 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-30 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-31 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-32 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-33 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-34 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-35 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-36 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-37 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-38 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-39 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-40 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-41 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 113 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>
