@@ -1,0 +1,881 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>C 基础 | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+struct &amp; union
+
+菜鸟教程 - C 结构体
+菜鸟教程 - C 共用体
+
+union
+定义
+union [union tag]
+{
+   member definition;
+   member definition;..." />
+    <meta name="keywords" content="编程语言" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1620905430446" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210513192631.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2021-04-06"><i class="fa fa-calendar"></i><span class="lately">1 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/c-basic/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/c-basic/"> </span>
+              </a>
+              <span id="/c-basic/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-0 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">C 基础</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <!-- more -->
+<h2 id="struct-union">struct &amp; union</h2>
+<ul>
+<li><a href="https://www.runoob.com/cprogramming/c-structures.html">菜鸟教程 - C 结构体</a></li>
+<li><a href="https://www.runoob.com/cprogramming/c-unions.html">菜鸟教程 - C 共用体</a></li>
+</ul>
+<h3 id="union">union</h3>
+<h4 id="定义">定义</h4>
+<pre><code class="language-C">union [union tag]
+{
+   member definition;
+   member definition;
+   ...
+   member definition;
+} [one or more union variables];
+</code></pre>
+<h4 id="示例">示例</h4>
+<ul>
+<li>Data 类型的变量可以存储一个整数、一个浮点数，或者一个字符串。这意味着一个变量（相同的内存位置）可以存储多个多种类型的数据。您可以根据需要在一个共用体内使用任何内置的或者用户自定义的数据类型。</li>
+</ul>
+<pre><code class="language-C">union Data
+{
+   int i;
+   float f;
+   char  str[20];
+} data;
+</code></pre>
+<ul>
+<li>共用体占用的内存应足够存储共用体中最大的成员。例如，在上面的实例中，Data 将占用 20 个字节的内存空间，因为在各个成员中，字符串所占用的空间是最大的。下面的实例将显示上面的共用体占用的总内存大小：</li>
+</ul>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+ 
+union Data
+{
+   int i;
+   float f;
+   char  str[20];
+};
+ 
+int main( )
+{
+   union Data data;     
+   // Memory size occupied by data : 20
+   printf( &quot;Memory size occupied by data : %d\n&quot;, sizeof(data));
+   
+ 
+   data.i = 10;
+   data.f = 220.5;
+   strcpy( data.str, &quot;C Programming&quot;);
+ 
+   printf( &quot;data.i : %d\n&quot;, data.i);
+   printf( &quot;data.f : %f\n&quot;, data.f);
+   printf( &quot;data.str : %s\n&quot;, data.str);
+ 
+   return 0;
+}
+
+data.i : 1917853763
+data.f : 4122360580327794860452759994368.000000
+data.str : C Programming
+</code></pre>
+<ul>
+<li>共用体的 i 和 f 成员的值有损坏，因为最后赋给变量的值占用了内存位置，这也是 str 成员能够完好输出的原因。</li>
+</ul>
+<h4 id="作用">作用</h4>
+<ul>
+<li>节省内存，有两个很长的数据结构，不会同时使用，比如一个表示老师，一个表示学生，如果要统计教师和学生的情况用结构体的话就有点浪费了！用共用体的话，只占用最长的那个数据结构所占用的空间，就足够了！</li>
+<li>通信中的数据包会用到共用体:因为不知道对方会发一个什么包过来，用共用体的话就很简单了，定义几种格式的包，收到包之后就可以直接根据包的格式取出数据。</li>
+</ul>
+<h4 id="大小分配">大小分配</h4>
+<ul>
+<li>结构体变量所占内存长度是其中最大字段大小的整数倍（参考：结构体大小的计算）。</li>
+<li>共用体变量所占的内存长度等于最长的成员变量的长度。例如，教程中定义的共用体Data各占20个字节（因为char str[20]变量占20个字节）,而不是各占4+4+20=28个字节。</li>
+<li>union的长度取决于其中的长度最大的那个成员变量的长度。即union中成员变量是重叠摆放的，其开始地址相同。</li>
+</ul>
+<pre><code class="language-C">  union   mm{   
+   char   a;//元长度1   
+   int   b[5];//元长度4   
+   double   c;//元长度8   
+   int   d[3]; //元长度4
+  };   
+</code></pre>
+<ul>
+<li>本来mm的空间应该是sizeof(int)*5=20;但是如果只是20个单元的话,那可以存几个double型(8位)呢?两个半?当然不可以,所以mm的空间延伸为既要大于20,又要满足其他成员所需空间的整数倍,,因为含有double元长度8，故大小为24。</li>
+</ul>
+<h3 id="struct">struct</h3>
+<h4 id="定义-2">定义</h4>
+<pre><code class="language-C">struct tag { 
+    member-list
+    member-list 
+    member-list  
+    ...
+} variable-list ;
+</code></pre>
+<h4 id="示例-2">示例</h4>
+<ul>
+<li>在一般情况下，tag、member-list、variable-list 这 3 部分至少要出现 2 个。以下为实例：</li>
+</ul>
+<pre><code class="language-C">//此声明声明了拥有3个成员的结构体，分别为整型的a，字符型的b和双精度的c
+//同时又声明了结构体变量s1
+//这个结构体并没有标明其标签
+struct 
+{
+    int a;
+    char b;
+    double c;
+} s1;
+ 
+//此声明声明了拥有3个成员的结构体，分别为整型的a，字符型的b和双精度的c
+//结构体的标签被命名为SIMPLE,没有声明变量
+struct SIMPLE
+{
+    int a;
+    char b;
+    double c;
+};
+//用SIMPLE标签的结构体，另外声明了变量t1、t2、t3
+struct SIMPLE t1, t2[20], *t3;
+ 
+//也可以用typedef创建新类型
+typedef struct
+{
+    int a;
+    char b;
+    double c; 
+} Simple2;
+//现在可以用Simple2作为类型声明新的结构体变量
+Simple2 u1, u2[20], *u3;
+</code></pre>
+<ul>
+<li>在上面的声明中，第一个和第二声明被编译器当作两个完全不同的类型，即使他们的成员列表是一样的，如果令 t3=&amp;s1，则是非法的。</li>
+<li>结构体的成员可以包含其他结构体，也可以包含指向自己结构体类型的指针，而通常这种指针的应用是为了实现一些更高级的数据结构如链表和树等。</li>
+</ul>
+<pre><code class="language-C">//此结构体的声明包含了其他的结构体
+struct COMPLEX
+{
+    char string[100];
+    struct SIMPLE a;
+};
+ 
+//此结构体的声明包含了指向自己类型的指针
+struct NODE
+{
+    char string[100];
+    struct NODE *next_node;
+};
+</code></pre>
+<ul>
+<li>如果两个结构体互相包含，则需要对其中一个结构体进行不完整声明，如下所示：</li>
+</ul>
+<pre><code class="language-C">struct B;    //对结构体B进行不完整声明
+ 
+//结构体A中包含指向结构体B的指针
+struct A
+{
+    struct B *partner;
+    //other members;
+};
+ 
+//结构体B中包含指向结构体A的指针，在A声明完后，B也随之进行声明
+struct B
+{
+    struct A *partner;
+    //other members;
+};
+</code></pre>
+<ul>
+<li><strong>实际使用示例</strong></li>
+</ul>
+<pre><code class="language-C">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+ 
+struct Books
+{
+   char  title[50];
+   char  author[50];
+   char  subject[100];
+   int   book_id;
+};
+ 
+/* 函数声明 */
+void printBook( struct Books *book );
+int main( )
+{
+   struct Books Book1;        /* 声明 Book1，类型为 Books */
+   struct Books Book2;        /* 声明 Book2，类型为 Books */
+ 
+   /* Book1 详述 */
+   strcpy( Book1.title, &quot;C Programming&quot;);
+   strcpy( Book1.author, &quot;Nuha Ali&quot;); 
+   strcpy( Book1.subject, &quot;C Programming Tutorial&quot;);
+   Book1.book_id = 6495407;
+ 
+   /* Book2 详述 */
+   strcpy( Book2.title, &quot;Telecom Billing&quot;);
+   strcpy( Book2.author, &quot;Zara Ali&quot;);
+   strcpy( Book2.subject, &quot;Telecom Billing Tutorial&quot;);
+   Book2.book_id = 6495700;
+ 
+   /* 通过传 Book1 的地址来输出 Book1 信息 */
+   printBook( &amp;Book1 );
+ 
+   /* 通过传 Book2 的地址来输出 Book2 信息 */
+   printBook( &amp;Book2 );
+ 
+   return 0;
+}
+void printBook( struct Books *book )
+{
+   printf( &quot;Book title : %s\n&quot;, book-&gt;title);
+   printf( &quot;Book author : %s\n&quot;, book-&gt;author);
+   printf( &quot;Book subject : %s\n&quot;, book-&gt;subject);
+   printf( &quot;Book book_id : %d\n&quot;, book-&gt;book_id);
+}
+
+Book title : C Programming
+Book author : Nuha Ali
+Book subject : C Programming Tutorial
+Book book_id : 6495407
+Book title : Telecom Billing
+Book author : Zara Ali
+Book subject : Telecom Billing Tutorial
+Book book_id : 6495700
+</code></pre>
+<h4 id="大小分配-2">大小分配</h4>
+<ul>
+<li><a href="https://www.cnblogs.com/lykbk/archive/2013/04/02/krtmbhrkhoirtj9468945.html">博客园：结构体大小的计算</a></li>
+<li><strong>结构体中成员变量分配的空间是按照成员变量中占用空间最大的来作为分配单位</strong>,同样成员变量的存储空间也是不能跨分配单位的,如果当前的空间不足,则会存储到下一个分配单位中。</li>
+<li>结构体变量的首地址能够被其最宽基本类型成员的大小所整除。</li>
+<li>结构体每个成员相对于结构体首地址的偏移量(offset)都是成员大小的整数倍，如有需要编译器会在成员之间加上填充字节(internal adding)。即结构体成员的末地址减去结构体首地址(第一个结构体成员的首地址)得到的偏移量都要是对应成员大小的整数倍。</li>
+<li>结构体的总大小为结构体最宽基本类型成员大小的整数倍，如有需要编译器会在成员末尾加上填充字节。</li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210513192958.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/cpp-multi-thread/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2021-05-06">2021-05-06</time>
+                  <h4 class="title white no-margin">C++ 多线程</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/basic-of-concurrency-one/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2021-04-05">2021-04-05</time>
+                  <h4 class="title white no-margin">Series Three of Basic of Concurrency - Condition Variables</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/cpp-multi-thread/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210513192958.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-05-06">2021-05-06</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/cpp-multi-thread/">C++ 多线程</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/c-basic/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210513192631.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-04-06">2021-04-06</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/c-basic/">C 基础</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/basic-of-concurrency-one/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-04-05">2021-04-05</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/basic-of-concurrency-one/">Series Three of Basic of Concurrency - Condition Variables</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-0 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-1 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-2 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-3 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-4 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-6 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-7 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/wAFV_pvXZ/" class="ctag ctag-8 ctag-wAFV_pvXZ" aria-label="">cs-course</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/VqiGqmxbod/" class="ctag ctag-9 ctag-VqiGqmxbod" aria-label="">6.824</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-10 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-11 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-12 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-13 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-14 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-15 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-16 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-17 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-18 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-27 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-28 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-29 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-30 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-31 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-32 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-33 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-34 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-35 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-36 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-37 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-38 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-39 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-40 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-41 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 115 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>
