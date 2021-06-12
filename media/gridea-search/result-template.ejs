@@ -1,16 +1,26 @@
-  <h2 class="year"># 搜索</h2>
-    <% posts.forEach(function(post) { %>
-      <article class="item default grid-33 tablet-grid-50 np-mobile">
-        <a href="<%= post.link %>" class="thumb hover-effect">
-          <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('<% if (post.feature) { %><%= post.feature %><% } else { %><%= customConfig.featureImage %><%} %>');"></span>
+<div class="post-container">
+  <% posts.forEach(function(post) { %>
+    <article class="post">
+      <a href="<%= post.link %>">
+        <h2 class="post-title"><%= post.title %></h2>
+      </a>
+      <div class="post-info">
+        <time class="post-time">
+          · <%= post.dateFormat %> ·
+        </time>
+        <% post.tags.forEach(function(tag) { %>
+          <a href="<%= tag.link %>" class="post-tag">
+            # <%= tag.name %>
+          </a>
+        <% }); %>
+      </div>
+      <% if (themeConfig.showFeatureImage && post.feature) { %>
+        <a href="<%= post.link %>" class="post-feature-image" style="background-image: url('<%= post.feature %>')">
         </a>
-        <div class="info gradient-effect">
-          <time datetime="<%= post.dateFormat %>"><%= post.dateFormat %></time>
-          <h4 class="title usmall">
-            <a href="<%= post.link %>"><%= post.title %></a>
-          </h4>
-        </div>
-      </article>
-
-    <% }); %>
-    <div class="clear"></div>
+      <% } %>
+      <div class="post-abstract">
+        <%- post.searchedPreview %>
+      </di>
+    </article>
+  <% }); %>
+</div>

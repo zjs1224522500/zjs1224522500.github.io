@@ -1,598 +1,304 @@
+<!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>C语言 | Elvis Zhang</title>
-<meta name="description" content="The easy way or the right way." />
-<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
-<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<title>
+    Elvis Zhang
+</title>
+<!--[if lt IE 9]><script src="//cdn.bootcss.com/html5shiv/r29/html5.js"></script><![endif]-->
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+<meta http-equiv="x-dns-prefetch-control" content="on">
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<meta name="author" content="Elvis">
+<meta name="description" content="The easy way or the right way!">
+<meta name="keywords" content="Dead">
+<script async src="//instant.page/3.0.0" type="module" defer integrity="sha384-OeDn4XE77tdHo8pGtE1apMPmAipjoxUQ++eeJa6EtJCfHlvijigWiJpD7VDPWXV1"></script>
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css" />
+<link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<script type="text/javascript" src="https://apps.bdimg.com/libs/jquery/1.7.1/jquery.min.js"></script>
 
-<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
-<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
-<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
-<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
-<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
-<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
-<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
-  </head>
-  <body>
-    <!-- start: #wrapper -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/itjoker233/Gridea-theme-Chic/assets/media/css/style.min.css" />
+        <script src="https://cdn.jsdelivr.net/gh/itjoker233/Gridea-theme-Chic/assets/media/script/tocbot.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/itjoker233/Gridea-theme-Chic/assets/media/script/script.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/itjoker233/Gridea-theme-Chic/assets/media/script/icon.min.js"></script>
+        
+            <script src="https://cdn.jsdelivr.net/gh/ITJoker233/ITJoker233.github.io@latest/CDN/js/Card/prism.min.js"></script>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ITJoker233/ITJoker233.github.io@latest/CDN/css/Card/prism.min.css" />
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/katex.min.css">
+            <script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/katex.min.js"></script>
+            
+                <!--点击特效-->
+                <script src="https://cdn.jsdelivr.net/gh/ITJoker233/ITJoker233.github.io@latest/CDN/js/love.min.js"></script>
+                
+                        <!--CDN样式-->
+                        <script src="https://cdn.jsdelivr.net/gh/ITJoker233/ITJoker233.github.io@latest/CDN/js/hit-kounter-lc-0.3.0.js"></script>
+                        <script src="https://cdn1.lncld.net/static/js/av-min-1.5.0.js"></script>
+                        
+                            <script>
+                                (function() {
+                                    var bp = document.createElement('script');
+                                    var curProtocol = window.location.protocol.split(':')[0];
+                                    if (curProtocol === 'https') {
+                                        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+                                    } else {
+                                        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+                                    }
+                                    var s = document.getElementsByTagName("script")[0];
+                                    s.parentNode.insertBefore(bp, s);
+                                })();
+                            </script>
+                            
+                                <script async src="https://www.googletagmanager.com/gtag/js?id=UA-143818020-1"></script>
+                                <script>
+                                    window.dataLayer = window.dataLayer || [];
+
+                                    function gtag() {
+                                        dataLayer.push(arguments);
+                                    }
+                                    gtag('js', new Date());
+                                    gtag('config', 'UA-143818020-1');
+                                </script>
+                                
+</head>
+
+<body>
     <div class="wrapper">
-      
-            <header id="header" class="grid-container">
-        <!-- start: .menu-wrapper -->
-        <div class="menu-mobile"> 
-          <i class="fa fa-reorder"></i>
-        </div>
-        <div class="menu-wrapper">
-          <div class="">
-            <div class="logo">
-              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo">
+                <a href="https://blog.shunzi.tech">
+                    Elvis Zhang
+                </a>
             </div>
-            <!-- start: .main-nav -->
-
-            <nav class="main-nav grid-container grid-parent">
-              <ul id="menu-header" class="menu gradient-effect">
-                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+            <div id="tp-weather-widget"></div>
+            <div class="menu navbar-right">
                 
-                  <li class="" >
-                    <a href="/archives" class="menu">
-                      归档
+                    <a class="menu-item" href="/archives">
+                        归档
                     </a>
-                  </li>
-                
-                  <li class="" >
-                    <a href="/tag/diary" class="menu">
-                      随笔
+                    
+                    <a class="menu-item" href="/tag/diary">
+                        随笔
                     </a>
-                  </li>
-                
-                  <li class="" >
-                    <a href="/movies" class="menu">
-                      观影
+                    
+                    <a class="menu-item" href="/post/about">
+                        关于
                     </a>
-                  </li>
-                
-                  <li class="" >
-                    <a href="/post/about" class="menu">
-                      关于
-                    </a>
-                  </li>
-                
-                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
-              </ul>
-            </nav>
-            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
-            <!-- end: .main-nav -->
-            <div class="clear"></div>
-            <div class="border hide-on-tablet hide-on-mobile"></div>
-          </div>    
-          <div class="clear"></div>
-        </div>
-        <!-- end: .menu-wrapper -->
-        <div class="clear"></div>
-      </header>
-      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
-        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
-          <div class="search-wrapper section">
-            <form id="gridea-search-form" data-update="1623468698619" action="/search/index.html" class="search-form" _lpchecked="1">
-              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
-              <button type="submit" class="submit" aria-label="Submit">
-                <i class="fa fa-search-line"></i>
-              </button>
+                    
+                        <input id="switch_default" type="checkbox" class="switch_default">
+                        <label for="switch_default" class="toggleBtn"></label>
+            </div>
+            <form id="gridea-search-form" data-update="1623473058875" action="/search/index.html">
+                <input class="search-input" autocomplete="off" spellcheck="false" name="q" autofocus="true" placeholder="Search...">
             </form>
-          </div>
         </div>
-      </div>
-
-      <main id="home" class="main fullcover no-sidebar content">
-        <div class="grid-container module-wrapper enable-masonry aos-init aos-animate" data-aos="fade-up">
-        <div class="epcl-page-wrapper">
-          <div class="left-content grid-70 np-mobile widget_epcl_related_articles">
-                
-            <!-- start: .articles -->
-            <div class="main-article post">
-  <h2 class="year"># C语言</h2>
-    
-      <article class="item default grid-33 tablet-grid-50 np-mobile">
-        <a href="https://blog.shunzi.tech/post/c-header/" class="thumb hover-effect">
-          <span class="fullimage cover" style="display: block;background-image: url('https://blog.shunzi.tech/post-images/c-header.jpg');"></span>
-        </a>
-        <div class="info gradient-effect">
-          <time datetime="2019-08-21">2019-08-21</time>
-          <h4 class="title usmall">
-            <a href="https://blog.shunzi.tech/post/c-header/">常见的C语言库函数</a>
-          </h4>
-        </div>
-      </article>
+    </nav>
 
     
-      <article class="item default grid-33 tablet-grid-50 np-mobile">
-        <a href="https://blog.shunzi.tech/post/cmake/" class="thumb hover-effect">
-          <span class="fullimage cover" style="display: block;background-image: url('https://cmake.org/wp-content/uploads/2018/11/cmake_logo_slider.png');"></span>
-        </a>
-        <div class="info gradient-effect">
-          <time datetime="2019-07-22">2019-07-22</time>
-          <h4 class="title usmall">
-            <a href="https://blog.shunzi.tech/post/cmake/">CMake入门</a>
-          </h4>
-        </div>
-      </article>
+        <nav class="navbar-mobile" id="nav-mobile">
+            <div class="container">
+                <div class="navbar-header">
+                    <div>
+                        <a href="https://blog.shunzi.tech">
+                            Elvis Zhang
+                        </a>
+                        <!--en-->
+                        <a id="mobile-toggle-theme-en" class="a en">&nbsp;Dark</a>
+                        <!--zh-->
+                        <a id="mobile-toggle-theme-zh" class="a zh">&nbsp;&#x6697;&#x9ED1;</a>
+                    </div>
+                    <form id="gridea-search-form" data-update="1623473058875" action="/search/index.html">
+                        <input class="search-input" autocomplete="off" spellcheck="false" name="q" autofocus="true" placeholder="Search...">
+                    </form>
+                    <!--en-->
+                    <div class="menu-toggle" id="menu-toggle-en" onclick="mobileBtn()">&#9776; Menu</div>
+                    <!--zh-->
+                    <div class="menu-toggle" id="menu-toggle-zh" onclick="mobileBtn()">&#9776; &#x83DC;&#x5355;</div>
 
-    
-    <div class="clear"></div>
-</div>
-            <!-- end: .articles -->
-            
-                        <div class="epcl-pagination section">
-              <div class="nav">
-                
-                
-              </div>
+                </div>
+                <div class="menu" id="mobile-menu">
+                    
+                        <a class="menu-item" href="/archives">
+                            归档
+                        </a>
+                        
+                        <a class="menu-item" href="/tag/diary">
+                            随笔
+                        </a>
+                        
+                        <a class="menu-item" href="/post/about">
+                            关于
+                        </a>
+                        
+                </div>
             </div>
-            
-          </div>
-          </div>
-        </div>
-      </main>
-
-        <footer id="footer" class="grid-container">
-        <div class="widgets row gradient-effect">
-            <div class="default-sidebar border-effect">
-              <div class="grid-33 tablet-grid-50 mobile-grid-100">
-                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
-                  <h4 class="widget-title title white bordered">最新文章</h4>
-                  
-                  
-                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
-                    <a href="https://blog.shunzi.tech/post/REMIX/" class="thumb hover-effect">
-                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610214450.png');"></span>
-                    </a>
-                    <div class="info gradient-effect">
-                      <time datetime="2021-06-05">2021-06-05</time>
-                      <h4 class="title usmall">
-                        <a href="https://blog.shunzi.tech/post/REMIX/">REMIX: Efficient Range Query for LSM-trees</a>
-                      </h4>
-                    </div>
-                    <div class="clear"></div>
-                  </article>
-                  
-                  
-                  
-                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
-                    <a href="https://blog.shunzi.tech/post/cpp-std/" class="thumb hover-effect">
-                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://blog.shunzi.tech/post-images/cpp-basic.jpg');"></span>
-                    </a>
-                    <div class="info gradient-effect">
-                      <time datetime="2021-05-12">2021-05-12</time>
-                      <h4 class="title usmall">
-                        <a href="https://blog.shunzi.tech/post/cpp-std/">C++ STL</a>
-                      </h4>
-                    </div>
-                    <div class="clear"></div>
-                  </article>
-                  
-                  
-                  
-                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
-                    <a href="https://blog.shunzi.tech/post/HashKV/" class="thumb hover-effect">
-                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324112600.png');"></span>
-                    </a>
-                    <div class="info gradient-effect">
-                      <time datetime="2021-05-11">2021-05-11</time>
-                      <h4 class="title usmall">
-                        <a href="https://blog.shunzi.tech/post/HashKV/">HashKV: Enabling Efficient Updates in KV Storage via Hashing</a>
-                      </h4>
-                    </div>
-                    <div class="clear"></div>
-                  </article>
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  <div class="clear"></div>
-                </section>
-              </div>
-
-              <div class="grid-33 tablet-grid-50 mobile-grid-100">
-                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
-                  <h4 class="widget-title title white bordered">标签云</h4>
-                  <div class="tagcloud">
-                    
-                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-1 ctag-3zCwFWPHxH" aria-label="">存储</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-2 ctag-_jfuTNqah" aria-label="">LSM</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-3 ctag-n2w6bz87h" aria-label="">编程语言</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/RxQjurMnD/" class="ctag ctag-4 ctag-RxQjurMnD" aria-label="">Survey</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-5 ctag-la-n8a0mo" aria-label="">读书笔记</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-6 ctag-os" aria-label="">OS</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-7 ctag-5uQUdLlSC" aria-label="">Paper</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-8 ctag-hbaTDSglx-" aria-label="">工具</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-9 ctag-EO3XpMf_y" aria-label="">Linux</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/wAFV_pvXZ/" class="ctag ctag-10 ctag-wAFV_pvXZ" aria-label="">cs-course</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/VqiGqmxbod/" class="ctag ctag-11 ctag-VqiGqmxbod" aria-label="">6.824</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-12 ctag-geK0jEW-T" aria-label="">分布式</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-13 ctag-9msH-lUaA" aria-label="">缓存</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-14 ctag-i2b42Y2j6" aria-label="">Ceph</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-15 ctag-oBVOD8v4ou" aria-label="">一致性</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-16 ctag-gqgftpk_y" aria-label="">AI</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-17 ctag-shu-ju-ku" aria-label="">数据库</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-18 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-19 ctag-4zx4ysLGro" aria-label="">云计算</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-20 ctag-Y_nsOD1At" aria-label="">SSD</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-21 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-22 ctag-PhD" aria-label="">Ph.D</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-23 ctag-ZqEqvRTvl" aria-label="">网络</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-24 ctag-PuY19cs53" aria-label="">仿真</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-25 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-26 ctag-fu-wu-qi" aria-label="">服务器</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-27 ctag-X-lnqf1Ex" aria-label="">容器</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-28 ctag-5h7k39FKw" aria-label="">C语言</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
-                    
-                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
-                    
-                  </div>
-                  <div class="clear"></div>
-                </section>
-              </div>
-
-              <div class="grid-33 tablet-grid-50 mobile-grid-100">
-                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
-                  <h4 class="widget-title title white bordered">关于我</h4>
-                  <div class="avatar">
-                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
-                  </div>
-                  <div class="info">
-                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
-                    <p class="founder">The easy way or the right way.</p>
-                    <div class="social">
-                      
-                          
-                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
-                        
-                      
-                          
-                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
-                        
-                      
-                        
-                      
-                        
-                      
-                        
-                      
-                    </div> 
-                  </div>
-                  <div class="clear"></div>
-                  </section>
-              </div>
-
-            </div>
-            <div class="clear"></div>
-        </div>
-
-        <div class="logo">
-          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
-        </div>
-        <p class="published border-effect">
-          ©2019 共 121 篇文章
-          <br/>
-          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
-        </p>
-        
-        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
-          <i class="fa fa-arrow"></i>
-        </a>
-    </footer>
-    
-    <div class="clear"></div>
-
-        
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
-<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+        </nav>
+</header>
 <script>
-    new Valine({
-        el: '#comments',
-        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
-        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
-        pageSize: 30,
-        placeholder: '既然来了，那就留个痕迹吧~',
-        visitor: true // 阅读量统计
-    })
-</script>
-    
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementById("menu-toggle-en");
+        var toggleMenu_zh = document.getElementById("menu-toggle-zh");
 
+        var mobileMenu = document.getElementById("mobile-menu");
+        if (toggleMenu.display != "none") {
+            if (toggleMenu.classList.contains("active")) {
+                toggleMenu.classList.remove("active")
+                mobileMenu.classList.remove("active")
+            } else {
+                toggleMenu.classList.add("active")
+                mobileMenu.classList.add("active")
+            }
+        } else if (toggleMenu_zh.display != "none") {
+            if (toggleMenu_zh.classList.contains("active")) {
+                toggleMenu_zh.classList.remove("active")
+                mobileMenu.classList.remove("active")
+            } else {
+                toggleMenu_zh.classList.add("active")
+                mobileMenu.classList.add("active")
+            }
+        }
+
+    }
+</script>
+
+
+
+    <script>
+        (function(a, h, g, f, e, d, c, b) {
+            b = function() {
+                d = h.createElement(g);
+                c = h.getElementsByTagName(g)[0];
+                d.src = e;
+                d.charset = "utf-8";
+                d.async = 1;
+                c.parentNode.insertBefore(d, c)
+            };
+            a["SeniverseWeatherWidgetObject"] = f;
+            a[f] || (a[f] = function() {
+                (a[f].q = a[f].q || []).push(arguments)
+            });
+            a[f].l = +new Date();
+            if (a.attachEvent) {
+                a.attachEvent("onload", b)
+            } else {
+                a.addEventListener("load", b, false)
+            }
+        }(window, document, "script", "SeniverseWeatherWidget", "//cdn.sencdn.com/widget2/static/js/bundle.js?t=" + parseInt((new Date().getTime() / 100000000).toString(), 10)));
+        window.SeniverseWeatherWidget('show', {
+            flavor: "slim",
+            location: "WWEFQFPJZ7T8",
+            geolocation: true,
+            language: "auto",
+            unit: "c",
+            theme: "auto",
+            token: "61bcc333-3305-4728-9465-6785274bb0a3",
+            hover: "enabled",
+            container: "tp-weather-widget"
+        })
+    </script>
+    
+            <div class="main">
+                <div class="container">
+                    <div class="post-wrap archive">
+                        
+                            
+                                <h3>
+                                    2019
+                                </h3>
+                                
+                                    
+
+                                        <article class="archive-item">
+                                            <a class="archive-item-link" href="https://blog.shunzi.tech/post/c-header/">
+                                                常见的C语言库函数
+                                            </a>
+                                            <span class="archive-item-date">2019-08-21 </span>
+                                        </article>
+                                        
+                                            
+                                    
+
+                                        <article class="archive-item">
+                                            <a class="archive-item-link" href="https://blog.shunzi.tech/post/cmake/">
+                                                CMake入门
+                                            </a>
+                                            <span class="archive-item-date">2019-07-22 </span>
+                                        </article>
+                                        
+                                            
+                                                
+                    </div>
+                    <div class="pagination-container">
+                        
+                            
+                                    
+                                            
+                    </div>
+                </div>
+            </div>
     </div>
-    <!-- end: #wrapper -->
-  </body>
+    
+        <footer id="footer" class="footer">
+            <div class="copyright">
+                
+                        Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+                            
+                                <b id="hitokoto"></b><br>
+                                
+                                        <svg viewBox="0 0 1024 1024" style="margin-left: 5px;margin-right: 5px;" version="1.0" width="8" height="8" class="my-face">
+            <path
+                d="M863.597631 513.574282l-271.33965-140.213484L729.783667 81.926656c3.583731-7.87141 7.167462-15.742819 7.167462-25.214109C736.887134 25.226908 708.345275 0.012799 672.635953 0.012799a63.611229 63.611229 0 0 0-39.293053 12.607055c-1.791866 1.59988-3.519736 3.19976-5.311602 3.19976L147.87531 418.925381a55.547834 55.547834 0 0 0-19.646527 47.356448c1.791866 17.278704 14.27093 33.021523 32.125591 42.492813l271.33965 141.749369L292.504463 945.221908c-12.479064 25.214109-1.791866 53.563983 23.166262 69.306802 10.751194 6.335525 23.230258 9.47129 35.709322 9.47129 16.062795 0 32.125591-4.735645 44.604655-15.742819l480.091993-403.297753a55.547834 55.547834 0 0 0 19.646526-47.228458 61.243407 61.243407 0 0 0-32.12559-44.156688z"
+                fill="#93b5cf"></path>
+        </svg>
+                                        Elvis Zhang &copy;Copyright
+                                            <script>
+                                                var date = new Date();
+                                                document.write("" + date.getFullYear());
+                                            </script>
+                                            | Powered by
+                                            <a href="https://github.com/" target="_blank">
+                                                Github Pages
+                                            </a>
+            </div>
+            <div id="update" style="display:none;">
+                on
+            </div>
+            
+                <div id="version" style="display:none;">
+                    1.7.6
+                </div>
+                
+                    <script>
+                        var port = '';
+                        
+                        document.write('<div id="home_path" style="display:none;">' + document.location.protocol + '//' + window.document.location.hostname + port + '</div>')
+                    </script>
+        </footer>
+        
+            <script src='https://cdn.jsdelivr.net/npm/live2d-widget@3.x/lib/L2Dwidget.min.js'></script>
+            
+                <script>
+                    
+                    
+                    loadlive2d();
+                    
+                    
+                    hitokoto();
+                    
+                    getStar();
+                    hljs.initHighlighting();
+                    console.clear();
+                    
+                    CheckVersion();
+                    
+                    var newDate = new Date();
+                    newDate.setTime(1623473058875);
+                    console.log(" Blog Update Time: " + newDate.toLocaleDateString());
+                    console.log("\n %c \u26a1Theme:Chic Author's Blog:https://blog.itjoker.cn  Write By ITJoker  \n\n", "color: #ffffff; background: rgba(49, 49, 49, 0.85); padding:5px 0;border-radius:5px;");
+                </script>
+        </div>
+</body>
+
 </html>
