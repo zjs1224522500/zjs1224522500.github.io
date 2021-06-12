@@ -1,0 +1,789 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>C++ STL | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+C++ STL 的相关资料记录
+持续更新
+
+
+STL
+
+C++ STL（标准模板库）是一套功能强大的 C++ 模板类，提供了通用的模板类和函数，这些模板类和函数可以实现多种流行和常用的算法和数据结构，如向量、链表、队列、栈。
+
+参考链接
+..." />
+    <meta name="keywords" content="编程语言" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1623466729068" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://blog.shunzi.tech/post-images/cpp-basic.jpg');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2021-05-12"><i class="fa fa-calendar"></i><span class="lately">1 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/cpp-std/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/cpp-std/"> </span>
+              </a>
+              <span id="/cpp-std/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-0 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">C++ STL</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <ul>
+<li>C++ STL 的相关资料记录</li>
+<li>持续更新</li>
+</ul>
+<!--more-->
+<h2 id="stl">STL</h2>
+<ul>
+<li>C++ STL（标准模板库）是一套功能强大的 C++ 模板类，提供了通用的模板类和函数，这些模板类和函数可以实现多种流行和常用的算法和数据结构，如向量、链表、队列、栈。</li>
+</ul>
+<h3 id="参考链接">参考链接</h3>
+<ul>
+<li><a href="https://www.runoob.com/cplusplus/cpp-stl-tutorial.html">[1] 菜鸟教程：C++ STL 教程</a></li>
+<li><a href="https://blog.csdn.net/u010183728/article/details/81913729">[2] CSDN - C++中STL用法超详细总结</a></li>
+<li><a href="https://github.com/czs108/Cpp-Primer-5th-Notes-CN">[3] Github - 《C++ Primer中文版（第5版）》笔记</a></li>
+</ul>
+<h3 id="stl-容器">STL 容器</h3>
+<h4 id="顺序容器-sequential-containers">顺序容器 Sequential Containers</h4>
+<ul>
+<li><strong>概览</strong></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">类型</th>
+<th style="text-align:center">特性</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center"><code>vector</code></td>
+<td style="text-align:center">可变大小数组。支持快速随机访问。在尾部之外的位置插入/删除元素可能很慢</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>deque</code></td>
+<td style="text-align:center">双端队列。支持快速随机访问。在头尾位置插入/删除速度很快</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>list</code></td>
+<td style="text-align:center">双向链表。只支持双向顺序访问。在任何位置插入/删除速度都很快</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>forward_list</code></td>
+<td style="text-align:center">单向链表。只支持单向顺序访问。在任何位置插入/删除速度都很快</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>array</code></td>
+<td style="text-align:center">固定大小数组。支持快速随机访问。不能添加/删除元素</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>string</code></td>
+<td style="text-align:center">类似<code>vector</code>，但用于保存字符。支持快速随机访问。在尾部插入/删除速度很快</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>forward_list</code>和<code>array</code>是C++11新增类型。与内置数组相比，<code>array</code>更安全易用。<code>forward_list</code>没有<code>size</code>操作。</li>
+</ul>
+<p><strong>容器选择原则</strong></p>
+<ul>
+<li>除非有合适的理由选择其他容器，否则应该使用<code>vector</code>。</li>
+<li>如果程序有很多小的元素，且空间的额外开销很重要，则不要使用<code>list</code>或<code>forward_list</code>。</li>
+<li>如果程序要求随机访问容器元素，则应该使用<code>vector</code>或<code>deque</code>。</li>
+<li>如果程序需要在容器头尾位置插入/删除元素，但不会在中间位置操作，则应该使用<code>deque</code>。</li>
+<li>如果程序只有在读取输入时才需要在容器中间位置插入元素，之后需要随机访问元素。则：
+<ul>
+<li>先确定是否真的需要在容器中间位置插入元素。当处理输入数据时，可以先向<code>vector</code>追加数据，再调用标准库的<code>sort</code>函数重排元素，从而避免在中间位置添加元素。</li>
+<li>如果必须在中间位置插入元素，可以在输入阶段使用<code>list</code>。输入完成后将<code>list</code>中的内容拷贝到<code>vector</code>中。</li>
+</ul>
+</li>
+<li>不确定应该使用哪种容器时，可以先只使用<code>vector</code>和<code>list</code>的公共操作：使用迭代器，不使用下标操作，避免随机访问。这样在必要时选择<code>vector</code>或<code>list</code>都很方便。</li>
+</ul>
+<h4 id="关联容器">关联容器</h4>
+<p>关联容器支持高效的关键字查找和访问操作。2个主要的关联容器（associative-container）类型是<code>map</code>和<code>set</code>。</p>
+<ul>
+<li><code>map</code>中的元素是一些键值对（key-value）：关键字起索引作用，值表示与索引相关联的数据。</li>
+<li><code>set</code>中每个元素只包含一个关键字，支持高效的关键字查询操作：检查一个给定关键字是否在<code>set</code>中。</li>
+</ul>
+<p>标准库提供了8个关联容器，它们之间的不同体现在三个方面：</p>
+<ul>
+<li>是<code>map</code>还是<code>set</code>类型。</li>
+<li>是否允许保存重复的关键字。</li>
+<li>是否按顺序保存元素。</li>
+</ul>
+<p>允许重复保存关键字的容器名字都包含单词<code>multi</code>；无序保存元素的容器名字都以单词<code>unordered</code>开头。</p>
+<h5 id="使用关联容器using-an-associative-container">使用关联容器（Using an Associative Container）</h5>
+<p><code>map</code>类型通常被称为关联数组（associative array）。</p>
+<p>从<code>map</code>中提取一个元素时，会得到一个<code>pair</code>类型的对象。<code>pair</code>是一个模板类型，保存两个名为<code>first</code>和<code>second</code>的公有数据成员。<code>map</code>所使用的<code>pair</code>用<code>first</code>成员保存关键字，用<code>second</code>成员保存对应的值。</p>
+<pre><code class="language-c++">// count the number of times each word occurs in the input
+map&lt;string, size_t&gt; word_count;     // empty map from string to size_t
+string word;
+while (cin &gt;&gt; word)
+    ++word_count[word];     // fetch and increment the counter for word
+for (const auto &amp;w : word_count)    // for each element in the map
+    // print the results
+    cout &lt;&lt; w.first &lt;&lt; &quot; occurs &quot; &lt;&lt; w.second
+        &lt;&lt; ((w.second &gt; 1) ? &quot; times&quot; : &quot; time&quot;) &lt;&lt; endl;
+</code></pre>
+<p><code>set</code>类型的<code>find</code>成员返回一个迭代器。如果给定关键字在<code>set</code>中，则迭代器指向该关键字，否则返回的是尾后迭代器。</p>
+<h6 id="pair">pair</h6>
+<p><code>pair</code>定义在头文件<em>utility</em>中。一个<code>pair</code>可以保存两个数据成员，分别命名为<code>first</code>和<code>second</code>。</p>
+<pre><code class="language-c++">pair&lt;string, string&gt; anon;        // holds two strings
+pair&lt;string, size_t&gt; word_count;  // holds a string and an size_t
+pair&lt;string, vector&lt;int&gt;&gt; line;   // holds string and vector&lt;int&gt;
+</code></pre>
+<p><code>pair</code>的默认构造函数对数据成员进行值初始化。</p>
+<h3 id="stl-常用算法">STL 常用算法</h3>
+<h4 id="搜索">搜索</h4>
+<h5 id="二分查找">二分查找</h5>
+<ul>
+<li><strong>upper_bound()</strong></li>
+</ul>
+<pre><code class="language-C++">//查找[first, last)区域中第一个大于 val 的元素。
+ForwardIterator upper_bound (ForwardIterator first, ForwardIterator last,
+                             const T&amp; val);
+//查找[first, last)区域中第一个不符合 comp 规则的元素
+ForwardIterator upper_bound (ForwardIterator first, ForwardIterator last,
+                             const T&amp; val, Compare comp);
+</code></pre>
+<ul>
+<li><strong>lower_bound()</strong></li>
+</ul>
+<pre><code class="language-C++">//在 [first, last) 区域内查找不小于 val 的元素
+ForwardIterator lower_bound (ForwardIterator first, ForwardIterator last,
+                             const T&amp; val);
+//在 [first, last) 区域内查找第一个不符合 comp 规则的元素
+ForwardIterator lower_bound (ForwardIterator first, ForwardIterator last,
+                             const T&amp; val, Compare comp);
+</code></pre>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610214450.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/REMIX/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2021-06-05">2021-06-05</time>
+                  <h4 class="title white no-margin">REMIX: Efficient Range Query for LSM-trees</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324112600.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/HashKV/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2021-05-11">2021-05-11</time>
+                  <h4 class="title white no-margin">HashKV: Enabling Efficient Updates in KV Storage via Hashing</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/REMIX/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610214450.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-06-05">2021-06-05</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/REMIX/">REMIX: Efficient Range Query for LSM-trees</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/cpp-std/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://blog.shunzi.tech/post-images/cpp-basic.jpg');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-05-12">2021-05-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/cpp-std/">C++ STL</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/HashKV/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324112600.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-05-11">2021-05-11</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/HashKV/">HashKV: Enabling Efficient Updates in KV Storage via Hashing</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-1 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-2 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-3 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/RxQjurMnD/" class="ctag ctag-4 ctag-RxQjurMnD" aria-label="">Survey</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-5 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-6 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-7 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-8 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-9 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/wAFV_pvXZ/" class="ctag ctag-10 ctag-wAFV_pvXZ" aria-label="">cs-course</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/VqiGqmxbod/" class="ctag ctag-11 ctag-VqiGqmxbod" aria-label="">6.824</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-12 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-13 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-14 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-15 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-16 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-17 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-18 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-19 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-20 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-21 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-22 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-23 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-24 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-25 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-26 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-27 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-28 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 121 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

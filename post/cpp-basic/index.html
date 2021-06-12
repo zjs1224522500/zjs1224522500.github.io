@@ -84,7 +84,7 @@
       <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
         <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
           <div class="search-wrapper section">
-            <form id="gridea-search-form" data-update="1620954331293" action="/search/index.html" class="search-form" _lpchecked="1">
+            <form id="gridea-search-form" data-update="1623466729068" action="/search/index.html" class="search-form" _lpchecked="1">
               <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
               <button type="submit" class="submit" aria-label="Submit">
                 <i class="fa fa-search-line"></i>
@@ -992,6 +992,129 @@ int main(void)
    return 0;
 }
 </code></pre>
+<h4 id="构造函数">构造函数</h4>
+<ul>
+<li><a href="https://www.jianshu.com/p/ef66ba66916c">简书：C++11 =default 和 =delete</a></li>
+</ul>
+<p>一个类通过定义五种特殊的成员函数来控制对象的拷贝、移动、赋值和销毁操作。</p>
+<ul>
+<li>拷贝构造函数（copy constructor）</li>
+<li>拷贝赋值运算符（copy-assignment operator）</li>
+<li>移动构造函数（move constructor）</li>
+<li>移动赋值运算符（move-assignment operator）</li>
+<li>析构函数（destructor）</li>
+</ul>
+<p>这些操作统称为拷贝控制操作（copy control）。</p>
+<p>在定义任何类时，拷贝控制操作都是必要部分。</p>
+<h5 id="拷贝构造函数the-copy-constructor">拷贝构造函数（The Copy Constructor）</h5>
+<p>如果一个构造函数的第一个参数是自身类类型的引用（几乎总是<code>const</code>引用），且任何额外参数都有默认值，则此构造函数是拷贝构造函数。</p>
+<pre><code class="language-c++">class Foo
+{
+public:
+    Foo();   // default constructor
+    Foo(const Foo&amp;);   // copy constructor
+    // ...
+};
+</code></pre>
+<p>由于拷贝构造函数在一些情况下会被隐式使用，因此通常不会声明为<code>explicit</code>的。</p>
+<p>如果类未定义自己的拷贝构造函数，编译器会为类合成一个。一般情况下，合成拷贝构造函数（synthesized copy constructor）会将其参数的非<code>static</code>成员逐个拷贝到正在创建的对象中。</p>
+<pre><code class="language-c++">class Sales_data
+{
+public:
+    // other members and constructors as before
+    // declaration equivalent to the synthesized copy constructor
+    Sales_data(const Sales_data&amp;);
+private:
+    std::string bookNo;
+    int units_sold = 0;
+    double revenue = 0.0;
+};
+
+// equivalent to the copy constructor that would be synthesized for Sales_data
+Sales_data::Sales_data(const Sales_data &amp;orig):
+    bookNo(orig.bookNo),    // uses the string copy constructor
+    units_sold(orig.units_sold),    // copies orig.units_sold
+    revenue(orig.revenue)   // copies orig.revenue
+    { } // empty bod
+</code></pre>
+<p>使用直接初始化时，实际上是要求编译器按照函数匹配规则来选择与实参最匹配的构造函数。使用拷贝初始化时，是要求编译器将右侧运算对象拷贝到正在创建的对象中，如果需要的话还要进行类型转换。</p>
+<pre><code class="language-c++">string dots(10, '.');   // direct initialization
+string s(dots);         // direct initialization
+string s2 = dots;       // copy initialization
+string null_book = &quot;9-999-99999-9&quot;;    // copy initialization
+string nines = string(100, '9');       // copy initialization
+</code></pre>
+<p>拷贝初始化通常使用拷贝构造函数来完成。但如果一个类拥有移动构造函数，则拷贝初始化有时会使用移动构造函数而非拷贝构造函数来完成。</p>
+<p>发生拷贝初始化的情况：</p>
+<ul>
+<li>用<code>=</code>定义变量。</li>
+<li>将对象作为实参传递给非引用类型的形参。</li>
+<li>从返回类型为非引用类型的函数返回对象。</li>
+<li>用花括号列表初始化数组中的元素或聚合类中的成员。</li>
+</ul>
+<p>当传递一个实参或者从函数返回一个值时，不能隐式使用<code>explicit</code>构造函数。</p>
+<pre><code class="language-c++">vector&lt;int&gt; v1(10);     // ok: direct initialization
+vector&lt;int&gt; v2 = 10;    // error: constructor that takes a size is explicit
+void f(vector&lt;int&gt;);    // f's parameter is copy initialized
+f(10);      // error: can't use an explicit constructor to copy an argument
+f(vector&lt;int&gt;(10));     // ok: directly construct a temporary vector from an int
+</code></pre>
+<h5 id="拷贝赋值运算符the-copy-assignment-operator">拷贝赋值运算符（The Copy-Assignment Operator）</h5>
+<p>重载运算符（overloaded operator）的参数表示运算符的运算对象。</p>
+<p>如果一个运算符是成员函数，则其左侧运算对象会绑定到隐式的<code>this</code>参数上。</p>
+<p>赋值运算符通常应该返回一个指向其左侧运算对象的引用。</p>
+<pre><code class="language-c++">class Foo
+{
+public:
+    Foo&amp; operator=(const Foo&amp;);  // assignment operator
+    // ...
+};
+</code></pre>
+<p>标准库通常要求保存在容器中的类型要具有赋值运算符，且其返回值是左侧运算对象的引用。</p>
+<p>如果类未定义自己的拷贝赋值运算符，编译器会为类合成一个。一般情况下，合成拷贝赋值运算符（synthesized copy-assignment operator）会将其右侧运算对象的非<code>static</code>成员逐个赋值给左侧运算对象的对应成员，之后返回左侧运算对象的引用。</p>
+<pre><code class="language-c++">// equivalent to the synthesized copy-assignment operator
+Sales_data&amp; Sales_data::operator=(const Sales_data &amp;rhs)
+{
+    bookNo = rhs.bookNo;    // calls the string::operator=
+    units_sold = rhs.units_sold;    // uses the built-in int assignment
+    revenue = rhs.revenue;  // uses the built-in double assignment
+    return *this;   // return a reference to this object
+}
+</code></pre>
+<h5 id="default">=default</h5>
+<p>可以通过将拷贝控制成员定义为<code>=default</code>来显式地要求编译器生成合成版本。</p>
+<pre><code class="language-c++">class Sales_data
+{
+public:
+    // copy control; use defaults
+    Sales_data() = default;
+    Sales_data(const Sales_data&amp;) = default;
+    ~Sales_data() = default;
+    // other members as before
+};
+</code></pre>
+<p>在类内使用<code>=default</code>修饰成员声明时，合成的函数是隐式内联的。如果不希望合成的是内联函数，应该只对成员的类外定义使用<code>=default</code>。</p>
+<p>只能对具有合成版本的成员函数使用<code>=default</code>。</p>
+<h5 id="阻止拷贝preventing-copiesdelete">阻止拷贝（Preventing Copies）=delete</h5>
+<p>大多数类应该定义默认构造函数、拷贝构造函数和拷贝赋值运算符，无论是显式地还是隐式地。</p>
+<p>在C++11新标准中，将拷贝构造函数和拷贝赋值运算符定义为删除的函数（deleted function）可以阻止类对象的拷贝。删除的函数是一种虽然进行了声明，但是却不能以任何方式使用的函数。定义删除函数的方式是在函数的形参列表后面添加<code>=delete</code>。</p>
+<pre><code class="language-c++">struct NoCopy
+{
+    NoCopy() = default; // use the synthesized default constructor
+    NoCopy(const NoCopy&amp;) = delete; // no copy
+    NoCopy &amp;operator=(const NoCopy&amp;) = delete; // no assignment
+    ~NoCopy() = default; // use the synthesized destructor
+    // other members
+};
+</code></pre>
+<p><code>=delete</code>和<code>=default</code>有两点不同：</p>
+<ul>
+<li><code>=delete</code>可以对任何函数使用；<code>=default</code>只能对具有合成版本的函数使用，defaulted 函数特性仅用于类的特殊成员函数，且该特殊成员函数没有默认参数。</li>
+<li><code>=delete</code>必须出现在函数第一次声明的地方；<code>=default</code>既能出现在类内，也能出现在类外。</li>
+</ul>
+<p>析构函数不能是删除的函数。对于析构函数被删除的类型，不能定义该类型的变量或者释放指向该类型动态分配对象的指针。</p>
+<p>如果一个类中有数据成员不能默认构造、拷贝或销毁，则对应的合成拷贝控制成员将被定义为删除的。</p>
+<p>在旧版本的C++标准中，类通过将拷贝构造函数和拷贝赋值运算符声明为<code>private</code>成员来阻止类对象的拷贝。在新标准中建议使用<code>=delete</code>而非<code>private</code>。</p>
 <h3 id="继承">继承</h3>
 <pre><code class="language-C++">#include &lt;iostream&gt;
  
@@ -1399,13 +1522,13 @@ jQuery(document).ready(function($){
                   
                   
                   <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
-                    <a href="https://blog.shunzi.tech/post/cpp-multi-thread/" class="thumb hover-effect">
-                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210513192958.png');"></span>
+                    <a href="https://blog.shunzi.tech/post/REMIX/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610214450.png');"></span>
                     </a>
                     <div class="info gradient-effect">
-                      <time datetime="2021-05-06">2021-05-06</time>
+                      <time datetime="2021-06-05">2021-06-05</time>
                       <h4 class="title usmall">
-                        <a href="https://blog.shunzi.tech/post/cpp-multi-thread/">C++ 多线程</a>
+                        <a href="https://blog.shunzi.tech/post/REMIX/">REMIX: Efficient Range Query for LSM-trees</a>
                       </h4>
                     </div>
                     <div class="clear"></div>
@@ -1414,13 +1537,13 @@ jQuery(document).ready(function($){
                   
                   
                   <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
-                    <a href="https://blog.shunzi.tech/post/c-basic/" class="thumb hover-effect">
-                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210513192631.png');"></span>
+                    <a href="https://blog.shunzi.tech/post/cpp-std/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://blog.shunzi.tech/post-images/cpp-basic.jpg');"></span>
                     </a>
                     <div class="info gradient-effect">
-                      <time datetime="2021-04-06">2021-04-06</time>
+                      <time datetime="2021-05-12">2021-05-12</time>
                       <h4 class="title usmall">
-                        <a href="https://blog.shunzi.tech/post/c-basic/">C 基础</a>
+                        <a href="https://blog.shunzi.tech/post/cpp-std/">C++ STL</a>
                       </h4>
                     </div>
                     <div class="clear"></div>
@@ -1429,17 +1552,29 @@ jQuery(document).ready(function($){
                   
                   
                   <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
-                    <a href="https://blog.shunzi.tech/post/basic-of-concurrency-one/" class="thumb hover-effect">
-                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></span>
+                    <a href="https://blog.shunzi.tech/post/HashKV/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324112600.png');"></span>
                     </a>
                     <div class="info gradient-effect">
-                      <time datetime="2021-04-05">2021-04-05</time>
+                      <time datetime="2021-05-11">2021-05-11</time>
                       <h4 class="title usmall">
-                        <a href="https://blog.shunzi.tech/post/basic-of-concurrency-one/">Series Three of Basic of Concurrency - Condition Variables</a>
+                        <a href="https://blog.shunzi.tech/post/HashKV/">HashKV: Enabling Efficient Updates in KV Storage via Hashing</a>
                       </h4>
                     </div>
                     <div class="clear"></div>
                   </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
                   
                   
                   
@@ -1675,89 +1810,91 @@ jQuery(document).ready(function($){
                   <h4 class="widget-title title white bordered">标签云</h4>
                   <div class="tagcloud">
                     
-                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-0 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
                     
                       <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-1 ctag-3zCwFWPHxH" aria-label="">存储</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-2 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-2 ctag-_jfuTNqah" aria-label="">LSM</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-3 ctag-os" aria-label="">OS</a>
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-3 ctag-n2w6bz87h" aria-label="">编程语言</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-4 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                      <a href="https://blog.shunzi.tech/tag/RxQjurMnD/" class="ctag ctag-4 ctag-RxQjurMnD" aria-label="">Survey</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-5 ctag-la-n8a0mo" aria-label="">读书笔记</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-6 ctag-hbaTDSglx-" aria-label="">工具</a>
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-6 ctag-os" aria-label="">OS</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-7 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-7 ctag-5uQUdLlSC" aria-label="">Paper</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/wAFV_pvXZ/" class="ctag ctag-8 ctag-wAFV_pvXZ" aria-label="">cs-course</a>
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-8 ctag-hbaTDSglx-" aria-label="">工具</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/VqiGqmxbod/" class="ctag ctag-9 ctag-VqiGqmxbod" aria-label="">6.824</a>
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-9 ctag-EO3XpMf_y" aria-label="">Linux</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-10 ctag-geK0jEW-T" aria-label="">分布式</a>
+                      <a href="https://blog.shunzi.tech/tag/wAFV_pvXZ/" class="ctag ctag-10 ctag-wAFV_pvXZ" aria-label="">cs-course</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-11 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                      <a href="https://blog.shunzi.tech/tag/VqiGqmxbod/" class="ctag ctag-11 ctag-VqiGqmxbod" aria-label="">6.824</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-12 ctag-9msH-lUaA" aria-label="">缓存</a>
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-12 ctag-geK0jEW-T" aria-label="">分布式</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-13 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-13 ctag-9msH-lUaA" aria-label="">缓存</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-14 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-14 ctag-i2b42Y2j6" aria-label="">Ceph</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-15 ctag-gqgftpk_y" aria-label="">AI</a>
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-15 ctag-oBVOD8v4ou" aria-label="">一致性</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-16 ctag-shu-ju-ku" aria-label="">数据库</a>
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-16 ctag-gqgftpk_y" aria-label="">AI</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-17 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-17 ctag-shu-ju-ku" aria-label="">数据库</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-18 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-18 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-19 ctag-4zx4ysLGro" aria-label="">云计算</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-20 ctag-Y_nsOD1At" aria-label="">SSD</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-21 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-22 ctag-PhD" aria-label="">Ph.D</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-23 ctag-ZqEqvRTvl" aria-label="">网络</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-24 ctag-PuY19cs53" aria-label="">仿真</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-25 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-26 ctag-fu-wu-qi" aria-label="">服务器</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-27 ctag-5h7k39FKw" aria-label="">C语言</a>
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-27 ctag-X-lnqf1Ex" aria-label="">容器</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-28 ctag-diary" aria-label="">Diary</a>
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-28 ctag-5h7k39FKw" aria-label="">C语言</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-29 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-30 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-31 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-32 ctag-Test" aria-label="">测试</a>
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-33 ctag-Product-Standard" aria-label="">Product Standard</a>
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-34 ctag-spring" aria-label="">Spring</a>
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-35 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-36 ctag-mian-jing" aria-label="">面经</a>
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-37 ctag-suan-fa" aria-label="">算法</a>
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-38 ctag-redis" aria-label="">Redis</a>
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-39 ctag-javaweb" aria-label="">JavaWeb</a>
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-40 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-41 ctag-javase" aria-label="">JavaSE</a>
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
                     
                   </div>
                   <div class="clear"></div>
@@ -1803,7 +1940,7 @@ jQuery(document).ready(function($){
           <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
         </div>
         <p class="published border-effect">
-          ©2019 共 115 篇文章
+          ©2019 共 121 篇文章
           <br/>
           Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
         </p>

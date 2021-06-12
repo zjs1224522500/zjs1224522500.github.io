@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://blog.shunzi.tech</id>
     <title>Elvis Zhang</title>
-    <updated>2021-05-14T01:22:09.280Z</updated>
+    <updated>2021-06-12T02:59:08.271Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://blog.shunzi.tech"/>
     <link rel="self" href="https://blog.shunzi.tech/atom.xml"/>
@@ -10,6 +10,607 @@
     <logo>https://blog.shunzi.tech/images/avatar.png</logo>
     <icon>https://blog.shunzi.tech/favicon.ico</icon>
     <rights>All rights reserved 2021, Elvis Zhang</rights>
+    <entry>
+        <title type="html"><![CDATA[REMIX: Efficient Range Query for LSM-trees]]></title>
+        <id>https://blog.shunzi.tech/post/REMIX/</id>
+        <link href="https://blog.shunzi.tech/post/REMIX/">
+        </link>
+        <updated>2021-06-05T04:21:02.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<ul>
+<li>FAST21 REMIX: Efficient Range Query for LSM-trees</li>
+</ul>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<ul>
+<li>FAST21 REMIX: Efficient Range Query for LSM-trees</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li>LSM 本身是为高速写操作优化的，而范围查询在传统的 LSM-tree 上需要 seek 且归并排序来自多个 Table 的数据，开销是很大的且经常导致较差的读性能。为了提升范围查询的性能，我们提出了一个空间高效的的 KV 索引数据结构 REMIX，记录跨多个表文件的KV数据的全局排序视图。对多个 REMIX 索引数据文件的范围查询可以使用二分搜索快速定位目标键，并在不进行键比较的情况下按排序顺序检索后续键。基于此构建了 RemixDB，一个采用了一个更高效的压缩策略并使用 REMIX 来进行快速的点查询和范围查询的 KV 存储。实验结果表明，在基于写优化 LSM 树的 KV-store 中，REMIX 可以显著提高范围查询性能。</li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<ul>
+<li>LSM 代表的是更新开销和读开销的一种权衡，相比于 B+tree 保证了更小的写开销以及更大的读开销。关于读开销的优化就有，驻留在内存中的为每个 Table 维护的 BloomFilters，来减小不必要的 Table 访问。但是 BloomFilter 不能处理范围查询，所以出现了 Range Filters，如 SIGMOD18-SuRF、SIGMOD20-Rosetta 来在范围查询时过滤掉 Tables。<strong>但是当范围查询内的 Key 位于很多个候选的 Tables 中时</strong>，filtering 就很难提升查询性能了，特别是大范围查询，而且当查询请求可以在缓存中处理时，访问 Filters 的计算开销可能导致性能表现一般，这是真实负载中比较普遍的情况。</li>
+<li>LSM 本身是有 Compaction 来减少查询时检索的 SSTable 数量的，选择 Table 的策略又分为了 leveled 和 tiering。
+<ul>
+<li>LevelDB、RocksDB 采用的 Leveled 的策略就是把小的 sorted run 合并一个更大的 sorted run 来保证重叠的 Tables 数量小于阈值，该策略却是保证了较好的读性能但是因为归并排序的方式导致写放大比较严峻</li>
+<li>Tiered 则是等待多个相近大小的 sorted runs 达到阈值后合并到一个更大的 runs，从而提供更小的写放大以及更高的写吞吐。Cassandra、ScyllaDB 就采用了这样的方式。但是没有限制重叠的 Tables 的数量从而导致较大的查询开销。</li>
+<li>SIGMOD18 Dostoevsky 和 SIGMOD19 The Log-Structured Merge-Bush &amp; the Wacky Continuum 提出的 compaction 策略虽然做了一定程度上的读写的平衡，但是还是没能同时实现最好的读和写。</li>
+</ul>
+</li>
+<li>问题的关键其实在于限制 sorted runs 的数量以及 KV 存储不得不归并排序且重写现有的数据。如今的硬件技术使得随机访问的效率也很高了，因此 KV 存储不再说必须保证物理上的有序，而可以只保证逻辑有序同时避免大量的重写。</li>
+<li>为此，我们设计了REMIX，现有的范围查询解决方案很难在物理重写数据和动态执行昂贵的排序合并之间进行改进，与此不同的是，REMIX 使用了一个空间效率高的数据结构来记录跨多个表文件的 KV 数据的全局排序视图。使用 REMIX，基于 LSM 树的 KV-store 可以利用高效写压缩策略，而不会牺牲搜索性能。基于此我们还构建了 RemixDB，和高效的 Tiered 压缩策略以及分区的布局集成，同时实现了较低的写放大和快速的查询。</li>
+</ul>
+<h2 id="background">Background</h2>
+<ul>
+<li>了解几个概念就好：
+<ul>
+<li><strong>minor compaction</strong>：其实就是我们说的 flush 过程，数据从内存持久化到存储设备。这个过程写是比较快的，因为是顺序批量写入且不需要合并存储中的现有数据，但也就意味着查询操作需要检索所有的重叠的 Tables，查询开销较大，所以出现了 major compaction。</li>
+<li><strong>major compaction</strong>：其实就是把几个重叠的 runs 归并排序排序成更少的的 runs。也就是我们更为熟知的 compaction 操作。常说的 compaction 策略也是指 major compaction 过程中使用的策略。示例如下图<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610211420.png" alt="20210610211420" loading="lazy"></li>
+<li><strong>Range Query</strong>：范围查询是在 LevelDB/RocksDB 中是通过迭代器来定位多个 Tables 实现的，首先初始化一个迭代器，对一个 key 进行 seek，也就是范围查询的下届，seek 操作则定位对应的迭代器让其指向大于等于该 Key 的最小位置，然后 next 操作则相应地按顺序移动迭代器指向下一个 key，直到遇到了范围查询的边界。由于 sorted run 是按时间顺序生成的，所以目标键可以驻留在任何 runs 中。因此，迭代器必须跟踪所有 sorted runs。如上图所示的查询过程，找到了对应的 Keys 之后构建一个小顶堆进行归并排序，从而得到结果。</li>
+</ul>
+</li>
+</ul>
+<h2 id="remix">REMIX</h2>
+<ul>
+<li>范围查询其实依赖全局有序视图，而全局有序视图其实本身是从 SSTables 的不变性继承过来的，也就是说该全局有序视图本身可以保证很长一段时间有效，直到 SSTables 结构发生了变化，被删除了重写了之类的操作。<strong>现有的方案没有利用到不变性的这个优势，而是在每次范围查询过程中重复构建该全局有序视图</strong>，因为大量的计算开销和 I/O 而导致较差的读性能。所以 REMIX 就是想利用 table files 的不变性来维护一个全局有序视图，从而加速后续的查询操作。</li>
+<li>为了让 I/O 更高效，LSM 的 KV 存储常使用一些内存高效的元数据格式，譬如稀疏索引和布隆过滤器，如果我们记录了全局有序视图，势必也需要保证内存的空间高效。不能因为存储更多的元数据而导致读写性能损失。</li>
+</ul>
+<h3 id="the-remix-data-structure">The REMIX Data Structure</h3>
+<ul>
+<li>图示很好理解，简单解释一下概念。下图所示例子包含了三个 sorted runs，顺序对应地由箭头表示，共计 15 个 Keys，为了构建 REMIX，首先进行了个划分，划分为一定数量的 segments，每个分段包含的 Keys 数量相等。每个 Segment 对应包含一个起始 Key，也就是 Anchor Key，包含一组游标偏移，对应就是记录每个 Sorted Runs 现在的指针位置，也就是大于等于起始锚点的指针位置，还有一个 Run Selectors，包含了真正的顺序，即下一个 Key 所在的 runs 编号。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610214450.png" alt="20210610214450" loading="lazy"></li>
+<li>范围查询的过程就变成了：
+<ul>
+<li>首先检索稀疏索引，也就是 Anchor Key，二分查找找到所属的 segment</li>
+<li>迭代器对应被 seek 到该 segment 对应的 Anchor Key，然后使用该 segment 的游标偏移来移动迭代器指针，根据 selectors 中的顺序来进行 seek</li>
+<li>最后通过在全局有序的视图上找到了对应的目标 Key</li>
+</ul>
+</li>
+<li>例子：图示中找到 Key 17，首先二分找到 Segment2。然后游标从 11 开始移动，根据 Seletors 发现 11 在 R0 上，以及 Offset 的结果，即在 R0 的索引为 1 的地方开始，因为 11 &lt; 17，那么要继续移动游标，直到找到大于等于 17 的 Key，也就是图中的 17，这时候 offset 变成了 2 2 1，根据 Selectors 那么找到了 R1，根据 offset 也就找到了 17。</li>
+</ul>
+<h3 id="efficient-search-in-a-segment">Efficient Search in a Segment</h3>
+<ul>
+<li>Segement 的划分是一个可调的配置，Size 太大，Anchor Keys 就少了，二分查找更快，但是 Segment 内平均访问次数增多，因此在目标的 Segment 内也使用二分查找。</li>
+</ul>
+<h4 id="binary-search">Binary Search</h4>
+<ul>
+<li>为了在一个段中执行二分搜索，我们必须能够随机访问段中的每个键。段中的键属于 run，由相应的 run 选择器指示。要访问一个键，我们需要将 run 的游标放在正确的位置。这可以通过计算相同的 run 选择器在键之前的段中出现的次数，并将相应的游标向前移动相同的次数来实现。可以使用现代 CPU 上的 SIMD 指令快速计算出现次数。搜索范围可以通过对段的一些随机访问快速缩小，直到识别出目标键。为了结束查找操作，我们使用每个 run 选择器在目标键之前出现的次数初始化所有游标。</li>
+<li>图示很清楚，很好理解就不解释了。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610220752.png" alt="20210610220752" loading="lazy"></li>
+</ul>
+<h4 id="io-optimization">I/O Optimization</h4>
+<ul>
+<li>执行段内二分查找当然是为了减少比较的次数，但是，搜索路径上的键可能驻留在不同的 runs 中，如果各自的数据块没有被缓存，则必须通过单独的 I/O 请求来检索。上图所示就比较了四次 Key，对应访问了 3 个 runs，但是像 41 43 这两个 Key 其实属于一个 Run，甚至可能属于一个数据块。因此，在进行键比较之后，搜索可以利用相同数据块中的其余键，在必须访问不同的 Run 之前进一步缩小搜索范围。这样，R3 中的每个键都可以在不访问任何其他 Run 的情况下找到。比如为了查找 79，访问 R3 可以将搜索范围缩小到键 43 和键 83 之间，这时候二分查找找到了 71，也就是 R0，然后在 R0 中找到了 79。</li>
+</ul>
+<h3 id="search-efficiency">Search Efficiency</h3>
+<ul>
+<li>总结下来，具体的提升体现在下面三个方面
+<ul>
+<li><strong>REMIXes find the target key using one binary search</strong>：说白了就是执行一次二分查找就能找到 Key（这个一次其实是指完整的一次，包括段内的，因为全局有序视图，就花一次也很好理解）</li>
+<li><strong>REMIXes move the iterator without key comparisons</strong>：这个就是说不用再比较很多个 runs 的 Key 之后再移动了，这个还是因为全局有序，可以跳过一些没必要的比较操作。</li>
+<li><strong>REMIXes skip runs that are not on the search path</strong>：就是说可以跳过一些 run，但这个其实是看数据重叠的情况的，总是是因为读一个数据块的粒度导致可能读上来的数据块恰好就包含了这个 key，或者减小了查询的范围。</li>
+</ul>
+</li>
+<li>作者表明对点查询也是有优化的。</li>
+</ul>
+<h3 id="remix-storage-cost">REMIX Storage Cost</h3>
+<ul>
+<li>具体公式就不列了，看个数据就行。</li>
+<li>其实空间开销不小，特别是那个快 10% 的 USR。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610223144.png" alt="20210610223144" loading="lazy"></li>
+</ul>
+<h2 id="remixdb">RemixDB</h2>
+<ul>
+<li>RemixDB 使用了 Tiered Compaction 加一个分区的布局。因为有很多研究表明真实负载大多有很强的空间局部性，然后分区存储的话可以很好地降低压缩开销。所以 RemixDB 将键空间划分为不重叠键范围的分区。REMIX 对每个分区中的表文件进行索引，提供分区的排序视图。通过这种方式，RemixDB 本质上是一个使用分层压缩的单层 LSM 树。RemixDB 不仅继承了 Tiered 压缩的写效率，而且在 REMIX 的帮助下实现了高效的读取。RemixDB 的点查询操作(GET)执行一个 seek 操作，如果它与目标键匹配，则返回迭代器下的键。RemixDB 不使用Bloom过滤器。</li>
+<li>下图展示了 RemixDB 的结构，内存组件和 LevelDB 这些是一样的。分区中的压缩创建分区的新版本，其中包含新旧表文件的混合以及一个新的 REMIX 文件。旧版本在压缩后进行垃圾收集。</li>
+<li>在多级 LSM-tree 设计中，MemTable 的大小通常只有几十 MB，接近于默认的 SSTable 大小。在分区存储布局中，较大的 Memtable 在触发压缩之前可以积累更多的更新，这有助于减少 WA。MemTables 和 WAL 的空间成本几乎不变，考虑到当今数据中心的大内存和存储容量，这是合理的。在 RemixDB 中，MemTable 的最大大小被设置为 4GB。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610223337.png" alt="20210610223337" loading="lazy"></li>
+</ul>
+<h3 id="the-structures-of-remixdb-files">The Structures of RemixDB Files</h3>
+<h4 id="table-files">Table Files</h4>
+<ul>
+<li>图 6 显示了 RemixDB 中的表文件格式。数据块默认为 4KB。一个大的 KV-pair 如果不能容纳在一个 4KB 的块中，就会独占一个 4K 的倍数的巨型块。每个数据块在块的开始包含一个小数组的 KV 对的块偏移量，用于随机访问单独的 KV 对。</li>
+<li>元数据块是一个 8bit value 的数组，每个都记录着一个 4KB block 中的 Keys 的数量。一个块可以包含 255 个 KV，在一个大 Block 中，除了第一个 4KB 外，其余的都将其对应的数字设为0，这样一个非零的数字总是对应于一个块的头部。使用偏移数组和元数据块，搜索可以快速到达任何相邻的块，并跳过任意数量的键，而不访问数据块。因为 KV 对是由 REMIX 索引的，所以表文件不包含索引或过滤器。</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611115230.png" alt="20210611115230" loading="lazy"></figure>
+<h4 id="remix-files">REMIX Files</h4>
+<ul>
+<li>图 7 展示了 REMIX 文件格式，anchor key 是在一个不可变的类似于 B+Tree 的索引中维护的，相当于 LevelDB/RocksDB 的块索引，来辅助二分查找。每个 Anchor Key 和一个 Segment ID 关联，对应关联游标偏移和 run selectors。游标偏移由 16 位的块索引和 8 位的 key 索引组成，即图示中的 blk-id 和 key-id。块索引可以索引 65536 个 4KB 的块，也就是 256MB，每个块可以包含 256 个 KV 对。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611115712.png" alt="20210611115712" loading="lazy"></li>
+<li>一个 Key 的多个版本可以存在于一个分区的不同 table 文件中，一个范围查询操作必须跳过老版本并返回对应的最新的数据，所以 REMIX 构建的全局有序视图按照了从最新到最老的顺序排序，每个 run 选择器的最高位被保留来区分新旧版本。forward scan operation 将总是最先遇到最新版本的 Key，然后通过检查每个 run selector 的保留位来跳过老版本，而不用进行 Key 的比较。</li>
+<li>如果一个 Key 有多版本，这些版本可能分布在两个 Segments，查询操作可能需要检索两个 Segments 来获得最新的版本。为了简化查询，当构造一个 REMIX 时，通过在第一个段中插入特殊的 run 选择器作为占位符，我们将键的所有版本向前移动到第二个段。还需要确保一个 Segment 中的 Key 的最大数量等于或大于由 REMIX 索引的 runs 的个数，才能保证每个 Segment 足够大以容纳一个 Key 的所有版本的数据。</li>
+<li>为了容纳上面描述的特殊值，每个 run selector 占据了一个 byte，run selector 的第 8 位和第 7 位 (0x80 and 0x40) 分别表示老版本和删除的 Key。特殊值 63 (0x3f) 意味 placeholder，通过这种方式，RemixDB 可以在一个分区中管理多达 63 个 sorted tuns。</li>
+</ul>
+<h3 id="compaction">Compaction</h3>
+<ul>
+<li>在每个分区中，compaction 进程基于进入分区的新数据的大小和现有的 tables 的布局来估计 compaction cost，基于估算出来的开销，可能执行下列操作：
+<ul>
+<li><strong>Abort</strong>：取消分区 compaction 并保留 Memtable 和 WAL 中的新数据</li>
+<li><strong>Minor Compaction</strong>：写新数据到一个或多个 tables 而不用重写现有的 tables</li>
+<li><strong>Major Compaction</strong>：将新数据和一些甚至全部的现有数据合并</li>
+<li><strong>Split Compaction</strong>：将新数据和所有的现有数据合并，并拆分分区到几个新分区上</li>
+</ul>
+</li>
+<li><strong>Abort</strong>：Compaction 之后，一个分区如果有文件将重建该分区的 REMIX 索引，当一个小的表文件因为 minor compacion 在分区中创建，重建 REMIX 可能导致比较大的 I/O 开销。例如，表1 中的 USR 负载就有最高的空间开销比例。写 100MB 新数据到一个 1GB 的分区，将创建一个大约 100M 的索引。为了最小化 I/O 开销，RemixDB 可能丢弃一个分区的 compaction，如果估算出的 I/O 开销超过了阈值。该场景下，新的 KV 数据应该保留在 MemTables 和 WAL 中直到下一次 Compaction。
+<ul>
+<li>但是还有一个极端例子，如果一个 uniform 的负载，当所有分区都有 compaction 被Aborted 的时候，compaction 进程不能高效地当移动数据到分区。为了避免这个问题，我们限制了可以驻留在 Memtables 和 WAL 中的新数据的大小，不能超过最大 MemTable 大小的 15%，compaction 进程可以丢弃掉那些 I/O 开销最大的 compactions 如果达到了限制的话。</li>
+</ul>
+</li>
+<li><strong>Minor Compaction</strong>：minor compaction 就是从 immutable memtable 中把数据写入到分区中，而不用重写分区中原有的数据，但是需要重建 REMIX 索引。根据新写入的数据大小，minor compaction 创建一个或者多个新的 table files，Minor Compaction 只有在 compaction 后的预期 table 文件数量低于阈值 T 的时候才会执行，我们的实现中该阈值设定为了 10。下图展示了 minor compaction 的例子。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611145307.png" alt="20210611145307" loading="lazy"></li>
+<li><strong>Major Compaction</strong>：当一个分区中的预期文件数量达到了阈值 T 将执行 major 或者 split compaction。major compaction 将归并排序现有的 table files 合并成更少的 tables。随着 tables 数量的减少，minor compaction 的效率也就可以根据输入表文件的数量与输出表文件的数量的比率来估计。下图展示了 major compaction 的过程，该例子中，新数据合并到了三个小的 tables，只有一个新的 table 在 compaction 之后被创建，比例为 3/1，如果整个分区被归并排序，compactions 需要重写更多的数据并且仍然输出三个 tables，比例 5/3，因为 table file 大小的限制。相应的，major compaction 选择能够产生最高比率的输入文件的数量。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611145910.png" alt="20210611145910" loading="lazy"></li>
+<li><strong>Split Compaction</strong>：major compaction 可能不会很快地减少填满了大 table 的分区中 tables 的数量，这可以通过一个较低的估计输入/输出比率(例如10/9)来预测。该例子下，分区需要被分成多个分区，从而保证每个分区中的 tables 的数量可以持续减少。Split Compaction 归并排序了新数据和现有的 table fils，产生新的 tables 来组成几个新的分区。下图展示了过程。为了避免创建太多的小分区，compaction process 在一个分区里创建了 M 个新的 table files，M 默认为 2，这样来保证创建了 E/M 个分区，E 为新产生的 tables 的数量。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611150559.png" alt="20210611150559" loading="lazy"></li>
+</ul>
+<h3 id="rebuilding-remixes">Rebuilding REMIXes</h3>
+<ul>
+<li>分区存储布局可以通过利用较强的空间局部性来有效最小化真实负载 compaction cost，具体的，RemixDB 可以在几个分区中吸收大多数更新，在接受少量的分区中的 compaction 可以被避免。但是如果负载没有空间局部性，许多分区不可避免地必须执行压缩并进行少量的更新。Tiered Compaction 可以最小化这些分区的写操作，但是在一个分区中重建 REMIX 仍然需要读取已经存在的 tables。在我们的实现中，RemixDB 利用了现有的 REMIX 索引并使用了一个搞笑的合并算法来最小化重建过程的 I/O 开销。</li>
+<li>当重建分区的 REMIX，现有的表已经被 REMIX 索引，这些表可以被视为一个 Sorted Run，相应的，重建过程相当于归并排序两个 sorted runs，一个来自现有的数据，另一个来自新数据，当现有的这个 sorted run 比新的大很多的时候，generalized binary merging algorithm 算法通过使用小顶堆实现了更少的 Key 比较，相比于归并排序、算法根据两个 sorted run 之间的 size ratio 估计出了下一次合并点的 location 信息，并在相邻的范围中进行搜索。在RemixDB中，我们通过使用锚键来定位包含合并点的目标段，最后在该段中应用二叉搜索。在这个过程中，访问锚定键不会产生任何I/O，因为它们存储在 REMIX 中。在目标段中进行二分搜索，最多读取 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>l</mi><mi>o</mi><msub><mi>g</mi><mn>2</mn></msub><mi>D</mi></mrow><annotation encoding="application/x-tex">log_2D</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">o</span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03588em;">g</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.03588em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathdefault" style="margin-right:0.02778em;">D</span></span></span></span> 键来找到合并点。现有表的所有 run 选择器和游标偏移量都可以从现有的 REMIX 中派生出来，而不需要任何 I/O。要为新的分段创建锚定键，我们最多需要在新的排序视图上对每个分段访问一个键。</li>
+<li>重建 REMIX 的读开销被分区中的所有表的大小限制，重建过程导致对现有表的读 I/O，为了降低 WA 并提升未来的读性能。构建 REMIX 是否是成本高效的取决于想要节省多少个写 I/O 以及未来想提升多少读性能。实际上，在 SSDs 中的写操作通常比读操作更慢而且可能对设备造成永久的破坏。因此读相比于写来说更经济，特别是有空闲 I/O 带宽的系统。在期望具有弱空间局部性的密集写操作的系统中，采用多层 tiered 压缩策略或延迟在单个分区中重建 REMIX 可以降低以拥有更多级别已排序视图为代价的重建成本。调整 REMIX 与不同的存储布局超出了本文的范围。我们对 RemixDB 在不同工作负载下的重建成本进行了实证评估</li>
+</ul>
+<h2 id="evaluations">Evaluations</h2>
+<ul>
+<li>实验搭建：
+<ul>
+<li>在每个实验中，我们首先创建一组 H 个表文件(1≤H≤16)，它们类似于RemixDB中的一个分区或LSM-tree中的一个级别，使用 tiered compaction。每个表文件包含 64MB 的KV-pairs，其中键和值的大小分别为 16B 和 100B。当 H≥2 时，KV 对可以用两种不同的模式分配到表中:
+<ul>
+<li><strong>Weak locality</strong>：每个键被分配给一个随机选择的表，这提供了弱访问局域性，因为逻辑上连续的键经常驻留在不同的表中</li>
+<li><strong>Strong locality</strong>：每64个逻辑上连续的键被分配给一个随机选择的表，这提供了强访问局域性，因为一个范围查询可以从几个表中检索多个连续的键</li>
+</ul>
+</li>
+<li>D=32，段内二分查找可以开启或关闭，对应图中的 full/partial<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162158.png" alt="20210611162158" loading="lazy"></li>
+</ul>
+</li>
+<li>单次 Seek：Merge Iterator 在只有一个 Table 的时候表现更好，因为和 REMIX 需要执行相同次数的二分查找，但是 REMIX 需要动态地计算出现次数，并将迭代器从段的开头移动到一个键进行比较，开销相对更大。随着 Tables 数量增加，REMIX 的性能优势渐渐体现出来了。</li>
+<li>Seek+Next50 整体性能低于 Seek 因为要拷贝数据到 Buffer。开启段内二分查找影响不大，因为 next 操作主要影响执行时间，在段中对寻道操作的线性扫描预热了块缓存，这使得未来的操作更快。</li>
+<li>点查询：当少于 14 个 tables 的时候，REMIX 都不如带布隆过滤器的点查询，因为搜索可以只需要检查Bloom过滤器来有效地缩小到一个表文件。其次，在SSTable中搜索比在管理更多的键的 REMIX 中要快。在最坏的情况下，REMIX的吞吐量比Bloom过滤器(有3个表)低20%。不出所料，在没有Bloom过滤器的情况下，使用两个以上sstable的搜索速度会慢得多</li>
+<li>强局部性的时候在 range query 的结果上差距不大，通常，改进的局部性允许更快的二分搜索，因为在这种情况下，最后几个键比较通常可以使用相同数据块中的键。但是，合并迭代器的吞吐量仍然很低，因为密集的键比较操作占据了搜索时间。带有部分二分搜索的 REMIX 比完全二分搜索的改进更多，是因为局部性的提升减少了在目标 segment 里 scan 的开销，导致更少的缓存缺失。</li>
+<li>REMIX 点查询性能也得到了改善，因为强大的局域性加快了底层查找操作的速度。同时，Bloom 过滤器的结果保持不变，因为搜索代价主要由假阳性率和对单个表的搜索代价决定。因此，当包含超过9个表时，remix的性能可以超过Bloom过滤器。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162216.png" alt="20210611162216" loading="lazy"></li>
+<li>8 个 tables，不同的 segment size，如果关闭了段内二分查找，只 seek 的负载下， D 的大小影响最大，这是因为段中的线性扫描显著增加了较大的 D 值的成本。由于段内的随机访问速度较慢，较大的段大小仍然会导致较高的开销。在 Seek+Next50 实验中，数据复制在执行时间中占主导地位，使用不同的 D 时没有显著差异<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162225.png" alt="20210611162225" loading="lazy"></li>
+<li>不同的 range query 展现出了大约相同的趋势，实验中顺序加载相应的数据，所以在每种存储系统中都不会有重叠的文件，也就意味着 seek 操作只会访问一个文件。然而一个合并迭代器必须检查每个 sorted run 即便他们没有重叠的键范围，所以如果有多个 sorted runs 的话检索每个 run 的操作将占据 seek 时间的很大一部分。具体的，每一个在 LevelDB 和 RocksDB 中的 L0 表都是一个独立的 run，但是每一层 Li 又只包含一个 run。PebblesDB 允许一个 Level 有多个 runs，话虽如此，LevelDB 的性能至少比RocksDB高出2倍，尽管它们都使用了 Leveled 压缩。观察发现 RocksDB 在顺序加载过程中，在 L0 层保留了好几个 tables，总共八个，而没有把这些文件移动到更深的层次。相反，LevelDB 直接把这个 Table 推向了更深的层次 （L2 或 L3），如果这个 Table 和别的 Tables 不重叠的话，从而让 LevelDB 的 L0 层总是为空。因此，RocksDB 中的一个 seek 操作需要动态地排序-合并至少 12 个 sorted run，而这个数字在 LevelDB 中只有 3 或 4。</li>
+<li>查找性能对访问的局部性是敏感的。较弱的局部性会增加搜索路径上的CPU和I/O开销。在每个特定 value 大小的实验中，采用 uniform 访问模式的吞吐量比顺序访问低50%左右。同时，顺序访问的性能对值大小不太敏感，因为内存复制成本不显著<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162232.png" alt="20210611162232" loading="lazy"></li>
+<li>另外的实验测试了不同的存储总量大小下 query 长度对范围扫描的性能影响。每个实验以随机的顺序将具有 120B 值大小的固定大小的 KV 数据集加载到存储中，然后使用 Zipfian 访问模式使用四个线程执行范围扫描。REMIX 表现最好，但随着范围查询的长度增加，性能差异逐渐变小，这是因为长范围的查询在每个 sorted run 上展示出了顺序访问的特性，也就意味着在 scan 过程中更多的数据已经被预取，同时内存拷贝也给每个存储增加了固定的开销。</li>
+<li>还有观察发现 LevelDB 在 256GB 的时候性能下降到和 RocksDB 一样。因为实验中配置了 4GB 的 block cache，缓存丢失导致大量的 I/O 占据了查询时间。与此同时 RocksDB 展示出了极大的计算开销，因为在数据量较小的时候 L0 层包含了太多 Tables。在更大数据量的存储中，过多的 I/O 掩盖了开销。与此同时 REMIX 保证了最好的访问局部性，因为导致了最少的随机访问和缓存丢失。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162249.png" alt="20210611162249" loading="lazy"></li>
+<li>单线程随机插入 256GB 的数据，数据集有 20 个 KV 对，value 大小是 120B，负载有 uniform 的访问特征，代表着最差的情况。REMIX 和 PebblesDB 吞吐量最高，因为使用了利于写的 tiered compaction 策略，对应写放大为 4.99、9.26。比 LevelDB/RocksDB 小了很多。RocksDB 和 RemixDB 有更多的读 I/O，因为 RocksDB 使用了四个线程进行 Compaction 来充分利用 SSD 带宽，因为 Block Cache 和 Page Cache 的低效利用导致读 I/O 较多，LevelDB 只支持单线程压缩。尽管 RemixDB 读 I/O 多于 RocksDB 但是总的 I/O 还是小于 RocksDB 的。综上所述，RemixDB 以增加读 I/O 为代价实现了低 WA 和高写吞吐量。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162259.png" alt="20210611162259" loading="lazy"></li>
+<li>顺序的负载展现出最高的吞吐，因为每一轮压缩只影响很少的分区。写 I/O 主要包含日志和创建新的表，大约是用户写入量的 2 倍。读 I/O 主要是重建 REMIX 和数据本身的大小基本相同。相比之下，两个倾斜负载，在 Memtable 中重复 overwrites 导致写 I/O 大幅减少，但是会创建分散的更新，将导致 Memtable 中更新较慢以及更多的分区被 Compacted。Zipfian-Composite 有更差的空间局部性比 Zipfian，导致了更大的 Compaction I/O 开销。</li>
+<li>YCSB 中，RemixDB 除了负载 D 表现都比其他的好。也就是 95% 的读请求访问最近的 5% 的写入，这种访问模式有很强的局部性，大部分请求直接是由存储中的 Memtables 来处理的，单线程压缩导致的缓慢插入阻碍了 LevelDB 的性能(1.1 MOPS)。</li>
+<li>即便 REMIX 没有显示出相比于布隆过滤器足够的优势，但是在 YCSB-B，C 中比其他表现好，这两种负载下点查询占据大部分。是因为点查询在多级的 LSM 中在搜索路径上选择对应的 tables 的开销很大，具体而言就是每一个 L0 的 table，大约有两个键比较用于检查 seek 键是否被表覆盖，如果在 L0 中没找到，在每一个更深的层次中执行二分查找，直到 Key 被找到。布隆过滤器的大小大约 600KB，对于一个 64MB 的表而言，访问一个布隆过滤器会导致大约七次内存随机访问，在一个很大的存储中将导致严重的缓存缺失。REMIX 索引的分区形成了一个全局有序视图，基于此的二分查找可以很快得到应答。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611195131.png" alt="20210611195131" loading="lazy"></li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[C++ STL]]></title>
+        <id>https://blog.shunzi.tech/post/cpp-std/</id>
+        <link href="https://blog.shunzi.tech/post/cpp-std/">
+        </link>
+        <updated>2021-05-12T01:36:30.000Z</updated>
+        <summary type="html"><![CDATA[<ul>
+<li>C++ STL 的相关资料记录</li>
+<li>持续更新</li>
+</ul>
+]]></summary>
+        <content type="html"><![CDATA[<ul>
+<li>C++ STL 的相关资料记录</li>
+<li>持续更新</li>
+</ul>
+<!--more-->
+<h2 id="stl">STL</h2>
+<ul>
+<li>C++ STL（标准模板库）是一套功能强大的 C++ 模板类，提供了通用的模板类和函数，这些模板类和函数可以实现多种流行和常用的算法和数据结构，如向量、链表、队列、栈。</li>
+</ul>
+<h3 id="参考链接">参考链接</h3>
+<ul>
+<li><a href="https://www.runoob.com/cplusplus/cpp-stl-tutorial.html">[1] 菜鸟教程：C++ STL 教程</a></li>
+<li><a href="https://blog.csdn.net/u010183728/article/details/81913729">[2] CSDN - C++中STL用法超详细总结</a></li>
+<li><a href="https://github.com/czs108/Cpp-Primer-5th-Notes-CN">[3] Github - 《C++ Primer中文版（第5版）》笔记</a></li>
+</ul>
+<h3 id="stl-容器">STL 容器</h3>
+<h4 id="顺序容器-sequential-containers">顺序容器 Sequential Containers</h4>
+<ul>
+<li><strong>概览</strong></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">类型</th>
+<th style="text-align:center">特性</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center"><code>vector</code></td>
+<td style="text-align:center">可变大小数组。支持快速随机访问。在尾部之外的位置插入/删除元素可能很慢</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>deque</code></td>
+<td style="text-align:center">双端队列。支持快速随机访问。在头尾位置插入/删除速度很快</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>list</code></td>
+<td style="text-align:center">双向链表。只支持双向顺序访问。在任何位置插入/删除速度都很快</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>forward_list</code></td>
+<td style="text-align:center">单向链表。只支持单向顺序访问。在任何位置插入/删除速度都很快</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>array</code></td>
+<td style="text-align:center">固定大小数组。支持快速随机访问。不能添加/删除元素</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>string</code></td>
+<td style="text-align:center">类似<code>vector</code>，但用于保存字符。支持快速随机访问。在尾部插入/删除速度很快</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>forward_list</code>和<code>array</code>是C++11新增类型。与内置数组相比，<code>array</code>更安全易用。<code>forward_list</code>没有<code>size</code>操作。</li>
+</ul>
+<p><strong>容器选择原则</strong></p>
+<ul>
+<li>除非有合适的理由选择其他容器，否则应该使用<code>vector</code>。</li>
+<li>如果程序有很多小的元素，且空间的额外开销很重要，则不要使用<code>list</code>或<code>forward_list</code>。</li>
+<li>如果程序要求随机访问容器元素，则应该使用<code>vector</code>或<code>deque</code>。</li>
+<li>如果程序需要在容器头尾位置插入/删除元素，但不会在中间位置操作，则应该使用<code>deque</code>。</li>
+<li>如果程序只有在读取输入时才需要在容器中间位置插入元素，之后需要随机访问元素。则：
+<ul>
+<li>先确定是否真的需要在容器中间位置插入元素。当处理输入数据时，可以先向<code>vector</code>追加数据，再调用标准库的<code>sort</code>函数重排元素，从而避免在中间位置添加元素。</li>
+<li>如果必须在中间位置插入元素，可以在输入阶段使用<code>list</code>。输入完成后将<code>list</code>中的内容拷贝到<code>vector</code>中。</li>
+</ul>
+</li>
+<li>不确定应该使用哪种容器时，可以先只使用<code>vector</code>和<code>list</code>的公共操作：使用迭代器，不使用下标操作，避免随机访问。这样在必要时选择<code>vector</code>或<code>list</code>都很方便。</li>
+</ul>
+<h4 id="关联容器">关联容器</h4>
+<p>关联容器支持高效的关键字查找和访问操作。2个主要的关联容器（associative-container）类型是<code>map</code>和<code>set</code>。</p>
+<ul>
+<li><code>map</code>中的元素是一些键值对（key-value）：关键字起索引作用，值表示与索引相关联的数据。</li>
+<li><code>set</code>中每个元素只包含一个关键字，支持高效的关键字查询操作：检查一个给定关键字是否在<code>set</code>中。</li>
+</ul>
+<p>标准库提供了8个关联容器，它们之间的不同体现在三个方面：</p>
+<ul>
+<li>是<code>map</code>还是<code>set</code>类型。</li>
+<li>是否允许保存重复的关键字。</li>
+<li>是否按顺序保存元素。</li>
+</ul>
+<p>允许重复保存关键字的容器名字都包含单词<code>multi</code>；无序保存元素的容器名字都以单词<code>unordered</code>开头。</p>
+<h5 id="使用关联容器using-an-associative-container">使用关联容器（Using an Associative Container）</h5>
+<p><code>map</code>类型通常被称为关联数组（associative array）。</p>
+<p>从<code>map</code>中提取一个元素时，会得到一个<code>pair</code>类型的对象。<code>pair</code>是一个模板类型，保存两个名为<code>first</code>和<code>second</code>的公有数据成员。<code>map</code>所使用的<code>pair</code>用<code>first</code>成员保存关键字，用<code>second</code>成员保存对应的值。</p>
+<pre><code class="language-c++">// count the number of times each word occurs in the input
+map&lt;string, size_t&gt; word_count;     // empty map from string to size_t
+string word;
+while (cin &gt;&gt; word)
+    ++word_count[word];     // fetch and increment the counter for word
+for (const auto &amp;w : word_count)    // for each element in the map
+    // print the results
+    cout &lt;&lt; w.first &lt;&lt; &quot; occurs &quot; &lt;&lt; w.second
+        &lt;&lt; ((w.second &gt; 1) ? &quot; times&quot; : &quot; time&quot;) &lt;&lt; endl;
+</code></pre>
+<p><code>set</code>类型的<code>find</code>成员返回一个迭代器。如果给定关键字在<code>set</code>中，则迭代器指向该关键字，否则返回的是尾后迭代器。</p>
+<h6 id="pair">pair</h6>
+<p><code>pair</code>定义在头文件<em>utility</em>中。一个<code>pair</code>可以保存两个数据成员，分别命名为<code>first</code>和<code>second</code>。</p>
+<pre><code class="language-c++">pair&lt;string, string&gt; anon;        // holds two strings
+pair&lt;string, size_t&gt; word_count;  // holds a string and an size_t
+pair&lt;string, vector&lt;int&gt;&gt; line;   // holds string and vector&lt;int&gt;
+</code></pre>
+<p><code>pair</code>的默认构造函数对数据成员进行值初始化。</p>
+<h3 id="stl-常用算法">STL 常用算法</h3>
+<h4 id="搜索">搜索</h4>
+<h5 id="二分查找">二分查找</h5>
+<ul>
+<li><strong>upper_bound()</strong></li>
+</ul>
+<pre><code class="language-C++">//查找[first, last)区域中第一个大于 val 的元素。
+ForwardIterator upper_bound (ForwardIterator first, ForwardIterator last,
+                             const T&amp; val);
+//查找[first, last)区域中第一个不符合 comp 规则的元素
+ForwardIterator upper_bound (ForwardIterator first, ForwardIterator last,
+                             const T&amp; val, Compare comp);
+</code></pre>
+<ul>
+<li><strong>lower_bound()</strong></li>
+</ul>
+<pre><code class="language-C++">//在 [first, last) 区域内查找不小于 val 的元素
+ForwardIterator lower_bound (ForwardIterator first, ForwardIterator last,
+                             const T&amp; val);
+//在 [first, last) 区域内查找第一个不符合 comp 规则的元素
+ForwardIterator lower_bound (ForwardIterator first, ForwardIterator last,
+                             const T&amp; val, Compare comp);
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[HashKV: Enabling Efficient Updates in KV Storage via Hashing]]></title>
+        <id>https://blog.shunzi.tech/post/HashKV/</id>
+        <link href="https://blog.shunzi.tech/post/HashKV/">
+        </link>
+        <updated>2021-05-11T04:21:02.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<ul>
+<li>HashKV: Enabling Efficient Updates in KV Storage via Hashing</li>
+<li>http://adslab.cse.cuhk.edu.hk/software/hashkv/</li>
+<li>ATC18 &amp; TOS19</li>
+</ul>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<ul>
+<li>HashKV: Enabling Efficient Updates in KV Storage via Hashing</li>
+<li>http://adslab.cse.cuhk.edu.hk/software/hashkv/</li>
+<li>ATC18 &amp; TOS19</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="个人总结">个人总结</h2>
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li>持久键值(KV)存储主要构建在日志结构的合并树(LSM)上，以获得较高的写性能，但是LSM树存在固有的较高的I/O放大问题。KV分离通过在LSM-tree中只存储键和在单独存储中的值来减轻I/O放大。<strong>然而，当前的KV分离设计在更新密集型工作负载下仍然是低效的，因为它在值存储方面的垃圾收集(GC)开销很大</strong>。我们提出了HashKV，它的目标是在更新密集型工作负载下，在KV分离的基础上提高更新性能。HashKV使用基于哈希的数据分组，它确定地将值映射到存储空间，从而提高更新和GC的效率。我们通过简单但有用的设计扩展进一步放宽了这种确定性映射的限制。通过大量的实验，我们将HashKV与最先进的KV存储进行了比较，并表明与当前的KV分离设计相比，HashKV实现了4.6×吞吐量和减少了53.4%的写流量。</li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<ul>
+<li>持久性 KV 存储应用广泛，用于存储海量结构化数据：Bigtable, Dynamo, Atlas。虽然现实中的KV存储工作负载主要是读密集型的(例如，在Facebook的Memcached工作负载中，Get/Update的比率可以达到30:1)，但更新密集型的工作负载在许多存储场景中也占主导地位（例如,雅虎报告其低延迟工作负载越来越多地从读转移到写）</li>
+<li>现代的针对写操作优化的 KV 存储大多是基于 LSM 树，思想源于最初的 LSF，LSM-tree设计不仅通过避免小的随机更新(这也有害于固态硬盘(SSD)的寿命)来提高写性能，而且通过在每个节点中保留已排序的KV对来提高范围扫描性能。<strong>但是写放大严重，读放大更严重</strong>。</li>
+<li><strong>已有方案</strong>：WiscKey 采用 KV 分离来减少 Compaction 操作带来的影响，<strong>但是我们发现 KV 分离还是无法在更新密集型工作负载下完全实现高性能</strong>。</li>
+<li><strong>根本原因</strong>在于用于值存储的循环日志需要频繁的垃圾收集(GC)，以从被删除或被新更新取代的KV对中回收空间。然而，由于循环日志的两个限制，GC开销实际上是昂贵的。
+<ul>
+<li>首先，循环日志保持严格的GC顺序，因为它总是在日志的开始处执行GC，即最近写入的KV对所在的位置。这可能会导致<strong>大量不必要的数据重定位</strong>(例如，当最近写的KV对仍然有效时)。</li>
+<li>其次，<strong>GC 操作需要查询LSM-tree</strong>，检查每个KV对的有效性。这些查询具有<strong>很高的延迟</strong>，特别是当LSM-tree在大工作负载下变得相当大时。</li>
+</ul>
+</li>
+<li>所以提出了 HashKV，为更新密集型工作负载量身定制的高性能KV存储。HashKV建立在KV分离的基础上，并使用一种新的基于哈希的数据分组设计来存储值。其思想是将值存储划分为固定大小的分区，并通过散列其键确定地将每个写入KV对的值映射到一个分区。基于哈希的数据分组支持<strong>基于确定性映射的轻量级更新</strong>。更重要的是，它显著地减轻了GC开销，因为每个GC操作<strong>不仅具有选择一个分区来回收空间的灵活性，而且还消除了为了检查KV对的有效性而对LSM-tree的查询</strong>。</li>
+<li>另一方面，基于哈希的数据分组的确定性限制了KV对的存储位置。因此，我们提出了三种新的设计扩展来放松基于哈希的数据分组的限制：
+<ul>
+<li>(i)  <strong>动态预留空间分配</strong>，在给定大小限制的情况下，动态分配预留空间给额外的写操作</li>
+<li>(ii)  <strong>热感知</strong>，受现有SSD设计的启发，将热KV和冷KV对的存储分开，以提高GC效率</li>
+<li>(iii) <strong>有选择性的KV分离</strong>，在LSM-tree中保持较小的KV对的完整，以简化查找</li>
+</ul>
+</li>
+<li>基于 LevelDB 实现了 HashKV 的原型，通过测试实验表明，在更新密集型的工作负载下，HashKV 的吞吐量达到 4.6×，与 wisckey 中的循环日志设计相比，写流量减少了 53.4%。此外，在各种情况下，与现代KV存储(如LevelDB和RocksDB)相比，HashKV通常能够实现更高的吞吐量和更少的写流量。</li>
+<li>我们的工作只是增加 KV 分离与一个新的Value管理设计的案例。虽然HashKV的密钥和元数据管理现在建立在LevelDB上，但它也可以采用带有新的LSM树设计的其他KV存储。在KV分离条件下，哈希KV如何影响各种基于lsm树的KV存储的性能是未来研究的重点。</li>
+</ul>
+<h2 id="motivation">Motivation</h2>
+<ul>
+<li>这一章节主要介绍 LevelDB 的读写放大问题，以及 WiscKey 这种 KV 分离方案带来的改善，同时分析普通的 KV 分离无法在写密集负载中实现高性能的原因。</li>
+</ul>
+<h3 id="leveldb">LevelDB</h3>
+<ul>
+<li>原理不过多介绍，重点是读写放大问题。
+<ul>
+<li>首先，压缩过程不可避免地产生额外的读写。在最坏的情况下，要将一个SSTable从Li−1合并到Li，它需要读取并排序10个SSTable，然后写回所有SSTable。先前的研究表明，LevelDB可以有至少50倍的总体写放大，因为在大的工作负载下，它可能会触发不止一次的压缩，将一个KV对向下移动多个级别。</li>
+<li>查找操作可以在多个级别搜索一个KV对，并导致多个磁盘访问。原因是，每个级别的搜索都需要读取相关SSTable中的索引元数据和Bloom过滤器，虽然使用了Bloom过滤器，但它可能会引入误报。在这种情况下，即使KV对实际上不存在，仍然需要从磁盘读取SSTable。因此，每次查找通常会导致多次磁盘访问。这种读放大在大的工作负载下会进一步恶化，因为LSMtree会逐级累积。测量结果表明，在最坏的情况下，读放大可达300倍以上<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324103632.png" alt="20210324103632" loading="lazy"></li>
+</ul>
+</li>
+</ul>
+<h3 id="kv-separation">KV Separation</h3>
+<h4 id="wisckey-原理">WiscKey 原理</h4>
+<ul>
+<li>KV分离，由 Wisckey 提出，对键和值的管理进行解耦，以减轻写和读的放大。其基本原理是，在 LSM-tree 中存储值对于索引来说是不必要的。因此，在LSM-tree中，wisckey 只存储键和元数据(例如键/值的大小、值的位置等)，而将值存储在一个单独的仅追加的循环日志vLog 中。KV 分离有效地减轻了LevelDB的写和读放大，因为它显著地减少了 lsm 树的大小，从而同时减少了压缩和查找开销。</li>
+<li>由于vLog遵循日志结构设计，KV分离在vLog中实现轻量级的垃圾收集(GC)是至关重要的，即在有限的开销下从无效值中回收空闲空间。具体来说，wisckey跟踪的是vLog头部和vLog尾部，分别对应于vLog的结束和开始。它总是向vLog头插入新的值。当它执行GC操作时，它从vLog尾部读取一大块KV对。它首先查询lsm树，查看每个KV对是否有效。然后丢弃无效KV对的值，并将有效值写回vLog头。它最后更新LSM-tree以获取有效值的最新位置。为了在GC期间支持有效的LSM-tree查询，wisckey还将相关的键和元数据与值一起存储在vLog中。请注意，vLog经常为减少GC开销而提供额外的预留空间。<br>
+<img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/papers/WiscKey%20Garbage%20Collection.png?raw=true" alt="image" loading="lazy"></li>
+</ul>
+<h4 id="limitations">Limitations</h4>
+<ul>
+<li>虽然KV分离降低了压缩和查找开销，但我们认为它受到了vLog中大量GC开销的影响。另外，如果预留空间有限，GC开销会变得更加严重。原因有两方面:
+<ul>
+<li>首先，由于它的循环日志设计，vLog只能从它的vLog尾部回收空间。这个约束可能会导致不必要的数据移动。特别是，真实世界的KV存储往往表现出很强的局部性，其中一小部分的热KV对经常更新，而其余的冷KV对只接收到很少甚至没有更新。在vLog中保持严格的顺序不可避免地会多次重新定位冷KV对，从而增加GC开销。</li>
+<li>此外，每个GC操作都查询LSM-tree，以检查vLog尾部chunk中每个KV对的有效性。由于KV对的键可能分散在整个LSM-tree中，查询开销很高，并增加了GC操作的延迟。虽然KV分离已经减少了LSM-tree的大小，但是LSM-tree在大的工作负载下仍然是相当大的，这加剧了查询成本。</li>
+</ul>
+</li>
+<li><strong>分别总结一下这两个问题</strong>：
+<ul>
+<li>GC 过程中需要对有效数据进行拷贝，<strong>热数据进行 GC 是必须的，确保频繁更新的数据的老旧版本的空间能够及时回收，冷数据 GC 其实意义不大，反而因为 GC 过程中的数据迁移引入了开销</strong>。GC 最好的情况就是遇到需要删除和回收的数据，因为在 WiscKey 这样的设计背景下，无需进行回收的数据就肯定会进行数据的拷贝来回收对应的这一段空间（为了避免碎片或者说hole 的产生，因为碎片相应地容易引发随机 I/O）</li>
+<li><strong>GC 操作每个都需要检查数据的有效性，需要去 LSM 树中进行查询，相当于 GC 操作引入了额外的查询开销，并增加了 GC 操作的延迟</strong>（这个是因为 LSM 树本身读的一部分原因，造成了读操作需要读很多层，延迟就比较高，本来 LSM 树读性能就不是特别好）
+<ul>
+<li>那 KV 分离为啥是用 LSM + Value Log 的方案，而不是 B tree + Value Log 呢？思想就是找一个小写读写性能比 LSM 相对更好的数据结构来代替 LSM 存储 Key。Key 大小甚至可以固定，使用一些定长编码的策略。<strong>换一个更高效的索引结构似乎就能解决查询延迟的问题？但仿佛又会牺牲写</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="实验验证">实验验证</h4>
+<ul>
+<li>为了验证KV分离的局限性，我们实现了一个基于vLog的KV存储原型(见§3.8)，并评估其写入放大。我们考虑两个阶段:加载和更新。在加载阶段，将40GiB的1-KiB KV对插入到初始为空的vLog中;在更新阶段，我们基于Zipf分布，Zipfian常数为0.99，发起了40GiB对现有KV对的更新。我们为视频日志提供40GiB的空间，并额外预留30% (12GiB)的空间。我们也在原型中禁用了写缓存(见§3.2)。图2显示了加载和更新阶段vLog的写放大结果，即由于插入或更新导致的总设备写大小与实际写大小的比例。</li>
+<li>为了进行比较，我们还考虑两个现代KV存储，LevelDB和RocksDB，基于它们的默认参数。在 Load 阶段，vLog有足够的空间容纳所有KV对，不触发GC，由于KV分离，它的写入放大只有1.6×。但是，在更新阶段，更新会填满保留的空间并开始触发GC。我们可以看到，vLog的写放大倍数为19.7×，接近LevelDB (19.1×)，高于RocksDB (7.9×)。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324111831.png" alt="20210324111831" loading="lazy"></li>
+<li>为了减轻vLog的GC开销，一种方法是将vLog划分成段，并根据成本-收益策略或其变体 [如下参考文献 ]  选择最佳的候选段来减少GC开销。但是，热KV和冷KV对仍然可以在vLog中混合在一起，所以为GC选择的段可能仍然包含冷KV对，并且不必要地移动。
+<ul>
+<li>[SOSP1997  Improving the Performance of Log-Structured File Systems with Adaptive Methods]</li>
+<li>[TOCS1992 The Design and Implementation of a Log-structured File System]</li>
+<li>[FAST14 Logstructured Memory for DRAM-based Storage]</li>
+</ul>
+</li>
+<li>为了解决热数据和冷数据的混合问题，更好的方法是像SSD设计中那样执行热-冷数据分组，其中，我们将热KV和冷KV的存储分成两个区域，并分别对每个区域应用GC(更多的GC操作将应用于热KV的存储区域)。然而，直接实现热-冷数据分组不可避免地增加了KV分离过程中的更新延迟。由于KV对可能存储在热或冷数据区，每次更新都需要首先查询LSM-tree以获得KV对的确切存储位置。因此，我们工作的一个关键动机是在不使用 LSM 树查找的情况下启用热状态识别。</li>
+</ul>
+<h2 id="design">Design</h2>
+<ul>
+<li>HashKV是一个持久的KV存储，专门针对更新密集型工作负载。在KV分离的基础上改进了 Value 存储的管理，实现了高更新性能。它支持标准的KV操作:PUT(即写入一个KV对)、GET(即检索一个键的值)、DELETE(即删除一个KV对)和SCAN(即检索一个键范围的值)。</li>
+</ul>
+<h3 id="main-idea">Main Idea</h3>
+<ul>
+<li>在KV分离之上，HashKV引入了几个核心设计元素来实现高效的 Value 存储管理：
+<ul>
+<li><strong>Hash-based data grouping</strong>: 回想一下，vLog在值存储方面会招致大量的GC开销。相反，HashKV通过散列相关的键将值映射到值存储中固定大小的分区中。这种设计实现了:
+<ul>
+<li>(i)分区隔离，在这种情况下，所有版本的值更新都必须被写入到相同的分区中，</li>
+<li>(ii)确定性分组，在这种情况下，一个值应该存储在哪个分区中是通过哈希来确定的。我们利用这种设计来实现灵活和轻量级的GC</li>
+</ul>
+</li>
+<li><strong>Dynamic reserved space allocation</strong>: 由于我们将值映射到固定大小的分区中，一个挑战是一个分区接收的更新可能多于它能容纳的更新。HashKV通过在值存储中分配部分保留空间，允许分区动态增长，超过其大小限制。</li>
+<li><strong>Hotness awareness</strong>：由于确定性分组，分区可能会被来自热KV对和冷KV对的混合值填满，在这种情况下，GC操作会不必要地读取和回写冷KV对的值。HashKV使用标记方法将冷KV对的值重新定位到不同的存储区域，并将热KV对和冷KV对分开，这样我们就可以只对热KV对使用GC，避免重复复制冷KV对。</li>
+<li><strong>Selective KV separation</strong>：HashKV通过其值大小来区分KV对，小的KV对可以直接存储在LSM-tree中，而不需要分离KV。这节省了访问小KV对的LSM-tree和值存储的开销，而在LSM-tree中存储小KV对的压缩开销是有限的。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324112600.png" alt="20210324112600" loading="lazy"></li>
+</ul>
+</li>
+<li>HashKV维护一个单一的LSM-tree来进行索引(而不是像值存储中那样对LSM-tree进行哈希分区)，以保持键的顺序和范围扫描性能。由于基于哈希的数据分组将KV对分散到值存储中，因此会导致随机写操作;相反，vLog使用日志结构的存储布局来维护顺序写入。我们的HashKV原型(见§3.8)利用<strong>多线程和批处理写来限制随机写开销</strong>。</li>
+</ul>
+<h3 id="storage-management">Storage Management</h3>
+<ul>
+<li>将 value store 的逻辑地址空间划分成固定大小的单元，称之为 main segments，此外，它还过度规定了保留空间的固定部分，将其再次划分为固定大小的单元，称为 log segments。注意，主段和日志段的大小可能不同;缺省情况下，分别设置为64MiB和1MiB。</li>
+<li>对于每一个KV对的插入或更新，HashKV将其密钥散列到一个主要段中。如果主段没有被填满，HashKV会把这个值添加到主段的末尾，以一种日志结构的方式存储这个值;另一方面，如果主段已满，HashKV会动态分配一个空闲的日志段，以日志结构的方式存储额外的值。同样，如果当前日志段已满，它将进一步分配额外的空闲日志段。我们统称一个主段和它的所有关联的日志段为段组。</li>
+<li>此外，HashKV更新LSM-tree以获得最新的值位置。为了跟踪段组和段的存储状态，HashKV使用一个内存中的全局段表来存储每个段组的当前结束位置，以供后续的插入或更新，以及与每个段组相关的日志段列表。我们的设计<strong>确保了每个插入或更新都可以直接映射到正确的写位置，而无需在写路径上执行LSM-tree查找</strong>（直接 HASH 得到对应的分区，然后在分区中进行追加写），从而实现了较高的写性能。另外，与同一个键相关联的值的更新必须转到同一个段组，这简化了GC。<strong>为了容错，HashKV checkpoints 段表到持久存储</strong>（内存中的段表数据恢复方式）。</li>
+<li>为了便于GC, HashKV还存储键和元数据(例如,键/值大小)，和 WiscKey 一样和值存储在一起(参见图3)。这使GC操作能够在 scan value store 时，快速识别关联到某一个值的键。然而，我们的GC设计与 WiscKey 使用的 vLog 有本质上的不同。</li>
+<li>为了提高写性能，<strong>HashKV在内存中保存了一个写缓存，以降低可靠性为代价来存储最近写的KV对。如果在写缓存中找到了要写的新KV对的键，HashKV就直接就地更新缓存的键的值，而不用向LSM-tree和值存储区发出写操作</strong>。它还可以从写缓存中返回KV对用于读取。如果写缓存已满，HashKV将所有缓存的KV对刷新到lsm 树和值存储中。注意，写缓存是一个可选组件，可以出于可靠性考虑禁用它。</li>
+<li>HashKV 通过将冷值保存在单独的冷数据日志 cold data log 中来支持热感知(见§3.4)。它还通过在 write journal 和 GC journal 中跟踪更新来解决崩溃一致性问题(见3.7)。</li>
+</ul>
+<h3 id="garbage-collection-gc">Garbage Collection (GC)</h3>
+<ul>
+<li>HashKV要求GC回收值存储中无效值所占用的空间。在HashKV中，GC以段组为单位进行操作，当保留空间中的空闲日志段用完时将触发GC。在较高的级别上，<strong>GC操作首先选择一个候选段组，并识别组中所有有效的KV对(即最新版本的KV对)。然后，它以日志结构的方式将所有有效的KV对写回主段，或者在需要时写到附加的日志段。它还释放任何未使用的日志段，这些日志段以后可以被其他段组使用</strong>。最后，它更新LSM-tree中最新的值位置。这里，GC操作需要解决两个问题:
+<ul>
+<li>(i)  应该为GC选择哪个段组;</li>
+<li>(ii) GC操作如何快速识别所选段组中的有效KV对。</li>
+</ul>
+</li>
+<li>不同于vLog，它要求GC操作遵循严格的顺序，HashKV可以灵活地选择执行GC的段组。<strong>目前采用的是贪婪的方法，选择写量最大的段组</strong>。我们的基本原理是，所选的段组通常保存有许多更新，因此有大量写操作的hot KV对。因此，为GC选择这个段组可能会回收最多的空闲空间。<strong>为了实现贪婪的方法，HashKV跟踪内存段表中每个段组的写量</strong>(见§3.2)，<strong>并使用堆 heap 来快速识别哪个段组收到的写量最大</strong></li>
+<li>为了检查所选段组中KV对的有效性，HashKV顺序扫描段组中的KV对，而不查询LSM-tree(注意，它还检查写缓存，以查找段组中最新的KV对)。由于KV对以日志结构的方式写入段组，所以必须按照更新的顺序依次放置KV对。对于一个有多个版本更新的KV对，最接近段组末尾的版本必须是最新的版本，并且对应于有效的KV对，而其他版本是无效的。因此，<strong>每个GC操作的运行时间只取决于需要扫描的段组的大小</strong>。相反，vLog中的GC操作从vLog尾部读取一大块KV对(见§2.2)。它查询LSM-tree(基于与值一起存储的键)以获取每个KV对的最新存储位置，以检查KV对是否为有效的。在大的工作负载下，查询LSM-tree的开销会变得很大。</li>
+<li>在段组的GC操作期间，<strong>HashKV构造一个临时内存哈希表(按键索引)来缓冲在段组中找到的有效KV对的地址</strong>。由于键和地址的大小通常比较小，并且一个段组中的 KV 对数量有限，所以哈希表的大小有限，可以全部存储在内存中。</li>
+</ul>
+<h3 id="hotness-awareness">Hotness Awareness</h3>
+<ul>
+<li>冷热数据分离提高了日志结构存储中的GC性能。事实上，当前基于散列的数据分组设计实现了某种形式的冷热数据分离，因为对热KV对的更新必须散列到同一段组，而我们当前的GC策略总是选择可能存储热KV对的段组。然而，不可避免的是，一些冷KV对被散列到为GC选择的段组中，导致不必要的数据重写。因此，充分实现冷热数据分离，进一步提高GC性能是一个挑战。</li>
+<li>HashKV通过标记方法放松了基于哈希的数据分组的限制(见图4)。具体来说，当HashKV对一个段组<strong>执行GC操作时，它将段组中的每个KV对划分为热的或冷的</strong>。目前，我们将自<strong>最后一次插入以来至少更新过一次</strong>的KV对视为热的，否则是冷的(可以使用更精确的热-冷数据识别方法）
+<ul>
+<li><strong>对于热KV对，HashKV仍然通过散列将它们的最新版本写回同一个段组。</strong></li>
+<li>对于冷KV对，它现在将它们的值写入一个单独的存储区域，并在段组中只保留它们的元数据(即没有值)。此外，<strong>它在每个冷KV对的元数据中添加一个标记，以表明它在段组中的存在</strong>。</li>
+</ul>
+</li>
+<li>因此，如果一个冷KV对后来被更新，我们直接从标签(不查询LSM-tree)知道冷KV对已经被存储，因此我们可以根据我们的分类策略将其视为热；标记的KV对也将失效。最后，<strong>在GC操作结束时，HashKV更新LSM-tree中最新的值位置，这样冷KV对的位置（LSM存储的地址）就指向单独的区域</strong>。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324165745.png" alt="20210324165745" loading="lazy"></li>
+<li>通过标记，HashKV避免了将冷KV对的值存储在段组中，并在GC期间重写它们。而且，<strong>标记只在GC期间触发，不会给写路径增加额外的开销</strong>。目前，我们为冷KV对实现了单独的存储区域，作为值存储中的一个仅追加的日志(称为冷数据日志)，并像vLog一样对冷数据日志执行gc（这里就和 WiscKey 一样了）。如果冷KV对很少被访问，冷数据日志也可以放在容量更大的二级存储中(如硬盘)。
+<ul>
+<li><strong>其实这里有三个问题：</strong>
+<ul>
+<li>热数据特别少，冷数据特别多的时候，空间分配会是个问题。</li>
+<li>所有的数据第一次访问的时候都是冷数据，第二次访问就成了热数据了，要是冷数据变热数据之间的时间较长，中间进行了 GC，就会导致数据拷贝（至少一次 segment group 到 cold Value Log），然后再引入一次 Cold Value Log 中的 GC 操作，这时候就退化成了 WiscKey 的 GC，需要检查 LSM Tree。</li>
+<li>这种过于简单的冷热数据识别，应对不了热数据变冷的问题，热数据变冷会一直在 segment group 中进行拷贝，还是会一直进行数据的拷贝，还是退化成了 WiscKey 的 GC。（<strong>这种简单的冷热数据识别只能对 只访问一次的冷数据为主要组成部分的负载 产生比较好的效果</strong>）</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>本质是将冷数据只进行一次拷贝操作，减少了冷数据的数据迁移，同时验证冷数据的有效性直接通过 tag 验证，不用查询 LSM 树，热数据的有效性的话还是需要通过内存中临时内存哈希表来进行验证。</strong></li>
+<li>我们评估了热度感知对HashKV更新性能的影响。我们考虑两个Zipfian常量，0.9和0.99，以捕获工作负载中的不同偏度。图10显示了禁用和启用热感知功能时的结果。当启用热感知功能时，更新吞吐量增加了113.1%和121.3%，而对于Zipfian常数0.9和0.99，写大小分别减少了42.8%和42.5%。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324215235.png" alt="20210324215235" loading="lazy"></li>
+</ul>
+<h3 id="selective-kv-separation">Selective KV Separation</h3>
+<ul>
+<li>HashKV支持具有一般值大小的工作负载。我们的理论基础是，KV分离降低了压缩开销，特别是对于大型KV对，但它对小型KV对的好处是有限的，而且它会导致访问 LSM 树和值存储的额外开销。因此，我们提出了选择KV分离的方法，<strong>即对较大值的KV对仍然采用KV分离，而较小值的KV对则全部存储在LSM-tree中</strong>。选择KV分离的一个关键挑战是选择区分小尺寸和大尺寸KV对的KV对大小阈值(假设键大小不变)。我们认为选择取决于部署环境。在实践中，我们可以对不同的值大小进行性能测试，看看什么时候选择性KV分离的吞吐量增益显著。</li>
+<li>我们观察到，由于在KV分离下存储的小KV对的高更新开销，当小KV对的比例较高时，此时工作负载下，KV分离的性能增益更高。同时 40B-1KB 的组合相比于 40B-4KB 的组合优化效果更明显。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324214027.png" alt="20210324214027" loading="lazy"></li>
+</ul>
+<h3 id="range-scans">Range Scans</h3>
+<ul>
+<li>使用LSM-tree进行索引的一个关键原因是它对范围扫描的有效支持。由于LSMtree按键存储和排序KV对，因此它可以通过顺序读取返回一系列键的值。然而，KV分离现在将值存储在单独的存储空间中，因此它会招致额外的值读取。在HashKV中，这些值分散在不同的段组中，因此范围扫描将触发许多随机读取，从而降低性能。<strong>HashKV目前利用预读机制通过将值预取到页面缓存中来加速范围扫描</strong>。对于每个扫描请求，HashKV遍历LSM-tree中排序键的范围，并(通过posix fadvise)向每个值发出预读请求。然后读取所有值并返回排序的KV对。</li>
+<li>在KV对大小上，HashKV具有与vLog相似的扫描性能。然而，对于256-B和1-KiB KV对，HashKV的扫描吞吐量分别比LevelDB低70.0%和36.3%，主要是因为HashKV需要向LSM-tree和值存储发出读操作，而且通过随机读操作从值存储中检索小值的开销也很大。然而，对于4KiB或更大的KV对，HashKV的性能优于LevelDB，例如，4KiB KV对的性能为94.2%。</li>
+<li>注意，预读机制(见§3.6)是使HashKV实现高范围扫描性能的关键。例如，与没有预读的情况相比，256-B KV对的HashKV的范围扫描吞吐量增加了81.0%<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324214413.png" alt="20210324214413" loading="lazy"></li>
+</ul>
+<h3 id="crash-consistency">Crash Consistency</h3>
+<ul>
+<li>
+<p>当HashKV问题写入持久性存储时，可能会发生崩溃。HashKV基于元数据日志记录解决崩溃一致性问题，主要关注两个方面:</p>
+<ul>
+<li>(i) 刷新写缓存</li>
+<li>(ii) GC操作。</li>
+</ul>
+</li>
+<li>
+<p>刷新写缓存涉及将KV对写入值存储并更新LSM-tree中的元数据。<strong>HashKV维护一个写日志 write journal 来跟踪每次 flush 操作</strong>。它在刷新写缓存时执行以下步骤：</p>
+<ul>
+<li>(i) 将缓存的KV对刷新到值存储中;</li>
+<li>(ii) 在 write journal 中追加写入元数据更新;</li>
+<li>(iii) 在 journal end 写入一个提交记录;</li>
+<li>(iv) 更新 LSM-tree 中的 keys 和元数据;</li>
+<li>(v) 在日志中标记 flush 操作为 free 状态( free 的日志记录可以稍后回收)。</li>
+</ul>
+</li>
+<li>
+<p>如果在步骤(iii)完成后发生崩溃，HashKV在写日志中回放更新，并确保LSMtree和值存储是一致的。</p>
+</li>
+<li>
+<p>GC 操作中崩溃一致性的处理是不同的，因为它们可能会覆盖现有的有效 KV 对。因此，我们还需要保护现有的有效 KV 对，防止在GC 期间崩溃。<strong>HashKV 维护一个GC日志来跟踪每个GC操作。</strong> 在GC操作中识别出所有有效的KV对后，它将执行以下步骤:</p>
+<ul>
+<li>(i)  将被覆盖的有效KV对以及元数据更新一起添加到GC日志中;</li>
+<li>(ii) 将所有有效KV对写回段组;</li>
+<li>(iii) 更新LSM-tree中的元数据;</li>
+<li>(iv) 在日志中标记GC操作对应的记录为 free 状态。</li>
+</ul>
+</li>
+<li>
+<p>我们研究了崩溃一致性机制对HashKV性能的影响。表1显示了结果。当启用了崩溃一致性机制时，P3阶段的HashKV的更新吞吐量减少了6.5%，总写大小增加了4.2%，这表明崩溃一致性机制的影响仍然有限。请注意，我们在运行时通过代码注入和意外终止来使HashKV崩溃，从而验证崩溃一致性机制的正确性。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324221131.png" alt="20210324221131" loading="lazy"></p>
+</li>
+</ul>
+<h3 id="implementation-details">Implementation Details</h3>
+<ul>
+<li>基于 LevelDB v1.20 实现</li>
+<li><strong>Storage organization</strong>: 我们目前将HashKV部署在具有多个ssd的RAID阵列上，以获得更高的I/O性能。我们使用 mdadm 创建一个软件RAID卷，并将RAID卷挂载为Ext4文件系统，在该文件系统上运行LevelDB和值存储。特别地，HashKV将值存储管理为一个大文件。它根据预先配置的段大小，将value store文件划分为两个区域，一个用于主段，另一个用于日志段。所有的段在value store文件中对齐，这样每个 main/log 段的起始偏移量是 main 段大小的倍数。<strong>如果启用了热感知功能(见§3.4)，HashKV会在值存储文件中为冷数据日志添加一个单独的区域。此外，为了解决崩溃一致性(见3.7)，HashKV使用单独的文件来存储写和GC日志。</strong></li>
+<li><strong>Multi-threading</strong>：<strong>HashKV通过线程池实现了多线程，当把写缓存中的KV对刷新到不同的段时(见§3.2)，并且在GC(见§3.3）过程中从段组中并行检索段，从而提高I/O性能</strong>。</li>
+<li>为了减轻确定性分组带来的随机写开销(见§3.1)，HashKV实现了批量写。<strong>当HashKV在写缓存中刷新KV对时，它首先识别并缓冲一批被散列到同一个分段组中的KV对，然后(通过线程)发出一个顺序写来刷新批处理。更大的批处理大小减少了随机写开销，但它也降低了并行性。</strong> 目前，我们配置了一个批写入阈值，在批中添加KV对后，如果批大小达到或超过批大小阈值，批将被刷新;换句话说，如果一个KV对的大小大于批写阈值，HashKV就直接刷新它。</li>
+</ul>
+<h2 id="evaluation">Evaluation</h2>
+<ul>
+<li>我们评估了LevelDB (LDB)、RocksDB (RDB)、HyperLevelDB (HDB)、PebblesDB (PDB)、vLog和HashKV (HKV)在更新密集型工作负载下的性能。我们首先比较LevelDB, RocksDB, vLog和HashKV;之后，我们还将HyperLevelDB和pebblesdb纳入比较中。</li>
+<li>图5(a)显示了每个阶段的性能。对于vLog和HashKV，加载阶段的吞吐量比更新阶段的吞吐量高，因为更新阶段主要由GC开销控制。在 load 阶段，hashkv的吞吐量分别比LevelDB和RocksDB大17.1×和3.0×。HashKV的吞吐量比vLog慢7.9%，这是由于通过哈希来分发KV对而引入了随机写。在更新阶段，HashKV的吞吐量在LevelDB、RocksDB和vLog上分别为6.3-7.9×、1.3-1.4×和3.7-4.6×。由于压缩开销很大，LevelDB的吞吐量在所有KV存储中是最低的，而vLog的GC开销也很高。</li>
+<li>图5(b)和5(c)显示了总写大小和所有加载和更新请求发出后，不同KV存储的大小。HashKV将LevelDB、RocksDB和vLog的总写大小分别减少了71.5%、66.7%和49.6%。而且，它们有非常相似的 KV 存储大小。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324221302.png" alt="20210324221302" loading="lazy"></li>
+<li>对于 HyperLevelDB 和 peblesdb，两者都是如此，由于压缩开销较低，因此具有较高的负载和更新吞吐量。例如，PebblesDB将sstable的片段从较高的级别添加到较低的级别，而不重写较低级别的sstable。<strong>HyperLevelDB和PebblesDB都至少实现了HashKV的两倍吞吐量，同时产生的写大小也小于HashKV。</strong> 另一方面，<strong>它们的存储开销很大，其最终KV存储大小分别为2.2× HashKV和1.7× HashKV。主要原因是HyperLevelDB和PebblesDB都只对选定范围的键进行压缩，以减少写放大，这样在压缩后可能仍然会有很多无效的KV对。它们触发压缩操作的频率也低于LevelDB。这两个因素都会导致较高的存储开销。</strong> 在接下来的实验中，我们关注LevelDB、RocksDB、vLog和HashKV，因为它们的存储开销相当。</li>
+<li><strong>写放大 PebblesDB/HyperLevelDB 做得更好，但空间放大 HASHKV 更好</strong></li>
+</ul>
+<h2 id="related-work">Related Work</h2>
+<ul>
+<li><strong>General KV stores</strong>:
+<ul>
+<li>DRAM: Redis, MemC3, NSDI13 Distributed Caching with Memcached, NSDI14 MICA</li>
+<li>SSDs: FlashStore, SIGMOD11 SkimpyStash, SOSP11 SILT, FAST16 WiscKey</li>
+<li>NVM: ATC15 NVMKV, ATC17 HiKV</li>
+</ul>
+</li>
+<li><strong>LSM-tree-based KV stores</strong>
+<ul>
+<li>bLSM</li>
+<li>VT-tree</li>
+<li>LSM-trie</li>
+<li>LWC-store</li>
+<li>SkipStore</li>
+<li>PebblesDB</li>
+</ul>
+</li>
+<li><strong>KV separation</strong>
+<ul>
+<li>WiscKey</li>
+<li>Atlas</li>
+<li>Cocytus</li>
+</ul>
+</li>
+<li><strong>Hash-based data organization</strong>
+<ul>
+<li>Dynamo</li>
+<li>Kinesis</li>
+<li>Ceph</li>
+<li>NVMKV</li>
+</ul>
+</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<ul>
+<li>本文提出了HashKV算法，它能够在更新密集型工作负载下对KV存储进行有效的更新。它的新颖之处在于利用基于哈希的数据分组进行确定性数据组织，从而减轻GC开销。我们通过几个扩展进一步增强了HashKV，包括动态预留空间分配、热度感知和选择性KV分离。试验台实验表明，HashKV实现了较高的更新吞吐量，并减少了总写大小。</li>
+</ul>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[C++ 多线程]]></title>
         <id>https://blog.shunzi.tech/post/cpp-multi-thread/</id>
@@ -36,10 +637,67 @@
 <li><a href="https://www.jianshu.com/p/8c1bb012d5f8">[6] 简书：c++11 多线程（3）atomic 总结</a></li>
 <li><a href="https://www.cnblogs.com/haippy/p/3301408.html">[7] 博客园：C++11 并发指南六( <atomic> 类型详解二 std::atomic )</a></li>
 <li><a href="https://support.huaweicloud.com/prtg-kunpengdbs/kunpengdbsolution_12_0002.html">[8] 华为云：常见原子操作（C语言）</a></li>
+<li><a href="http://events.jianshu.io/p/a25e0754e2b9">[9] 简书：LevelDB 中的跳表实现</a></li>
 </ul>
 <h3 id="atomic">atomic</h3>
 <ul>
 <li>所谓原子操作，就是多线程程序中“最小的且不可并行化的”操作。对于在多个线程间共享的一个资源而言，这意味着同一时刻，多个线程中有且仅有一个线程在对这个资源进行操作，即互斥访问。</li>
+<li>而关于原子性，我们应当具有一个基本的认知：<strong>高级语言层面，单条语句并不能保证对应的操作具有原子性</strong>。</li>
+</ul>
+<h4 id="举例说明">举例说明</h4>
+<ul>
+<li>在使用 C、C++、Java 等各种高级语言编写代码时，不少人会下意识的认为一条不可再分的单条语句具有原子性，例如常见 i++。</li>
+</ul>
+<pre><code class="language-C">// 伪码
+
+int i = 0;
+
+void increase() {
+  i++;
+}
+
+int main() {
+  /* 创建两个线程，每个线程循环进行 100 次 increase */
+  // 线程 1
+  Thread thread1 = new Thread(
+    run() {
+      for (int i = 0; i &lt; 100; i++) increase();
+    }
+  );
+  // 线程 2
+  Thread thread2 = new Thread(
+    run() {
+      for (int i = 0; i &lt; 100; i++) increase();
+    }
+  );
+}
+</code></pre>
+<ul>
+<li>如果 i++ 是原子操作，则上述伪码中的 i 最终结果为 200。但实际上每次运行结果可能都不相同，且通常小于 200。</li>
+<li>之所以出现这样的情况是因为 <strong>i++ 在执行时通常还会继续划分为多条 CPU 指令</strong>。以 Java 为例，i++ 编译将形成四条字节码指令，以下四条指令是 Java 虚拟机中的字节码指令，字节码指令是 JVM 执行的指令。实际每条字节码指令还可以继续划分为更底层的机器指令。但字节码指令已经足够演示原子性的含义了。如下所示：
+<ul>
+<li><a href="https://blog.csdn.net/tanggao1314/article/details/53260891">CSDN：JVM指令集及各指令的详细使用说明</a></li>
+</ul>
+</li>
+</ul>
+<pre><code>// Java 字节码指令
+0:  getstatic     # 获取静态属性指令，获取指定类的静态域，并将其值压入栈顶  
+1:  iconst_1      # 当int取值-1~5时，JVM采用iconst指令将常量压入栈中，也就是将 1 压入栈中
+2:  iadd          # 将栈顶两 int 型数值相加并将结果压入栈顶
+3:  putstatic     # 为指定的类的静态域赋值
+</code></pre>
+<ul>
+<li>而上述四条指令的执行并不保证原子性，即执行过程可被打断。考虑如下 CPU 执行序列：
+<ol>
+<li>线程 1 执行 getstatic 指令，获得 i = 1</li>
+<li>CPU 切换到线程 2，也执行了 getstatic 指令，获得 i = 1。</li>
+<li>CPU 切回线程 1 执行剩下指令，此时 i = 2</li>
+<li>CPU 切到线程 2，由于步骤 2 读到的是 i = 1，固执行剩下指令最终只会得到 i = 2</li>
+</ol>
+</li>
+</ul>
+<h3 id="c-stdatomic">C++ std::atomic</h3>
+<ul>
 <li>std::atomic 为C++11封装的原子数据类型。原子数据类型不会发生数据竞争，能直接用在多线程中而不必我们用户对其进行添加互斥资源锁的类型。从实现上，大家可以理解为这些原子类型内部自己加了锁。</li>
 <li>原子类型在头文件 <atomic> 中，使用atomic有两套命名模式：一种是使用替代名称，一种是使用atomic的特化。
 <ul>
@@ -148,6 +806,470 @@ b.compare_exchange_weak(expected, new_value);
 <li>不像compare_exchange_weak，此版本必须始终true在预期确实与所包含的对象相等时返回，不允许出现虚假故障。但是，在某些计算机上，对于某些在循环中进行检查的算法，compare_exchange_weak 可能会明显改善性能。</li>
 <li>其余使用方法和compare_exchange_weak完全一致。</li>
 <li>这两个版本的区别是：Weak版本如果数据符合条件被修改，其也可能返回false，就好像不符合修改状态一致；而Strong版本不会有这个问题，但在某些平台上Strong版本比Weak版本慢 [注:在x86平台我没发现他们之间有任何性能差距]；绝大多数情况下，我们应该优先选择使用Strong版本；</li>
+</ul>
+<h4 id="memory-order">memory order</h4>
+<ul>
+<li>在介绍 Memory Order 之前首先介绍 <strong>有序性</strong></li>
+</ul>
+<h5 id="有序性">有序性</h5>
+<ul>
+<li>上述已经提到 CPU 的一条指令执行时，通常会有多个步骤，如取指IF 即从主存储器中取出指令、ID 译码即翻译指令、EX 执行指令、存储器访问 MEM 取数、WB 写回。</li>
+<li>即指令执行将经历：<strong>IF、ID、EX、MEM、WB</strong> 阶段。</li>
+<li>现在考虑 CPU 在执行一条又一条指令时该如何完成上述步骤？最容易想到并是顺序串行，指令 1 依次完成上述五个步骤，完成之后，指令 2 再开始依次完成上述步骤。这种方式简单直接，但执行效率显然存在很大的优化空间。</li>
+<li>思考一种流水线工作：</li>
+</ul>
+<pre><code>指令1   IF ID EX MEM WB
+指令2      IF ID EX MEM WB
+指令3         IF ID EX MEM WB
+</code></pre>
+<ul>
+<li>采用这种流水线的工作方式，将避免 CPU 、存储器中各个器件的空闲，从而充分利用每个器件，提升性能。同时注意到由于每条指令执行的情况有所不同，指令执行的先后顺序将会影响到这条流水线的负载情况，而我们的目标则是让整个流水线满载紧凑的运行。</li>
+<li>为此 CPU 又实现了「指令重排」技术，CPU 将有选择性的对部分指令进行重排来提高 CPU 执行的性能和效率。例如：</li>
+</ul>
+<pre><code class="language-C">x = 100;    // #1
+y = 200;    // #2
+z = x + y;  // #3
+</code></pre>
+<ul>
+<li>虽然上述高级语言的语句会编译成多条机器指令，多条机器指令还会进行「指令重排」，#1 语句与 #2 语句完全有可能被 CPU 重新排序，所以程序实际运行时可能会先执行 y = 200; 然后再执行 x = 100;</li>
+<li>但另一方面，指令重排的前提是不会影响线程内程序的串行语义，CPU 在重排指令时必须保证线程内语义不变，例如：</li>
+</ul>
+<pre><code class="language-C">x = 0; // #1
+x = 1; // #2
+y = x; // #3
+</code></pre>
+<ul>
+<li>上述的 y 一定会按照正常的串行逻辑被赋值为 1。</li>
+<li>但不幸的是，CPU 只能保证线程内的串行语义。在多线程的视角下，「指令重排」造成的影响需要程序员自己关注。</li>
+</ul>
+<pre><code class="language-C">
+// 公共资源
+int x = 0;
+int y = 0;
+int z = 0;
+
+Thread_1:             Thread_2:
+x = 100;              while (y != 200);
+y = 200;              print x
+z = x + y;
+</code></pre>
+<ul>
+<li>如果 CPU 不进行「乱序优化」执行，那么 y = 200 时，x 已经被赋值为 100，此时线程 2 输出 x = 200。但实际运行时，线程 1 可能先执行 y = 200，此时 x 还是初始值 0。线程 2 观察到 y = 200 后，退出循环，输出 x = 0;</li>
+</ul>
+<h5 id="memory-order-2">memory order</h5>
+<ul>
+<li>C++ 提供了 std::atomic 类模板，以保证操作原子性。同时也提供了内存顺序模型 memory_order指定内存访问，以便提供有序性和可见性。
+<ul>
+<li><strong>memory_order_relaxed</strong>: 只保证原子操作的原子性，不提供有序性的保证</li>
+<li><strong>memory_order_consume</strong>	当前线程中依赖于当前加载的该值的读或写不能被重排到此加载前</li>
+<li><strong>memory_order_acquire</strong>	在其影响的内存位置进行获得操作：当前线程中读或写不能被重排到此加载前</li>
+<li><strong>memory_order_release</strong>	当前线程中的读或写不能被重排到此存储后</li>
+<li><strong>memory_order_acq_rel</strong>	带此内存顺序的读修改写操作既是获得操作又是释放操作</li>
+<li><strong>memory_order_seq_cst</strong>	有此内存顺序的加载操作进行获得操作，存储操作进行释放操作，而读修改写操作进行获得操作和释放操作，再加上存在一个单独全序，其中所有线程以同一顺序观测到所有修改</li>
+</ul>
+</li>
+<li>组合出四种顺序：
+<ul>
+<li><strong>Relaxed ordering 宽松顺序</strong>：宽松顺序只保证原子变量的原子性（变量操作的机器指令不进行重排序），但无其他同步操作，不保证多线程的有序性。</li>
+</ul>
+<pre><code class="language-C">Thread1: 
+y.load(std::memory_order_relaxed);
+
+Thread2:
+y.store(h, std::memory_order_relaxed);
+</code></pre>
+<ul>
+<li><strong>Release-Acquire ordering 释放获得顺序</strong>，store 使用 memory_order_release，load 使用 memory_order_acquire，CPU 将保证如下两点：
+<ul>
+<li>store 之前的语句不允许被重排序到 store 之后（例子中的 #1 和 #2 语句一定在 store 之前执行）</li>
+<li>load 之后的语句不允许被重排序到 load 之前（例子中的 #3 和 #4 一定在 load 之后执行）</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-C++">std::atomic&lt;std::string*&gt; ptr;
+int data;
+
+void producer()
+{
+    std::string* p  = new std::string(&quot;Hello&quot;); // #1
+    data = 42;  // #2
+    ptr.store(p, std::memory_order_release);
+}
+
+void consumer()
+{
+    std::string* p2;
+    while (!(p2 = ptr.load(std::memory_order_acquire)))
+        ;
+    assert(*p2 == &quot;Hello&quot;); // 绝无问题 #3
+    assert(data == 42); // 绝无问题 #4
+}
+
+int main()
+{
+    std::thread t1(producer);
+    std::thread t2(consumer);
+    t1.join(); t2.join();
+}
+</code></pre>
+<ul>
+<li>同时 CPU 将保证 store 之前的语句比 load 之后的语句「先行发生」，即先执行 #1、#2，然后执行 #3、#4。这实际上就意味着线程 1 中 store 之前的读写操作对线程 2 中 load 执行后是可见的。<strong>注意是所有操作都同步了，不管 #3 是否依赖了 #1 或 #2</strong></li>
+<li>值得关注的是这种顺序模型在一些强顺序系统例如 x86、SPARC TSO、IBM 主框架上是自动进行的。但在另外一些系统如 ARM、Power PC 等需要额外指令来保障。</li>
+<li><strong>Release-Consume ordering 释放消费顺序</strong>:store 使用 memory_order_release，load 使用 memory_order_consume。其效果与 Release-Acquire ordering 释放获得顺序类似，唯一不同的是并不是所有操作都同步（不够高效），而是只对依赖操作进行同步，保证其有序性上例就是 #3 一定发生在 #1 之后，因为这两个操作依赖于 ptr。但不会保证 #4 一定发生在 #2 之后（注意「释放获得顺序」可以保证这一点）。</li>
+</ul>
+<pre><code class="language-C++">std::atomic&lt;std::string*&gt; ptr;
+int data;
+
+void producer()
+{
+    std::string* p  = new std::string(&quot;Hello&quot;); // #1
+    data = 42; // #2
+    ptr.store(p, std::memory_order_release);
+}
+
+void consumer()
+{
+    std::string* p2;
+    while (!(p2 = ptr.load(std::memory_order_consume)))
+        ;
+    assert(*p2 == &quot;Hello&quot;); // #3 绝无出错： *p2 从 ptr 携带依赖
+    assert(data == 42); // #4 可能也可能不会出错： data 不从 ptr 携带依赖
+}
+
+int main()
+{
+    std::thread t1(producer);
+    std::thread t2(consumer);
+    t1.join(); t2.join();
+}
+</code></pre>
+<ul>
+<li><strong>Sequential consistency 序列一致顺序</strong>: 「释放获得顺序」是对某一个变量进行同步，Sequential consistency 序列一致顺序则是对所有变量的所有操作都进行同步。store 和 load 都使用 memory_order_seq_cst，可以理解对每个变量都进行 Release-Acquire 操作。所以这也是最慢的一种顺序模型。</li>
+</ul>
+</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[FloDB: Unlocking Memory in Persistent Key-Value Stores]]></title>
+        <id>https://blog.shunzi.tech/post/FloDB/</id>
+        <link href="https://blog.shunzi.tech/post/FloDB/">
+        </link>
+        <updated>2021-04-09T04:21:02.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<ul>
+<li>EuroSys17: FloDB: Unlocking Memory in Persistent Key-Value Stores</li>
+<li>https://dcl.epfl.ch/site/flodb</li>
+</ul>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<ul>
+<li>EuroSys17: FloDB: Unlocking Memory in Persistent Key-Value Stores</li>
+<li>https://dcl.epfl.ch/site/flodb</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li>日志结构合并(LSM)数据存储允许存储和处理大量数据，同时保持良好的性能。它们通过吸收内存层中的更新并按顺序分批地将它们传输到磁盘层来缓解I/O瓶颈。然而，LSM体系结构基本上要求元素按排序顺序排列。随着内存中数据量的增长，维护这种排序顺序的成本越来越高。与直觉相反，现有的LSM系统在使用较大的内存组件时实际上可能会损失吞吐量。</li>
+<li>在本文中，我们介绍了FloDB，一种LSM内存组件架构，它允许吞吐量在具有充足内存大小的现代多核机器上扩展。<strong>FloDB的主要思想本质上是通过在内存组件上添加一个小的内存缓冲层来引导传统的LSM体系结构</strong>。该缓冲区提供低延迟操作，屏蔽排序内存组件的写延迟。将这个缓冲区集成到经典的LSM内存组件中以变成 FloDB 并非易事，需要重新访问面向用户的 LSM 操作(搜索、更新、扫描)的算法。FloDB 的两层可以用最先进的、高并发的数据结构来实现。通过这种方式，正如我们在本文中所展示的那样，FloDB 消除了经典 LSM 设计中显著的同步瓶颈，同时提供了一个丰富的 LSM API。</li>
+<li>我们实现FloDB作为LevelDB的扩展，谷歌流行的LSM键值存储。我们将FloDB的性能与最先进的LSMs进行比较。简而言之，在各种多线程工作负载下，FloDB的性能比性能仅次于它的竞争对手高出一个数量级。</li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<ul>
+<li>键值存储是许多系统的关键组件，这些系统需要对大量数据进行低延迟的访问。这些存储的特点是扁平的数据组织和简化的接口，这允许有效的实现。然而，键值存储的目标数据量通常大于主存;因此，通常需要持久化存储。由于访问持久存储的速度比 CPU 慢，直接在磁盘上更新数据产生了一个严重的瓶颈。所以很多 KV 存储系统使用了 LSM 结构。LSM 数据存储适用于需要低延迟访问的应用程序，例如需要进行大量更新的消息队列，以及在面向用户的应用程序中维护会话状态。基本上，LSM 体系结构一方面通过缓存读，另一方面通过在内存中吸收写并稍后批量写入磁盘，掩盖了磁盘访问瓶颈。<strong>尽管 LSM 键值存储在解决I/O瓶颈带来的挑战方面发挥了很大的作用，但它们的性能不会随着内存组件的大小而扩展，也不会随着线程的数量而扩展</strong>。换句话说，可能令人惊讶的是，<strong>增加现有lsm的内存部分只能在相对较小的尺寸下提高性能。类似地，添加线程并不能提高许多现有lsm的吞吐量，因为它们使用了全局阻塞同步</strong>。</li>
+<li>上面描述的两种限制在 LSM 的传统设计中是固定存在的。我们通过引入 FloDB 来规避这些限制，FloDB 是一种新颖的 LSM 内存组件，其设计目的是随线程数量及其在内存中的大小而扩展。传统上，LSMs 一直采用两层存储层次结构，一层在内存中，一层在磁盘上。我们建议增加一个内存级别。换句话说，<strong>FloDB 是一个位于磁盘组件之上的两级内存组件(图1)，每个in-memory 级别都是一个并发数据结构。内存顶层是一个小而快速的数据结构，而内存底层是一个更大的、排序的数据结构</strong>。在存储到磁盘之前，新条目被插入到顶层，然后在后台被排到底层。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210330151553.png" alt="20210330151553" loading="lazy"></li>
+<li>这个方案有几个优点：
+<ul>
+<li>首先，它允许扫描和写入并行进行，分别在底层和顶层。</li>
+<li>其次，无论内存组件大小如何，使用小型、快速的顶级级别都可以实现低延迟的更新，而现有的 LSM 会随着内存组件大小的增加而性能下降。更大的内存组件可能在峰值吞吐量时造成更长的写突发。</li>
+<li>第三，维护底层内存层的排序允许在不进行额外的(昂贵的)排序步骤的情况下对磁盘进行刷新。</li>
+</ul>
+</li>
+<li>我们使用一个<strong>小型的高性能并发哈希表来实现 FloDB</strong>，并使用一个<strong>较大的并发跳表</strong>来实现底部的内存级别。乍一看，实现 FloDB 似乎只需要在现有的 LSM 体系结构上添加一个额外的基于哈希表的缓冲区级别。然而，这个看似很小的步骤却带来了微妙的技术挑战。
+<ul>
+<li>第一个挑战是<strong>确保两个内存级别之间的有效数据流动</strong>，以便充分利用额外的缓冲区，同时不耗尽系统资源。为此，我们引入了多插入操作，这是一种用于并发跳表的新操作。其<strong>主要思想是在一个操作中在跳跃列表中插入 n 个排序的元素，使用前面插入元素的位置作为插入下一个元素的起点，从而重用已经遍历过的 hops</strong>。Skiplist 多插入是独立的，通过增加内存组件更新的吞吐量，它也可以使以前的单写入器 LSM 实现受益。</li>
+<li>第二个挑战是<strong>确保面向用户的 LSM 操作的一致性</strong>，同时在这些操作之间启用高级别的并发性。特别是，FloDB 是第一个同时支持一致扫描和就地更新的LSM系统。</li>
+</ul>
+</li>
+<li>我们的实验表明，FloDB的性能优于当前的键值存储解决方案，特别是在写密集型场景中。例如，在只写的工作负载中，FloDB 可以用一个工作线程来饱和磁盘组件的吞吐量，并且在最多有16个工作线程的情况下，它的性能继续超过性能第二好的系统，平均是后者的2倍。此外，对于倾斜的读写工作负载，FloDB 获得比性能最高的竞争对手高一个数量级的吞吐量：
+<ul>
+<li>FloDB，一个用于 log-structured merge 内存组件的两级架构。FloDB 可以根据主内存的大小进行扩展，并且具有丰富的API，读取、写入和扫描都可以并发进行。</li>
+<li>在Xeon多核机器上，作为LevelDB的扩展，FloDB体系结构的一个公开的c++实现，以及一个高达192GB内存组件大小的实验。</li>
+<li>一种用于并行跳过表的新型多插入操作的算法。除了FloDB，多插入还可以使任何使用skiplist 的 LSM 体系结构受益</li>
+</ul>
+</li>
+<li><strong>尽管 FloDB 有很多优点，但我们并不认为它是一剂灵丹妙药;它确实有局限性</strong>。
+<ul>
+<li>首先，与所有lsm一样，稳态吞吐量受到层次结构中最慢组件的限制:将内存组件写入磁盘。FloDB在内存组件中所做的改进与潜在的磁盘级改进是正交的，这超出了本文的讨论范围。磁盘级别的改进可以与FloDB结合使用，进一步提高LSMs的总体性能。</li>
+<li>其次，可以设计出对FloDB扫描有问题的工作负载。例如，在写密集型工作负载和严重争用中，长时间运行扫描的性能会下降。第三，对于比主存大得多的数据集，FloDB提高的读性能要小于写性能。这是因为在LSMs中，读取性能很大程度上取决于缓存的有效性，这也不在我们的论文讨论范围之内。</li>
+</ul>
+</li>
+</ul>
+<h2 id="shortcomings-of-current-lsms">Shortcomings of Current LSMs</h2>
+<h3 id="lsm-key-value-store-overview">LSM Key-Value Store Overview</h3>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210330155255.png" alt="20210330155255" loading="lazy"></figure>
+<h3 id="limitationscalability-with-number-of-threads">Limitation—Scalability with Number of Threads</h3>
+<ul>
+<li>多个处理核心的存在可以提高LSM数据存储的性能。虽然现有的LSM系统允许某种程度的并发，但它们仍留有大量的并行机会。例如，
+<ul>
+<li>leveldb——许多LSM键值存储的基础——支持多个写线程，但通过让线程将其预期的写操作存储在一个并发队列中来序列化写操作;这个队列中的写操作由单个线程一个接一个地应用到键值存储。此外，LevelDB还要求读取器在每次操作中获取全局锁，以便访问或更新元数据</li>
+<li>HyperLevelDB 建立在LevelDB之上，通过允许并发更新来提高并发性;然而，为了通过版本号来维护更新的顺序，仍然需要昂贵的同步</li>
+<li>RocksDB 也是源自LevelDB的一个键值存储，它通过引入磁盘组件的多线程合并来提高并发性。虽然多线程压缩确实提高了整体性能，但RocksDB仍然保持全局同步来访问内存结构和更新版本号，这与HyperLevelDB类似</li>
+<li>cLSM 甚至更进一步，从只读路径上删除了任何阻塞的同步，但是使用全局共享独占锁来协调更新和后台磁盘写操作，仍然削弱了系统的可伸缩性。正如我们在第5节中所展示的，这些可伸缩性瓶颈确实在实践中表现出来</li>
+</ul>
+</li>
+</ul>
+<h3 id="limitationscalability-with-memory-size">Limitation—Scalability with Memory Size</h3>
+<ul>
+<li>现有的LSM内存组件可以排序(例如，skiplist)或未排序的(例如，哈希表)。这两种选择都有各自的优点和缺点，但令人惊讶的是，它们都不能扩展到大型内存组件。</li>
+<li>一方面，当使用skiplist时，顺序扫描是自然的。而且，压缩阶段只不过是将组件直接复制到磁盘;因此它的开销很低。然而，写需要数据结构大小的对数时间来维持排序顺序(直接从内存组件读取也需要数据结构大小的对数时间。然而，对于大型数据集，大多数读操作都是从磁盘组件上读取的，因此<strong>内存组件数据结构的选择对读延迟的影响小于写延迟</strong>)。因此，从图3中可以看出，分配更多的内存实际上增加了写延迟。该图显示了作为RocksDB(最流行的最先进的lsm之一)中内存组件大小的函数的读和写延迟的中值。在第99百分位，我们观察到类似的读写延迟趋势。延迟使用RocksDB的读写基准测试，有八个读线程和一个写线程在一个有100万个条目的数据库上运行。密钥大小为8字节，值大小为256字节。延迟被规范化为128 MB内存组件。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210330161949.png" alt="20210330161949" loading="lazy"></li>
+<li>另一方面，对于哈希表，写操作在常量时间内完成，但是顺序扫描是不实用的，而且压缩阶段更复杂。压缩在将内存组件写入磁盘之前需要对其进行完全排序，以保存LSM结构。实际上，我们的测量结果表明，基于哈希表的内存组件的平均压缩时间至少比相同大小的基于skiplist的内存组件的平均压缩时间高一个数量级：因为随着哈希表变得越来越大，排序和持久化到磁盘所需的时间也越来越长。在对不可变内存组件进行排序和持久化时，活动(可变)内存组件也可能被填满。在这种情况下，writer 被延迟，因为在内存中没有空间来完成它们的操作。结果，端到端写延迟随着内存大小而增加，如图4所示，图4展示了与图3相同的实验，使用的是哈希表而不是跳过列表。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210330163009.png" alt="20210330163009" loading="lazy"></li>
+<li>因此，对于跳过列表和哈希表，<strong>端到端系统吞吐量随着内存的增加而趋于稳定，甚至下降。这种限制是传统 LSM 的单级内存组件固有的，限制了 LSM 用户利用现代多核中的丰富内存</strong>。在接下来的部分中，我们将展示将哈希表和跳过表的优点结合起来是可能的，从而提高 LSMs的写吞吐量，同时仍然允许 inorder 扫描。</li>
+</ul>
+<h2 id="flodb-design">FloDB Design</h2>
+<ul>
+<li>现有的 LSM 存在固有的可伸缩性问题，包括内存大小和线程数量方面的问题。后者是由可伸缩性瓶颈引起的，而前者则源于大小-延迟的权衡。</li>
+<li>这种权衡体现在排序和未排序的内存组件上。有序的组件允许扫描，并且可以直接持久化到磁盘，但是随着内存组件变大，其内存组件对应就会有显著更高的访问次数。未排序组件的速度可能与大小无关，但对于扫描来说并不实用，并且需要在被刷新到磁盘之前排序，需要耗费线性时间，这可能会延迟 writers。FloDB 的内存组件体系结构就是为了避免这些问题而设计的。FloDB 的主要目标是:
+<ul>
+<li>(1) 根据给定的内存量进行扩展;</li>
+<li>(2) 使用最小的同步(以扩大规模);</li>
+<li>(3) 利用内存组件提高写性能，而不牺牲读性能。</li>
+</ul>
+</li>
+<li>下面，我们将概述FloDB的内存组件架构，以及利用这个新结构的主要操作:Get、Put、Delete和Scan。</li>
+</ul>
+<h3 id="in-memory-levels">In-memory Levels</h3>
+<ul>
+<li>简而言之，FloDB的基本思想是使用两层内存组件，其中一层是小型、快速的数据结构，第二层是大型、排序的数据结构。这种设计允许FloDB打破大小延迟的平衡，并最小化同步。</li>
+<li>第一级称为 Membuffer，它又小又快，但不一定要排序。第二级称为Memtable，规模更大，以便捕获更大的工作集，从而更好地屏蔽高I/O延迟。此外，Memtable 保持元素的排序，所以它可以直接刷新到磁盘。<strong>这两个级别都是并发的数据结构，使得操作可以并行进行</strong>。与其他LSMs 类似，数据从最小的组件(Membuffer)流向最大的组件(磁盘)，因为各个级别都满了。</li>
+<li>磁盘级组件不是我们的重点，也不在本文的讨论范围之内。由于磁盘组件和内存中对数据的处理在 LSM 键值存储中是相互正交的，所以我们展示的内存中优化方法可以与任何持久化到磁盘的机制一起使用。例如，FloDB的内存组件可以与类似于 RocksDB 的多线程压缩方案相结合，或者像LSM-trie中那样，可以减少写放大，从而获得更好的磁盘结构。</li>
+</ul>
+<h3 id="operations">Operations</h3>
+<ul>
+<li>我们给出了FloDB主要操作的高层设计。在第4.4节中，我们将描述该设计的具体实现。FloDB的两层内存组件允许非常简单的基本操作(即Get、Put、Delete)，但在扫描的情况下会带来额外的复杂性。</li>
+</ul>
+<h4 id="get">Get</h4>
+<ul>
+<li>除了LSM数据结构中的同步外，FloDB中的Get操作不需要同步。首先搜索的是Membuffer，然后是Memtable，最后是磁盘。如果在某个级别找到所需的元素，则read可以立即返回。显然，一旦找到了元素，就没有必要在较低的层次中进行搜索，因为层次结构中的较高层次总是包含最新的值。</li>
+</ul>
+<h4 id="update">Update</h4>
+<ul>
+<li>Put和Delete操作本质上是相同的。删除是通过插入一个特殊的tombstone值来完成的。从现在开始，我们将把Put和Delete操作都称为Update。首先，<strong>在Membuffer中尝试更新。如果Membuffer中没有空间，则直接在Memtable中进行更新。如果键已经存在于Membuffer或Memtable中，相应的值将就地更新</strong>。</li>
+<li>就地更新的另一种方法是多版本化:保留相同键的多个版本，仅在压缩阶段丢弃旧版本。所有现有的 LSMs 都使用多版本控制。然而，多版本控制方法不能利用倾斜工作负载的局部性。事实上，不断地更新一个键就足以填满内存组件并触发频繁刷新磁盘。相比之下，在就地更新中，重复写同一个键不会占用额外的内存，因此内存中的存储是按照数据大小的顺序排列的。就地更新，结合一个大型内存组件，允许我们有效地捕获大型的、写密集型的、倾斜的工作负载，如第5节所示。</li>
+</ul>
+<h4 id="scan">Scan</h4>
+<ul>
+<li>我们的扫描算法背后的<strong>主要思想是扫描Memtable和磁盘的同时允许在Membuffer中完成并发更新</strong>。这种方法的一个挑战是，扫描Memtable 可能返回一个过时的键值，当扫描开始时，这个键仍然在Membuffer 中。我们通过在扫描前清空 Memtable 中的 MemBuffer 来解决这个问题。</li>
+<li>另一个挑战是，如果扫描需要很长时间才能完成，如果经常调用扫描，或者在扫描期间有很多线程执行更新，那么吸收更新的 Membuffer 可能会被填满。在这种情况下，我们允许写入器和扫描器在 Memtable 中并行进行。然而，如果允许写入者在扫描 A 期间天真地更新 Memtable，那么在 A 的范围内的一个条目可能会在 A 进行时被修改，导致不一致。我们<strong>通过在 Memtable 级别引入每个条目的序列号来解决这个问题</strong>。通过这种方式，扫描 A 可以验证自 A 启动以来是否在其范围内写入了 Memtable 中的新值；如果是这种情况，扫描 A 将失效并重新启动。A 的 fallback 机制来确保 liveness(即，扫描不会被 writers 无限期重启)。值得注意的是，我们使用序列号的方式与上面提到的多版本控制不同;在我们的算法中，当 Memtable 中存在的键 k 发生更新时，k 的值和序列号就地更新 （<strong>这里感觉讲的不是很清楚，有些含糊</strong>）</li>
+</ul>
+<h4 id="summary">Summary</h4>
+<ul>
+<li>FloDB 的两级设计有几个好处。
+<ul>
+<li>首先，很大一部分写操作是在Membuffer 中完成的，因此 FloDB 从快速内存组件(通常为整体未排序的内存组件保留，如哈希表)中获得好处。</li>
+<li>第二，排序的底部组件允许扫描，并可以直接刷新到磁盘。</li>
+<li>第三，级别的分离使写和读能够与扫描并行进行。</li>
+<li>两层层次结构的另一个好处是，可以增加内存组件的总体大小，以获得更好的性能(与现有系统相比)。</li>
+<li>最后，我们的设计允许就地更新，同时支持一致扫描</li>
+</ul>
+</li>
+</ul>
+<h2 id="flodb-implementation">FloDB Implementation</h2>
+<ul>
+<li>我们在谷歌的 LevelDB 上实现FloDB。LevelDB的内存组件完全被FloDB架构所取代。我们保留了 LevelDB 的持久化和压缩机制。</li>
+</ul>
+<blockquote>
+<p>LevelDB中的原始方法是在内存中保留 thread-local 版本和文件描述符缓存(fd-cache)的一个共享版本，并在必要时获取一个全局锁来访问fd-cache的共享版本。在我们的初步测试中，我们发现这个全局锁是一个主要的可伸缩性瓶颈。为了消除这个瓶颈，作为内存优化的一部分，我们将LevelDB fd-cache实现替换为一个更可伸缩、并发的哈希表</p>
+</blockquote>
+<ul>
+<li>在下面,我们将讨论的关键实现细节FloDB:
+<ul>
+<li>(1) 对于 Memtable 和 Membuffer 数据结构的选择</li>
+<li>(2) 机制将用于 level 之间的数据移动</li>
+<li>(3) 我们的新型 multi-insert 操作用于简化在 Memtable 和 Membuffer 之间的数据流</li>
+<li>(4) 面向用户的操作的实现</li>
+</ul>
+</li>
+</ul>
+<h3 id="memory-component-implementation">Memory Component Implementation</h3>
+<ul>
+<li>在实现FloDB体系结构时，需要解决的一个重要问题是，在内存级别上如何选择良好的数据结构。为了使写操作尽可能快，第一级的合适选择是哈希表。如图5所示，一个现代哈希表可以提供超过100 Mops/s的吞吐量，即使有10亿个条目的工作负载。然而，即使哈希表很快，它们也不会对它们的条目进行排序，这意味着不能直接对数据进行顺序迭代。由于这个原因，保持数据有序且易于迭代的数据结构(例如在传统LSM实现中已经用作内存组件的skiplist)是第二级的良好选择。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331115947.png" alt="20210331115947" loading="lazy"></li>
+<li>因此，FloDB的内存层次结构由一个小型的高性能并发哈希表和一个较大的并发跳表组成。哈希表存储键-值元组。skiplist存储用于扫描操作的键-值元组和序列号。</li>
+<li><strong>Membuffer和Memtable之间的大小比例是一种权衡</strong>。一方面，相对较小的Membuffer会更快地填满，迫使更多的更新在Memtable中完成。这是有问题的，因为Memtable较慢，但也因为Memtable绑定的更新可能会迫使更多的扫描重新启动。另一方面，一个大的Membuffer将花费更长的时间来进入Memtable，这可能会延迟扫描。</li>
+</ul>
+<h3 id="interaction-between-levels">Interaction Between Levels</h3>
+<ul>
+<li><strong>Background threads</strong>：因为我们不希望数据是静态的(也就是说，数据不断地被插入或更新)，所以FloDB有两种机制来跨层次结构的级别移动数据:<strong>持久化和draining</strong>。
+<ul>
+<li>持久化通过一个专门的后台线程将项从Memtable移动到磁盘——这是LSM实现中的一种既定技术。当Memtable被填满时，持久化被触发。</li>
+<li>Draining 将条目从Membuffer移动到Memtable，这是由一个或多个专门的后台线程完成的。Draining 是一个持续不断的过程，因为人们希望保持尽可能低的 Membuffer 占用率。<strong>实际上，只有在 Membuffer 中完成写操作时，才会从两级层次结构中获益</strong>。</li>
+</ul>
+</li>
+<li><strong>Persisting</strong>：在LSMs中，将内存组件持久化到磁盘的一种标准技术是使该组件不可变，安装一个新的、可变的组件，并在后台将旧组件写入磁盘。通过这种方式，当旧组件被持久化时，写入者仍然可以继续处理新组件，并且不可变组件中的数据对读者仍然是可见的。然而，内存组件之间的切换通常是使用锁定完成的。<strong>FloDB有一个更高效的RCU（Read-Copy-Update）方法来切换内存组件，它不会阻塞任何更新或读取</strong>。当持久化的时候，RCU 是用来确保在后台线程将Memtable复制到磁盘之前，所有对不可变Memtable的待处理的更新都已经完成。第二，在Memtable被复制到磁盘之后，我们使用RCU来确保在后台线程可以继续释放不可变Memtable之前，没有reader线程正在读取它。</li>
+<li><strong>Draining</strong>：Draining(图6)是由一个或多个专门的后台线程与更新、读取或其他Draining同时进行的，并按照以下步骤进行。要将一个key-value 条目 e 从 Membuffer 移动到 Memtable 中，e 首先被检索并在 Membuffer 中标记。这样做是为了确保没有其他后台线程也试图将 e 移动到 Memtable 中。然后，e 被分配一个序列号(通过原子递增操作获得)，并被后台线程插入到 Memtable 中。最后，e 从 Membuffer 中移除。有一种特殊情况，扫描开始时发生 Draining，为了使扫描能够只在Memtable和磁盘级别上进行，但仍然包括Membuffer中最近的更新，在扫描开始时将Membuffer中所有的内存都 Draining 到Memtable中。<strong>这种类型的 Draining 是通过使当前的 Membuffer 不可变，安装一个新的 Membuffer(使用RCU)，然后将旧的 Membuffer 中的所有条目移动到 Memtable 中，类似于Memtable是如何持久化到磁盘上的</strong>。</li>
+<li><strong>RCU 的本质是转变数据可写状态，然后创建新的空的数据结构</strong><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331144829.png" alt="20210331144829" loading="lazy"></li>
+</ul>
+<h3 id="skiplist-multi-inserts">Skiplist Multi-inserts</h3>
+<ul>
+<li>图5和图7显示了一个并发跳表大约比一个相同大小的并发哈希表慢一到两个数量级。因此，为了使大量的更新可以直接在哈希表中进行，我们需要尽可能快地在各级之间移动项。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331144936.png" alt="20210331144936" loading="lazy"></li>
+</ul>
+<h4 id="intuition">Intuition</h4>
+<ul>
+<li>我们为并发跳过表引入了一种新的多插入操作，以增加 Draining 线程的吞吐量。多插入操作背后的直观感觉很简单。在跳过列表中插入 n 个元素，而不是调用 n 次插入操作，只需在一次多插入操作中插入这些元素。<strong>n个元素按升序插入，使用已经完成的进度(即所经过的跃点)插入前一个元素，作为插入下一个元素的起点</strong>。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331161934.png" alt="20210331161934" loading="lazy"></li>
+<li>除了增加FloDB中的吞吐量，多插入还可以使使用并发跳过表的其他应用程序受益。例如，像LevelDB这样的lsm使用了来进行更新(第2.2节)，它们可以通过以下方式加速更新。组合线程可以在一个多插入操作中应用所有更新，而不是一个接一个地分别应用它们。更重要的是，几个组合线程可以通过多次插入并发地应用更新。</li>
+</ul>
+<h4 id="pseudocode">Pseudocode</h4>
+<ul>
+<li>多插入操作的伪代码见算法1。操作输入是一个由(键、值)元组组成的数组。首先，输入元组按升序排序。然后，对于每个元组，使用FindFromPreds定位其在跳过列表中的位置。FindFromPreds从前面插入的元素的前身开始搜索当前元素在跳过列表中的位置(第5-8行)。如果当前 level 中存储的前一个元素的键大于要插入的当前元素的键，则可以直接从前一个元素跳转到存储的前一个元素。这是多插入操作的核心，其中应用了路径重用的思想。在跳过列表中找到一个元组的位置后，对该元组的插入操作类似于普通的插入操作。</li>
+</ul>
+<pre><code class="language-C++">FindFromPreds(key , preds , succs): 
+// returns true iff key was found
+// side -effect: updates preds and succs 
+  pred = root
+  for level from levelmax downto 0: 
+    if (preds[level].key &gt; pred.key):
+      pred = preds[level]
+  curr = pred.next[level] 
+  while(true):
+    succ = curr.next[level] 
+    if (curr.key &lt; key): 
+      pred = curr
+      curr = succ 
+    else: 
+      break
+  preds[level] = pred 
+  succs[level] = curr
+  return (curr.key == key)
+
+MultiInsert(keys , values): 
+  sortByKey(keys , values)
+  for i from 0 to levelmax: 
+    preds[i] = root
+  for each key -value pair (k,v): 
+    node = new node(k,v) 
+    while(true):
+      if (FindFromPreds(k, preds , succs)): 
+        SWAP(succs [0].val , v)
+        break 
+      else:
+        for lvl from 0 to node.toplvl: 
+          node.next[lvl] = succs[lvl]
+      if (CAS(preds [0]. next[0], succs[0], node)):
+        for lvl from 1 to node.toplvl: 
+          while(true):
+            if (CAS(preds[lvl].next[lvl], succs[lvl], node)):
+              break 
+            else: 
+              FindFromPreds(k, preds , succs) 
+        break
+</code></pre>
+<h4 id="concurrency">Concurrency</h4>
+<ul>
+<li>多个插入相互并发，简单的插入和读取也是如此。然而，多插入的正确性依赖于这样一个事实，即元素不会同时从跳过列表中删除。从设计上讲，这在 FloDB 中不是一个问题;只有当条目持久化到磁盘时，才会从跳过列表中删除它们。此外，虽然多重插入中的每个插入都是原子的，但多重插入本身是不能线性化的，也就是说，整个元素数组不会被视为在单个时间点插入(即中间状态是可见的)。</li>
+</ul>
+<h4 id="neighborhoods">Neighborhoods</h4>
+<ul>
+<li><strong>键的邻近性是多插入性能的一个主要因素。直观地说，如果在跳跃列表中多次插入的键最终会在跳跃列表中靠近，路径重用就会最大化</strong>。图8描述了一个实验的结果，这个实验比较了简单插入和5个键多插入的吞吐量，这是一个只进行更新的测试中键接近度的函数。在本实验中，如果键范围的邻域大小为n，则一次多插入中的所有键之间的距离最大为2n。可以清楚地看到，随着邻域大小的减小，多插入的效率也会提高。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331155201.png" alt="20210331155201" loading="lazy"></li>
+<li>在FloDB中，我们<strong>在哈希表中创建分区，以利用在多次插入中键靠得更近的性能优势(邻域效应)</strong>。当一个key-value元组插入到FloDB中时，该键的最有效位 ℓ 将用于确定该元组应该插入到哈希表的哪个分区。然后，键的其余位被散列，以确定分区(即桶)中的位置。因为 ℓ 是一个参数，所以可以很容易地控制邻居的大小。</li>
+<li><strong>虽然我们的分区方案利用了多插入的性能优势，但它也使哈希表容易受到数据倾斜的影响</strong>。如果存在具有公共前缀的流行键(如果数据倾斜涉及某个键范围)，那么与流行键对应的桶将比与流行度较低的键对应的桶更快地满满。这反过来会导致在 Membuffer 中能够完成的更新比例更小。倾斜工作负载的这种影响将在第5节中讨论。</li>
+</ul>
+<h4 id="implementation-of-flodb-operations">Implementation of FloDB Operations</h4>
+<ul>
+<li>算法2给出了Get, Put和Delete操作的伪代码(为了提高可读性，我们省略了进入和退出RCU临界区的代码)。</li>
+<li><strong>Get</strong>: Get操作简单地在每一层上搜索一个键，顺序如下:Membuffer (MBF)，不可变Membuffer (IMM_MBF)，如果有的话，Memtable (MTB)，不可变Memtable (IMM_MTB)，如果有的话，最后在磁盘上搜索。Get返回它遇到的第一个键，这保证是最新的一个，因为级别是按照与数据流相同的顺序检查的。</li>
+<li><strong>Update</strong>: 如前所述，Delete操作是一个带有特殊tombstone值的Put操作，因此我们只需要描述后一个操作。实际上，Put操作是通过尝试在Membuffer中插入键值对e来进行的(第10行);如果e的目标哈希表桶没有满，添加到Membuffer成功，操作返回(第11行);否则，e将被插入Memtable中(第20行)。此外，算法2中的完整Put伪代码还包括与持久化线程和并发扫描器同步的机制。首先，如果不成功地将e插入到Membuffer中，并且设置了pauseWriters标志，那么writer将在必要时帮助 Draining 不可变的Membuffer，或者等待标志被取消设置(第12-16行)。正如我们在下面解释的那样，扫描使用pauseWriters标志向写入者发出信号:Membuffer已经被完全清空到memtable中，为扫描做准备，写入者应该等待或者帮助完成清空。第二，写入者会等到Memtable中有空间时才开始执行Put(第17-18行)。这通常是一个非常短的等待，即当前 Memtable 被填满后，持久化线程准备新 Memtable 的时间。</li>
+</ul>
+<pre><code class="language-C++">Get(key):
+  for c in MBF IMM_MBF MTB IMM_MTB DISK: 
+    if (c != NULL):
+      value = c.search(key) 
+      if (value != not_found):
+        return value 
+      return not_found 
+
+Put(key , value):
+  if (MBF.add(key , value) == success): 
+    return
+  while pauseWriters:
+    if MBFNeedsDraining (): 
+      IMM_MBF.helpDrain ()
+    else: 
+      wait()
+  while MTB.size &gt; MTB_TARGET_SIZE: 
+    wait() 
+  seq = globalSeqNumber.fetchAndIncrement() 
+  MTB.add(key , value , seq)
+
+Delete(key):
+  Put(key , TOMBSTONE)
+</code></pre>
+<h5 id="scan-2">Scan</h5>
+<ul>
+<li><strong>Scan</strong>：扫描操作以两个参数作为输入:lowKey和highKey。它返回一个数组，其中包含数据存储中介于低输入键和高输入键之间的所有键和对应值。为清楚起见，我们将扫描算法的介绍分为两部分。首先，我们提出了一种扫描算法，该算法可以并行进行读和写操作，但不能与另一个扫描一起进行。然后，我们介绍必要的额外部分，即允许多线程扫描。</li>
+<li><strong>Single-threaded scans, multithreaded reads and writes</strong>：单线程扫描的伪代码在算法3中显示(为了更清晰，我们再次忽略了RCU临界区边界)。第一步是冻结对当前Membuffer和Memtable的更新，并将当前Membuffer的内容释放到Memtable中。为此，我们暂停后台 Draining(第4行)，通知写入者停止直接在Memtable中进行更新(第5行)，并等待所有正在进行的Memtable写入完成(第9行)。注意，<strong>扫描从来不会完全阻塞写入器;即使写入者不能在扫描的第5行和第13行之间更新Memtable，他们也可以尝试更新Membuffer或帮助处理Draining。帮助确保即使扫描程序线程很慢，也能完成 Draining，从而减少写入程序不允许更新Memtable的时间。</strong></li>
+<li>然后，将当前的Membuffer变为不可变的，并创建一个新的Membuffer，用于吸收未来的更新(第6-8行)。然后，发起扫描的线程开始将Membuffer清空到Memtable(第10行)。在Membuffer被清空后，扫描将获得一个序列号(通过原子递增操作)(第12行)。现在，允许后台从新的Membuffer中抽取数据，并允许写入者在Memtable上进行更新(如有必要，第13-14行)是安全的，因为扫描的序列号将用于确保一致性。实际的扫描操作(第15-28行)现在开始，首先是在Memtable和不可变Memtable(如果存在的话)上，最后是在磁盘上。当遇到扫描范围内的键时，将检查其序列号。如果小于扫描序列号，则保存key-value元组。如果遇到已经保存的键，则保留与小于扫描序列号的最大序列号对应的值。否则，如果键序列号高于扫描序列号，扫描将重启，因为序列号高于扫描序列号可能意味着该键对应的值被并发操作覆盖。最后，对保存的键和值数组进行排序并返回。</li>
+<li>重启是昂贵的，因为它们需要完全 re-drain Membuffer.。<strong>为了避免在写密集型工作负载中任意多次重启扫描，我们添加了一种称为 fallbackScan 的回退机制，当扫描被迫重启过多次时将触发该机制</strong>。fallbackScan 的工作原理是阻止 Memtable 的写入者，直到完成扫描。在我们的实验中(第5节)，回退扫描很少被触发，并且不会增加显著的开销。</li>
+</ul>
+<pre><code class="language-C++">Scan(lowKey , highKey): 
+  restartCount = 0
+restart:
+  pauseDrainingThreads = true 
+  pauseWriters = true 
+  IMM_MBF = MBF
+  MBF = new MemBuffer () 
+  MemBufferRCUWait () 
+  MemTableRCUWait () 
+  IMM_MBF.drain() 
+  IMM_MBF.destroy ()
+  seq = globalSeqNumber.fetchAndIncrement () 
+  pauseWriters = false
+  pauseDrainingThreads = false 
+  results = ∅
+for dataStructure in MTB IMM_MTB DISK: 
+  iter = dataStructure.newIterator () 
+  iter.seek(lowKey)
+  while (iter.isValid () and iter.key &lt; highKey):
+    if iter.seq &gt; seq: 
+      restartCount += 1
+      if restartCount &lt; RESTART_THRESHOLD: 
+        goto restart
+      else:
+      return fallbackScan(lowKey , highKey) 
+    results.add(iter.key , iter.value) 
+    iter.next()
+  results.sort() 
+  return results
+</code></pre>
+<h5 id="multithreaded-scans">Multithreaded scans</h5>
+<ul>
+<li>如果多个线程同时进行扫描，则需要进行额外的同步，以避免多个线程各自创建一个Membuffer的副本并试图耗尽它的情况。为此，我们区分了两种类型的扫描:主扫描和 piggybacking 扫描。<strong>主扫描是在没有其他扫描并发运行时启动的扫描。piggybacking扫描是在其他扫描同时运行时启动的扫描</strong>。在任何给定的时间，只有一个主扫描可能正在运行。我们确保主扫描执行算法3的第4-14行，所有扫描执行第2行和第15-30行。piggyback扫描将等待，直到主扫描程序发布第12行获得的序列号，然后继续进行第15-28行中的实际扫描。请注意，如果在主扫描运行时启动的另一个piggyback扫描与主扫描并发，则在主扫描未运行时启动的piggyback扫描也可以启动。这个过程可以自我重复，创建长长的 piggybacking 扫描链，在链的开始处重用相同的主扫描序列号。我们通过一个系统参数来限制这些链的长度，以避免由于使用陈旧的序列号而重新启动的大量扫描。</li>
+<li>当多个扫描并发运行时，上述方案会产生良好的性能，这是由于负载机制将耗尽的开销分散到多个扫描调用上，并且负载扫描在重新启动时不会重新耗尽Membuffer。针对低并发情况的一种优化方法是允许主扫描(除了附带扫描之外)重用前一个主扫描的序列号。这样可以避免过于频繁地完全耗尽内存缓冲区。</li>
+</ul>
+<h5 id="correctness">Correctness</h5>
+<ul>
+<li>在安全方面，建立一个新的扫描序列号的主扫描对于更新来说是线性化的。线性化点在算法3的第7行，在安装新的可变Membuffer的指令上。Draining 不可变的Membuffer可以确保线性化点之前的所有更新都包含在扫描中，并且第12行中获得的序列号可以确保线性化点之后的更新都不包含在扫描中。然而，piggyback扫描(以及重用现有序列号的主扫描)对于更新是不能线性化的(但它们是可序列化的)，因为它们可能会错过在它们的序列号建立之后发生的更新。如果在应用程序级别需要更严格的扫描一致性，可以指示扫描等待，直到它能够建立一个新的序列号，或者可以完全禁用扫描 piggyback。因此，FloDB中的所有扫描在更新方面都可以线性化，但要以性能为代价(每次扫描在继续之前都必须耗尽Membuffer，这是一个昂贵的操作)。就活性而言，所有的扫描最终都会完成，这是由于 fallbackScan 机制，该机制不能被写入器作废，因此保证会返回。</li>
+</ul>
+<h4 id="implementation-trade-offs">Implementation Trade-offs</h4>
+<ul>
+<li>如第5节所示，在各种工作负载下，FloDB比它的竞争对手获得更好的性能。尽管如此，FloDB的性能是有代价的:我们用资源来换取性能。连接两个inmemory级别需要至少一个后台线程(即引流线程)在写密集型工作负载下几乎持续运行。此外，FloDB的扫描操作存在以下局限性。虽然理论上可以调用范围(−∞，+∞)上的扫描(这将返回整个数据库的快照)，但大型扫描可能会重启多次，为了成功完成，会触发针对所有 writer 的 block 操作，开销较大。该扫描算法仅适用于中小型扫描。</li>
+</ul>
+<h2 id="evaluation">Evaluation</h2>
+<ul>
+<li>测试结果重点是测扩展性，就是说在不同的内存大小或者线程数上性能的提升，因为以往是到了一定程度性能会有所下降的，同时对比其他几个方案表明 FloDB 其实在扩展性这一块确实做的更好，从而把这个故事讲的更完整。</li>
+<li>但是看下图结果很容易发现对于只读负载，在线程数大于等于 16 的时候，FloDB 就不如 RocksDB 及其变种 cLSM 了。作者给的解释是 FloDB 比 LevelDB 及其变体要好是因为毕竟采用了简化后的并发性支持更好的 Get 操作，但是比 RocksDB 差是因为在磁盘组件上没有像 RocksDB 那样做这么多优化，而大数据量的读操作很多都是在磁盘组件上最终进行的。这地方其实前面读者也有埋伏笔，就是说内存组件对于写的影响比对读的影响可能更大，所以才有 MemBuffer，然后当时也降到了和其他磁盘组件优化是正交的，所以也算是自圆其说吧。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331225435.png" alt="20210331225435" loading="lazy"></li>
+<li>其他测试就看原文吧，没啥特别想讲的了。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331230132.png" alt="20210331230132" loading="lazy"></li>
 </ul>
 ]]></content>
     </entry>
@@ -398,6 +1520,423 @@ Book book_id : 6495700
 <li>结构体变量的首地址能够被其最宽基本类型成员的大小所整除。</li>
 <li>结构体每个成员相对于结构体首地址的偏移量(offset)都是成员大小的整数倍，如有需要编译器会在成员之间加上填充字节(internal adding)。即结构体成员的末地址减去结构体首地址(第一个结构体成员的首地址)得到的偏移量都要是对应成员大小的整数倍。</li>
 <li>结构体的总大小为结构体最宽基本类型成员大小的整数倍，如有需要编译器会在成员末尾加上填充字节。</li>
+</ul>
+<h2 id="弹性数组">弹性数组</h2>
+<ul>
+<li>定义数组时，没有指明其长度，此为弹性数组。</li>
+<li>弹性数组只能存在于结构体中，并且必须满足如下<strong>条件</strong>：
+<ul>
+<li>弹性数组必须为<strong>结构体的最后一个成员</strong>；</li>
+<li>该结构体必须<strong>包含一个非弹性数组的成员</strong>；</li>
+<li>编译器需要支持 <strong>C99</strong> 标准。</li>
+</ul>
+</li>
+</ul>
+<h3 id="示例-3">示例</h3>
+<pre><code class="language-C"> #include &lt;stdio.h&gt;
+ #include &lt;stdlib.h&gt;
+ #include &lt;string.h&gt;
+ #include &lt;stdint.h&gt;
+ ​
+ typedef struct {
+     int32_t id;
+     int32_t grade;
+     int8_t name[];
+ }student_info_struct;
+ ​
+ int main() {
+     int32_t *tmp = 0;
+     int8_t *name = &quot;sdc&quot;;
+     student_info_struct *si = NULL;
+ ​
+     printf(&quot;sizeof(struct) = %d\n&quot;, sizeof(student_info_struct));
+ ​
+     si = (student_info_struct *)malloc(sizeof(student_info_struct) + strlen(name) + 1); // +1 是为了存储 '\0'
+     if(NULL == si)
+     {
+         printf(&quot;malloc failed\n&quot;);
+         return -1;
+     }
+     memset((void *)si, 0, sizeof(student_info_struct) + strlen(name) + 1);
+ ​
+     si-&gt;id = 123;
+     si-&gt;grade = 6;
+     memcpy((void *)si-&gt;name, name, strlen(name));
+ ​
+     printf(&quot;addr:\n&quot;);
+     printf(&quot;si: 0x%p\n&quot;, si);
+     printf(&quot;si-&gt;grade: 0x%p\n&quot;, &amp;si-&gt;grade);
+     printf(&quot;si-&gt;name: 0x%p\n&quot;, &amp;si-&gt;name);
+     printf(&quot;si-&gt;name: 0x%p\n&quot;, si-&gt;name);
+ ​
+     return 0;
+ }
+</code></pre>
+<ul>
+<li>输出结果：</li>
+</ul>
+<pre><code> sizeof(struct) = 8 // 弹性数组不占空间
+ addr: 
+ &amp;si: 0x00000000003C21C0
+ &amp;si-&gt;grade: 0x00000000003C21C4
+ &amp;si-&gt;name: 0x00000000003C21C8
+ si-&gt;name: 0x00000000003C21C8
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Evolution of Development Priorities in Key-value Stores Serving Large-scale Applications: The RocksDB Experience]]></title>
+        <id>https://blog.shunzi.tech/post/RocksDB-Experience/</id>
+        <link href="https://blog.shunzi.tech/post/RocksDB-Experience/">
+        </link>
+        <updated>2021-04-05T04:21:02.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<ul>
+<li>FAST21: Evolution of Development Priorities in Key-value Stores Serving Large-scale Applications: The RocksDB Experience</li>
+</ul>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<ul>
+<li>FAST21: Evolution of Development Priorities in Key-value Stores Serving Large-scale Applications: The RocksDB Experience</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li>RocksDB是一个针对大规模分布式系统的键值存储，并针对固态硬盘(ssd)进行了优化。本文描述了RocksDB在过去8年中开发重点的变化。这种演变是硬件发展趋势的结果，也是许多公司大规模生产RocksDB的丰富经验的结果。RocksDB在多个组织进行规模化生产。我们将描述RocksDB的资源优化目标是如何以及为什么从写放大、到空间放大、到CPU利用率迁移的。大规模应用的运行经验告诉我们，需要跨不同的RocksDB实例管理资源分配，数据格式需要保持向后和向前兼容，以允许增量软件上线，还需要对数据库复制和备份提供适当的支持。失败处理的教训告诉我们，需要更早地在系统的每一层检测到数据损坏错误。</li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<ul>
+<li>RocksDB 起源于 LevelDB，针对 SSD 的一些特性进行了优化，以分布式应用程序为目标，同时也被设计成可以被嵌入到一些高级应用程序（如 Ceph）的 KV 库。每个RocksDB实例只管理单个节点上的数据，没有处理任何节点之间的操作（比如 replication、 loadbalancing），也不执行高级操作，比如 checkpoints，让上层应用来实现，底层只是提供一些支持。</li>
+<li>RocksDB 可以根据负载以及性能需求进行定制和调优，主要包括对 WAL 的处理、压缩策略的选择。</li>
+<li>RocksDB 应用广泛：
+<ul>
+<li>Database: MySQL, Rocksandra, CockroachDB, MongoDB, TiDB</li>
+<li>Stream processing：Apache Flink, Kafka Stream, Samza, and Facebook’s Stylus.</li>
+<li>Logging/queuing services: Facebook’s LogDevice, Uber’s Cherami, Iron.io</li>
+<li>Index services: Facebook’s Dragon, Rockset</li>
+<li>Caching on SSD: Caching on SSD, Qihoo’s Pika, Redis</li>
+</ul>
+</li>
+<li>对不同应用特性进行了简单总结：<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301101401.png" alt="20210301101401" loading="lazy"></li>
+<li>FAST20 之前的一篇介绍 Facebook 实际的 RocksDB 负载特性也得出了一些数据信息：<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301101630.png" alt="20210301101630" loading="lazy"></li>
+<li>使用如 RocksDB 这种公共的存储引擎有利有弊：
+<ul>
+<li>劣势在于每个系统需要基于 RocksDB 构建自己的子系统，那么就涉及到一系列复杂的崩溃一致性的保证操作（但比较好的公共存储引擎一般会 cover 这一点）</li>
+<li>优势在于很多基础功能是可以复用的</li>
+</ul>
+</li>
+<li>其实就是因为 RocksDB 的应用广泛，以及一些硬件技术的发展，导致 RocksDB 的开发重点也在不断地变化。</li>
+</ul>
+<h2 id="background">Background</h2>
+<ul>
+<li>flash的特性对RocksDB的设计产生了深刻的影响。读写性能的不对称和有限的寿命给数据结构和系统架构的设计带来了挑战和机遇。因此，RocksDB采用了flash友好的数据结构，并针对现代硬件进行了优化。</li>
+</ul>
+<h3 id="embedded-storage-on-flash-based-ssds">Embedded storage on flash based SSDs</h3>
+<ul>
+<li>低延迟高吞吐的高性能 SSD 的出现促进了相应设计的变化，在一些场景里，以往的 IO 瓶颈可能转移到了网络上，无论是吞吐量还是延迟。所以这时候数据存储到本地的 SSD 相比于存储到远端性能要好很多，这时候嵌入式的存储引擎的需求就增加了。</li>
+<li>RocksDB 就基于该场景产生了，并基于 LSM 开始了相关设计。</li>
+</ul>
+<h3 id="rocksdb-architecture">RocksDB architecture</h3>
+<ul>
+<li>LSM 树是 RocksDB 存储数据的主要数据结构</li>
+</ul>
+<h4 id="主要操作">主要操作</h4>
+<h5 id="写">写</h5>
+<ul>
+<li>步骤：
+<ul>
+<li>首先写入到名为 MemTable 的内存 Buffer 和磁盘上的 WAL 中
+<ul>
+<li>MemTable 基于跳表实现有序，插入和查询的复杂度均为 logN</li>
+<li>WAL 用于故障恢复，但其实不是强制的。</li>
+</ul>
+</li>
+<li>然后持续写入。一旦 MemTable 达到一定的大小（设定的阈值），当前 MemTable 和 WAL 就不可修改了</li>
+<li>分配一个新的 MemTable 和 WAL 来接受后续的写入</li>
+<li>不可修改的 Memtable 刷入到磁盘上的 SSTable 文件中</li>
+<li>刷入后的 Memtable 和 WAL 相应地被丢弃</li>
+</ul>
+</li>
+<li>每个SSTable按排序顺序存储数据，并将其划分为大小相同的块。每个SSTable也有一个索引块，每个SSTable块有一个索引项用于二分查找。</li>
+</ul>
+<h5 id="read">Read</h5>
+<ul>
+<li>在读取路径中，在每个后续级别都进行键查找，直到找到键为止。它首先搜索所有memtable，然后搜索所有级别为0的sstable，然后依次搜索更高级别的sstable。在每一个级别上，都使用二分查找。Bloom过滤器用于消除SSTable文件中不必要的搜索。扫描要求搜索所有级别。</li>
+</ul>
+<h5 id="compaction">Compaction</h5>
+<ul>
+<li>最新的sstable由MemTable刷新创建，并放置在0级。高于0级的级别是由称为压缩的流程创建的。给定级别上sstable的大小受到配置参数的限制。当超过level-L的size目标时，选择level-L中的一些sstable与level-(L+1)中的重叠sstable合并。这样做，deleted 和 overwritten 的数据被删除，并优化表的读性能和空间效率。这个过程将写数据从0级逐渐迁移到最后一级。压缩I/O是高效的，因为它可以并行化，并且只涉及对整个文件的批量读写。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301114859.png" alt="20210301114859" loading="lazy"></li>
+<li>Level-0 sstable有重叠的键范围，因为SSTable覆盖了完整的 sorted run。后面的每个级别只包含一个sorted run，因此这些级别中的sstable包含其级别 sorted run 的一个分区。</li>
+<li>RocksDB支持多种不同类型的压缩。
+<ul>
+<li><em>Leveled Compaction</em> 是从LevelDB继承的，然后进行了改进，如上图所示，Level 的 target 大小呈指数级增长</li>
+<li><em>Tiered Compaction</em> （又称 <em>Universal Compaction</em>）是和 Cassandra 以及 HBase 使用的策略类似的。多个 sorted run 被延迟压缩在一起，或者当有太多的 sorted run，或者DB总大小与最大 sorted run 的大小之比超过了一个可配置的阈值。</li>
+<li><em>FIFO Compaction</em> 当 DB 大小达到某个阈值限制时直接丢弃以前的文件并只执行轻量压缩，主要用于内存缓存应用。</li>
+</ul>
+</li>
+<li>通过使用不同的压缩策略，RocksDB 可以被配置为 读友好/写友好/对某些特殊缓存负载非常写友好。然而，应用程序所有者将需要考虑他们特定用例的不同指标之间的权衡。
+<ul>
+<li>一个 lazy 的压缩策略可以提升写吞吐量和写放大，但读性能将下降</li>
+<li>虽然更积极的压缩会牺牲写性能，但允许更快的读取。</li>
+</ul>
+</li>
+<li>日志和流处理服务需要进行大量的写操作，而数据库应用更喜欢进行权衡。表3通过微基准测试结果描述了这种灵活性。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301142503.png" alt="20210301142503" loading="lazy"></li>
+</ul>
+<h3 id="rocksdb-history">RocksDB History</h3>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301160214.png" alt="20210301160214" loading="lazy"></figure>
+<h2 id="evolution-of-resource-optimization-targets">Evolution of resource optimization targets</h2>
+<ul>
+<li>资源优化目标的转变过程：从写放大到空间放大再到 CPU 利用率</li>
+</ul>
+<h3 id="write-amplification">Write amplification</h3>
+<ul>
+<li>当初开发 RockDB 时主要关注节省 Flash 颗粒的擦除次数来减小 SSD 内部的写放大，这是当时社区的普遍看法，这个对于很多写密集型的应用确实是个极大的挑战，现在也仍然是个问题。</li>
+<li>写放大实际出现在两个层次：
+<ul>
+<li>SSD 本身的写放大，观察发现在 1.1 到 3 之间。</li>
+<li>存储和数据库软件也会产生写放大，有时候甚至可能达到 100（比如当对小于100字节的更改写入整个4KB/8KB/16KB页时）</li>
+</ul>
+</li>
+<li><em>Leveled Compaction</em> 在 RocksDB 中通常显示出了 10-30 的写放大，在很多情况下，比使用 b 树要好好几倍。不过，10-30范围内的写放大对于写密集的应用程序来说还是太高了。</li>
+<li><em>Tiered Compaction</em> 将写放大降低到了 4-10，但也降低了读性能。如下图以及上表所示的对比结果：<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301145605.png" alt="20210301145605" loading="lazy"></li>
+<li>RocksDB应用程序所有者通常会选择一种压缩方法，在写速率高的时候减少写放大，在写速率低的时候更积极地压缩，以实现空间效率和读性能的目标。</li>
+</ul>
+<h3 id="space-amplification">Space amplification</h3>
+<ul>
+<li>经历了几年的开发之后发现，考虑到闪存写周期和写开销都没有限制，Space amplification 比 Write amplification 更重要，实际生产环境中表现出的 IOPS 是要比 SSD 本身可以提供的性能要低的，因此，我们将资源优化目标转移到磁盘空间。</li>
+<li>幸运的是，由于lsm -tree的非碎片数据布局，它在优化磁盘空间时也可以很好地工作。然而，我们看到了通过减少 LSM 树中的老数据(即删除和覆盖的数据)的数量来改进 <em>Leveled Compaction</em> 的机会，因此开发了 <em>Dynamic Leveled Compaction</em>，树中每个 Level 的大小会根据最后一个 Level 的实际大小自动调整(而不是静态地设置每个 Level 的大小)。该策略相比于 <em>Leveled Compaction</em> 实现了更好的以及更稳定的空间效率。</li>
+</ul>
+<h3 id="cpu-utilization">CPU utilization</h3>
+<ul>
+<li>很多人认为对于高速 SSD，已经足够快，性能瓶颈已经从 SSD 转移到了 CPU。基于我们的经验，我们并不认为这是一个问题，我们也不希望它成为未来基于 SSD 的 NAND 闪存的问题，原因有二。
+<ul>
+<li>只有少部分应用被 SSD 提供的 IOPS 给限制，大多数应用还是被空间给限制。</li>
+<li>其次，我们发现任何具有高端 CPU 的服务器都有足够的计算能力来饱和一个高端 SSD，在我们的环境中，RocksDB在充分利用SSD性能方面从来没有遇到过问题。
+<ul>
+<li>当然，可以配置一个系统，使 CPU 变成一个瓶颈（比如一个 CPU，多个 SSD）。然而，高效的系统通常是那些配置为良好平衡的系统，这是今天的技术所允许的</li>
+<li>密集的写为主导的工作负载也可能导致CPU成为瓶颈。对于某些情况，可以通过配置RocksDB使用更轻量级的压缩选项来缓解这种问题。</li>
+<li>对于其他情况，工作负载可能根本不适合SSD，因为它将超过允许SSD持续2-5年的典型闪存耐久预算。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>为了证实我们的观点，我们调查了生产中 ZippyDB 和 MyRocks 的 42 种不同部署，它们分别服务于不同的应用程序。下图测试结果表明 <strong>大多数工作负载都受到空间限制</strong>。有些主机的确CPU利用率很高，但是主机通常没有得到充分的利用，没有为增长和处理数据中心或区域级故障留出空间(或由于错误配置)。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301151148.png" alt="20210301151148" loading="lazy"></li>
+<li>然而，减少 CPU 开销已经成为一个重要的优化目标，因为减少空间放大已经做的差不多了。减少CPU开销可以提高CPU确实受到限制的少数应用程序的性能，更重要的是，减少CPU开销的优化允许更经济有效的硬件配置，从成本的角度讲该优化也挺有必要的。</li>
+<li>早期降低CPU开销的努力包括引入前缀bloom过滤器、在索引查找之前应用bloom过滤器，以及其他bloom过滤器改进。还有进一步改善的空间。</li>
+</ul>
+<h3 id="adapting-to-newer-technologies">Adapting to newer technologies</h3>
+<ul>
+<li>SSD 架构相关的改进可能很容易瓦解 RocksDB 的相关性，比如 OC-SSD，Multi-Stream SSD，ZNS 承诺改善查询延迟和节省flash擦除周期。然而，这些新技术只能使使用 RocksDB 的少数应用程序受益，因为大多数应用程序都受到空间限制，而没有消除周期或延迟限制。此外，如果让RocksDB直接使用这些技术，将会对RocksDB的经验构成挑战，一个可能的方法是将这些技术的适应能力委托给底层文件系统，也许RocksDB会给底层文件系统提供一定的额外的提示。</li>
+<li>存储内计算可能会带来显著的收益，但目前还不清楚有多少RocksDB应用能从中受益。我们认为，RocksDB 要适应存储内计算将是一个挑战，可能需要对整个软件堆栈进行API更改，以充分利用。我们期待未来关于如何最好地做到这一点的研究。
+<ul>
+<li><a href="https://www.zhihu.com/question/305643823">计算型存储/存算一体如何实现？</a></li>
+</ul>
+</li>
+<li>分类(远程)存储似乎是一个更有趣的优化目标，并且是当前的优先级，到目前为止，我们的优化假设flash是本地连接的，因为我们的系统基础设施主要是这样配置的。然而，目前更快的网络可以提供更多的远程 I/O，因此在越来越多的应用程序中，使用远程存储运行RocksDB的性能是可行的。使用远程存储，可以更容易地同时充分利用 CPU 和 SSD 资源，因为它们可以根据需要分别提供(使用本地附加的SSD很难实现这一点)，因此，优化 RocksDB 的远程闪存存储已成为当务之急。我们目前正在通过尝试合并和并行 I/O 来解决长 I/O 延迟的挑战。我们已经对RocksDB进行了改造，以处理瞬时故障，将QoS要求传递给底层系统，并报告分析信息。然而，还需要做更多的工作。</li>
+<li>存储级内存(SCM)是一种很有前途的技术。我们正在研究如何最好地利用它。以下几种可能性值得考虑: (NVM) <a href="https://zhuanlan.zhihu.com/p/72564047">SCM介绍</a>
+<ul>
+<li>使用 SCM 作为 DRAM 的延申，这就提出了这样的问题:如何用混合的 DRAM 和 SCM 来最好地实现关键数据结构(例如，块缓存或 memtable)，以及在尝试利用所提供的持久性时会引入哪些开销</li>
+<li>使用 SCM 作为数据库的主存储，但是我们注意到RocksDB往往会受到空间或CPU的瓶颈，而不是 I/O</li>
+<li>为 WAL 使用 SCM，但是，这就提出了这样一个问题:考虑到我们只需要在转移到 SSD 之前的一小块 staging 区域，这个用例是否单独证明了 SCM 的成本是合理的。</li>
+</ul>
+</li>
+</ul>
+<h3 id="main-data-structure-revisited">Main Data Structure Revisited</h3>
+<ul>
+<li>我们不断地重新讨论lsm -tree是否仍然合适的问题，但仍然得出它们确实合适的结论。SSD的价格还没有下降到足以改变大多数用例的空间和闪存续航瓶颈的程度，用CPU或DRAM交换SSD的使用只对少数应用程序有意义，虽然主要结论是一致的，但我们经常听到用户对写放大的要求低于RocksDB所能提供的。然而，我们注意到，当对象大小很大时，可以通过分离键和值来减少写放大，比如 WiscKey 和 ForrestDB，所以在 RocksDB 中也添加了这种支持 BlobDB</li>
+</ul>
+<h2 id="lessons-on-serving-large-scale-systems">Lessons on serving large-scale systems</h2>
+<ul>
+<li>RocksDB是各种需求各异的大型分布式系统的基石。随着时间的推移，我们了解到需要在资源管理、WAL处理、批处理文件删除、数据格式兼容性和配置管理方面进行改进。</li>
+</ul>
+<h3 id="resource-management">Resource management</h3>
+<ul>
+<li>分布式系统常常对数据进行分片，分片成 shards，shards 分布在多个服务器存储节点上，大小通常有限，因为要进行备份以及负载均衡，同时也会作为原子粒度进行一些一致性的保证。因此每个节点大概会有几十上百个 shards，一个 RocksDB 实例通常只服务于一个 shard，所以一个服务节点上可能通常会运行多个 RocksDB 实例。可能共享地址空间，也可能使用自己独立的地址空间。</li>
+<li>一台主机可能会运行多个RocksDB实例，这对资源管理有一定影响。假设这些实例共享主机的资源，那么需要对资源进行全局(每个主机)和本地(每个实例)管理，以确保公平和有效地使用它们。当运行在单个进程模式下,拥有全局资源限制是很重要的,包括
+<ul>
+<li>(1) 内存写入缓冲器和块缓存,</li>
+<li>(2) Compaction 的 I/O 带宽、</li>
+<li>(3) Compaction 线程数</li>
+<li>(4) 总磁盘使用情况</li>
+<li>(5) 文件删除率</li>
+</ul>
+</li>
+<li>还需要本地资源限制，例如，确保单个实例不能使用过多的任何资源。RocksDB允许应用程序为每种类型的资源创建一个或多个资源控制器(作为传递给不同DB对象的c++对象实现)，也可以在每个实例的基础上这样做。同时需要支持一些优先级策略，来保证一些资源可以优先被分配给一些最需要该资源的实例。</li>
+<li>在一个进程中运行多个实例时得到的另一个教训是:大量地生成非池线程可能会有问题，特别是当线程是长期存在的时候。拥有太多的线程会增加CPU的概率，导致过多的上下文切换开销，并使调试变得极其困难，导致I/O strike。如果一个RocksDB实例需要使用一个可能会休眠或等待某个条件的线程来执行一些工作，那么最好使用一个线程池，这样可以方便地限制线程的大小和资源使用。</li>
+<li>考虑到每个shard只有本地信息，当RocksDB实例运行在单独的进程中时，全局(每台主机)资源管理变得更加具有挑战性。可以采用两种策略。
+<ul>
+<li>首先，将每个实例配置为谨慎地使用资源，而不是贪婪地使用资源。例如，使用压缩，每个实例可以启动比“正常”更少的压缩，只有在压缩落后时才会增加。这种策略的缺点是，全局资源可能无法得到充分利用，导致资源使用不理想。</li>
+<li>第二种，在操作上更具挑战性的策略是让实例之间共享资源使用信息，并相应地进行调整，试图在更大范围内优化资源使用。RocksDB还需要更多的工作来改善主机范围内的资源管理。</li>
+</ul>
+</li>
+</ul>
+<h3 id="wal-treatment">WAL treatment</h3>
+<ul>
+<li>传统的数据库倾向于在每一个写操作上强制执行write-ahead-log (WAL)，以确保持久性。相比之下，大型分布式存储系统通常为了性能和可用性复制数据，并且它们通过各种一致性保证来做到这一点。例如，当同一数据存在多个副本，其中一个副本损坏或无法访问时，存储系统会使用其他未受影响主机的有效副本重建故障主机的副本。对于这样的系统，RocksDB WAL 写的就不那么重要了。此外，分布式系统通常有自己的复制日志(例如Paxos日志)，在这种情况下，根本不需要RocksDB WAL。</li>
+<li>我们了解到，提供调优WAL同步行为的选项，以满足不同应用程序的需要是很有帮助的。具体来说，我们介绍了不同的WAL操作模式:(i)同步WAL写，(i)缓冲WAL写，和(i)根本没有WAL写。对于buffered WAL处理，为了不影响RocksDB的流量延迟，在后台定期将WAL以低优先级写入磁盘。</li>
+</ul>
+<h3 id="rate-limited-file-deletions">Rate-limited file deletions</h3>
+<ul>
+<li>RocksDB通常通过文件系统与底层存储设备交互。这些文件系统支持是能识别出 SSD 的;例如,XFS。每当一个文件被删除，使用实时丢弃，可以发出修剪命令 TRIM 到 SSD。修剪命令通常被认为可以改善 SSD 性能和 Flash 寿命，这是经过我们的生产经验验证的。然而也会产生性能问题，TRIM 破坏性很大：除了更新地址映射(通常在SSD的内部内存中)之外，SSD固件还需要将这些更改写入flash中的FTL的日志，这反过来可能触发SSD的内部垃圾收集，导致相当大的数据迁移，并对前台IO延迟造成负面影响。为了避免 TRIM 活动 spike 和I/O延迟的相关增加，我们引入了文件删除的速率限制，以防止多个文件同时被删除(在压缩后发生)。</li>
+</ul>
+<h3 id="data-format-compatibility">Data format compatibility</h3>
+<ul>
+<li>型分布式应用程序在许多主机上运行它们的服务，它们期望零停机时间。结果，软件升级在主机之间逐步推出;当出现问题时，更新将被回滚。由于持续部署，这些软件升级频繁发生;RocksDB每个月都会发布一个新版本。因此，磁盘上的数据在不同的软件版本之间保持向后和向前兼容是很重要的。新升级(或回滚)的RocksDB实例必须能够理解前一个实例存储在磁盘上的数据。此外，为了构建副本或平衡负载，可能需要在分布式实例之间复制RocksDB数据文件，而这些实例可能运行不同的版本。由于缺少前向兼容性保障，在一些部署中，RocksDB的操作出现了困难，因此我们增加了这一保障。</li>
+<li>RocksDB竭尽全力确保数据的前后兼容(除了新特性)。这在技术上和过程上都具有挑战性，但我们发现付出的努力是值得的。为了向后兼容，RocksDB必须能够理解之前写入磁盘的所有格式;这增加了软件和维护的复杂性。为了向前兼容，需要理解未来的数据格式，我们的目标是保持至少一年的向前兼容性。这可以通过使用通用技术部分实现，例如协议Buffer或Thrift所使用的技术。对于配置文件条目，RocksDB需要能够识别新的字段，并尽可能地猜测如何应用配置或何时放弃配置。我们不断地用不同版本的数据对不同版本的RocksDB进行测试。</li>
+</ul>
+<h3 id="managing-configurations">Managing configurations</h3>
+<ul>
+<li>RocksDB具有高度的可配置性，可以优化应用程序的工作负载。然而，我们发现配置管理是一个挑战。最初，RocksDB继承了LevelDB的参数配置方法，将参数选项直接嵌入到代码中。这造成了两个问题。
+<ul>
+<li>首先，参数选项通常与存储在磁盘上的数据绑定在一起，当使用一个选项创建的数据文件不能被新配置了另一个选项的RocksDB实例打开时，可能会产生兼容性问题。</li>
+<li>其次，代码中没有明确指定的配置选项会自动设置为RocksDB的默认值。当RocksDB软件更新包括改变默认配置参数(例如，增加内存使用量或压缩并行度)时，应用程序有时会遇到意想不到的后果</li>
+</ul>
+</li>
+<li>为了解决这些问题，RocksDB首先引入了RocksDB实例使用包含配置选项的字符串参数打开数据库的能力。后来，RocksDB引入了对随数据库存储选项文件的可选支持。我们还引入了两个工具:(i)验证工具，验证打开数据库的选项是否与目标数据库兼容;(ii)迁移工具重写数据库以兼容所需的选项(尽管这个工具是有限的)</li>
+<li>RocksDB配置管理的一个更严重的问题是大量的配置选项。在RocksDB的早期，我们的设计选择是支持高度定制:我们引入了许多新的旋钮，并引入了可插拔组件的支持，所有这些都允许应用程序实现其性能潜力。这被证明是一种成功的策略，能够在早期获得最初的吸引力。然而，现在一个常见的抱怨是，选择太多了，很难理解它们的影响;也就是说，它变得非常困难</li>
+<li>除了要调优许多配置参数之外，更令人生畏的是，最优配置不仅取决于嵌入了RocksDB的系统，还取决于上面应用程序产生的工作负载。以ZippyDB为例，ZippyDB是一个内部开发的大型分布式键值存储系统，在其节点上使用了RocksDB。ZippyDB服务于许多不同的应用程序，有时是单独的，有时是在多租户设置中。尽管在尽可能跨所有ZippyDB用例使用统一配置方面进行了大量努力，但不同用例的工作负载是如此不同，当性能很重要时，统一配置实际上是不可行的。表5显示了我们抽样的39个ZippyDB部署的25种不同配置<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301163015.png" alt="20210301163015" loading="lazy"></li>
+<li>对于已交付给第三方的嵌入式RocksDB系统，调整配置参数也尤其具有挑战性。考虑第三方在其应用程序中使用MySQL或ZippyDB等数据库。第三方通常对RocksDB知之甚少，也不知道如何对其进行最佳调整。数据库所有者也不太愿意对客户的系统进行调优</li>
+<li>这些真实的经验教训触发了我们配置支持策略的变化。我们在改进开箱即用性能和简化配置上花费了大量的精力。我们目前的重点是提供自动适应性，同时继续支持广泛的显式配置，考虑到RocksDB继续服务于专门的应用程序。我们注意到在追求自适应性的同时保持显式的可配置性会造成大量的代码维护开销，我们相信拥有一个统一的存储引擎的好处要大于代码的复杂性。</li>
+</ul>
+<h3 id="replication-and-backup-support">Replication and backup support</h3>
+<ul>
+<li>RocksDB是一个单节点库。如果需要，使用RocksDB的应用程序将负责复制和备份。每个应用程序都以自己的方式实现这些函数(出于合理的原因)，因此RocksDB对这些函数提供适当的支持是很重要的。</li>
+<li>通过复制现有副本的所有数据来引导一个新的副本可以通过两种方式完成。
+<ul>
+<li>首先，可以从源副本读取所有键，然后将其写入目标副本(逻辑复制)。在源端，RocksDB支持数据扫描操作，能够最大限度地减少对并发在线查询的影响;例如，通过提供选项来不缓存这些操作的结果，从而防止缓存垃圾化。在目标端，支持散装装载，并针对此场景进行了优化。</li>
+<li>第二，可以通过直接复制sstable和其他文件(物理复制)来引导一个新的副本。RocksDB通过识别当前时间点的现有数据库文件，并防止它们被删除或更改，从而帮助物理复制。支持物理复制是RocksDB将数据存储在底层文件系统上的一个重要原因，因为它允许每个应用程序使用自己的工具。我们认为，RocksDB直接使用块设备接口或与FTL进行深度集成所带来的潜在性能提升，不会超过上述所述的好处。</li>
+</ul>
+</li>
+<li>备份是大多数数据库和其他应用程序的重要特性。对于备份，应用程序具有与复制相同的逻辑与物理选择。备份和复制之间的一个区别是，应用程序通常需要管理多个备份。虽然大多数应用程序都实现了自己的备份(以满足自己的需求)，但如果应用程序的备份需求很简单，RocksDB会提供一个备份引擎供其使用。</li>
+<li>在这方面，我们看到有两个方面需要进一步改进，但都需要对key-value API进行更改;
+<ul>
+<li>第一个是在不同副本上以一致的顺序应用更新，这带来了性能挑战。</li>
+<li>第二个问题涉及到每次发出一个写请求的性能问题，以及副本可能会落后，而应用程序可能希望这些副本能够更快地赶上</li>
+</ul>
+</li>
+<li>不同的应用程序实现了不同的解决方案来解决这些问题，但是它们都有局限性. 挑战在于，应用程序不能乱序写数据，也不能用它们自己的序列号读取快照，因为RocksDB目前不支持使用用户定义的时间戳进行多版本控制</li>
+</ul>
+<h2 id="lessons-on-failure-handling">Lessons on failure handling</h2>
+<ul>
+<li>通过生产经验，我们学到了三个主要的教训，关于故障处理。首先，需要尽早检测数据损坏，以最小化数据不可用或丢失的风险，并通过这样做来查明错误的起源。其次，完整性保护必须覆盖整个系统，以防止静默的破坏暴露给RocksDB客户或传播到其他副本(见图4)。第三，错误需要以不同的方式处理.<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301163522.png" alt="20210301163522" loading="lazy"></li>
+</ul>
+<h3 id="frequency-of-silent-corruptions">Frequency of silent corruptions</h3>
+<ul>
+<li>由于性能原因，RocksDB用户通常不使用SSD(如DIF/DIX)的数据保护，存储介质损坏由RocksDB块校验和检测，这是所有成熟数据库的常规特性，因此我们在这里跳过分析。CPU/内存损坏很少发生，而且很难准确量化。使用RocksDB的应用程序通常会进行数据一致性检查，比较副本的完整性。这可以捕获错误，但这些错误可能是由RocksDB或客户端应用程序引入的(例如，在复制、备份或恢复数据时)。</li>
+<li>我们发现，通过比较MyRocks数据库表中的主索引和二级索引，可以估计在RocksDB级别引入的损坏频率;任何不一致都可能在RocksDB级别上出现，包括CPU或内存损坏。根据我们的测量，大约每三个月，每100PB的数据就会出现一次RocksDB级别的故障。更糟糕的是，在这些案件中，有40%的损坏已经传播到其他副本。</li>
+<li>在传输数据时也会发生数据损坏，通常是由于软件错误。例如，在处理网络故障时，底层存储系统中的错误导致我们在一段时间内看到，传输的每拍字节的物理数据大约有17个校验和不匹配。</li>
+</ul>
+<h3 id="multi-layer-protection">Multi-layer protection</h3>
+<ul>
+<li>需要尽早检测到数据损坏，以减少停机时间和数据丢失。大多数RocksDB应用都将数据复制到多个主机上;当检测到校验和不匹配时，将丢弃损坏的副本，并用正确的副本替换。然而，只有在正确的副本仍然存在时，这才是可行的选择。</li>
+<li>如今，RocksDB在多个层次上对文件数据进行校验和，以识别底层的损坏情况。这些以及计划的应用层校验和如图4所示。多层校验和是重要的，主要是因为它们有助于及早发现错误，也因为它们可以防止不同类型的威胁。从LevelDB继承的块校验和可以防止文件系统或文件系统以下的数据损坏暴露给客户端。文件校验和是在2020年增加的，用于防止底层存储系统传播到其他副本造成的损坏，以及防止在通过网络传输SSTable文件时造成的损坏。对于WAL文件，切换校验和能够在写时有效地早期检测损坏。</li>
+</ul>
+<h4 id="block-integrity">Block integrity</h4>
+<ul>
+<li>每个SSTable块或WAL片段都附加了一个校验和，在数据创建时生成。与仅在文件移动时才验证的文件校验和不同，这个校验和在每次读取数据时都要验证，因为它的作用域更小。这样做可以防止存储层损坏的数据暴露给RocksDB客户端。</li>
+</ul>
+<h4 id="file-integrity">File integrity</h4>
+<ul>
+<li>文件内容特别有可能在传输操作期间被破坏;例如，用于备份或分发SSTable文件。为了解决这个问题，sstable被它们自己的校验和保护，这些校验和是在创建表时生成的。SSTable的校验和记录在元数据的SSTable文件条目中，并在传输时使用SSTable文件进行验证。然而，我们注意到其他文件，如WAL文件，仍然没有采用这种方式保护。</li>
+</ul>
+<h4 id="handoffintegrity">Handoffintegrity</h4>
+<ul>
+<li>早期检测写损坏的一种已建立的技术是对将要写入底层文件系统的数据生成一个切换校验和，并将其与数据一起传递下去，由底层进行验证。我们希望使用这样的write API来保护WAL的写操作，因为与sstable不同的是，WAL可以从每次追加的增量验证中获益。不幸的是，本地文件系统很少支持这一点——但是，一些专门的堆栈，比如Oracle ASM就支持。</li>
+<li>另一方面，在远程存储上运行时，write API可以更改为接受校验和，并与存储服务的内部ECC挂钩。RocksDB可以在现有的WAL片段校验和上使用校验和组合技术来高效地计算写切换校验和。由于我们的存储服务执行写时验证，我们希望将损坏检测延迟到读时的情况非常罕见。</li>
+</ul>
+<h3 id="end-to-end-protection">End-to-end protection</h3>
+<ul>
+<li>虽然上面描述的保护层在许多情况下防止客户端暴露于损坏的数据，但它们并不全面。到目前为止提到的保护的一个不足是数据在文件I/O层以上是不受保护的;例如，MemTable中的数据和块缓存。在此级别损坏的数据将无法检测，因此最终将暴露给用户。此外，刷新或压缩操作可以持久化已损坏的数据，从而使损坏永久存在。</li>
+</ul>
+<h4 id="key-value-integrity">Key-value integrity</h4>
+<ul>
+<li>为了解决这个问题，我们目前正在实现每个键值校验和，以检测在文件I/O层之上发生的损坏。这个校验和将与键/值一起被复制，尽管我们将从已经存在替代完整性保护的文件数据中删除它。</li>
+</ul>
+<h3 id="severity-based-error-handling">Severity-based error handling</h3>
+<ul>
+<li>RocksDB遇到的大多数错误是底层存储系统返回的错误。这些错误可能源于许多问题，从严重的问题(如只读文件系统)到短暂的问题(如全磁盘或访问远程存储的网络错误)。早期，RocksDB对此类问题的反应要么是简单地向客户端返回错误消息，要么是永久停止所有写操作。</li>
+<li>今天，我们的目标是在错误不能在本地恢复的情况下中断RocksDB的操作;例如，临时网络错误不需要用户干预重启RocksDB实例。为了实现这一点，我们对RocksDB进行了改进，使其在遇到被归类为瞬态错误的错误后，能够周期性地重试恢复操作。因此，我们获得了运营上的优势，因为客户不需要为发生的大部分故障手动缓解RocksDB。</li>
+</ul>
+<h2 id="lessons-on-the-key-value-interface">Lessons on the key-value interface</h2>
+<ul>
+<li>核心键值(KV)接口的用途惊人地多。几乎所有的存储工作负载都可以通过一个带有KV API的数据存储来提供;我们很少看到应用程序不能使用这个接口实现功能。这也许就是kv如此受欢迎的原因。KV接口是通用的。键和值都是可变长度的字节数组。应用程序在决定将哪些信息打包到每个键和值中方面具有很大的灵活性，而且它们可以从丰富的编码方案集中自由选择。因此，是应用程序负责解析和解释键和值。KV接口的另一个优点是可移植性。从一个键值系统迁移到另一个键值系统是相对容易的。然而，尽管许多用例通过这个简单的接口实现了最佳性能，但我们注意到它可能会限制一些应用程序的性能。</li>
+<li>例如，在RocksDB之外构建并发控制是可能的，但很难提高效率，特别是在需要支持两阶段提交的情况下，在提交事务之前需要一些数据持久性。为此我们添加了事务支持，MyRocks (MySQL+RocksDB)使用了事务支持。我们会继续添加新功能;例如，gap/next 键锁定和大事务支持。</li>
+<li>在其他情况下，这种限制是由key-value接口本身造成的。因此，我们已经开始研究基本键-值接口的可能扩展。其中一个扩展就是支持用户定义的时间戳</li>
+</ul>
+<h3 id="versions-and-timestamps">Versions and timestamps</h3>
+<ul>
+<li>在过去的几年里，我们已经认识到了数据版本控制的重要性。我们得出的结论是，版本信息应该成为RocksDB的头等公民，以适当地支持功能，如多版本并发控制(MVCC)和时间点读取。为了实现这一目标，RocksDB需要能够有效地访问不同的版本。</li>
+<li>到目前为止，RocksDB内部一直在使用56位序列号来识别不同版本的kv -对。序列号由RocksDB生成，并在每次写入客户端时递增(因此，所有数据在逻辑上按排序顺序排列)。客户端应用程序不能影响序列号。然而，RocksDB允许应用程序对数据库进行快照，在此之后，RocksDB保证快照时存在的所有KV对将持续存在，直到应用程序显式地释放快照。因此，具有相同密钥的多个kv -对可能共存，并根据它们的序列号进行区分。</li>
+<li>这种版本控制方法是不充分的，因为它并没有满足多种应用的要求。要从过去的状态读取数据，必须在前一个时间点已经拍摄了快照。RocksDB不支持对过去进行快照，因为没有API来指定时间点。此外，支持时间点读取是低效的。最后，每个RocksDB实例分配自己的序列号，并且只能根据每个实例获取快照。这使得具有多个(可能是复制的)分片(每个分片都是一个RocksDB实例)的应用程序的版本控制变得复杂。总之，创建提供跨分片一致读取的数据版本基本上是不可能的</li>
+<li>应用程序可以通过在键或值中编码时间戳来绕开这些限制。但是，在这两种情况下，它们的性能都会下降。在键内进行编码会影响点查找的性能，而在值内进行编码会影响对相同键的无序写入的性能，并使读取旧版本的键变得复杂。我们相信应用程序指定的时间戳可以更好地解决这些限制，应用程序可以用可以全局理解的时间戳标记其数据，并且在键或值之外这样做</li>
+<li>我们已经添加了对应用程序指定的时间戳的基本支持，并使用DB-Bench评估了这种方法。结果如表6所示。每个工作负载有两个步骤:第一步填充数据库，第二步测量性能。例如，在“fill_seq + read_random”中，我们通过按升序写一些键来填充初始数据库，在步骤2中执行随机读操作。相对于基线，应用程序将时间戳编码为密钥的一部分(对于RocksDB来说是透明的)，应用程序指定的时间戳API可以带来1.2倍或更好的吞吐量增益。这些改进来自于将时间戳作为元数据与用户键分开处理，因为这样就可以使用点查找而不是迭代器来获取键的最新值，并且Bloom过滤器可以识别不包含该键的sstable。此外，SSTable覆盖的时间戳范围可以存储在其属性中，这可以用来排除只能包含陈旧值的SSTable。</li>
+</ul>
+<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301165053.png" alt="20210301165053" loading="lazy"></figure>
+<ul>
+<li>我们希望这个特性能够让用户更容易地在系统中实现单节点MVCC、分布式事务的多版本控制，或者解决多主复制中的冲突。然而，更复杂的API使用起来不那么简单，而且可能容易被误用。此外，与不存储时间戳相比，数据库将消耗更多的磁盘空间，而且对其他系统的可移植性也较差。</li>
+</ul>
+<h2 id="related-work">Related Work</h2>
+<h3 id="storage-engine-libraries">Storage Engine Libraries</h3>
+<ul>
+<li>BerkeleyDB</li>
+<li>SQLite</li>
+<li>Hekaton</li>
+</ul>
+<h3 id="key-value-stores-for-ssds">Key-value stores for SSDs</h3>
+<ul>
+<li>SILT: 在内存效率、CPU和性能之间进行平衡的键值存储</li>
+<li>ForestDB: 使用 HB+ tree 在日志上建立索引</li>
+<li>TokuDB：和其他数据库使用 FractalTree/Bε 树。</li>
+<li>LOCS/NoFTL-KV/FlashKV 瞄准开放通道ssd以提高性能</li>
+</ul>
+<h3 id="lsm-tree-improvements">LSM-tree improvements</h3>
+<ul>
+<li>一些系统也使用LSM树并改进了它们的性能。</li>
+<li>写放大通常是最主要的优化目标：
+<ul>
+<li>WiscKey</li>
+<li>PebblesDB</li>
+<li>IAM-tree</li>
+<li>TRIAD</li>
+</ul>
+</li>
+<li>这些系统在优化写放大方面比RocksDB做得更好，后者更关注不同指标之间的权衡。
+<ul>
+<li>SlimDB 优化 LSM 树空间效率</li>
+<li>Monkey 试图在 DRAM 和 IOPs 之间实现平衡。</li>
+<li>bLSM/VT-tree/cLSM 优化LSM树的一般性能</li>
+</ul>
+</li>
+</ul>
+<h3 id="large-scale-storage-systems">Large-scale storage systems</h3>
+<h2 id="future-work-and-open-questions">Future Work and Open Questions</h2>
+<ul>
+<li>除了完成上面提到的改进，包括对分类聚合存储、键值分离、多层校验和和应用程序指定的时间戳的优化，我们计划统一 leveled 和 tiered 压缩并提高自适应能力。然而，一些开放的问题可以从进一步的研究中受益。
+<ul>
+<li>How can we use SSD/HDD hybrid storage to improve efficiency?</li>
+<li>How can we mitigate the performance impact on readers when there are many consecutive deletion markers?</li>
+<li>How should we improve our write throttling algorithms?</li>
+<li>Can we develop an efficient way of comparing two replicas to ensure they contain the same data?</li>
+<li>How can we best exploit SCM? Should we still use LSM tree and how to organize storage hierarchy?</li>
+<li>Can there be a generic integrity API to handle data handoff between RocksDB and the file system layer?</li>
+</ul>
+</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<ul>
+<li>RocksDB已经从一个服务于小众应用的键值存储平台发展到目前广泛应用于众多工业大规模分布式应用的地位。作为主要数据结构的LSM树很好地服务于RocksDB，因为它表现出良好的写入和空间放大能力。然而，我们对业绩的看法是随着时间的推移而演变的。虽然写和空间放大仍然是主要关注的问题，但更多的焦点已经转移到CPU和DRAM效率，以及远程存储上。</li>
+<li>运行大规模应用程序给我们带来了教训资源分配需要跨不同的RocksDB实例进行管理，数据格式需要保持向后和向前兼容，以允许增量软件部署，需要对数据库复制和备份提供适当的支持，配置管理需要简单且最好是自动化。失败处理的教训告诉我们，需要更早地在系统的每一层检测到数据损坏错误。key-value接口因其简单性和性能上的一些限制而广受欢迎。对界面进行一些简单的修改可能会产生更好的平衡。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301170127.png" alt="20210301170127" loading="lazy"></li>
 </ul>
 ]]></content>
     </entry>
@@ -1895,1441 +3434,6 @@ int main(int argc, char *argv[]) {
 <li><a href="">Series Three of Basic of Concurrency - Condition Variables</a></li>
 <li><a href="">Series Four of Basic of Concurrency - Semaphores</a></li>
 <li><a href="">Series Five of Basic of Concurrency - Bugs and Event-Based Concurrency</a></li>
-</ul>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[SpanDB: A Fast, Cost-Effective LSM-tree Based KV Store on Hybrid Storage]]></title>
-        <id>https://blog.shunzi.tech/post/SpanDB/</id>
-        <link href="https://blog.shunzi.tech/post/SpanDB/">
-        </link>
-        <updated>2021-03-11T12:07:09.000Z</updated>
-        <summary type="html"><![CDATA[<blockquote>
-<ul>
-<li>FAST 2021 的文章《SpanDB: A Fast, Cost-Effective LSM-tree Based KV Store on Hybrid Storage》</li>
-</ul>
-</blockquote>
-]]></summary>
-        <content type="html"><![CDATA[<blockquote>
-<ul>
-<li>FAST 2021 的文章《SpanDB: A Fast, Cost-Effective LSM-tree Based KV Store on Hybrid Storage》</li>
-</ul>
-</blockquote>
-<!--more-->
-<ul>
-<li>SpanDB: A Fast, Cost-Effective LSM-tree Based KV Store on Hybrid Storage</li>
-<li><a href="https://blog.shunzi.tech/post/SpanDB/">Elvis Zhang's Blog</a></li>
-</ul>
-<h2 id="abstract">Abstract</h2>
-<ul>
-<li>键值(KV)存储支持许多关键的应用程序和服务。它们在内存中执行的速度很快，但仍然经常受到I/O性能的限制。最近出现的高速商业NVMe ssd推动了利用其超低延迟和高带宽优势的新kv系统设计。与此同时，转换到全新的数据布局并将整个数据库扩展到高端 SSD 需要大量的投资。</li>
-<li>作为一种折衷方案，我们提出了SpanDB，一种基于 LSM 树的 KV 存储，适应流行的RocksDB 系统，利用高速 SSD 选择性部署。SpanDB 允许用户将大量数据存储在更便宜、更大的SSD上，同时将预写日志(WAL)和 LSM 树的顶层重新定位到更小、更快的NVMe SSD上。为了更好地利用这个快速磁盘，SpanDB通过SPDK提供了高速、并行的WAL写入，并支持异步请求处理，以减轻线程间同步开销，并有效地使用基于轮询的I/O工作。我们的测试结果显示，SpanDB 同时将 RocksDB 的吞吐量提高了8.8x，并将延迟降低了9.5% - 58.3%。与专为高端 SSD 设计的 KVell 系统相比，SpanDB的吞吐量达到 96-140%，延迟 2.3-21.6x 更低，存储配置更便宜。</li>
-<li><a href="https://github.com/SpanDB/SpanDB">Github Repo</a></li>
-</ul>
-<h2 id="introduction">Introduction</h2>
-<ul>
-<li>LSM 树应用广泛，它仍然具有吸引力，因为生产KV环境经常被发现是写密集型的，特别是由于积极的内存缓存。正如最近的系统所证明的那样，最近快速的、商业NVMe SSD可以显著提高KV性能，如 KVell、KVSSD，通过丢弃为硬盘设计的LSM-tree数据结构或将KV数据管理卸载到专门的硬件，这些系统提供了高吞吐量和可伸缩性，整个数据集托管在高端设备上。</li>
-<li>相反，这项工作的目标是将主流基于lsm树的KV设计适应于快速NVMe ssd和I/O接口，并特别关注在生产环境中具有成本效益的部署，因为我们发现当前基于 LSM 树的 KV 存储未能充分挖掘 NVMe SSD 的潜力（对比 NVMe SSD 和 SATA SSD），特别是，常见的KV存储设计的I/O路径严重地未充分利用超低延迟NVMe ssd，特别是对于小的写操作（对比 ext4 和 SPDK）</li>
-<li>这对写前日志记录(WAL)尤为不利，WAL 它对数据持久性和事务原子性至关重要，位于写的关键路径上，是主要瓶颈。其次，现有的KV请求处理采用慢速设备，如果切换到快速的基于轮询的I/O，工作流设计将引入高软件开销或浪费CPU周期</li>
-<li>此外，新的NVMe接口附带了访问约束(例如要求绑定整个设备以进行SPDK访问，或者建议将线程固定在core上)。这使得使用高端 SSD 来处理不同类型的KV I/O的KV设计变得复杂，并降低了当前的常见实践(如同步请求处理)的效率。</li>
-<li>像Optane这样的顶级ssd对于大规模部署来说是昂贵的。由于大型的、写密集型的KV存储不可避免地拥有大量的冷数据，在这些相对较小和昂贵的设备上托管所有数据可能超出用户或云数据库服务提供商的预算。</li>
-<li>针对这些挑战，我们提出了SpanDB，一个基于LSM tree的KV系统，采用高端NVMe ssd进行部分部署，对使用 SPDK I/O 的 KV 系统的瓶颈和挑战进行了全面分析。
-<ul>
-<li>它通过合并一个相对较小但速度较快的磁盘(SD)来扩大对最新数据的所有读写处理，同时将数据存储扩展到一个或多个更大、更便宜的磁盘(CD)上。</li>
-<li>它可以通过SPDK实现快速并行访问，从而更好地利用SD，绕过Linux I/O堆栈，特别是允许高速WAL写入。(据作者描述，这是研究KV存储的SPDK支持的第一个工作。)</li>
-<li>它设计了一个适合基于轮询的I/O的异步请求处理管道，它消除了不必要的同步，积极地将I/O等待与内存中处理重叠，并自适应地协调前台/后台I/O。</li>
-<li>它根据实际的KV工作负载有策略地自适应地划分数据，积极地将CD的I/O资源，特别是带宽纳入其中，以帮助共享当代KV系统中常见的写放大</li>
-</ul>
-</li>
-<li>SpanDB重新设计了RocksDB的KV请求处理、存储管理和组WAL写，利用快速SPDK接口，保留了RocksDB的lsm树组织、后台I/O机制、事务支持等数据结构和算法。 因此，它的设计与RocksDB的许多其他优化方案是互补的。添加SD后，可以将现有的RocksDB数据库迁移到SpanDB</li>
-<li>我们使用YCSB和LinkBench进行的评估显示，SpanDB在所有测试用例中(吞吐量、平均延迟和尾部延迟)的性能都显著优于RocksDB，特别是在写密集型测试用例中。相对于最近设计用来利用高端ssd的KVell系统，SpanDB在大多数情况下提供了更高的吞吐量(只占KVell延迟的一小部分)，而不牺牲事务支持。</li>
-</ul>
-<h2 id="background-motivation">Background &amp; Motivation</h2>
-<h3 id="lsm-tree-based-kv-stores">LSM-tree based KV Stores</h3>
-<ul>
-<li>整体架构不再赘述。</li>
-<li>几个观点：
-<ul>
-<li>WAL 仍然是面向客户的数据库的一个组成部分，并且位于处理写请求的关键路径上</li>
-<li>读操作可能会在 LSM 的很多层上产生随机数据访问，尽管有很多系统采用内存缓存来优化读性能，但是对于数据量较大的情况或者局部性较差的情况还是会产生 I/O 操作，严重增加了尾延迟，影响整体性能。</li>
-<li>flush 和 compaction 操作都会产生较大的顺序 I/O，它对前台请求处理的影响体现在 I/O 争用和写停滞(当用户写需要等待刷新以清空MemTable空间时)。</li>
-<li>RocksDB和LevelDB通过用户可配置的flush/compaction线程数量来控制后台I/O速率，当有后台I/O任务时，它们被激活，否则休眠。研究人员已经注意到后台线程设置对性能的影响，并提出了相关的优化 （SILK）。然而，现有的解决方案仍然保留了后台线程设计，假定I/O速度较慢和基于中断的同步，这在新的基于轮询的I/O接口(将在下面讨论)中不能很好地工作。</li>
-</ul>
-</li>
-</ul>
-<h3 id="group-wal-writes">Group WAL Writes</h3>
-<ul>
-<li>
-<p>当前写 WAL 的常见做法是分组日志记录(group logging)，即对一次日志数据写入批量处理多个写请求。在很多常见的数据库系统中都使用了该技术，除了容错之外，组日志还通过促进顺序写操作，在速度较慢的存储设备(其中随机访问往往更慢)上提供了更好的写性能。</p>
-</li>
-<li>
-<p>图 1 展示了批量写 WAL 的流程。WAL 的写入过程是顺序的，任何时候最多只有一个 group 在写 log。</p>
-<ul>
-<li>当有一个正在进行中的写操作时，处理写请求的 workers 线程通过加入一个共享队列组成一个新的组，第一个进入队列的线程被指定为组的 leader。图示 1 - 3</li>
-<li>leader 从 peers 中收集日志项，直到前一个组的 leader (刚刚完成写入)通知它继续执行。这将关闭当前组的大门，随后到达的线程将启动一个新的组。</li>
-<li>leader 以单个同步 I/O 步骤(使用fsync/fdatasync, 4)将日志条目写入持久存储。然后，leader 唤醒组成员，启动 MemTables 中的更新，使这样的写入对后续的请求可见 5 - 6</li>
-<li>通过将最后一个可见序列推进到其条目中的最新序列号来完成组提交 7</li>
-<li>解散组 8，然后唤醒下一个 leader<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301214350.png" alt="20210301214350" loading="lazy"></li>
-</ul>
-</li>
-<li>
-<p>使用高端 NVMe SSD 的话，上图中的步骤 4 的时间可以大幅减少。与此同时批处理写操作合并了小 IO。因此，同步组日志导致的软件开销增加，导致大多数线程将时间浪费在不同类型的等待上 （步骤 1-3 和 7）</p>
-</li>
-<li>
-<p>例如，我们测量了RocksDB在通过ext4访问的SATA SSD上的这4个步骤上平均花费了68.1%的写请求处理时间，而在Optane上通过 SPDK 则增长到了81.0%。（因为总花费的时间减少了，等待的时间所占据的比重就增加了）</p>
-</li>
-<li>
-<p><strong>如果上面的 Group Logging 流程不够清晰，可以看下面这个图</strong></p>
-<ul>
-<li><a href="https://zhuanlan.zhihu.com/p/161797527">图源：知乎 bluesky - RocksDB 写入流程</a><br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210311152453.png" alt="20210311152453" loading="lazy"></li>
-</ul>
-</li>
-</ul>
-<h3 id="high-performance-ssds-interfaces">High-Performance SSDs Interfaces</h3>
-<ul>
-<li>高性能 SSD Intel Optane、Toshiba XL-Flash、Samsung Z-SSD 提供了更低的延迟和更高的吞吐量。考虑到Linux内核I/O堆栈开销在总I/O延迟中不再是可以忽略的，Intel 开发了 SPDK，一组用户态的库/工具来访问高速的 NVMe 设备。<strong>SPDK 把驱动移动到了用户空间，避免了系统调用并支持了零拷贝访问。它轮询硬件完成，而不是使用中断，并避免I/O路径中的锁</strong>。在这里我们总结了在本研究中发现的与KV存储相关的SPDK性能行为和策略限制</li>
-</ul>
-<h4 id="spdk-整体性能">SPDK 整体性能</h4>
-<ul>
-<li>Intel Optane P4800X and P4610</li>
-<li>使用不同类型和不同大小的 IO 组合来模拟 I/O，下图展示了 P4800X 的结果，P4160 展示的测试结果趋势类似。ext4 使用了 write 调用，每一个都进行了 fdatasync，SPDK 使用了内建的 perf tool (spdk_nvme_perf)</li>
-<li>结果表明：（<strong>此处无随机写测试</strong>）
-<ul>
-<li><strong>顺序读</strong>下 ext4 和 SPDK 接近</li>
-<li>通过ext4进行的4KB<strong>顺序写</strong>操作(WAL-style)只实现了硬件潜力的一小部分，延迟时间比SPDK高4.05x(IOPS相应降低)。</li>
-<li>4KB的<strong>随机读</strong>和64KB的<strong>顺序写</strong>测试可以看到这两个极端之间的ext4-SPDK差距</li>
-</ul>
-</li>
-<li>这些结果突出表明，SPDK可以显著改善KV I/O，特别是日志和写密集型工作负载<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301220514.png" alt="20210301220514" loading="lazy"></li>
-</ul>
-<h4 id="spdk-concurrency">SPDK concurrency</h4>
-<ul>
-<li>为了评估SPDK服务并发顺序写的能力，我们分析了各个SPDK请求，并发现7-8µs的单线程延迟中的大部分确实被busy-wait占用，由于争用下的I/O变慢，busy-wait随着并发写的线程增多而增加。</li>
-<li>然后我们设计了一个 pipeline 方案，其中每个线程管理多个并发的SPDK请求。它允许“窃取”I/O等待时间来发出新请求，并检查未完成请求的完成状态(每个请求的完成时间低于1µs)。</li>
-<li>图3 给出了Intel上的延迟和吞吐量结果P4610 (N)和Intel Optane (O) ssd硬盘。我们改变线程的数量(“3-N”有3个线程写入SSD N)和每个线程并发请求的上限(“CR=2”，每个线程最多发出2个请求)。NVMe ssd提供了目前RocksDB/LevelDB single-WAL-writer设计所没有的并行性。特别是，Optane (O)显示出比P4610 (N)更高的并发性，在更多的写入的情况下，具有更低的延迟和更快的吞吐量增长。然而，即使使用O，超过3个并发写入也不能提供更高的SPDK IOPS:使用3个loggers，每个CR=3似乎可以提供峰值的WAL速度，我们表示为3L3R。另一方面，N在2L4R处饱和。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301220356.png" alt="20210301220356" loading="lazy"></li>
-</ul>
-<h4 id="spdk-access-restrictions">SPDK access restrictions</h4>
-<ul>
-<li>快速使用spdk访问高端NVMe ssd带来的性能好处体现在：
-<ul>
-<li>一旦某个SSD被一个进程绑定到SPDK上，其他进程(无论是通过SPDK还是通过Linux I/O堆栈)都无法访问它。这简化了与用户级访问相关的工作负载间隔离，但也禁止将文件系统部分部署到通过SPDK访问的SSD上。</li>
-<li>此外，建议用户将spdk access线程绑定到特定的内核。我们验证了不这样做会带来显著的I/O性能损失。这一点，再加上基于轮询的I/O模式，使得使用后台刷新/压缩线程的常见做法不适合SPDK访问:未绑定线程的I/O很慢，而绑定线程在空闲时不能轻松释放核心资源</li>
-</ul>
-</li>
-</ul>
-<h2 id="spandb-overview">SpanDB Overview</h2>
-<h3 id="design-rationale">Design rationale</h3>
-<ul>
-<li>我们提出了SpanDB，一个高性能，经济有效的基于lsm树的KV存储使用异构存储设备。SpanDB提倡使用小型、快速且通常更昂贵的NVMe SSD作为快速磁盘(SD)，同时部署更大、更慢、更便宜的SSD(或此类设备的阵列)作为容量磁盘(CD)。SpanDB使用SD有两个目的:<strong>(1)对WAL进行写操作(2)存储RocksDB的LSM-tree的顶层</strong>。</li>
-<li>由于WAL的处理成本是用户可见的，并且直接影响延迟，我们预留了足够的资源(内核和并发的SPDK请求，以及足够的SPDK队列)，以最大化其性能。同时，WAL数据只需要维护到相应的flush操作，通常需要GBs的空间，而今天的“小型”高端ssd，如Optane，提供超过300GB的空间，这促使SpanDB将RocksDB的LSM-tree的顶层移至SD。这还会从CD上卸载大量的刷新/压缩流量，CD上驻留着大量较冷的数据</li>
-</ul>
-<h3 id="spandb-architecture">SpanDB architecture</h3>
-<ul>
-<li>下图展示了 SpanDB 的架构。在 DRAM 中保留了 RocksDB Memtable 的相关设计，使用一个可变和多个不可变memtable。SpanDB 几乎不会对 RocksDB 的 KV 数据结构、算法或者操作语义进行修改。这里的主要区别在于它的异步处理模型，以减少同步开销和自适应调度任务。</li>
-<li>磁盘上的数据分布在 CD 和 SD 上，两个物理存储分区。
-<ul>
-<li>SD 进一步被分区，一个小部分为 WAL 区域，另一个部分为数据区域。SpanDB 通过 SPDK 将 SD 当作裸设备管理并重新设计了 RocksDB 的 WAL 批量写入，以实现快速、并行的日志记录，将日志记录带宽提高 10x。为了最小化 RocksDB 的修改，SpanDB 实现了一个轻量级的自带缓存的文件系统 <em>TopFS</em>，允许简单和动态的 LSM levels 重定位。</li>
-<li>CD 分区同时存储了 tree stump，经常包含较冷的大部分数据。SpanDB 的管理还是与RocksDB一样，通过文件系统访问，并借助操作系统页面缓存进行辅助。</li>
-</ul>
-</li>
-<li>下图还对 SpanDB 不同类型的流量进行了区分。WAL 区域只进行 log 的操作，SD 的数据区域接受所有 flush 操作。此外，SD 数据区和 CD 都可以容纳用户读和压缩读/写，SpanDB 执行额外的优化，以支持在两个分区上同时进行压缩，并自动协调前台/后台任务。最后，SpanDB 能够基于对两个分区的实时带宽监控实现动态 tree level 布局。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301222754.png" alt="20210301222754" loading="lazy"></li>
-</ul>
-<h3 id="sources-of-performance-benefits">Sources of performance benefits</h3>
-<ul>
-<li>通过采用一个通过SPDK访问的小而快的SD，它加快了WAL的速度，并行WAL写入。</li>
-<li>通过将SD也用于数据存储，它优化了这种快速ssd的带宽利用率</li>
-<li>通过启用工作负载自适应的SD-CD数据分发，它积极地聚合设备间可用的I/O资源(而不是仅仅将CD用作“溢出层”)。</li>
-<li>虽然主要是通过将I/O卸载到SD来优化写，但它减少了读密集型工作负载的尾部延迟</li>
-<li>通过减少同步和主动平衡前台/后台I/O需求，它利用了快速轮询I/O，同时节省CPU资源</li>
-</ul>
-<h3 id="limitations">Limitations</h3>
-<ul>
-<li>由于前面提到的SPDK访问约束，SD需要绑定到一个进程，这使得共享资源 SD 变得困难</li>
-<li>对于全读的工作负载，SpanDB在异步处理中产生的速度提升很小，并带来轻微的开销。</li>
-</ul>
-<h2 id="design-and-implementation">Design and Implementation</h2>
-<h3 id="asynchronous-request-processing">Asynchronous Request Processing</h3>
-<ul>
-<li>很多 KV 系统都使用了嵌入式的 DB 处理，所有前端任务都被假设成客户端，每次同步处理一个KV请求。这样的处理通常是 I/O 限制(特别是WAL写)，用户通常通过线程过度配置获得更高的总体吞吐量(每秒请求数)，拥有比 cores 更多的客户端线程。具有快速NVMe ssd和SPDK等接口，线程同步(比如睡眠和唤醒)很容易花费比 I/O 请求更长的时间。在这种情况下，线程过度配置不仅增加了延迟，还会降低总体资源利用率，从而降低吞吐量。</li>
-<li>此外，使用基于轮询的SPDK I/O，让线程在相同的 cores 上共存就失去了在 I/O 等待期间提高 CPU 利用率的吸引力。这也适用于使用后台线程管理LSM-tree刷新/压缩任务的常见实践。特别是，由于SPDK I/O的“fsync”涉及到忙等待，现有的 RocksDB 设计可能会释放许多后台线程，这会对其他线程造成巨大的破坏，并浪费 CPU 周期。</li>
-<li>认识到这些，SpanDB采用异步请求处理。在 n 核机器上，用户将客户端线程的数量配置为N client，每个线程占用一个核。剩下的 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>n</mi><mo>−</mo><msub><mi>N</mi><mrow><mi>c</mi><mi>l</mi><mi>i</mi><mi>e</mi><mi>n</mi><mi>t</mi></mrow></msub></mrow><annotation encoding="application/x-tex">n - N_{client}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.66666em;vertical-align:-0.08333em;"></span><span class="mord mathdefault">n</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.10903em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">c</span><span class="mord mathdefault mtight" style="margin-right:0.01968em;">l</span><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight">e</span><span class="mord mathdefault mtight">n</span><span class="mord mathdefault mtight">t</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 个核心处理 SpanDB 内部服务线程，相应地被分为两个角色：<em>loggers</em> and <em>workers</em>。这些线程都被绑定到他们分配的核心上。 Loggers 主要执行 WAL 写入，Workers 处理后台任务处理（flush/compaction）以及一些非 I/O 任务，例如 Memtables 的写入和更新，WAL 日志项的准备，相关事务的加锁/同步。根据观察到的写强度，head-server 线程自动自适应地决定logger 的数量，这些 logger 被绑定到分配了 SPDK 队列的核上，从而保证 WAL 的写带宽<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210302114726.png" alt="20210302114726" loading="lazy"></li>
-</ul>
-<h4 id="asynchronous-apis">Asynchronous APIs</h4>
-<ul>
-<li>SpanDB 提供了简单、直观的异步 api。对于现有的 RocksDB 同步 get 和 put 操作，它增加了异步对等对象A_get和A_put，再加上A_check来检查请求状态。类似的API扩展适用于扫描和删除。相应地，SpanDB扩展了RocksDB的 status 枚举。</li>
-<li>如下代码示例大致描述了异步请求的流程。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210302143805.png" alt="20210302143805" loading="lazy"></li>
-</ul>
-<h4 id="spandb-request-processing">SpanDB request processing</h4>
-<ul>
-<li>SpanDB管理前台请求处理的各个阶段，以及多个队列中的后台刷新/压缩任务。这些队列在线程之间传递子任务，还提供关于某个系统组件的压力级别的反馈。根据这些反馈，SpanDB可以调节客户端请求发出率(通过上述IsBusy接口)，也可以动态调整内部 workers 的任务分配</li>
-<li>图 5 描绘了 SpanDB 中的相关队列。flush 和 compaction 队列本身就是来自于 RocksDB 的设计，即便 SpanDB 修改了实际的操作来使用 SPDK I/O。SPDK 还额外加了四个队列，读队列、以及写相关的三个队列（ProLog、Log、EpiLog）</li>
-<li>对于<strong>异步读</strong>，当请求不需要进行 I/O 时，SpanDB 保持了原有 RocksDB 的同步模型，在KV应用程序中，由于具有典型的局部性，许多读操作都是从MemTable中进行的，特别是在今天由 DRAM 支持的更大的 MemTable 的场景下。给定一个 Key，能够快速在检查 Memtables 是否命中，如果命中直接完成读请求。命中的情况下大概只花费 4-6 微秒，相反即使在争用的情况下从 Optane 上读取也只花费 30 微妙，相应地会把读请求插入到读请求等待队列中然后返回。之后会有 worker 从队列中取出该请求，完成剩下的和 RocksDB 相同的读任务并设置他的完成状态。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210302114726.png" alt="20210302114726" loading="lazy"></li>
-<li>对于<strong>异步写</strong>，SpanDB 将处理过程划分成了三个部分。
-<ul>
-<li>
-<ol>
-<li>客户端先将请求 dump 到 ProLog 队列中，由 worker 来处理。</li>
-</ol>
-</li>
-<li>
-<ol start="2">
-<li>worker 相应地生成 WAL 日志项，按顺序传递到 Log 队列中。这两个队列都旨在促进批处理日志：一个 worker/logger 在这些队列中收集所有的日志项。除了批处理之外，logger 还将写日志流水线化，最大限度地提高了SPDK写并发性</li>
-</ol>
-</li>
-<li>
-<ol start="3">
-<li>当将一个组写入到了 SD 之后，logger 把相应的请求添加到 EpiLog 队列中，以便 worker 能够完成最终的处理。主要包括实际 MemTable 的更新。像读操作一样，这里的任务需要单独的注意力，不可能通过批量执行来加速。</li>
-</ol>
-</li>
-</ul>
-</li>
-<li><strong>如上图所示，ProLog 和 Log 队列都是 flat 的无锁队列，也就很容易地抓取所有请求进行出队。 Read、Epilog 都是环形队列，只在出队的时候要求加锁。</strong></li>
-</ul>
-<h4 id="task-scheduling">Task scheduling</h4>
-<ul>
-<li>上述SpanDB队列为调整内部资源分配提供了自然反馈。我们的SPDK基准测试结果表明 NVMe SSD 提供了并行性但是可能会被每个核心发出好几个并发请求使其饱和。因此 SpanDB 从一个 logger 开始，根据当前的写入强度在 1 到 3 之间增加和减少这个分配。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301220356.png" alt="20210301220356" loading="lazy"></li>
-<li>对于 Worker 因为需要处理所有其他的队列，所以比较灵活。在三个前端任务队列之间，SpanDB 根据队列的实际长度和每个任务的处理时间的加权来执行负载均衡。在前端队列和后端队列之间，SpanDB 以处理前台任务优先，使用一个合适的阈值来监控后台队列长度，从而主动执行清理，特别是在写密集型工作负载下。</li>
-</ul>
-<h4 id="transaction-support">Transaction support</h4>
-<ul>
-<li>SpanDB 完整支持了事务并提供了一个异步提交接口 <code>A_commit</code>，对 RocksDB 做了一些小改动。注意在 RocksDB 的事务模式，写操作将在一个内部 Buffer 中生成 WAL 项，只会在提交的时候才会被写入。而 SpanDB 异步提交操作则是将相应的写任务插入到了 ProLog 队列。</li>
-</ul>
-<h3 id="high-speed-logging-via-spdk">High-speed Logging via SPDK</h3>
-<h4 id="enabling-parallelism-and-pipelining">Enabling parallelism and pipelining</h4>
-<ul>
-<li>SpanDB 保留了 group logging 机制，但也允许多个 WAL 流并发写入。它不是让一个客户端作为 leader (并迫使 follower 等待)，而是使用专用的 logger，并发地发出批处理写操作。每个 logger 抓取它在 QLog 中看到的所有请求，并将这些 WAL 条目聚合为尽可能少的 4KB 块。它通过为一个请求窃取 SPDK 繁忙等待时间准备/检查其他请求来执行 pipeline。例如，对于 2L4R，有多达 8 个未完成的 WAL 写组</li>
-</ul>
-<h4 id="log-data-management">Log data management</h4>
-<ul>
-<li>并行的 WAL 写入让日志数据的管理变得复杂，特别是针对没有文件系统的裸设备。幸运的是，使用原子的 4KB SPDK 写操作，协调并发的 WAL 流只增加了很少的开销。</li>
-<li>SpanDB 首先在 SD 上分配可配置数量的 Pages 给相应的 WAL 区域（测试中分配了 10GB），每个都会有一个逻辑页号 LPN。这些页中的一个会被设置为元数据页，在任何时候只会有一个可变的 Memtable，其对应的日志文件会不断增大。我们会分配固定数量的逻辑页 groups，每个组会包含连续的页，而且足够大可以装下一个 Memtable 的日志数据。被使用了的日志页和对应的 Memtable 给组织在一起：SpanDB 重用了 RocksDB Memtable 的日志文件号 LFN 作为日志标签号 LTN，嵌入在所有日志页的开头以便进行故障恢复。</li>
-<li>下图给了一个包含四个 Memtable 的例子，一个 mutable 三个 immutable，对应元数据页中的 Active 和 InActive 状态。</li>
-<li>在一个 Memtable 被 flush 之后，日志页的整个分片将被回收，保证 Memtable 日志的连续性。对于每个 Immutable Memtable，元数据页都记录了对应日志页的起始和终止 LPN。假设典型的 KV 存储使用少量 memtable，一个页面就足够容纳这样的元数据了。</li>
-<li>Logger 发出并发请求，每个 Logger 提供一个 WAL 数据缓冲区和大小，唯一的同步点是日志页面的分配。我们使用比较和交换(CAS)操作实现了轻量级的原子页面分配。下图中的淡蓝色部分显示了三个请求的日志页分配过程，分别分配了 1，3，2 个页面，可以并行地进行分配。这些 WAL 写入不会修改元数据页，在元数据页中，只有当MemTable变得不可变时，per-MemTable end LPN 才会被追加。</li>
-<li>在日志 Page 中，logger 首先记录当前 LTN，然后是一组日志条目，每个条目都有其大小的注释。图7中的放大部分描述了这种布局，包括每个条目的校验和(已经在RocksDB中计算过了)。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210302153627.png" alt="20210302153627" loading="lazy"></li>
-</ul>
-<h4 id="correctness">Correctness</h4>
-<ul>
-<li>SpanDB的并行WAL写设计保留了RocksDB一致性语义。它不会改变用于协调和排序客户机请求的并发控制机制。因此，带有happened-before限制的事务在日志页面中不会出现顺序错误，如下面的简要解释。RocksDB 默认的隔离保证是 READ COMMITTED，也会检查写与写操作之间的冲突并序列化两个并发事务（假定两个更新相同 KV 项）。对于任何两个更新事务T1 和 T2，使用这两个隔离保证，READ COMMITTED 表明如果 T1 发生在 T2 之前，即 T2 看到了 T1 的效果，那么 T1 在 T2 开始执行之前必须提交。通过RocksDB group WAL写协议的设计，可以看出T1和T2的日志记录应该分两批出现，其中T1的批提交早于T2的批提交，在T2的批提交之前完成。当批量日志并行写入到 SpanDB 时，传递一个序列化的point 以便进行原子的页分配。因此 T1 的批任务仍然保证了比 T2 获得的序列号更小，后者就能看见前者的更新。相似的，从 WAL 中恢复的时候，SpanDB 总是按序列号升序执行 redo。</li>
-</ul>
-<h4 id="log-recovery">Log recovery</h4>
-<ul>
-<li>恢复操作首先读元数据页，检索出 log page groups 的数量以及相应的页地址范围。实际的从 log page group 恢复和从 RocksDB 的日志文件中恢复是一致的。同样，每个页面中的LTN号帮助标识 Active 日志 log group 的“结束”。</li>
-<li>一个难点是 SpanDB 回收日志页 groups 时，有的 group 包含一些老的日志页，在恢复过程中 SpanDB 需要知道当前组中哪些页已经被重写了。RocksDB 依赖文件系统进行故障恢复：读取数据是否包含在活跃的 log file 中。没有文件系统，SpanDB 在回收之前可以持久化一个单独的元数据更新或者将老的日志页 wipe out(写 0)。会影响 SD 的 WAL 写带宽，降低到一半。而我们重用了每个 Memtable 的 LTN 作为日志页的 color。因为 SSD 可以保证 4K 原子写，LTN 通常又都是在页的开始写的，这些页已经暗含了最后一次成功写的位置信息了。元数据页维护了当前活跃的 LTN，在这个组中，具有过时LTN的页面还没有从当前MemTable中被覆盖写。</li>
-</ul>
-<h3 id="offloading-lsm-tree-levels-to-sd">Offloading LSM-tree Levels to SD</h3>
-<ul>
-<li>为了 KV 服务器的持续均衡的运行，SpanDB将RocksDB的lsm树的顶层迁移到SD，为用户提供更多的硬件投资回报。下面我们讨论所涉及的主要挑战和解决办法</li>
-</ul>
-<h4 id="data-area-storage-organization">Data area storage organization</h4>
-<ul>
-<li>在NVMe SSD上使用SPDK的一个限制是，整个设备必须与本机内核驱动程序解除绑定，并且不能通过传统的I/O堆栈访问。因此不能对SD进行分区，只能使用SPDK将WAL写入一个区域，在另一个区域安装文件系统。</li>
-<li>SpanDB 实现的 TopFS，这是一个精简的文件系统，在SPDK I/O之上提供熟悉的文件接口包装器。SST 文件的仅追加和此后不可变的特性，加上它们的单 writer 访问模式，简化了TopFS设计。比如文件在创建的时候就知道了大小或者有有一个已知的大小限制。而且每个 SST 只会被单个线程写一次。大多数场景下，输入的数据不会被删除直到 SST 文件写入成功完成。此外，TopFS 保证了文件 close 时的数据的一致性。从而支持了每个文件连续的 LPN 范围分配，和前面提到的日志 groups 相似。元数据管理也比较简单：一个哈希表，按文件名进行索引，存储文件的起始和结束 LPN。TopFS 使用一个 LPN 空闲列表管理空闲空间，相应的连续的 LPN 范围被合并。</li>
-</ul>
-<h4 id="ensuring-wal-write-priority">Ensuring WAL write priority</h4>
-<ul>
-<li>flush/Compaction 操作是会影响前台负载的，但他们的延迟很多时候都对用户是透明的，因此 SD 可以完全更充分利用其带宽，比如在 WAL 写上，因为 WAL 的写入延迟用户时能感知到的。SPDK 提供了足够的 NVMe Queue Pairs，这允许对不同的请求类型进行单独管理。不幸的是，没有一个现有的通用 SSD 实现对这些队列的优先级管理。此外，这些队列提供的操作非常有限:用户只能发出请求和检查完成状态。</li>
-<li>因此除了前后端任务在队列上的协调以外，SpanDB 还对 WAL 写请求赋予了优先级。我们发现他们的优先级可以有效地保护通过以下步骤：
-<ul>
-<li>(1) 分配到每个日志请求 slot 专用队列(例如,8 个 L2R4 队列)</li>
-<li>(2) 减少 flush/compaction 的 I/O 请求的大小从 1MB 到 64KB 来减小有 WAL 时的 I/O 争用</li>
-<li>(3) 限制执行 flush/compaction 的 worker 线程数量</li>
-</ul>
-</li>
-</ul>
-<h4 id="spandb-spdk-cache">SpanDB SPDK cache</h4>
-<ul>
-<li>SPDK bypass 了 OS page cache，如果无人看管，这会带来出色的原始 I/O，但会带来灾难性的应用程序 I/O 性能。为了克服这个问题，我们在 TopFS 上实现了 SpanDB 自己的缓存。注意，对于SPDK I/O，传递的所有数据缓冲区必须通过 <code>spdk_dma_malloc()</code> 在固定内存中分配。SpanDB重用这样的缓冲区作为缓存，从而节省额外的内存复制。</li>
-<li>在SpanDB初始化时，它在hugepage中分配一个大内存缓存(大小可配置)。在创建SST文件时，SpanDB在缓存中保留适当数量的连续64KB缓冲区(文件大小或大小限制是已知的)。SpanDB使用另一个哈希表来管理这个缓存，同样以RocksDB SST文件名作为键。value字段是一个数组，存储每个文件块的缓存项，如果块被缓存，则存储相应的内存地址，否则为空。块大小配置显然涉及到缓存数据粒度和元数据开销之间的权衡。我们的评估使用SpanDB默认块大小64KB，对100GB的数据库产生&lt;500KB的元数据开销。</li>
-</ul>
-<h4 id="dynamic-level-placement">Dynamic level placement</h4>
-<ul>
-<li>通过上述所有机制，我们可以动态地调整SD上驻留的树级别的数量。最初，我们使用一个分析模型来直接计算最佳SD-CD级别分区，从而最大限度地提高整个系统的吞吐量。然而，我们无法找到与我们的测量结果一致的精确的 LSM-tree 写放大模型。特别是，最先进的工作在这前端的似乎没有考虑写速度和它的变化。我们的测试表明，这些因素会严重影响暂态的“树状结构”(最高层在不同程度上超出其大小限制)，进而影响写/读放大级别。</li>
-<li>因此，SpanDB 使用了临时的动态分区，通过观察 SD 和 CD 之间持续的资源利用率的不平衡，它的 head-server 线程监视 SD 带宽使用情况，并在低于 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mrow><mi>B</mi><mi>W</mi></mrow><mi>L</mi></msub></mrow><annotation encoding="application/x-tex">{BW}_L</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord"><span class="mord mathdefault" style="margin-right:0.05017em;">B</span><span class="mord mathdefault" style="margin-right:0.13889em;">W</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.32833099999999993em;"><span style="top:-2.5500000000000003em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">L</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 时触发SST文件重定位，直到达到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mrow><mi>B</mi><mi>W</mi></mrow><mi>H</mi></msub></mrow><annotation encoding="application/x-tex">{BW}_H</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord"><span class="mord mathdefault" style="margin-right:0.05017em;">B</span><span class="mord mathdefault" style="margin-right:0.13889em;">W</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.32833099999999993em;"><span style="top:-2.5500000000000003em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.08125em;">H</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 或 SD 满，其中 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mrow><mi>B</mi><mi>W</mi></mrow><mi>L</mi></msub></mrow><annotation encoding="application/x-tex">{BW}_L</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord"><span class="mord mathdefault" style="margin-right:0.05017em;">B</span><span class="mord mathdefault" style="margin-right:0.13889em;">W</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.32833099999999993em;"><span style="top:-2.5500000000000003em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">L</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 和 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mrow><mi>B</mi><mi>W</mi></mrow><mi>H</mi></msub></mrow><annotation encoding="application/x-tex">{BW}_H</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord"><span class="mord mathdefault" style="margin-right:0.05017em;">B</span><span class="mord mathdefault" style="margin-right:0.13889em;">W</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.32833099999999993em;"><span style="top:-2.5500000000000003em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.08125em;">H</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 是两个可配置的阈值。</li>
-<li><strong>由于SST文件不断地进行合并，SpanDB并没有在SD和CD之间迁移数据，而是通过将文件创建重定向到不同的目标，逐步“提升”或“降级”整个级别</strong>。它有一个指针，指示当前哪些级别应该转到快速NVMe设备。例如，指针 3 覆盖了所有的前3个级别。然而，该指针仅确定新SST文件的目的地。因此，在SD上有一个新的L3文件，在CD上有一个旧的L2文件是可能的，尽管这种“倒置”是罕见的，因为顶层更小，他们的文件更新更频繁。</li>
-</ul>
-<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210312113832.png" alt="20210312113832" loading="lazy"></figure>
-<h2 id="evaluation">Evaluation</h2>
-<p><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210312113934.png" alt="20210312113934" loading="lazy"><br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210302200522.png" alt="20210302200522" loading="lazy"></p>
-<h2 id="related-work">Related Work</h2>
-<h3 id="tiered-storage">Tiered storage</h3>
-<ul>
-<li>NVMFS, Strata, Ziggurat:  File system based on heterogeneous devices</li>
-<li>HiLSM, MatrixKV: Hybrid storage devices for KV</li>
-<li>Mutant: ranks SST files by popularity and places them on different cloud storage devices</li>
-<li>PrismDB: makes LSM-trees “read-aware” by pinning hot objects to fast devices.</li>
-</ul>
-<h3 id="kv-stores-optimizations-for-fast-homogeneous-storage">KV stores optimizations for fast, homogeneous storage</h3>
-<h4 id="homogeneous-storage">homogeneous storage</h4>
-<ul>
-<li>UniKV</li>
-<li>LSM-trie</li>
-<li>SlimDB</li>
-<li>FloDB</li>
-<li>PebblesDB</li>
-<li>KVell</li>
-<li>SplinterDB</li>
-</ul>
-<h4 id="fpga">FPGA</h4>
-<ul>
-<li><strong>X-Engine</strong></li>
-<li><strong>KVSSD</strong></li>
-<li><strong>ATC20 PinK</strong></li>
-</ul>
-<h4 id="pm">PM</h4>
-<ul>
-<li>HiKV</li>
-<li>NoveLSM</li>
-<li>NVMRocks</li>
-<li>Bullet</li>
-<li>SLM-DB</li>
-<li>FlatStore</li>
-<li>MyNVM</li>
-<li>MyRocks</li>
-</ul>
-<h3 id="logging-optimizations">Logging optimizations</h3>
-<ul>
-<li>NVLogging</li>
-<li>NVWAL</li>
-</ul>
-<h3 id="other-related-work">Other related work</h3>
-<ul>
-<li>SILK</li>
-<li>Monkey</li>
-<li>ElasticBF</li>
-<li>TRIAD</li>
-<li>WiscKey</li>
-<li>HashKV</li>
-</ul>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Linux Software Management]]></title>
-        <id>https://blog.shunzi.tech/post/linux-software-mangement/</id>
-        <link href="https://blog.shunzi.tech/post/linux-software-mangement/">
-        </link>
-        <updated>2021-02-26T08:37:41.000Z</updated>
-        <summary type="html"><![CDATA[<blockquote>
-<ul>
-<li>Linux 软件包管理安装。</li>
-</ul>
-</blockquote>
-]]></summary>
-        <content type="html"><![CDATA[<blockquote>
-<ul>
-<li>Linux 软件包管理安装。</li>
-</ul>
-</blockquote>
-<!--more-->
-<h2 id="参考书目链接">参考书目/链接</h2>
-<ul>
-<li><a href="https://www.linuxprobe.com/linux-basic-manage.html">Linux 就该这么学：Linux软件包管理基本操作入门</a></li>
-<li><a href="https://segmentfault.com/a/1190000011325357">segmentfault: Linux系统中软件的“四”种安装原理详解</a></li>
-<li><a href="https://www.cnblogs.com/zwj-linux/p/11643033.html">博客园：Linux下rpm、yum和源码三种安装方式简介</a></li>
-<li><a href="https://www.ibm.com/developerworks/cn/linux/l-rpm1/index.html">IBM Developer - 构建和分发包</a></li>
-</ul>
-<h2 id="软件包">软件包</h2>
-<h3 id="windows">Windows</h3>
-<ul>
-<li>开始介绍 Linux 软件包之前，先大致回忆一下 Windows 场景下的我们常常使用的软件包形态。</li>
-<li>Win 环境下：
-<ul>
-<li>大量的软件应用程序都是使用诸如 .exe/.msi 等类型的文件进行安装，直接运行该安装程序，按照步骤勾选相应的可选配置就能安装对应的软件。
-<ul>
-<li>MSI 就是 microsoft installer 的简写，msi 文件就是 window installer 的数据包，把所有和安装文件相关的内容封装在一个包里。</li>
-<li>exe 是一个安装引导程序。主要是用于检查安装的环境，当检查成功后，会自动再安装 msi 文件。</li>
-</ul>
-</li>
-<li>除了安装程序以外，常常还有一些压缩包的形式来安装软件（也就是所谓的绿色版），本质就是把程序的全部数据以及依赖的环境给压缩到一个文件夹中，而下载该文件夹就可以直接执行其中保存的可执行程序。</li>
-</ul>
-</li>
-</ul>
-<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210225220304.png" alt="20210225220304" loading="lazy"></figure>
-<h3 id="linux">Linux</h3>
-<ul>
-<li>大多数现代类 Unix 操作系统都提供了一个集中的软件包管理机制，以帮助用户搜索、安装和管理软件。而软件通常以「包」的形式存储在仓库「repository」中，对软件包的使用和管理被称为包管理。</li>
-<li>Linux 包的基本组成部分通常有：共享库、应用程序、服务和文档。</li>
-<li>Linux 软件包分类:
-<ul>
-<li>源码包</li>
-<li>二进制包（RPM/DEB包）</li>
-<li>yum/apt 源在线安装</li>
-<li>脚本安装包（本质还是源码包和二进制包）</li>
-</ul>
-</li>
-</ul>
-<h2 id="linux-软件包管理">Linux 软件包管理</h2>
-<h3 id="软件包管理系统">软件包管理系统</h3>
-<ul>
-<li>大多数包管理系统是建立在包文件上的集合，包文件通常包含编译好的二进制文件和其它资源组成的：软件、安装脚本、元数据及其所需的依赖列表。</li>
-<li>因为 Linux 有很多发行版，各自的管理系统也有一定的差异</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th>系统</th>
-<th>格式</th>
-<th>工具</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Debian</td>
-<td>.deb</td>
-<td>apt, apt-cache、apt-get、dpkg</td>
-</tr>
-<tr>
-<td>Ubuntu</td>
-<td>.deb</td>
-<td>apt、apt-cache、apt-get、dpkg</td>
-</tr>
-<tr>
-<td>CentOS</td>
-<td>.rpm</td>
-<td>yum</td>
-</tr>
-<tr>
-<td>Fedora</td>
-<td>.rpm</td>
-<td>dnf</td>
-</tr>
-</tbody>
-</table>
-<ul>
-<li>Debian 及其衍生产品如：Ubuntu、Linux Mint 和 Raspbian 的包格式为.deb文件，APT 是最常见包操作命令，可：搜索库、安装包及其依赖和管理升级。而要直接安装现成.deb包时需要使用dpkg命令。</li>
-<li>CentOS、Fedora 及 Red Hat 系列 Linux 使用RPM包文件，并使用yum命令管理包文件及与软件库交互。在最新的 Fedora 版本中，yum命令已被dnf取代进行包管理。</li>
-</ul>
-<h3 id="常见操作">常见操作</h3>
-<ul>
-<li>更新本地包数据库列表：
-<ul>
-<li>apt-get update</li>
-<li>yum check-update</li>
-<li>dnf check-update</li>
-</ul>
-</li>
-<li>升级已安装的包：
-<ul>
-<li>apt-get upgrade</li>
-<li>apt-get dist-upgrade</li>
-<li>yum update /dnf upgrade</li>
-</ul>
-</li>
-<li>查找/搜索软件包：
-<ul>
-<li>apt-cache search xxx</li>
-<li>yum search xxx</li>
-<li>yum search all xxx</li>
-<li>dnf search xxx</li>
-<li>dnf search all xxx</li>
-</ul>
-</li>
-<li>查看某个软件包信息:
-<ul>
-<li>apt-cache show [pkg_name]</li>
-<li>dpkg -s [pkg_name] (显示包的安装状态)</li>
-<li>yum info [pkg_name]</li>
-<li>yum deplist [pkg_name] （列出包的依赖）</li>
-<li>dnf info  [pkg_name]</li>
-<li>dnf repoquery –requires [pkg_name]</li>
-</ul>
-</li>
-<li>安装包：
-<ul>
-<li>apt-get install xxx</li>
-<li>yum instal xxx</li>
-<li>dnf install xxx</li>
-</ul>
-</li>
-<li>移除包：
-<ul>
-<li>apt-get remove xxx</li>
-<li>apt-get autoremove (自动移除已知不需要的包)</li>
-<li>yum remove xxx</li>
-<li>dnf erase xxx</li>
-</ul>
-</li>
-</ul>
-<h3 id="本地文件系统安装">本地文件系统安装</h3>
-<ul>
-<li>首先简要介绍本地安装软件包的场景和主要命令，然后以 RPM 为例详细说明。</li>
-</ul>
-<h4 id="从本地文件系统直接安装包">从本地文件系统直接安装包</h4>
-<ul>
-<li>很多时候，我们在进行测试或从某个地方直接拿到软件包之后需要从本地文件系统直接安装包。（特别是针对一些无公网的环境，无法直接使用包管理工具直接安装相关依赖）</li>
-<li>Debian 及衍生系统可以使用 dpkg 进行安装，CentOS 和 Fedora 系统使用 yum 和 dnf 命令进行安装。</li>
-</ul>
-<h5 id="本地安装命令">本地安装命令</h5>
-<ul>
-<li>dpkg -i [pkg_name].deb</li>
-<li>apt-get install -y gdebi&amp;&amp; sudo gdebi [pkg_name].deb （使用gdebi检索缺少的依赖关系）</li>
-<li>yum install [pkg_name].rpm</li>
-<li>dnf install [pkg_name].rpm</li>
-</ul>
-<h3 id="rpm">RPM</h3>
-<ul>
-<li>RPM命名“RedHat Package Manager”，简称则为RPM。这个机制最早由Red Hat这家公司开发出来的，后来实在很好用，因此很多distributons就使用这个机制来作为软件安装的管理方式，包括Fedora，CentOS，SuSE等知名的开发商都是用它。</li>
-<li>RPM最大的特点就是需要安装的软件已经编译过，并已经打包成RPM机制的安装包，通过里头默认的数据库记录这个软件安装时需要的依赖软件。当安装在你的Linux主机时，RPM会先依照软件里头的数据查询Linux主机的依赖属性软件是否满足，若满足则予以安装，若不满足则不予安装。</li>
-</ul>
-<h4 id="构建流程">构建流程</h4>
-<p>要构建 RPM，必须：</p>
-<ul>
-<li>依照 rpmbuild 规范设定一个目录结构。</li>
-<li>将源代码和附带文件放在目录中合适的位置。</li>
-<li>创建 spec 文件。</li>
-<li>编译 RPM。可以选择编译源 RPM，以与其他人共享您的源代码。</li>
-</ul>
-<h5 id="目录结构">目录结构</h5>
-<ul>
-<li><strong>BUILD</strong>。BUILD 用作实际编译软件的暂存空间。</li>
-<li><strong>RPMS</strong>。RPMS 包含 rpmbuild 所编译的二进制 RPM。</li>
-<li><strong>SOURCES</strong>。SOURCES 存储源代码。</li>
-<li><strong>SPECS</strong>。SPECS 包含您的 spec 文件，您想要构建的一个 RPM 对应一个 spec 文件。</li>
-<li><strong>SRPMS</strong>。SRPMS 包含在这个过程中构建的源 RPM。</li>
-</ul>
-<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210226153713.png" alt="20210226153713" loading="lazy"></figure>
-<h5 id="准备文件">准备文件</h5>
-<ul>
-<li><strong>step1</strong>. 将源代码（理想情况下应捆绑为一个 tarball 压缩文件）复制到 SOURCES 目录</li>
-<li><strong>step2</strong>. 创建 spec 文件。spec 文件只是一个具有特殊语法的文本文件。
-<ul>
-<li>此处举一个简单例子 wget 打包</li>
-</ul>
-</li>
-</ul>
-<pre><code class="language-shell"># This is a sample spec file for wget
-
-# 定义了五个变量 
-%define _topdir     /home/strike/mywget
-%define name            wget 
-%define release     1
-%define version     1.12
-%define buildroot %{_topdir}/%{name}-%{version}-root
- 
-# 设置若干关键参数
-BuildRoot:  %{buildroot}
-Summary:        GNU wget
-License:        GPL
-Name:           %{name}
-Version:        %{version}
-Release:        %{release}
-Source:         %{name}-%{version}.tar.gz
-Prefix:         /usr
-Group:          Development/Tools
-
-# 简单明了地描述软件。这一行将在用户运行 rpm -qi 来查询 RPM 数据库时显示。您可以说明包的用途，描述任何警告或额外的配置说明等。
-%description
-The GNU wget program downloads files from the Internet using the command-line.
-
-# 生成一个 shell 脚本，该脚本嵌入到 RPM 中，随后作为安装的一部分运行
-# 准备源代码
-# %setup -q 是一个 %prep 宏，用于自动解压 Source 中的特定 tarball 压缩文件
-%prep
-%setup -q
-
-# 生成一个 shell 脚本，该脚本嵌入到 RPM 中，随后作为安装的一部分运行
-# 手动配置和启动构建过程的步骤 
-%build
-./configure
-make
-
-# 生成一个 shell 脚本，该脚本嵌入到 RPM 中，随后作为安装的一部分运行
-%install
-make install prefix=$RPM_BUILD_ROOT/usr
-
-# 列出应该捆绑到 RPM 中的文件，还可以设置权限和其他信息。
-%files
-%defattr(-,root,root)
-/usr/local/bin/wget
-
-# %doc 告诉 RPM 该文件为一个文档文件，所以如果用户使用 --excludedocs 安装包，将不会安装该文件。
-%doc %attr(0444,root,root) /usr/local/share/man/man1/wget.1
-</code></pre>
-<ul>
-<li>再来看 tcmu-runner.spec 的例子</li>
-</ul>
-<pre><code class="language-spec">%global _hardened_build 1
-
-# 运行 rpmbuild 时读取的一些条件参数
-# without rbd dependency
-# if you wish to exclude rbd handlers in RPM, use below command
-# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without rbd
-%bcond_without rbd
-
-# without glusterfs dependency
-# if you wish to exclude glfs handlers in RPM, use below command
-# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without glfs
-%bcond_without glfs
-
-# without qcow dependency
-# if you wish to exclude qcow handlers in RPM, use below command
-# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without qcow
-%bcond_without qcow
-
-# without zbc dependency
-# if you wish to exclude zbc handlers in RPM, use below command
-# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without zbc
-%bcond_without zbc
-
-# without file backed optical dependency
-# if you wish to exclude fbo handlers in RPM, use below command
-# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without fbo
-%bcond_without fbo
-
-# without tcmalloc dependency
-# if you wish to exclude tcmalloc, use below command
-# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without tcmalloc
-%bcond_without tcmalloc
-
-# 设置若干关键参数
-Name:          tcmu-runner
-Summary:       A daemon that handles the userspace side of the LIO TCM-User backstore
-Group:         System Environment/Daemons
-License:       ASL 2.0 or LGPLv2+
-Version:       1.0
-URL:           https://github.com/open-iscsi/tcmu-runner
-
-Release:       0%{dist}
-BuildRoot:     %(mktemp -udp %{_tmppath}/%{name}-%{version})
-Source:       %{name}-%{version}.tar.gz
-ExclusiveOS:   Linux
-
-BuildRequires: cmake make gcc
-BuildRequires: libnl3-devel glib2-devel zlib-devel kmod-devel
-
-# 针对不同条件参数下的依赖处理
-%if %{with rbd}
-BuildRequires: librbd1-devel librados2-devel
-Requires(pre): librados2, librbd1
-%endif
-
-%if %{with glfs}
-BuildRequires: glusterfs-api-devel
-Requires(pre): glusterfs-api
-%endif
-
-%if %{with tcmalloc}
-BuildRequires: gperftools-devel
-Requires:      gperftools-libs
-%endif
-
-# 基本依赖
-Requires(pre): kmod, zlib, libnl3, glib2, logrotate, rsyslog
-Requires:      libtcmu = %{version}-%{release}
-
-# 软件描述
-%description
-A daemon that handles the userspace side of the LIO TCM-User backstore.
-
-LIO is the SCSI target in the Linux kernel. It is entirely kernel code, and
-allows exported SCSI logical units (LUNs) to be backed by regular files or
-block devices. But, if we want to get fancier with the capabilities of the
-device we're emulating, the kernel is not necessarily the right place. While
-there are userspace libraries for compression, encryption, and clustered
-storage solutions like Ceph or Gluster, these are not accessible from the
-kernel.
-
-The TCMU userspace-passthrough backstore allows a userspace process to handle
-requests to a LUN. But since the kernel-user interface that TCMU provides
-must be fast and flexible, it is complex enough that we'd like to avoid each
-userspace handler having to write boilerplate code.
-
-tcmu-runner handles the messy details of the TCMU interface -- UIO, netlink,
-pthreads, and DBus -- and exports a more friendly C plugin module API. Modules
-using this API are called &quot;TCMU handlers&quot;. Handler authors can write code just
-to handle the SCSI commands as desired, and can also link with whatever
-userspace libraries they like.
-
-# 生成的 RPM 包 libtcmu
-%package -n libtcmu
-Summary:       A library supporting LIO TCM-User backstores processing
-Group:         Development/Libraries
-
-%description -n libtcmu
-libtcmu provides a library for processing SCSI commands exposed by the
-LIO kernel target's TCM-User backend.
-
-# 生成的 RPM 包 libtcmu-devel
-%package -n libtcmu-devel
-Summary:       Development headers for libtcmu
-Group:         Development/Libraries
-Requires:      %{name} = %{version}-%{release}
-Requires:      libtcmu = %{version}-%{release}
-
-%description -n libtcmu-devel
-Development header(s) for developing against libtcmu.
-
-%global debug_package %{nil}
-
-# 准备源代码
-%prep
-%setup -n %{name}-%{version}
-
-# 手动配置和启动构建
-%build
-%{__cmake} \
- -DSUPPORT_SYSTEMD=ON -DCMAKE_INSTALL_PREFIX=%{_usr} \
- %{?_without_rbd:-Dwith-rbd=false} \
- %{?_without_zbc:-Dwith-zbc=false} \
- %{?_without_qcow:-Dwith-qcow=false} \
- %{?_without_glfs:-Dwith-glfs=false} \
- %{?_without_fbo:-Dwith-fbo=false} \
- %{?_without_tcmalloc:-Dwith-tcmalloc=false} \
- .
-%{__make}
-
-%install
-%{__make} DESTDIR=%{buildroot} install
-%{__rm} -f %{buildroot}/etc/tcmu/tcmu.conf.old
-%{__rm} -f %{buildroot}/etc/logrotate.d/tcmu-runner.bak/tcmu-runner
-
-# 列出应该捆绑到 RPM 中的文件
-%files
-%{_bindir}/tcmu-runner
-%dir %{_sysconfdir}/dbus-1/
-%dir %{_sysconfdir}/dbus-1/system.d
-%config %{_sysconfdir}/dbus-1/system.d/tcmu-runner.conf
-%dir %{_datadir}/dbus-1/
-%dir %{_datadir}/dbus-1/system-services/
-%{_datadir}/dbus-1/system-services/org.kernel.TCMUService1.service
-%{_unitdir}/tcmu-runner.service
-%dir %{_libdir}/tcmu-runner/
-%{_libdir}/tcmu-runner/*.so
-%{_mandir}/man8/*
-%doc README.md LICENSE.LGPLv2.1 LICENSE.Apache2
-%dir %{_sysconfdir}/tcmu/
-%config %{_sysconfdir}/tcmu/tcmu.conf
-%config(noreplace) %{_sysconfdir}/logrotate.d/tcmu-runner
-%ghost %attr(0644,-,-) %{_sysconfdir}/tcmu/tcmu.conf.old
-%ghost %attr(0644,-,-) %{_sysconfdir}/logrotate.d/tcmu-runner.bak/tcmu-runner
-
-%files -n libtcmu
-%{_libdir}/libtcmu*.so.*
-
-%files -n libtcmu-devel
-%{_libdir}/libtcmu*.so
-
-</code></pre>
-<h5 id="构建-rpm">构建 RPM</h5>
-<ul>
-<li>例如构建 wget:</li>
-</ul>
-<blockquote>
-<p><code>rpmbuild -v -bb --clean SPECS/wget.spec</code></p>
-</blockquote>
-<p>此命令使用指定的 spec 文件构建一个二进制包（-bb 表示 “构建二进制包”），还会生成详细的输出（-v）。构建实用程序在生成包之后删除构建树（--clean）。如果还希望构建源 RPM，指定 -ba（“构建所有包”）来代替 -bb。（查看 rpmbuild 清单页面，了解完整的选项列表。）</p>
-<ul>
-<li>rpmbuild 执行以下步骤：
-<ul>
-<li>读取并解析 wget.spec 文件。</li>
-<li>运行 %prep 节，将源代码解压到临时目录。在这里，临时目录为 BUILD。</li>
-<li>运行 %build 节，编译代码。</li>
-<li>运行 %install 节，将代码安装到构建机器上的目录中。</li>
-<li>从 %files 节读取文件列表，将它们收集到一起，然后创建一个二进制 RPM（和源 RPM 文件，如果已选择）。</li>
-</ul>
-</li>
-</ul>
-<h4 id="安装流程">安装流程</h4>
-<figure data-type="image" tabindex="3"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210226151530.png" alt="20210226151530" loading="lazy"></figure>
-<ul>
-<li><code>rpm -ivh package-name</code>
-<ul>
-<li>-i：install的意思，安装</li>
-<li>-v：查看更详细的安装信息画面（provide more detailed output）</li>
-<li>-h：以安装信息栏显示安装进度</li>
-</ul>
-</li>
-</ul>
-<h5 id="错误处理">错误处理</h5>
-<ul>
-<li>安装rpm包时提示错误：依赖检测失败: <code>--nodeps --force</code></li>
-</ul>
-<pre><code class="language-cmd">[root@localhost ~]# rpm -ivh tcmu-runner-2.0.1-0.el7.x86_64.rpm 
-错误：依赖检测失败：
-	libhcs_obj_util.so()(64bit) 被 tcmu-runner-2.0.1-0.el7.x86_64 需要
-
-[root@localhost ~]# rpm -ivh tcmu-runner-2.0.1-0.el7.x86_64.rpm --nodeps --force
-准备中...                          ################################# [100%]
-正在升级/安装...
-   1:tcmu-runner-2.0.1-0.el7          ################################# [100%]
-[root@localhost ~]# systemctl status tcmu-runner
-● tcmu-runner.service - LIO Userspace-passthrough daemon
-   Loaded: loaded (/usr/lib/systemd/system/tcmu-runner.service; disabled; vendor preset: disabled)
-   Active: inactive (dead)
-     Docs: man:tcmu-runner(8)
-</code></pre>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Reading Group Notes]]></title>
-        <id>https://blog.shunzi.tech/post/ReadingGroup/</id>
-        <link href="https://blog.shunzi.tech/post/ReadingGroup/">
-        </link>
-        <updated>2021-02-19T08:37:41.000Z</updated>
-        <summary type="html"><![CDATA[<blockquote>
-<ul>
-<li>参加 Systems Reading Group 记录的论文笔记。</li>
-</ul>
-</blockquote>
-]]></summary>
-        <content type="html"><![CDATA[<blockquote>
-<ul>
-<li>参加 Systems Reading Group 记录的论文笔记。</li>
-</ul>
-</blockquote>
-<!--more-->
-<h1 id="system-reading-group">System Reading Group</h1>
-<ul>
-<li>Group 介绍以及 Presentation 安排： https://learn-sys.github.io/cn/reading/</li>
-<li>THU AOS 2020: http://os.cs.tsinghua.edu.cn/oscourse/AOS2020</li>
-</ul>
-<h2 id="week-1-operating-system">Week 1: Operating System</h2>
-<h3 id="course-notes">Course Notes</h3>
-<ul>
-<li>Video: THU AOS P7 - P11</li>
-</ul>
-<h4 id="os-architecture-structure">OS Architecture &amp; Structure</h4>
-<ul>
-<li><strong>OS Structure</strong>:
-<ul>
-<li>Simple kernel</li>
-<li>Monolithic kernel</li>
-<li>Micro kernel</li>
-<li>Exokernel</li>
-<li>VMM(Virtual Machine Monitor), etc...</li>
-</ul>
-</li>
-<li><strong>Monolithic kernel</strong>
-<ul>
-<li>UNIX Arch<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210219163131.png" alt="20210219163131" loading="lazy"></li>
-<li>Linux Arch<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210219163153.png" alt="20210219163153" loading="lazy"></li>
-</ul>
-</li>
-<li><strong>Micro kernel</strong>
-<ul>
-<li><strong>微内核：功能相对较少的内核，只提供某些核心功能。从而相比于单体内核，把很多单体内核中的事情放到用户空间去做，解耦了内核的各个 features，让整个系统的稳定性和灵活性得到了提升。但也就因为 IPC 的开销导致性能表现不尽如人意。</strong></li>
-<li>Kernel with minimal features</li>
-<li>Moves as much from the kernel into user space
-<ul>
-<li>Address spaces</li>
-<li>Interprocess communication (IPC)</li>
-<li>Scheduling</li>
-</ul>
-</li>
-<li>Benefits
-<ul>
-<li>Flexibility</li>
-<li>Safety</li>
-<li>Modularity</li>
-</ul>
-</li>
-<li>Detriments (Poor Performance)
-<ul>
-<li>Address spaces</li>
-<li>Interprocess communication (IPC)</li>
-<li>Scheduling</li>
-</ul>
-</li>
-<li><strong>Mach</strong><br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210219165141.png" alt="20210219165141" loading="lazy"></li>
-<li><strong>L4</strong> - Microkernel– L4Second generation microkernel
-<ul>
-<li>synchronous IPCs –&gt; async IPCs (like epoll in Linux)</li>
-<li>smaller, Mach 3(330 KB) –&gt; L4 (12KB)</li>
-<li>IPC security checks moved to user process</li>
-<li>IPC is hardware dependent</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><strong>Exokernel</strong>
-<ul>
-<li><strong>Exokernel 要做的事情其实是把内核也近乎给 PASS 掉，尽可能减少抽象层次，允许应用程序直接访问硬件，而ExoKernel只负责保护和分配系统资源。说白了就是把硬件资源都直接交给应用程序自己来组织了，因为有大量的应用程序想要自己独立控制可管理硬件，而不需要你操作系统层面的过多干涉。</strong><br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210219165849.png" alt="20210219165849" loading="lazy"><br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210219165610.png" alt="20210219165610" loading="lazy"></li>
-</ul>
-</li>
-</ul>
-<h3 id="paper-1-the-multikernel-a-new-os-architecture-for-scalable-multicore-systems">Paper 1: The Multikernel: A new OS architecture for scalable multicore systems</h3>
-<ul>
-<li><strong>SOSP09</strong></li>
-<li><strong>SIGOPS Hall of Fame Award 2020</strong></li>
-</ul>
-<h4 id="abstract">Abstract</h4>
-<ul>
-<li>普通计算机系统包含越来越多的处理器核心，并呈现出越来越多的架构权衡，包括内存层次结构、互连、指令集和变体，以及IO配置。 以前的高性能计算系统在特定情况下进行了扩展，但是现代客户机和服务器工作负载的动态特性，加上不可能针对所有工作负载和硬件变体静态地优化操作系统，对操作系统结构构成了严重的挑战。</li>
-<li>我们认为，迎接未来多核硬件挑战的最好方法是拥抱机器的网络化本质，重新思考使用来自分布式系统的思想的操作系统架构。我们研究了一种新的操作系统结构，即 Multikernel，它将机器视为一个由独立核心组成的网络，假定在最低层次上没有核间共享，并将传统的操作系统功能转移到一个通过消息传递进行通信的分布式进程系统。</li>
-<li>我们已经实现了一个多内核操作系统来证明这种方法是有前途的，并且我们描述了操作系统的传统的可伸缩性问题(如内存管理)是如何通过消息有效地重新解决的，以及如何利用分布式系统和网络的洞察力。在多核系统上对我们的原型的评估表明，即使在现在的机器上，多内核的性能也可以与传统的相媲美，并且可以更好地扩展以支持未来的硬件。</li>
-</ul>
-<h4 id="problems">Problems</h4>
-<ul>
-<li>随着不断变化的技术对摩尔定律的限制，处理器架构变得越来越多样化，且逐渐转向异构化，并向可扩展的架构发展，以适应高性能的应用。传统的单体操作系统在解决可伸缩性问题和针对不同硬件结构进行优化方面面临着巨大的挑战。
-<ul>
-<li>Systems are increasingly diverse</li>
-<li>Cores are increasingly diverse</li>
-<li>The interconnect matters</li>
-<li>Messages cost less than shared memory</li>
-<li>Cache coherence is not a panacea</li>
-<li>Messages are getting easier</li>
-</ul>
-</li>
-<li>本文作者尝试通过在内核之间使用显式消息传递和在内核之间复制内核状态来解决这个问题，而不是使用共享内存模型。他们的另一个主要目标是使这个操作系统与硬件无关，不针对任何机器架构。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210220221342.png" alt="20210220221342" loading="lazy"></li>
-</ul>
-<h4 id="contributions">Contributions</h4>
-<ul>
-<li>多内核操作系统的主要贡献嵌入在它们的三个设计原则中：
-<ul>
-<li>通过消息传递显式地实现内核间通信</li>
-<li>使操作系统结构与硬件无关</li>
-<li>在内核之间复制内核状态</li>
-</ul>
-</li>
-<li>该系统侧重于非共享内存模型，通过消息的显式通信来维护缓存的一致性。基于以上原则，设计实现了 MultiKernel 原型 Barrelfish<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210224113033.png" alt="20210224113033" loading="lazy"></li>
-</ul>
-<h2 id="week-2-virtualization">Week 2: Virtualization</h2>
-<h3 id="course-notes-2">Course Notes</h3>
-<ul>
-<li>Video
-<ul>
-<li>THU AOS P12 - P21</li>
-<li>IPADS MOS P70 - P87</li>
-</ul>
-</li>
-</ul>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[MapReduce: Simplified Data Processing on Large Clusters]]></title>
-        <id>https://blog.shunzi.tech/post/MapReduce/</id>
-        <link href="https://blog.shunzi.tech/post/MapReduce/">
-        </link>
-        <updated>2021-02-08T08:37:41.000Z</updated>
-        <summary type="html"><![CDATA[<blockquote>
-<ul>
-<li>该篇文章来自于 OSDI2004，Google 当年率先提出的 MapReduce 框架，开启了分布式和大数据的纪元。</li>
-</ul>
-</blockquote>
-]]></summary>
-        <content type="html"><![CDATA[<blockquote>
-<ul>
-<li>该篇文章来自于 OSDI2004，Google 当年率先提出的 MapReduce 框架，开启了分布式和大数据的纪元。</li>
-</ul>
-</blockquote>
-<!--more-->
-<h2 id="before-beginning">Before Beginning</h2>
-<ul>
-<li>为什么要读这篇论文呢？其实这篇文章之前也已经简单看过了，只是最近开始刷 MIT6.824，本来是想直接做相关 Lab 的，但是发现还是有整理不清楚的思路，觉得还是有必要回顾一下，那就多花点时间继续研读吧~</li>
-<li>网上关于 6.824 以及 MapReduce 的资料很多了，我在这里只是做一些简单的记录，如果有发现其他大佬做的比较好的笔记，也会贴在这里，以供膜拜学习。我的 6.824 系列的的博客介绍大抵都是如此。</li>
-<li>话不多说，学习开始~</li>
-</ul>
-<h2 id="abstract">Abstract</h2>
-<ul>
-<li><strong>大致流程</strong>: 用户指定一个 map 函数来处理键/值对以生成一组中间键/值对，以及一个 reduce 函数来合并与同一中间键相关的所有中间值</li>
-<li><strong>为什么这么做？</strong> 是想充分利用不同机器的并行性来处理大量的数据，分别执行 map 和 reduce 任务来完成大数据任务，提高每个 host 的利用率。（也就是分布式系统的原型）</li>
-<li><strong>需要解决的问题：</strong>
-<ul>
-<li>数据输入的切分</li>
-<li>不同机器上执行的任务的调度</li>
-<li>机器故障处理</li>
-<li>机器间通信的管理</li>
-</ul>
-</li>
-</ul>
-<h2 id="introduction">Introduction</h2>
-<ul>
-<li><strong>根本矛盾</strong>：少数据量时单机能够直接运行简单的任务来完成相关计算，但面对大数据量的情况下，引入多计算实例组成的系统的复杂性和本身计算任务的简单性之间的矛盾。</li>
-<li><strong>思想起源</strong>：来自于 Lisp 语言的函数式编程思想中的 map/reduce 函数。
-<ul>
-<li>在 lisp 语言中，map 作为一个输入函数接受一个序列，然后处理每个序列中 value 值，然后 reduce 将最终的 map 计算出来的结果整理成最终程序输出。</li>
-</ul>
-</li>
-</ul>
-<h2 id="programming-model">Programming Model</h2>
-<ul>
-<li>MapReduce 本质是一种编程模型
-<ul>
-<li>Map: 由用户编写，接受一个输入对并生成一组中间键/值对</li>
-</ul>
-</li>
-</ul>
-<pre><code class="language-Java">// map (k1,v1) → list(k2,v2)
-map(String key, String value): 
-    // key: document name 
-    // value: document contents 
-    for each word w in value: 
-        EmitIntermediate(w, &quot;1&quot;);
-</code></pre>
-<ul>
-<li>Reduce: 也由用户编写，接受一个中间键和该键的一组值。它将这些值合并在一起，形成一个可能更小的值集</li>
-</ul>
-<pre><code class="language-Java">// reduce (k2,list(v2)) → list(v2)
-reduce(String key, Iterator values): 
-    // key: a word 
-    // values: a list of counts 
-    int result = 0; 
-    for each v in values: 
-        result += ParseInt(v); 
-    Emit(AsString(result));
-</code></pre>
-<ul>
-<li><strong>应用实例</strong>：
-<ul>
-<li>Distributed Grep</li>
-<li>Count of URL Access Frequency：map &lt;URL, 1&gt;, reduce &lt;URL, total count&gt;</li>
-<li>Reverse Web-Link Graph: map &lt;target, source&gt;, reduce &lt;target, list(source)&gt;</li>
-<li>Term-Vector per Host</li>
-<li>Inverted Index: map &lt;word, document ID&gt;, reduce &lt;word, list(document ID)&gt;</li>
-<li>Distributed Sort</li>
-</ul>
-</li>
-</ul>
-<h2 id="implementation">Implementation</h2>
-<ul>
-<li>Map 函数分布在多个机器上，相应地自动将输入数据划分为 M 份，然后可以由分布了 Map 函数的机器并行处理这些数据。而对于 Reduce 则是将中间数据划分为 R 份，通常需要使用一个分割函数，常见的就是 <code>hash(key) mod R</code> 来将中间 Key 进行区分。</li>
-<li>下图演示了整个 MapReduce 的流程，当用户程序调用 MapReduce 函数时将按照以下顺序执行：
-<ul>
-<li>
-<ol>
-<li>MapReduce Library 首先将输入文件划分为 M 个分片，每个分片大小通常为 16MB or 64MB，可以由用户控制，然后开始将程序拷贝到各个机器上，也就是图中的 <strong>fork</strong> 过程</li>
-</ol>
-</li>
-<li>
-<ol start="2">
-<li>fork 的过程中会有一个特殊的情况，即 master 节点上运行的程序。剩下的 worker 对应执行的任务都是由 master 分配的，有 M 个 map task 和 R 个 reduce task 需要分配，master 选择空闲的 worker 来执行 map 或者 reduce task。</li>
-</ol>
-</li>
-<li>
-<ol start="3">
-<li>被分配到 map task 的 worker 首先读取分片的数据内容，它从输入数据中解析键/值对，并将每对键/值传递给用户定义的 Map 函数，然后由 Map 产生的中间键值对将被缓冲在内存中；</li>
-</ol>
-</li>
-<li>
-<ol start="4">
-<li>缓冲在内存中的中间数据将定期执行刷回操作写到磁盘，然后再由用户定义的分割函数执行将中间数据分割为 R 个区域，这些原本缓冲在内存中的数据持久化到磁盘之后的地址将传递给 master，然后 master 负责告诉 reduce task worker 这些数据在哪里。</li>
-</ol>
-</li>
-<li>
-<ol start="5">
-<li>执行 reduce task 的 worker 在接收到来自 master 的数据地址的通知之后，使用 RPC 来从 map worker 的本地磁盘中读取数据，当一个 reducer 读取到了所有的中间数据之后，就可以根据中间键对它进行排序，以便将所有出现的相同键组合在一起。之所以需要排序，是因为通常有许多不同的键映射到同一个reduce任务。如果中间数据量太大，无法装入内存，则使用外部排序。</li>
-</ol>
-</li>
-<li>
-<ol start="6">
-<li>reduce worker 迭代已排序的中间数据，对于遇到的每个惟一的中间键，它将键和相应的中间值集传递给用户的 reduce 函数。Reduce 函数的输出被追加到这个 Reduce 分区的最终输出文件中；</li>
-</ol>
-</li>
-<li>
-<ol start="7">
-<li>所有的 map 任务和 reduce 任务都完成后，master 唤醒用户程序。此时，用户程序中的MapReduce 调用返回到用户程序。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210208135434.png" alt="20210208135434" loading="lazy"></li>
-</ol>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="master-data-structures">Master Data Structures</h3>
-<ul>
-<li>master 节点保存了几个数据结构：
-<ul>
-<li>对于每个 map 和 reduce task，它存储了 task 对应的状态（idle, in-progress, completed）</li>
-<li>worker machine 的标识（非空闲任务运行所在的机器）</li>
-</ul>
-</li>
-<li>master 是一个管道，通过它将中间文件区域的位置从 map task 传播到 reduce task。因此，对于每个完成的 map task，master 存储了 map task 产生的 R 个中间文件区域的位置和大小，当 map task 完成时，master 将接收对该位置和大小信息的更新。信息被递增地推送给正在进行 reduce task 的 worker。</li>
-</ul>
-<h3 id="fault-tolerance">Fault Tolerance</h3>
-<ul>
-<li>由于 MapReduce 库被设计用来帮助处理使用成百上千台机器的大量数据，所以这个库必须能够优雅地容忍机器故障。</li>
-</ul>
-<h4 id="worker-failure">Worker Failure</h4>
-<ul>
-<li>master 周期地 ping 每个 worker，如果在确定时间内未收到对应的响应，则认为该 worker 宕机，标记该 worker 为 failed，由 worker <strong>已经完成</strong>的任何 map task 都将被重置回初始的空闲 <em>idle</em> 状态，因此有资格对其他 worker 进行重新调度，类似地，在一个失败的 worker 上<strong>正在进行</strong>的任何 map task 或reduce task 也会被重置为空闲，并可以重新调度。</li>
-<li>在发生故障时，完成的 map task 将被重新执行，因为它们的输出存储在故障机器的本地磁盘上，因此无法访问。<strong>已完成的 reduce 任务</strong>不需要重新执行，因为它们的输出存储在全局文件系统中。</li>
-<li>假设一个 map task A 一开始由 A 执行，之后由 B 执行（因为 A failed），所有正在执行 reduce task 的 workers 将被通知重新执行，任何尚未从 worker A 读取数据的 reduce task 都将从 worker B 读取数据。</li>
-</ul>
-<h4 id="master-failure">Master Failure</h4>
-<ul>
-<li>让 master 定期对上面描述的 master 节点存取的数据结构做 checkpoint 很容易。如果 master task 失效，可以从最后一个检查点状态启动一个新的副本。然而，考虑到只有一个主机，它的失败是不太多见，因此，如果 master 失败，我们当前的实现将终止 MapReduce 计算。客户端可以检查这种情况，如果他们愿意，可以重试 MapReduce 操作。</li>
-</ul>
-<h4 id="semantics-in-the-presence-of-failures">Semantics in the Presence of Failures</h4>
-<ul>
-<li>当用户提供的 map 和 reduce 操作符是其输入值的确定性函数时，我们的分布式实现产生的输出与整个程序的非故障顺序执行产生的输出相同。</li>
-<li>我们依赖 map 和 reduce task 输出的原子提交来实现该属性。每个正在进行的任务都将其输出写入私有临时文件。一个 reduce task 生成一个这样的文件，map task 生成 R 个这样的文件(每个 reduce task 一个)。当 map task 完成时，worker 向 master 发送一条消息，并在消息中包含 R 临时文件的名称，如果 master 接收到一个<strong>已经完成</strong>的 map task 的完成消息，它将忽略该消息。否则，它将在主数据结构中记录 R 文件的名称。</li>
-<li>当一个 reduce task 完成之后，reduce worker 自动地将其临时输出文件重命名为最终输出文件。如果在多台机器上执行相同的 reduce 任务，那么将对相同的最终输出文件执行多个 rename 调用。我们依赖于底层文件系统提供的原子重命名操作，以确保最终文件系统状态只包含一次执行 reduce 任务所产生的数据。</li>
-<li>我们的 map 和 reduce 操作符绝大多数都是确定性的，在这种情况下，我们的语义等价于顺序执行，这使得程序员可以很容易地推断他们的程序行为。当 map 或 reduce 操作符是不确定的时，我们提供较弱但仍然合理的语义。在存在非确定性操作符的情况下，特定 reduce 任务 R1 的输出等价于由非确定性程序的顺序执行产生的 R1 的输出。然而，不同 reduce 任务 R2 的输出可能对应于非确定性程序的不同顺序执行产生的 R2 输出。</li>
-<li>考虑 map 任务 M 和 reduce 任务 R1 和 R2。设 e(Ri) 是所承诺的 Ri 的执行(只有一个这样的执行)。由于 e(R1) 可能读取了 M 的一次执行产生的输出，而 e(R2) 可能读取了 M 的另一次执行产生的输出，所以语义较弱。</li>
-</ul>
-<h3 id="locality">Locality</h3>
-<ul>
-<li>在我们的计算环境中，网络带宽是一个相对稀缺的资源。通过利用输入数据(由 GFS 管理)存储在组成集群的机器的本地磁盘这一事实，我们节约了网络带宽。GFS 将每个文件划分为64 MB的块，并在不同的机器上存储每个块的多个副本(通常是3个副本)，MapReduce master 将输入文件的位置信息考虑在内，并尝试在包含相应输入数据副本的机器上调度map任务。如果失败，它将尝试调度靠近该任务输入数据副本的 map 任务(例如，在与包含数据的机器在同一网络交换机上的工作机器上)。当在集群中相当一部分 worker 上运行大型MapReduce 操作时，大部分输入数据都是在本地读取的，不会消耗网络带宽</li>
-</ul>
-<h3 id="task-granularity">Task Granularity</h3>
-<ul>
-<li>如上所述，我们将 map 阶段细分为 M 个部分，将 reduce 阶段细分为 R 个部分。理想情况下，M 和 R 应该远远大于工作机器的数量。让每个 worker 执行许多不同的任务可以改善动态负载平衡，并在 worker 失败时加快恢复速度:它完成的许多 map 任务可以分散到所有其他 worker 机器上。</li>
-<li>在我们的实现中，M 和 R 的大小最多有多大是有实际限制的，因为如上所述，master 必须做出 O(M + R) 调度决策，并在内存中保持 O(M*R) 状态。(内存使用的常量是很小的:状态的 O(M∗R) 部分由每个 map任务/reduce任务对大约一个字节的数据组成。)</li>
-<li>此外，R 常常受到用户的限制，因为每个 reduce 任务的输出都以单独的输出文件结束。在实践中，我们倾向于选择 M，以便每个单独的任务大约有 16MB 到 64MB 的输入数据(以便上面描述的局部性优化最有效)，并且我们将 R 设为预期使用的工作机器数量的小倍数。我们经常使用 2000 台 worker 机器进行 M = 200000 和 R = 5000 的 MapReduce 计算。</li>
-</ul>
-<h3 id="backup-tasks">Backup Tasks</h3>
-<ul>
-<li>导致 MapReduce 操作总时间延长的一个常见原因是“掉线”(straggler)。一种需要异常长时间才能完成计算过程中最后几个 map 或 reduce 任务之一的机器。掉队者出现的原因有很多。例如，磁盘有问题的机器可能会经常出现可纠正错误，导致读性能从 30MB/s 降至 1MB/s。集群调度系统可能已经调度了机器上的其他任务，由于 CPU、内存、本地磁盘或网络带宽的竞争，导致它执行 MapReduce 代码的速度变慢。我们最近遇到的一个问题是，机器初始化代码中的一个bug导致了处理器缓存被禁用:受影响机器的计算速度降低了 100 倍以上。</li>
-<li>我们有一个一般性的机制来缓解掉队者的问题。当 MapReduce 操作接近完成时，master 会对剩余的正在执行的任务进行备份。只要主执行或备份执行完成，任务就被标记为完成。我们已经调优了这种机制，因此它通常不会增加操作使用的计算资源超过几个百分点。我们发现，这大大减少了完成大型 MapReduce 操作的时间。以5.3中所述的排序程序为例，关闭备份机制后，排序程序完成的时间会增加 44%。</li>
-</ul>
-<h2 id="refinements">Refinements</h2>
-<h3 id="partitioning-function">Partitioning Function</h3>
-<ul>
-<li>MapReduce 的用户指定他们想要的 reduce 任务/输出文件的数量(R)，使用中间键上的分区函数在这些任务之间对数据进行分区。提供了一个默认的分区函数，使用哈希(例如&quot; hash(key) mod R &quot;)。这往往会导致相当平衡的分区。然而，在某些情况下，通过键的其他函数来分区数据是有用的。例如，有时输出键是url，我们希望单个主机的所有条目都在同一个输出文件中结束。为了支持这种情况，MapReduce 库的用户可以提供一个特殊的分区函数。例如，使用&quot; hash(Hostname(urlkey)) mod R &quot;作为分区函数会导致来自同一主机的所有 url 最终出现在同一个输出文件中。</li>
-</ul>
-<h3 id="ordering-guarantees">Ordering Guarantees</h3>
-<ul>
-<li>我们保证在给定的分区中，中间键/值对按键的递增顺序进行处理。这种排序保证使得为每个分区生成有序的输出文件变得很容易，当输出文件格式需要支持按键进行有效的随机访问查找，或者输出的用户发现对数据进行排序很方便时，这很有用。</li>
-</ul>
-<h3 id="combiner-function">Combiner Function</h3>
-<ul>
-<li>在某些情况下，每个 map 任务产生的中间键有显著的重复，并且用户指定的 Reduce 函数是可交换的和关联的。单词计数示例就是一个很好的例子。由于单词频率倾向于遵循 Zipf 分布，每个 map 任务将产生数百或数千个 &lt;the, 1&gt; 形式的记录。所有这些计数将通过网络发送到一个 reduce 任务，然后由 reduce 函数相加产生一个数字。我们允许用户指定一个可选的Combiner函数，该函数在通过网络发送数据之前对数据进行部分合并。</li>
-<li>Combiner 函数在每一个执行 map task 上的机器执行，通常使用相同的代码来实现 combiner 和 reduce 函数，reduce 函数和 combiner 函数之间的唯一区别是 MapReduce 库如何处理函数的输出。reduce 函数的输出被写入最终的输出文件。combiner 函数的输出被写入一个中间文件，该文件将被发送到reduce 任务。</li>
-<li>部分 Combine 大大加快了 MapReduce 操作的某些类。</li>
-</ul>
-<h3 id="input-and-output-types">Input and Output Types</h3>
-<ul>
-<li>MapReduce 库支持以几种不同的格式读取输入数据。text 模式的输入将每一行视为键/值对：键是文件中的偏移量，值是行内容。另一种常见的支持格式存储按键排序的键/值对序列。每个输入类型实现都知道如何将自己分割成有意义的范围，以便作为单独的 map 任务进行处理(例如，文本模式的范围分割确保范围分割只发生在行边界)。用户可以通过提供一个简单的 <em>reader</em> 接口的实现来添加对新输入类型的支持，尽管大多数用户只使用少数预定义输入类型中的一种。</li>
-<li><em>reader</em> 并不一定需要提供从文件中读取的数据。例如，很容易定义从数据库或映射在内存中的数据结构中读取记录的 <em>reader</em>。</li>
-<li>以类似的方式，我们支持一组输出类型来生成不同格式的数据，并且用户代码很容易添加对新输出类型的支持。</li>
-</ul>
-<h3 id="side-effects">Side-effects</h3>
-<ul>
-<li>在某些情况下，MapReduce 的用户发现从他们的 map 或 reduce 操作生成辅助文件作为额外的输出是很方便的。我们依靠应用程序 writer 使这些副作用具有原子性和幂等性。通常，应用程序会写入一个临时文件，并在完全生成该文件后自动重命名该文件。</li>
-<li>我们不支持单个任务生成的多个输出文件的原子两阶段提交。因此，产生具有跨文件一致性要求的多个输出文件的任务应该是确定的。这种限制在实践中从来就不是问题。</li>
-</ul>
-<h3 id="skipping-bad-records">Skipping Bad Records</h3>
-<ul>
-<li>有时，用户代码中的错误会导致 Map 或 Reduce 函数在特定记录上崩溃。此类 bug 会导致 MapReduce 操作无法完成。通常的做法是修复 bug，但有时这是不可行的;这个 bug 可能存在于源代码不可用的第三方库中。此外，有时忽略一些记录是可以接受的，例如在对一个大数据集进行统计分析时。我们提供了一个可选的执行模式，MapReduce 库会检测哪些记录导致确定性崩溃，并跳过这些记录以便继续前进。</li>
-<li>每个工作进程都安装一个信号处理程序来捕获分割违规和总线错误。在调用 Map 或 Reduce 操作之前，MapReduce 库会将参数的序号存储在全局变量中。如果用户代码产生信号，信号处理器发送一个包含序列号的“最后一口气” UDP 包给 MapReduce master。当主服务器在一个特定的记录上看到多个失败时，它指示在下一次重新执行对应的 Map 或 Reduce 任务时应该跳过该记录。</li>
-</ul>
-<h3 id="local-execution">Local Execution</h3>
-<ul>
-<li>在 Map 或 Reduce 函数中调试问题可能会很棘手，因为实际的计算发生在分布式系统中，通常在几千台机器上，由 master 动态地做出工作分配决策。为了方便调试、分析和小规模测试，我们开发了 MapReduce 库的替代实现，在本地机器上顺序执行 MapReduce 操作的所有工作。控件提供给用户，以便计算可以限制到特定的映射任务。用户可以用一个特殊的标志来调用他们的程序，然后可以很容易地使用任何他们认为有用的调试或测试工具(例如gdb)。</li>
-</ul>
-<h3 id="status-information">Status Information</h3>
-<ul>
-<li>主服务器运行一个内部HTTP服务器，并导出一组状态页面供人们使用。状态页面显示了计算的进度，例如有多少任务已经完成，有多少任务正在进行，输入字节数，中间数据字节数，输出字节数，处理速率等。这些页面还包含指向每个任务生成的标准错误和标准输出文件的链接。用户可以使用这些数据来预测计算将花费多长时间，以及是否应该向计算中添加更多的资源。这些页面还可以用于计算何时会比预期的慢得多。</li>
-<li>此外，顶级状态页面显示哪些 worker 失败了，以及当他们失败时正在处理哪些 map 和 reduce 任务。当试图诊断用户代码中的错误时，此信息非常有用。</li>
-</ul>
-<h3 id="counters">Counters</h3>
-<ul>
-<li>MapReduce 库提供了一个计数器来计算各种事件的发生次数。例如，用户代码可能需要计算已处理的字的总数或索引的德文文档的数量，等等。</li>
-<li>要使用这个功能，用户代码创建一个命名的计数器对象，然后在 Map 或 Reduce 函数中适当地增加计数器。例如:</li>
-</ul>
-<pre><code class="language-C++">Counter* uppercase; 
-uppercase = GetCounter(&quot;uppercase&quot;);
-map(String name, String contents): 
-  for each word w in contents: 
-    if (IsCapitalized(w)): 
-      uppercase-&gt;Increment(); 
-    EmitIntermediate(w, &quot;1&quot;);
-</code></pre>
-<ul>
-<li>来自各个 worker 机器的计数器值定期传播到 master (在 ping 响应中附带)。master 聚合成功的 map 和 reduce 任务的计数器值，并在 MapReduce 操作完成时将它们返回给用户代码。当前计数器值也显示在 master 状态页面上，以便人们可以观看实时计算的进度。在聚合计数器值时，master 消除了重复执行同一个 map 或 reduce 任务的影响，以避免重复计算。(重复执行可能是由于我们使用了备份任务以及由于失败而重新执行任务引起的。)</li>
-<li>一些计数器值由 MapReduce 库自动维护，例如处理的输入键/值对的数量和产生的输出键/值对的数量。</li>
-<li>用户已经发现 counter 工具对于检查 MapReduce 操作的行为是非常有用的。例如，在一些 MapReduce 操作中，用户代码可能希望确保生成的输出对的数量恰好等于处理的输入对的数量，或者确保处理的德文文档的比例在处理的文档总数的某个可容忍的比例内。</li>
-</ul>
-<h2 id="conclusion">Conclusion</h2>
-<ul>
-<li>MapReduce编程模型已经在谷歌上成功地用于许多不同的目的。我们认为这种成功有几个原因。首先，该模型易于使用，即使对于没有并行和分布式系统经验的程序员也是如此，因为它隐藏了并行化、容错、局部性优化和负载平衡的细节。其次，大量的问题可以通过MapReduce计算很容易地表达出来。例如，MapReduce被用于谷歌生产web搜索服务的数据生成、排序、数据挖掘、机器学习以及许多其他系统。第三，我们开发了一个MapReduce的实现，它可以扩展到由数千台机器组成的大型机器集群。该实现有效地利用了这些机器资源，因此适合用于在谷歌中遇到的许多大型计算问题。</li>
-<li>我们从这项工作中学到了一些东西。首先，对编程模型的限制使得并行化和分布式计算变得容易，并使这些计算具有容错性。其次，网络带宽是一种稀缺资源。因此，我们系统中的许多优化都旨在减少通过网络发送的数据量:局部性优化允许我们从本地磁盘读取数据，将中间数据的单个副本写入本地磁盘可以节省网络带宽。第三，冗余执行可以用来减少慢速机器的影响，并处理机器故障和数据丢失。</li>
-</ul>
-<pre><code class="language-C++">#include &quot;mapreduce/mapreduce.h&quot;
-// 用户实现map函数
-class WordCounter : public Mapper {
- public:
-    virtual void Map(const MapInput&amp; input) {
-      const string&amp; text = input.value();
-      const int n = text.size();
-      for (int i = 0; i &lt; n; ) {
-        // 跳过前导空格
-        while ((i &lt; n) &amp;&amp; isspace(text[i]))
-             i++;
-         // 查找单词的结束位置
-         int start = i;
-         while ((i &lt; n) &amp;&amp; !isspace(text[i]))
-              i++;
-         if (start &lt; i)
-            Emit(text.substr(start,i-start),&quot;1&quot;);
-        }
- 
-     }
- 
-};
- 
-REGISTER_MAPPER(WordCounter);
-// 用户实现reduce函数
-class Adder : public Reducer {
-    virtual void Reduce(ReduceInput* input) {
-              // 迭代具有相同key的所有条目,并且累加它们的value
-              int64 value = 0;
-              while (!input-&gt;done()) {
-                     value += StringToInt(input-&gt;value());
-                     input-&gt;NextValue();
-              }
-              // 提交这个输入key的综合
-              Emit(IntToString(value));
-       }
- 
-};
-REGISTER_REDUCER(Adder);
-int main(int argc, char** argv) {
-       ParseCommandLineFlags(argc, argv);
-       MapReduceSpecification spec;
-       // 把输入文件列表存入&quot;spec&quot;
-       for (int i = 1; i &lt; argc; i++) {
-              MapReduceInput* input = spec.add_input();
-              input-&gt;set_format(&quot;text&quot;);
-              input-&gt;set_filepattern(argv[i]);
-              input-&gt;set_mapper_class(&quot;WordCounter&quot;);
-       }
-        //指定输出文件:
-       // /gfs/test/freq-00000-of-00100
-       // /gfs/test/freq-00001-of-00100
-      // ...
-       MapReduceOutput* out = spec.output();
-       out-&gt;set_filebase(&quot;/gfs/test/freq&quot;);
-       out-&gt;set_num_tasks(100);
-       out-&gt;set_format(&quot;text&quot;);
-       out-&gt;set_reducer_class(&quot;Adder&quot;);
-       // 可选操作:在map任务中做部分累加工作,以便节省带宽
-       out-&gt;set_combiner_class(&quot;Adder&quot;);
-       // 调整参数: 使用2000台机器,每个任务100MB内存
-       spec.set_machines(2000);
-       spec.set_map_megabytes(100);
-       spec.set_reduce_megabytes(100);
-       // 运行它
-       MapReduceResult result;
-       if (!MapReduce(spec, &amp;result)) abort();
-       // 完成: 'result'结构包含计数,花费时间,和使用机器的信息
-       return 0;
-</code></pre>
-<hr>
-<ul>
-<li>论文的部分到此结束，后面展开讲一下 MapReduce 的其他东西。</li>
-</ul>
-<h2 id="other">Other</h2>
-<ul>
-<li>MapReduce 最重要的贡献：MR takes care of, and hides, all aspects of distribution!</li>
-</ul>
-<h3 id="problems">Problems</h3>
-<ul>
-<li><strong>What if the master gives two workers the same Map() task?</strong>
-<ul>
-<li>Perhaps the master incorrectly thinks one worker died. it will tell Reduce workers about only one of them.</li>
-</ul>
-</li>
-<li><strong>What if the master gives two workers the same Reduce() task?</strong>
-<ul>
-<li>they will both try to write the same output file on GFS! atomic GFS rename prevents mixing; one complete file will be visible.</li>
-</ul>
-</li>
-<li><strong>What if a single worker is very slow -- a &quot;straggler&quot;?</strong>
-<ul>
-<li>perhaps due to flakey hardware. master starts a second copy of last few tasks.</li>
-</ul>
-</li>
-<li><strong>What if a worker computes incorrect output, due to broken h/w or s/w?</strong>
-<ul>
-<li>too bad! MR assumes &quot;fail-stop&quot; CPUs and software.</li>
-</ul>
-</li>
-</ul>
-<h3 id="current-status">Current status</h3>
-<ul>
-<li>Hugely influential (Hadoop, Spark, &amp;c).</li>
-<li>Probably no longer in use at Google.
-<ul>
-<li>Replaced by Flume / FlumeJava (see paper by Chambers et al).</li>
-<li>GFS replaced by Colossus (no good description), and BigTable.</li>
-</ul>
-</li>
-</ul>
-<h3 id="conclusion-2">Conclusion</h3>
-<ul>
-<li>MapReduce single-handedly made big cluster computation popular.
-<ul>
-<li>-Not the most efficient or flexible.</li>
-<li>+Scales well.</li>
-<li>+Easy to program -- failures and data movement are hidden.</li>
-</ul>
-</li>
-</ul>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[What is license for source code?]]></title>
-        <id>https://blog.shunzi.tech/post/license/</id>
-        <link href="https://blog.shunzi.tech/post/license/">
-        </link>
-        <updated>2021-02-06T08:37:41.000Z</updated>
-        <summary type="html"><![CDATA[<blockquote>
-<ul>
-<li>什么是源代码许可？以及如何选择源代码许可？困扰了很久的问题，查了下资料决定把这个坑埋了。</li>
-</ul>
-</blockquote>
-]]></summary>
-        <content type="html"><![CDATA[<blockquote>
-<ul>
-<li>什么是源代码许可？以及如何选择源代码许可？困扰了很久的问题，查了下资料决定把这个坑埋了。</li>
-</ul>
-</blockquote>
-<!--more-->
-<h3 id="开源许可长啥样">开源许可长啥样？</h3>
-<ul>
-<li>我们常常在 Github 上看到关于 License 的信息，仿佛 NB 点的项目都挂了个 License（啊没有不挂就不 NB 的意思），一般都长成下面这样，只是可能协议啥的会有区别。如 RocksDB 的 <a href="https://github.com/facebook/rocksdb">repo</a>，使用了 <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html">GPLv2</a> 和 <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0 License</a> 协议，然后 repo 内也有相应的协议文件与之对应，COPYING 和 LICENSE.Apache<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206203249.png" alt="20210206203249" loading="lazy"></li>
-</ul>
-<h3 id="到底啥是开源许可">到底啥是开源许可？</h3>
-<ul>
-<li>License 可能大家听说的相对于 Copyright 少一点。那么不妨先说啥是 Copyright。</li>
-</ul>
-<h4 id="copyrightc">Copyright(C)</h4>
-<ul>
-<li><strong>Copyright</strong>：中文译作版权，大家在一些数字媒体软件上可能感受的真切一点，比如某首歌只有部分音乐公司拥有其版权，那为什么有的公司没有版权就不能提供相关音乐的播放和下载服务呢，不妨拆词解义 copy + right，即复制的权利，说的简单点就是没有某个产品 Copyright 的公司就无法对该产品进行复制，就更别说进行修改发布了。</li>
-</ul>
-<blockquote>
-<p>百度百科：版权是对计算机程序、文学著作、音乐作品、照片、游戏，电影等的复制权利的合法所有权。除非转让给另一方，版权通常被认为是属于作者的。大多数计算机程序不仅受到版权的保护，还受软件许可证的保护。版权只保护思想的表达形式，而不保护思想本身。算法、数学方法、技术或机器的设计均不在版权的保护之列。</p>
-</blockquote>
-<ul>
-<li>如果有去公司实习或者工作过的同学应该就知道，往往在公司的项目里写相关代码的时候往往会有一条编程规范的限制，即 Copyright 的声明，许多 IDE 也有相关 Copyright 模板和自动生成插件的提供。如下为 RocksDB 源代码中关于 CopyRight 的声明。Copyright 约定了版权归属谁，并归定了这个软件的使用许可证方式。</li>
-</ul>
-<pre><code class="language-Java">// Copyright (c) 2011-present, Facebook, Inc.  All rights reserved.
-//  This source code is licensed under both the GPLv2 (found in the
-//  COPYING file in the root directory) and Apache 2.0 License
-//  (found in the LICENSE.Apache file in the root directory).
-
-package org.rocksdb;
-
-public abstract class Cache extends RocksObject {
-  protected Cache(final long nativeHandle) {
-    super(nativeHandle);
-  }
-}
-</code></pre>
-<ul>
-<li>Copyright 是作者或者创建者因为其原创性的工作，所拥有的复制，分发，出售以及其他一系列的排他性权利，如上所示代码声明了“这段代码的版权归属于 Facebook”，拥有一切版权保护的相关权利。</li>
-</ul>
-<h4 id="copyleftɔ">Copyleft(Ɔ)</h4>
-<ul>
-<li>其实还有个东西叫 <strong>Copyleft(Ɔ)</strong>，
-<ul>
-<li>“Copyleft”最初是为反对商业软件而生，但它并不是放弃版权。反对软件一切权利归作者私有，保护知识共享、权利共享。</li>
-<li>软件的版权归原作者所有，其它一切权利归任何人所有。用户和软件的作者享有除版权外的完全同等的权利，包括复制软件和重新发布修改过的软件的权利。</li>
-<li>自由软件在承认著作权的基础上，可以通过许可协议，与公众共享作品的其它权利</li>
-</ul>
-</li>
-</ul>
-<blockquote>
-<p>百度百科：著佐权（Copyleft）是一个由自由软件运动所发展的概念，是一种利用现有著作权体制来保护所有用户和二次开发者的自由的授权方式。在自由软件授权方式中增加著佐权条款之后，该自由软件除了允许使用者自由使用、散布、修改之外，著佐权许可证更要求使用者修改后的衍生作品必须要以同等的授权方式（除非许可证或者版权声明里面例外条款所规定的外）释出以回馈社会。</p>
-</blockquote>
-<ul>
-<li>所以正是因为 <strong>Copyleft(Ɔ)</strong> 的思想，才逐渐衍生出后来的 <strong>License</strong>。可以简单理解为 <code>Copyleft = Copyright+GPL</code></li>
-</ul>
-<h4 id="license">License</h4>
-<ul>
-<li>版权法默认禁止共享，也就是说，没有许可证的软件，就等同于保留版权，虽然开源了，用户只能看看源码，不能用，一用就会侵犯版权。所以软件开源的话，必须明确地授予用户开源许可证。</li>
-<li>License 是 Copyright 拥有者授予其他人处置其原创性成果的权利，如上代码版权声明所示，“Facebook 授予了这段代码 GPLv2 和 Apache2.0 的许可”。</li>
-<li>开放源码许可证是符合开放源码定义的许可证——简而言之，它们允许“<strong>自由</strong>”地使用、修改和共享软件。这里的自由其实是相对的，相应地需要遵守对应 License 下的规定。</li>
-<li>软件许可是告诉其他人，他们能够对您的代码做什么，不能做什么。</li>
-<li>大多数人将其许可文件放在仓库根目录的文件 <code>LICENSE.txt</code>（或 <code>LICENSE.md</code>）中，如 RocksDB 中的 COPYING 和 LICENSE.Apache。</li>
-<li>GPLv2 COPYING</li>
-</ul>
-<pre><code class="language-txt">                    GNU GENERAL PUBLIC LICENSE
-                       Version 2, June 1991
-
- Copyright (C) 1989, 1991 Free Software Foundation, Inc.,
- 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- Everyone is permitted to copy and distribute verbatim copies
- of this license document, but changing it is not allowed.
- ...
-</code></pre>
-<ul>
-<li>Apache2.0 LICENSE.Apache</li>
-</ul>
-<pre><code class="language-txt">
-
-                                 Apache License
-                           Version 2.0, January 2004
-                        http://www.apache.org/licenses/
-
-   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-   1. Definitions.
-   ...
-</code></pre>
-<ul>
-<li>上面其实介绍的都是开源 license，但其实在软件市场中还是有大量的<strong>商业 license</strong> 的，毕竟也是要恰饭的嘛。主要就是一些商业软件的使用，常常需要大家购买对应软件的 license 才能使用，而且很多 license 大多都是有时间期限的，例如 IDEA 可能还有一些 license server 的机制，但总体思想都是通过销售 license 来获取盈利。
-<ul>
-<li>BTW，很多盗版软件其实就是尝试着去碰撞出一个可能有效的 license，甚至有人共享对应的 license 来进行多用户使用。</li>
-</ul>
-</li>
-</ul>
-<h3 id="有哪些开源许可">有哪些开源许可</h3>
-<ul>
-<li>https://www.gnu.org/licenses/license-list.zh-cn.html</li>
-<li>几种常见的开源许可：
-<ul>
-<li><a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GPL（GNU General Public License）</a>：GNU 通用公共许可协议，免费使用、引用、修改代码，但不能用在闭源软件中发布及销售。“传染性” 表示如果一个软件使用了 GPL 协议的开源代码，那么这个软件也必须开源，仍然免费使用。不能用于商业产品。</li>
-<li><a href="https://www.gnu.org/licenses/lgpl-3.0.html">LGPL（GNU Lesser General Public License）</a>：宽松GPL，规定：如果A项目采用LGPL许可证，那么基于A开发出来的B项目也必须采用LGPL，即必须也开源，但是，如果B项目不是基于A开发出来的，而仅仅调用了A的接口，那么B项目可不必开源，倘若换做GPL的话，那么B项目也是要开源的（所以叫做宽松的GPL）。</li>
-<li><a href="https://en.wikipedia.org/wiki/BSD_licenses">BSD License（original BSD license、FreeBSD license、Original BSD license）</a>：伯克利软件套装，规定：如果A项目采用BSD许可证，那么基于A开发出来的B项目可以选择闭源，即私有化、商业化，但是必须注明B项目采用了A这个开源项目。<strong>主要限制在于不能用开源代码的作者或机构进行商品推广。</strong></li>
-<li><a href="https://en.wikipedia.org/wiki/MIT_License">MIT(The MIT License)</a>：麻省理工学院许可证，规定：这是一个自由度很高的开源许可证，几乎同意了可以随意使用一个开源项目（使用、复制、修改、合并、出版发行、散布、再授权、贩售软件及软件的副本），只要在你的项目中包含或提及原开源项目的MIT许可证。<strong>至于你会不会通过它进行商品推广，作者并不关心，只想保留版权。</strong></li>
-<li><a href="https://www.apache.org/licenses/">Apache Licence</a>：Apache软件基金会，规定：大致上和BSD许可证类似，只是有一点细微差别，它除了需要注明B项目源于开源项目A，也要在每个修改过的A项目的文件注明此文件已被修改，并且原文件是A开源项目中的哪个文件。<strong>相对于 MIT，如果修改了源代码，需要进行说明</strong>。</li>
-</ul>
-</li>
-<li>不推荐用于商业产品的协议：GPL (eg. Linux), LGPL, MPL</li>
-<li>适用于商业产品的协议：BSD, MIT, Apache (eg. RocksDB)</li>
-<li><strong>Dual-Licensed</strong>: 但是我们在如上的 RocksDB 中的例子观察到，RocksDB 中包含了两个开源许可，一个是不推荐用于商业产品的 GPLv2，一个是推荐用于商业产品的 Apache2.0，而在 RocksDB 关于 License 的介绍中我们发现本身该项目就是基于两个开源协议的，而其他软件开发者可以根据自己的实际需求来决定使用哪一个 License。</li>
-</ul>
-<h4 id="other">Other</h4>
-<ul>
-<li>可能还会有小伙伴看过这样的版权例子，但大多都是一些知识产品，比如博客、slides、文档以及网页等等。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206230938.png" alt="20210206230938" loading="lazy"></li>
-<li><strong>CC License</strong>: Creative Commons license，简称CC许可，是一种公共版权许可协议，知识共享许可协议，其允许分发受版权保护的作品。一个创作共用许可，用于一个作者想给他人分享、使用、甚至创作派生作品的权利。创作共用提供给作者灵活性（例如，他们可以选择允许非商业用途使用他们的作品），保护使用或重新分配他人作品的人，所以他们只要遵守由作者指定的条件，不必担心侵犯版权。</li>
-</ul>
-<blockquote>
-<p>百度百科：知识共享（Creative Commons，简称CC，台湾译名创用CC）是一个非营利组织，也用是一种创作的授权方式。此组织的主要宗旨是增加创意作品的流通可及性，作为其它人据以创作及共享的基础，并寻找适当的法律以确保上述理念。</p>
-</blockquote>
-<ul>
-<li><strong>CC-BY-NC-SA</strong> 本质是几种权利的组合：
-<ul>
-<li><strong>CC</strong>：创作共用</li>
-<li><strong>BY</strong>：署名：您（用户）可以复制、发行、展览、表演、放映、广播或通过信息网络传播本作品；您必须按照作者或者许可人指定的方式对作品进行署名。</li>
-<li><strong>NC</strong>：非商业性使用（英语：Noncommercial，nc）您可以自由复制、散布、展示及演出本作品；您不得为商业目的而使用本作品。</li>
-<li><strong>SA</strong>：相同方式共享（英语：ShareAlike，sa）您可以自由复制、散布、展示及演出本作品；若您改变、转变或更改本作品，仅在遵守与本作品相同的许可条款下，您才能散布由本作品产生的派生作品。（参见copyleft。）</li>
-</ul>
-</li>
-<li>除此以外还包含一种权利：
-<ul>
-<li><strong>ND</strong>：禁止演绎（英语：No Derivative Works，nd)，您可以自由复制、散布、展示及演出本作品；您不得改变、转变或更改本作品。</li>
-</ul>
-</li>
-</ul>
-<h3 id="怎么选开源许可">怎么选开源许可</h3>
-<ul>
-<li>如何选 License: https://www.gnu.org/licenses/license-recommendations.html</li>
-<li>千言万语一大堆，不如一张图。图源阮一峰博客 http://www.ruanyifeng.com/blog/2011/05/how_to_choose_free_software_licenses.html<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206213620.png" alt="20210206213620" loading="lazy"></li>
-<li>https://choosealicense.com/<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210206220305.png" alt="20210206220305" loading="lazy"></li>
 </ul>
 ]]></content>
     </entry>

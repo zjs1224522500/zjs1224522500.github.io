@@ -1,0 +1,972 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FloDB: Unlocking Memory in Persistent Key-Value Stores | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+EuroSys17: FloDB: Unlocking Memory in Persistent Key-Value Stores
+https://dcl.epfl.ch/site/flodb
+
+
+
+Abstract
+
+日志结构合并(L..." />
+    <meta name="keywords" content="KVS,存储,LSM" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1623466729068" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210330151553.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2021-04-09"><i class="fa fa-calendar"></i><span class="lately">2 个月前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/FloDB/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/FloDB/"> </span>
+              </a>
+              <span id="/FloDB/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-1 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-2 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">FloDB: Unlocking Memory in Persistent Key-Value Stores</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>EuroSys17: FloDB: Unlocking Memory in Persistent Key-Value Stores</li>
+<li>https://dcl.epfl.ch/site/flodb</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li>日志结构合并(LSM)数据存储允许存储和处理大量数据，同时保持良好的性能。它们通过吸收内存层中的更新并按顺序分批地将它们传输到磁盘层来缓解I/O瓶颈。然而，LSM体系结构基本上要求元素按排序顺序排列。随着内存中数据量的增长，维护这种排序顺序的成本越来越高。与直觉相反，现有的LSM系统在使用较大的内存组件时实际上可能会损失吞吐量。</li>
+<li>在本文中，我们介绍了FloDB，一种LSM内存组件架构，它允许吞吐量在具有充足内存大小的现代多核机器上扩展。<strong>FloDB的主要思想本质上是通过在内存组件上添加一个小的内存缓冲层来引导传统的LSM体系结构</strong>。该缓冲区提供低延迟操作，屏蔽排序内存组件的写延迟。将这个缓冲区集成到经典的LSM内存组件中以变成 FloDB 并非易事，需要重新访问面向用户的 LSM 操作(搜索、更新、扫描)的算法。FloDB 的两层可以用最先进的、高并发的数据结构来实现。通过这种方式，正如我们在本文中所展示的那样，FloDB 消除了经典 LSM 设计中显著的同步瓶颈，同时提供了一个丰富的 LSM API。</li>
+<li>我们实现FloDB作为LevelDB的扩展，谷歌流行的LSM键值存储。我们将FloDB的性能与最先进的LSMs进行比较。简而言之，在各种多线程工作负载下，FloDB的性能比性能仅次于它的竞争对手高出一个数量级。</li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<ul>
+<li>键值存储是许多系统的关键组件，这些系统需要对大量数据进行低延迟的访问。这些存储的特点是扁平的数据组织和简化的接口，这允许有效的实现。然而，键值存储的目标数据量通常大于主存;因此，通常需要持久化存储。由于访问持久存储的速度比 CPU 慢，直接在磁盘上更新数据产生了一个严重的瓶颈。所以很多 KV 存储系统使用了 LSM 结构。LSM 数据存储适用于需要低延迟访问的应用程序，例如需要进行大量更新的消息队列，以及在面向用户的应用程序中维护会话状态。基本上，LSM 体系结构一方面通过缓存读，另一方面通过在内存中吸收写并稍后批量写入磁盘，掩盖了磁盘访问瓶颈。<strong>尽管 LSM 键值存储在解决I/O瓶颈带来的挑战方面发挥了很大的作用，但它们的性能不会随着内存组件的大小而扩展，也不会随着线程的数量而扩展</strong>。换句话说，可能令人惊讶的是，<strong>增加现有lsm的内存部分只能在相对较小的尺寸下提高性能。类似地，添加线程并不能提高许多现有lsm的吞吐量，因为它们使用了全局阻塞同步</strong>。</li>
+<li>上面描述的两种限制在 LSM 的传统设计中是固定存在的。我们通过引入 FloDB 来规避这些限制，FloDB 是一种新颖的 LSM 内存组件，其设计目的是随线程数量及其在内存中的大小而扩展。传统上，LSMs 一直采用两层存储层次结构，一层在内存中，一层在磁盘上。我们建议增加一个内存级别。换句话说，<strong>FloDB 是一个位于磁盘组件之上的两级内存组件(图1)，每个in-memory 级别都是一个并发数据结构。内存顶层是一个小而快速的数据结构，而内存底层是一个更大的、排序的数据结构</strong>。在存储到磁盘之前，新条目被插入到顶层，然后在后台被排到底层。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210330151553.png" alt="20210330151553" loading="lazy"></li>
+<li>这个方案有几个优点：
+<ul>
+<li>首先，它允许扫描和写入并行进行，分别在底层和顶层。</li>
+<li>其次，无论内存组件大小如何，使用小型、快速的顶级级别都可以实现低延迟的更新，而现有的 LSM 会随着内存组件大小的增加而性能下降。更大的内存组件可能在峰值吞吐量时造成更长的写突发。</li>
+<li>第三，维护底层内存层的排序允许在不进行额外的(昂贵的)排序步骤的情况下对磁盘进行刷新。</li>
+</ul>
+</li>
+<li>我们使用一个<strong>小型的高性能并发哈希表来实现 FloDB</strong>，并使用一个<strong>较大的并发跳表</strong>来实现底部的内存级别。乍一看，实现 FloDB 似乎只需要在现有的 LSM 体系结构上添加一个额外的基于哈希表的缓冲区级别。然而，这个看似很小的步骤却带来了微妙的技术挑战。
+<ul>
+<li>第一个挑战是<strong>确保两个内存级别之间的有效数据流动</strong>，以便充分利用额外的缓冲区，同时不耗尽系统资源。为此，我们引入了多插入操作，这是一种用于并发跳表的新操作。其<strong>主要思想是在一个操作中在跳跃列表中插入 n 个排序的元素，使用前面插入元素的位置作为插入下一个元素的起点，从而重用已经遍历过的 hops</strong>。Skiplist 多插入是独立的，通过增加内存组件更新的吞吐量，它也可以使以前的单写入器 LSM 实现受益。</li>
+<li>第二个挑战是<strong>确保面向用户的 LSM 操作的一致性</strong>，同时在这些操作之间启用高级别的并发性。特别是，FloDB 是第一个同时支持一致扫描和就地更新的LSM系统。</li>
+</ul>
+</li>
+<li>我们的实验表明，FloDB的性能优于当前的键值存储解决方案，特别是在写密集型场景中。例如，在只写的工作负载中，FloDB 可以用一个工作线程来饱和磁盘组件的吞吐量，并且在最多有16个工作线程的情况下，它的性能继续超过性能第二好的系统，平均是后者的2倍。此外，对于倾斜的读写工作负载，FloDB 获得比性能最高的竞争对手高一个数量级的吞吐量：
+<ul>
+<li>FloDB，一个用于 log-structured merge 内存组件的两级架构。FloDB 可以根据主内存的大小进行扩展，并且具有丰富的API，读取、写入和扫描都可以并发进行。</li>
+<li>在Xeon多核机器上，作为LevelDB的扩展，FloDB体系结构的一个公开的c++实现，以及一个高达192GB内存组件大小的实验。</li>
+<li>一种用于并行跳过表的新型多插入操作的算法。除了FloDB，多插入还可以使任何使用skiplist 的 LSM 体系结构受益</li>
+</ul>
+</li>
+<li><strong>尽管 FloDB 有很多优点，但我们并不认为它是一剂灵丹妙药;它确实有局限性</strong>。
+<ul>
+<li>首先，与所有lsm一样，稳态吞吐量受到层次结构中最慢组件的限制:将内存组件写入磁盘。FloDB在内存组件中所做的改进与潜在的磁盘级改进是正交的，这超出了本文的讨论范围。磁盘级别的改进可以与FloDB结合使用，进一步提高LSMs的总体性能。</li>
+<li>其次，可以设计出对FloDB扫描有问题的工作负载。例如，在写密集型工作负载和严重争用中，长时间运行扫描的性能会下降。第三，对于比主存大得多的数据集，FloDB提高的读性能要小于写性能。这是因为在LSMs中，读取性能很大程度上取决于缓存的有效性，这也不在我们的论文讨论范围之内。</li>
+</ul>
+</li>
+</ul>
+<h2 id="shortcomings-of-current-lsms">Shortcomings of Current LSMs</h2>
+<h3 id="lsm-key-value-store-overview">LSM Key-Value Store Overview</h3>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210330155255.png" alt="20210330155255" loading="lazy"></figure>
+<h3 id="limitationscalability-with-number-of-threads">Limitation—Scalability with Number of Threads</h3>
+<ul>
+<li>多个处理核心的存在可以提高LSM数据存储的性能。虽然现有的LSM系统允许某种程度的并发，但它们仍留有大量的并行机会。例如，
+<ul>
+<li>leveldb——许多LSM键值存储的基础——支持多个写线程，但通过让线程将其预期的写操作存储在一个并发队列中来序列化写操作;这个队列中的写操作由单个线程一个接一个地应用到键值存储。此外，LevelDB还要求读取器在每次操作中获取全局锁，以便访问或更新元数据</li>
+<li>HyperLevelDB 建立在LevelDB之上，通过允许并发更新来提高并发性;然而，为了通过版本号来维护更新的顺序，仍然需要昂贵的同步</li>
+<li>RocksDB 也是源自LevelDB的一个键值存储，它通过引入磁盘组件的多线程合并来提高并发性。虽然多线程压缩确实提高了整体性能，但RocksDB仍然保持全局同步来访问内存结构和更新版本号，这与HyperLevelDB类似</li>
+<li>cLSM 甚至更进一步，从只读路径上删除了任何阻塞的同步，但是使用全局共享独占锁来协调更新和后台磁盘写操作，仍然削弱了系统的可伸缩性。正如我们在第5节中所展示的，这些可伸缩性瓶颈确实在实践中表现出来</li>
+</ul>
+</li>
+</ul>
+<h3 id="limitationscalability-with-memory-size">Limitation—Scalability with Memory Size</h3>
+<ul>
+<li>现有的LSM内存组件可以排序(例如，skiplist)或未排序的(例如，哈希表)。这两种选择都有各自的优点和缺点，但令人惊讶的是，它们都不能扩展到大型内存组件。</li>
+<li>一方面，当使用skiplist时，顺序扫描是自然的。而且，压缩阶段只不过是将组件直接复制到磁盘;因此它的开销很低。然而，写需要数据结构大小的对数时间来维持排序顺序(直接从内存组件读取也需要数据结构大小的对数时间。然而，对于大型数据集，大多数读操作都是从磁盘组件上读取的，因此<strong>内存组件数据结构的选择对读延迟的影响小于写延迟</strong>)。因此，从图3中可以看出，分配更多的内存实际上增加了写延迟。该图显示了作为RocksDB(最流行的最先进的lsm之一)中内存组件大小的函数的读和写延迟的中值。在第99百分位，我们观察到类似的读写延迟趋势。延迟使用RocksDB的读写基准测试，有八个读线程和一个写线程在一个有100万个条目的数据库上运行。密钥大小为8字节，值大小为256字节。延迟被规范化为128 MB内存组件。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210330161949.png" alt="20210330161949" loading="lazy"></li>
+<li>另一方面，对于哈希表，写操作在常量时间内完成，但是顺序扫描是不实用的，而且压缩阶段更复杂。压缩在将内存组件写入磁盘之前需要对其进行完全排序，以保存LSM结构。实际上，我们的测量结果表明，基于哈希表的内存组件的平均压缩时间至少比相同大小的基于skiplist的内存组件的平均压缩时间高一个数量级：因为随着哈希表变得越来越大，排序和持久化到磁盘所需的时间也越来越长。在对不可变内存组件进行排序和持久化时，活动(可变)内存组件也可能被填满。在这种情况下，writer 被延迟，因为在内存中没有空间来完成它们的操作。结果，端到端写延迟随着内存大小而增加，如图4所示，图4展示了与图3相同的实验，使用的是哈希表而不是跳过列表。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210330163009.png" alt="20210330163009" loading="lazy"></li>
+<li>因此，对于跳过列表和哈希表，<strong>端到端系统吞吐量随着内存的增加而趋于稳定，甚至下降。这种限制是传统 LSM 的单级内存组件固有的，限制了 LSM 用户利用现代多核中的丰富内存</strong>。在接下来的部分中，我们将展示将哈希表和跳过表的优点结合起来是可能的，从而提高 LSMs的写吞吐量，同时仍然允许 inorder 扫描。</li>
+</ul>
+<h2 id="flodb-design">FloDB Design</h2>
+<ul>
+<li>现有的 LSM 存在固有的可伸缩性问题，包括内存大小和线程数量方面的问题。后者是由可伸缩性瓶颈引起的，而前者则源于大小-延迟的权衡。</li>
+<li>这种权衡体现在排序和未排序的内存组件上。有序的组件允许扫描，并且可以直接持久化到磁盘，但是随着内存组件变大，其内存组件对应就会有显著更高的访问次数。未排序组件的速度可能与大小无关，但对于扫描来说并不实用，并且需要在被刷新到磁盘之前排序，需要耗费线性时间，这可能会延迟 writers。FloDB 的内存组件体系结构就是为了避免这些问题而设计的。FloDB 的主要目标是:
+<ul>
+<li>(1) 根据给定的内存量进行扩展;</li>
+<li>(2) 使用最小的同步(以扩大规模);</li>
+<li>(3) 利用内存组件提高写性能，而不牺牲读性能。</li>
+</ul>
+</li>
+<li>下面，我们将概述FloDB的内存组件架构，以及利用这个新结构的主要操作:Get、Put、Delete和Scan。</li>
+</ul>
+<h3 id="in-memory-levels">In-memory Levels</h3>
+<ul>
+<li>简而言之，FloDB的基本思想是使用两层内存组件，其中一层是小型、快速的数据结构，第二层是大型、排序的数据结构。这种设计允许FloDB打破大小延迟的平衡，并最小化同步。</li>
+<li>第一级称为 Membuffer，它又小又快，但不一定要排序。第二级称为Memtable，规模更大，以便捕获更大的工作集，从而更好地屏蔽高I/O延迟。此外，Memtable 保持元素的排序，所以它可以直接刷新到磁盘。<strong>这两个级别都是并发的数据结构，使得操作可以并行进行</strong>。与其他LSMs 类似，数据从最小的组件(Membuffer)流向最大的组件(磁盘)，因为各个级别都满了。</li>
+<li>磁盘级组件不是我们的重点，也不在本文的讨论范围之内。由于磁盘组件和内存中对数据的处理在 LSM 键值存储中是相互正交的，所以我们展示的内存中优化方法可以与任何持久化到磁盘的机制一起使用。例如，FloDB的内存组件可以与类似于 RocksDB 的多线程压缩方案相结合，或者像LSM-trie中那样，可以减少写放大，从而获得更好的磁盘结构。</li>
+</ul>
+<h3 id="operations">Operations</h3>
+<ul>
+<li>我们给出了FloDB主要操作的高层设计。在第4.4节中，我们将描述该设计的具体实现。FloDB的两层内存组件允许非常简单的基本操作(即Get、Put、Delete)，但在扫描的情况下会带来额外的复杂性。</li>
+</ul>
+<h4 id="get">Get</h4>
+<ul>
+<li>除了LSM数据结构中的同步外，FloDB中的Get操作不需要同步。首先搜索的是Membuffer，然后是Memtable，最后是磁盘。如果在某个级别找到所需的元素，则read可以立即返回。显然，一旦找到了元素，就没有必要在较低的层次中进行搜索，因为层次结构中的较高层次总是包含最新的值。</li>
+</ul>
+<h4 id="update">Update</h4>
+<ul>
+<li>Put和Delete操作本质上是相同的。删除是通过插入一个特殊的tombstone值来完成的。从现在开始，我们将把Put和Delete操作都称为Update。首先，<strong>在Membuffer中尝试更新。如果Membuffer中没有空间，则直接在Memtable中进行更新。如果键已经存在于Membuffer或Memtable中，相应的值将就地更新</strong>。</li>
+<li>就地更新的另一种方法是多版本化:保留相同键的多个版本，仅在压缩阶段丢弃旧版本。所有现有的 LSMs 都使用多版本控制。然而，多版本控制方法不能利用倾斜工作负载的局部性。事实上，不断地更新一个键就足以填满内存组件并触发频繁刷新磁盘。相比之下，在就地更新中，重复写同一个键不会占用额外的内存，因此内存中的存储是按照数据大小的顺序排列的。就地更新，结合一个大型内存组件，允许我们有效地捕获大型的、写密集型的、倾斜的工作负载，如第5节所示。</li>
+</ul>
+<h4 id="scan">Scan</h4>
+<ul>
+<li>我们的扫描算法背后的<strong>主要思想是扫描Memtable和磁盘的同时允许在Membuffer中完成并发更新</strong>。这种方法的一个挑战是，扫描Memtable 可能返回一个过时的键值，当扫描开始时，这个键仍然在Membuffer 中。我们通过在扫描前清空 Memtable 中的 MemBuffer 来解决这个问题。</li>
+<li>另一个挑战是，如果扫描需要很长时间才能完成，如果经常调用扫描，或者在扫描期间有很多线程执行更新，那么吸收更新的 Membuffer 可能会被填满。在这种情况下，我们允许写入器和扫描器在 Memtable 中并行进行。然而，如果允许写入者在扫描 A 期间天真地更新 Memtable，那么在 A 的范围内的一个条目可能会在 A 进行时被修改，导致不一致。我们<strong>通过在 Memtable 级别引入每个条目的序列号来解决这个问题</strong>。通过这种方式，扫描 A 可以验证自 A 启动以来是否在其范围内写入了 Memtable 中的新值；如果是这种情况，扫描 A 将失效并重新启动。A 的 fallback 机制来确保 liveness(即，扫描不会被 writers 无限期重启)。值得注意的是，我们使用序列号的方式与上面提到的多版本控制不同;在我们的算法中，当 Memtable 中存在的键 k 发生更新时，k 的值和序列号就地更新 （<strong>这里感觉讲的不是很清楚，有些含糊</strong>）</li>
+</ul>
+<h4 id="summary">Summary</h4>
+<ul>
+<li>FloDB 的两级设计有几个好处。
+<ul>
+<li>首先，很大一部分写操作是在Membuffer 中完成的，因此 FloDB 从快速内存组件(通常为整体未排序的内存组件保留，如哈希表)中获得好处。</li>
+<li>第二，排序的底部组件允许扫描，并可以直接刷新到磁盘。</li>
+<li>第三，级别的分离使写和读能够与扫描并行进行。</li>
+<li>两层层次结构的另一个好处是，可以增加内存组件的总体大小，以获得更好的性能(与现有系统相比)。</li>
+<li>最后，我们的设计允许就地更新，同时支持一致扫描</li>
+</ul>
+</li>
+</ul>
+<h2 id="flodb-implementation">FloDB Implementation</h2>
+<ul>
+<li>我们在谷歌的 LevelDB 上实现FloDB。LevelDB的内存组件完全被FloDB架构所取代。我们保留了 LevelDB 的持久化和压缩机制。</li>
+</ul>
+<blockquote>
+<p>LevelDB中的原始方法是在内存中保留 thread-local 版本和文件描述符缓存(fd-cache)的一个共享版本，并在必要时获取一个全局锁来访问fd-cache的共享版本。在我们的初步测试中，我们发现这个全局锁是一个主要的可伸缩性瓶颈。为了消除这个瓶颈，作为内存优化的一部分，我们将LevelDB fd-cache实现替换为一个更可伸缩、并发的哈希表</p>
+</blockquote>
+<ul>
+<li>在下面,我们将讨论的关键实现细节FloDB:
+<ul>
+<li>(1) 对于 Memtable 和 Membuffer 数据结构的选择</li>
+<li>(2) 机制将用于 level 之间的数据移动</li>
+<li>(3) 我们的新型 multi-insert 操作用于简化在 Memtable 和 Membuffer 之间的数据流</li>
+<li>(4) 面向用户的操作的实现</li>
+</ul>
+</li>
+</ul>
+<h3 id="memory-component-implementation">Memory Component Implementation</h3>
+<ul>
+<li>在实现FloDB体系结构时，需要解决的一个重要问题是，在内存级别上如何选择良好的数据结构。为了使写操作尽可能快，第一级的合适选择是哈希表。如图5所示，一个现代哈希表可以提供超过100 Mops/s的吞吐量，即使有10亿个条目的工作负载。然而，即使哈希表很快，它们也不会对它们的条目进行排序，这意味着不能直接对数据进行顺序迭代。由于这个原因，保持数据有序且易于迭代的数据结构(例如在传统LSM实现中已经用作内存组件的skiplist)是第二级的良好选择。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331115947.png" alt="20210331115947" loading="lazy"></li>
+<li>因此，FloDB的内存层次结构由一个小型的高性能并发哈希表和一个较大的并发跳表组成。哈希表存储键-值元组。skiplist存储用于扫描操作的键-值元组和序列号。</li>
+<li><strong>Membuffer和Memtable之间的大小比例是一种权衡</strong>。一方面，相对较小的Membuffer会更快地填满，迫使更多的更新在Memtable中完成。这是有问题的，因为Memtable较慢，但也因为Memtable绑定的更新可能会迫使更多的扫描重新启动。另一方面，一个大的Membuffer将花费更长的时间来进入Memtable，这可能会延迟扫描。</li>
+</ul>
+<h3 id="interaction-between-levels">Interaction Between Levels</h3>
+<ul>
+<li><strong>Background threads</strong>：因为我们不希望数据是静态的(也就是说，数据不断地被插入或更新)，所以FloDB有两种机制来跨层次结构的级别移动数据:<strong>持久化和draining</strong>。
+<ul>
+<li>持久化通过一个专门的后台线程将项从Memtable移动到磁盘——这是LSM实现中的一种既定技术。当Memtable被填满时，持久化被触发。</li>
+<li>Draining 将条目从Membuffer移动到Memtable，这是由一个或多个专门的后台线程完成的。Draining 是一个持续不断的过程，因为人们希望保持尽可能低的 Membuffer 占用率。<strong>实际上，只有在 Membuffer 中完成写操作时，才会从两级层次结构中获益</strong>。</li>
+</ul>
+</li>
+<li><strong>Persisting</strong>：在LSMs中，将内存组件持久化到磁盘的一种标准技术是使该组件不可变，安装一个新的、可变的组件，并在后台将旧组件写入磁盘。通过这种方式，当旧组件被持久化时，写入者仍然可以继续处理新组件，并且不可变组件中的数据对读者仍然是可见的。然而，内存组件之间的切换通常是使用锁定完成的。<strong>FloDB有一个更高效的RCU（Read-Copy-Update）方法来切换内存组件，它不会阻塞任何更新或读取</strong>。当持久化的时候，RCU 是用来确保在后台线程将Memtable复制到磁盘之前，所有对不可变Memtable的待处理的更新都已经完成。第二，在Memtable被复制到磁盘之后，我们使用RCU来确保在后台线程可以继续释放不可变Memtable之前，没有reader线程正在读取它。</li>
+<li><strong>Draining</strong>：Draining(图6)是由一个或多个专门的后台线程与更新、读取或其他Draining同时进行的，并按照以下步骤进行。要将一个key-value 条目 e 从 Membuffer 移动到 Memtable 中，e 首先被检索并在 Membuffer 中标记。这样做是为了确保没有其他后台线程也试图将 e 移动到 Memtable 中。然后，e 被分配一个序列号(通过原子递增操作获得)，并被后台线程插入到 Memtable 中。最后，e 从 Membuffer 中移除。有一种特殊情况，扫描开始时发生 Draining，为了使扫描能够只在Memtable和磁盘级别上进行，但仍然包括Membuffer中最近的更新，在扫描开始时将Membuffer中所有的内存都 Draining 到Memtable中。<strong>这种类型的 Draining 是通过使当前的 Membuffer 不可变，安装一个新的 Membuffer(使用RCU)，然后将旧的 Membuffer 中的所有条目移动到 Memtable 中，类似于Memtable是如何持久化到磁盘上的</strong>。</li>
+<li><strong>RCU 的本质是转变数据可写状态，然后创建新的空的数据结构</strong><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331144829.png" alt="20210331144829" loading="lazy"></li>
+</ul>
+<h3 id="skiplist-multi-inserts">Skiplist Multi-inserts</h3>
+<ul>
+<li>图5和图7显示了一个并发跳表大约比一个相同大小的并发哈希表慢一到两个数量级。因此，为了使大量的更新可以直接在哈希表中进行，我们需要尽可能快地在各级之间移动项。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331144936.png" alt="20210331144936" loading="lazy"></li>
+</ul>
+<h4 id="intuition">Intuition</h4>
+<ul>
+<li>我们为并发跳过表引入了一种新的多插入操作，以增加 Draining 线程的吞吐量。多插入操作背后的直观感觉很简单。在跳过列表中插入 n 个元素，而不是调用 n 次插入操作，只需在一次多插入操作中插入这些元素。<strong>n个元素按升序插入，使用已经完成的进度(即所经过的跃点)插入前一个元素，作为插入下一个元素的起点</strong>。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331161934.png" alt="20210331161934" loading="lazy"></li>
+<li>除了增加FloDB中的吞吐量，多插入还可以使使用并发跳过表的其他应用程序受益。例如，像LevelDB这样的lsm使用了来进行更新(第2.2节)，它们可以通过以下方式加速更新。组合线程可以在一个多插入操作中应用所有更新，而不是一个接一个地分别应用它们。更重要的是，几个组合线程可以通过多次插入并发地应用更新。</li>
+</ul>
+<h4 id="pseudocode">Pseudocode</h4>
+<ul>
+<li>多插入操作的伪代码见算法1。操作输入是一个由(键、值)元组组成的数组。首先，输入元组按升序排序。然后，对于每个元组，使用FindFromPreds定位其在跳过列表中的位置。FindFromPreds从前面插入的元素的前身开始搜索当前元素在跳过列表中的位置(第5-8行)。如果当前 level 中存储的前一个元素的键大于要插入的当前元素的键，则可以直接从前一个元素跳转到存储的前一个元素。这是多插入操作的核心，其中应用了路径重用的思想。在跳过列表中找到一个元组的位置后，对该元组的插入操作类似于普通的插入操作。</li>
+</ul>
+<pre><code class="language-C++">FindFromPreds(key , preds , succs): 
+// returns true iff key was found
+// side -effect: updates preds and succs 
+  pred = root
+  for level from levelmax downto 0: 
+    if (preds[level].key &gt; pred.key):
+      pred = preds[level]
+  curr = pred.next[level] 
+  while(true):
+    succ = curr.next[level] 
+    if (curr.key &lt; key): 
+      pred = curr
+      curr = succ 
+    else: 
+      break
+  preds[level] = pred 
+  succs[level] = curr
+  return (curr.key == key)
+
+MultiInsert(keys , values): 
+  sortByKey(keys , values)
+  for i from 0 to levelmax: 
+    preds[i] = root
+  for each key -value pair (k,v): 
+    node = new node(k,v) 
+    while(true):
+      if (FindFromPreds(k, preds , succs)): 
+        SWAP(succs [0].val , v)
+        break 
+      else:
+        for lvl from 0 to node.toplvl: 
+          node.next[lvl] = succs[lvl]
+      if (CAS(preds [0]. next[0], succs[0], node)):
+        for lvl from 1 to node.toplvl: 
+          while(true):
+            if (CAS(preds[lvl].next[lvl], succs[lvl], node)):
+              break 
+            else: 
+              FindFromPreds(k, preds , succs) 
+        break
+</code></pre>
+<h4 id="concurrency">Concurrency</h4>
+<ul>
+<li>多个插入相互并发，简单的插入和读取也是如此。然而，多插入的正确性依赖于这样一个事实，即元素不会同时从跳过列表中删除。从设计上讲，这在 FloDB 中不是一个问题;只有当条目持久化到磁盘时，才会从跳过列表中删除它们。此外，虽然多重插入中的每个插入都是原子的，但多重插入本身是不能线性化的，也就是说，整个元素数组不会被视为在单个时间点插入(即中间状态是可见的)。</li>
+</ul>
+<h4 id="neighborhoods">Neighborhoods</h4>
+<ul>
+<li><strong>键的邻近性是多插入性能的一个主要因素。直观地说，如果在跳跃列表中多次插入的键最终会在跳跃列表中靠近，路径重用就会最大化</strong>。图8描述了一个实验的结果，这个实验比较了简单插入和5个键多插入的吞吐量，这是一个只进行更新的测试中键接近度的函数。在本实验中，如果键范围的邻域大小为n，则一次多插入中的所有键之间的距离最大为2n。可以清楚地看到，随着邻域大小的减小，多插入的效率也会提高。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331155201.png" alt="20210331155201" loading="lazy"></li>
+<li>在FloDB中，我们<strong>在哈希表中创建分区，以利用在多次插入中键靠得更近的性能优势(邻域效应)</strong>。当一个key-value元组插入到FloDB中时，该键的最有效位 ℓ 将用于确定该元组应该插入到哈希表的哪个分区。然后，键的其余位被散列，以确定分区(即桶)中的位置。因为 ℓ 是一个参数，所以可以很容易地控制邻居的大小。</li>
+<li><strong>虽然我们的分区方案利用了多插入的性能优势，但它也使哈希表容易受到数据倾斜的影响</strong>。如果存在具有公共前缀的流行键(如果数据倾斜涉及某个键范围)，那么与流行键对应的桶将比与流行度较低的键对应的桶更快地满满。这反过来会导致在 Membuffer 中能够完成的更新比例更小。倾斜工作负载的这种影响将在第5节中讨论。</li>
+</ul>
+<h4 id="implementation-of-flodb-operations">Implementation of FloDB Operations</h4>
+<ul>
+<li>算法2给出了Get, Put和Delete操作的伪代码(为了提高可读性，我们省略了进入和退出RCU临界区的代码)。</li>
+<li><strong>Get</strong>: Get操作简单地在每一层上搜索一个键，顺序如下:Membuffer (MBF)，不可变Membuffer (IMM_MBF)，如果有的话，Memtable (MTB)，不可变Memtable (IMM_MTB)，如果有的话，最后在磁盘上搜索。Get返回它遇到的第一个键，这保证是最新的一个，因为级别是按照与数据流相同的顺序检查的。</li>
+<li><strong>Update</strong>: 如前所述，Delete操作是一个带有特殊tombstone值的Put操作，因此我们只需要描述后一个操作。实际上，Put操作是通过尝试在Membuffer中插入键值对e来进行的(第10行);如果e的目标哈希表桶没有满，添加到Membuffer成功，操作返回(第11行);否则，e将被插入Memtable中(第20行)。此外，算法2中的完整Put伪代码还包括与持久化线程和并发扫描器同步的机制。首先，如果不成功地将e插入到Membuffer中，并且设置了pauseWriters标志，那么writer将在必要时帮助 Draining 不可变的Membuffer，或者等待标志被取消设置(第12-16行)。正如我们在下面解释的那样，扫描使用pauseWriters标志向写入者发出信号:Membuffer已经被完全清空到memtable中，为扫描做准备，写入者应该等待或者帮助完成清空。第二，写入者会等到Memtable中有空间时才开始执行Put(第17-18行)。这通常是一个非常短的等待，即当前 Memtable 被填满后，持久化线程准备新 Memtable 的时间。</li>
+</ul>
+<pre><code class="language-C++">Get(key):
+  for c in MBF IMM_MBF MTB IMM_MTB DISK: 
+    if (c != NULL):
+      value = c.search(key) 
+      if (value != not_found):
+        return value 
+      return not_found 
+
+Put(key , value):
+  if (MBF.add(key , value) == success): 
+    return
+  while pauseWriters:
+    if MBFNeedsDraining (): 
+      IMM_MBF.helpDrain ()
+    else: 
+      wait()
+  while MTB.size &gt; MTB_TARGET_SIZE: 
+    wait() 
+  seq = globalSeqNumber.fetchAndIncrement() 
+  MTB.add(key , value , seq)
+
+Delete(key):
+  Put(key , TOMBSTONE)
+</code></pre>
+<h5 id="scan-2">Scan</h5>
+<ul>
+<li><strong>Scan</strong>：扫描操作以两个参数作为输入:lowKey和highKey。它返回一个数组，其中包含数据存储中介于低输入键和高输入键之间的所有键和对应值。为清楚起见，我们将扫描算法的介绍分为两部分。首先，我们提出了一种扫描算法，该算法可以并行进行读和写操作，但不能与另一个扫描一起进行。然后，我们介绍必要的额外部分，即允许多线程扫描。</li>
+<li><strong>Single-threaded scans, multithreaded reads and writes</strong>：单线程扫描的伪代码在算法3中显示(为了更清晰，我们再次忽略了RCU临界区边界)。第一步是冻结对当前Membuffer和Memtable的更新，并将当前Membuffer的内容释放到Memtable中。为此，我们暂停后台 Draining(第4行)，通知写入者停止直接在Memtable中进行更新(第5行)，并等待所有正在进行的Memtable写入完成(第9行)。注意，<strong>扫描从来不会完全阻塞写入器;即使写入者不能在扫描的第5行和第13行之间更新Memtable，他们也可以尝试更新Membuffer或帮助处理Draining。帮助确保即使扫描程序线程很慢，也能完成 Draining，从而减少写入程序不允许更新Memtable的时间。</strong></li>
+<li>然后，将当前的Membuffer变为不可变的，并创建一个新的Membuffer，用于吸收未来的更新(第6-8行)。然后，发起扫描的线程开始将Membuffer清空到Memtable(第10行)。在Membuffer被清空后，扫描将获得一个序列号(通过原子递增操作)(第12行)。现在，允许后台从新的Membuffer中抽取数据，并允许写入者在Memtable上进行更新(如有必要，第13-14行)是安全的，因为扫描的序列号将用于确保一致性。实际的扫描操作(第15-28行)现在开始，首先是在Memtable和不可变Memtable(如果存在的话)上，最后是在磁盘上。当遇到扫描范围内的键时，将检查其序列号。如果小于扫描序列号，则保存key-value元组。如果遇到已经保存的键，则保留与小于扫描序列号的最大序列号对应的值。否则，如果键序列号高于扫描序列号，扫描将重启，因为序列号高于扫描序列号可能意味着该键对应的值被并发操作覆盖。最后，对保存的键和值数组进行排序并返回。</li>
+<li>重启是昂贵的，因为它们需要完全 re-drain Membuffer.。<strong>为了避免在写密集型工作负载中任意多次重启扫描，我们添加了一种称为 fallbackScan 的回退机制，当扫描被迫重启过多次时将触发该机制</strong>。fallbackScan 的工作原理是阻止 Memtable 的写入者，直到完成扫描。在我们的实验中(第5节)，回退扫描很少被触发，并且不会增加显著的开销。</li>
+</ul>
+<pre><code class="language-C++">Scan(lowKey , highKey): 
+  restartCount = 0
+restart:
+  pauseDrainingThreads = true 
+  pauseWriters = true 
+  IMM_MBF = MBF
+  MBF = new MemBuffer () 
+  MemBufferRCUWait () 
+  MemTableRCUWait () 
+  IMM_MBF.drain() 
+  IMM_MBF.destroy ()
+  seq = globalSeqNumber.fetchAndIncrement () 
+  pauseWriters = false
+  pauseDrainingThreads = false 
+  results = ∅
+for dataStructure in MTB IMM_MTB DISK: 
+  iter = dataStructure.newIterator () 
+  iter.seek(lowKey)
+  while (iter.isValid () and iter.key &lt; highKey):
+    if iter.seq &gt; seq: 
+      restartCount += 1
+      if restartCount &lt; RESTART_THRESHOLD: 
+        goto restart
+      else:
+      return fallbackScan(lowKey , highKey) 
+    results.add(iter.key , iter.value) 
+    iter.next()
+  results.sort() 
+  return results
+</code></pre>
+<h5 id="multithreaded-scans">Multithreaded scans</h5>
+<ul>
+<li>如果多个线程同时进行扫描，则需要进行额外的同步，以避免多个线程各自创建一个Membuffer的副本并试图耗尽它的情况。为此，我们区分了两种类型的扫描:主扫描和 piggybacking 扫描。<strong>主扫描是在没有其他扫描并发运行时启动的扫描。piggybacking扫描是在其他扫描同时运行时启动的扫描</strong>。在任何给定的时间，只有一个主扫描可能正在运行。我们确保主扫描执行算法3的第4-14行，所有扫描执行第2行和第15-30行。piggyback扫描将等待，直到主扫描程序发布第12行获得的序列号，然后继续进行第15-28行中的实际扫描。请注意，如果在主扫描运行时启动的另一个piggyback扫描与主扫描并发，则在主扫描未运行时启动的piggyback扫描也可以启动。这个过程可以自我重复，创建长长的 piggybacking 扫描链，在链的开始处重用相同的主扫描序列号。我们通过一个系统参数来限制这些链的长度，以避免由于使用陈旧的序列号而重新启动的大量扫描。</li>
+<li>当多个扫描并发运行时，上述方案会产生良好的性能，这是由于负载机制将耗尽的开销分散到多个扫描调用上，并且负载扫描在重新启动时不会重新耗尽Membuffer。针对低并发情况的一种优化方法是允许主扫描(除了附带扫描之外)重用前一个主扫描的序列号。这样可以避免过于频繁地完全耗尽内存缓冲区。</li>
+</ul>
+<h5 id="correctness">Correctness</h5>
+<ul>
+<li>在安全方面，建立一个新的扫描序列号的主扫描对于更新来说是线性化的。线性化点在算法3的第7行，在安装新的可变Membuffer的指令上。Draining 不可变的Membuffer可以确保线性化点之前的所有更新都包含在扫描中，并且第12行中获得的序列号可以确保线性化点之后的更新都不包含在扫描中。然而，piggyback扫描(以及重用现有序列号的主扫描)对于更新是不能线性化的(但它们是可序列化的)，因为它们可能会错过在它们的序列号建立之后发生的更新。如果在应用程序级别需要更严格的扫描一致性，可以指示扫描等待，直到它能够建立一个新的序列号，或者可以完全禁用扫描 piggyback。因此，FloDB中的所有扫描在更新方面都可以线性化，但要以性能为代价(每次扫描在继续之前都必须耗尽Membuffer，这是一个昂贵的操作)。就活性而言，所有的扫描最终都会完成，这是由于 fallbackScan 机制，该机制不能被写入器作废，因此保证会返回。</li>
+</ul>
+<h4 id="implementation-trade-offs">Implementation Trade-offs</h4>
+<ul>
+<li>如第5节所示，在各种工作负载下，FloDB比它的竞争对手获得更好的性能。尽管如此，FloDB的性能是有代价的:我们用资源来换取性能。连接两个inmemory级别需要至少一个后台线程(即引流线程)在写密集型工作负载下几乎持续运行。此外，FloDB的扫描操作存在以下局限性。虽然理论上可以调用范围(−∞，+∞)上的扫描(这将返回整个数据库的快照)，但大型扫描可能会重启多次，为了成功完成，会触发针对所有 writer 的 block 操作，开销较大。该扫描算法仅适用于中小型扫描。</li>
+</ul>
+<h2 id="evaluation">Evaluation</h2>
+<ul>
+<li>测试结果重点是测扩展性，就是说在不同的内存大小或者线程数上性能的提升，因为以往是到了一定程度性能会有所下降的，同时对比其他几个方案表明 FloDB 其实在扩展性这一块确实做的更好，从而把这个故事讲的更完整。</li>
+<li>但是看下图结果很容易发现对于只读负载，在线程数大于等于 16 的时候，FloDB 就不如 RocksDB 及其变种 cLSM 了。作者给的解释是 FloDB 比 LevelDB 及其变体要好是因为毕竟采用了简化后的并发性支持更好的 Get 操作，但是比 RocksDB 差是因为在磁盘组件上没有像 RocksDB 那样做这么多优化，而大数据量的读操作很多都是在磁盘组件上最终进行的。这地方其实前面读者也有埋伏笔，就是说内存组件对于写的影响比对读的影响可能更大，所以才有 MemBuffer，然后当时也降到了和其他磁盘组件优化是正交的，所以也算是自圆其说吧。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331225435.png" alt="20210331225435" loading="lazy"></li>
+<li>其他测试就看原文吧，没啥特别想讲的了。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331230132.png" alt="20210331230132" loading="lazy"></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210513192958.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/cpp-multi-thread/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2021-05-06">2021-05-06</time>
+                  <h4 class="title white no-margin">C++ 多线程</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210513192631.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/c-basic/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2021-04-06">2021-04-06</time>
+                  <h4 class="title white no-margin">C 基础</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/REMIX/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610214450.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-06-05">2021-06-05</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/REMIX/">REMIX: Efficient Range Query for LSM-trees</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/cpp-std/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://blog.shunzi.tech/post-images/cpp-basic.jpg');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-05-12">2021-05-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/cpp-std/">C++ STL</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/HashKV/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324112600.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-05-11">2021-05-11</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/HashKV/">HashKV: Enabling Efficient Updates in KV Storage via Hashing</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-1 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-2 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-3 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/RxQjurMnD/" class="ctag ctag-4 ctag-RxQjurMnD" aria-label="">Survey</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-5 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-6 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-7 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-8 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-9 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/wAFV_pvXZ/" class="ctag ctag-10 ctag-wAFV_pvXZ" aria-label="">cs-course</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/VqiGqmxbod/" class="ctag ctag-11 ctag-VqiGqmxbod" aria-label="">6.824</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-12 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-13 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-14 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-15 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-16 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-17 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-18 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-19 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-20 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-21 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-22 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-23 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-24 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-25 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-26 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-27 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-28 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 121 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

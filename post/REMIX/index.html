@@ -1,0 +1,818 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>REMIX: Efficient Range Query for LSM-trees | Elvis Zhang</title>
+<meta name="description" content="The easy way or the right way." />
+<link rel="shortcut icon" href="https://blog.shunzi.tech/favicon.ico">
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+<script data-ad-client="ca-pub-7661668224317940" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/masonry.pkgd.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/aos.js"></script>
+<script src="https://blog.shunzi.tech/media/js/pace.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/view-image.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/jquery.magnific-popup.min.js"></script>
+<script src="https://blog.shunzi.tech/media/js/functions.js"></script>
+    <meta name="referrer" content="never">
+    <meta name="description" content="
+
+FAST21 REMIX: Efficient Range Query for LSM-trees
+
+
+
+Abstract
+
+LSM 本身是为高速写操作优化的，而范围查询在传统的 LSM-tree 上需要 seek 且归并排序来自多个 ..." />
+    <meta name="keywords" content="KVS,存储,LSM" />
+    <script src="https://blog.shunzi.tech/media/js/waterfall.min.js"></script>
+    <script src="https://blog.shunzi.tech/media/js/prism.min.js"></script>
+  </head>
+  <body>
+            <header id="header" class="grid-container">
+        <!-- start: .menu-wrapper -->
+        <div class="menu-mobile"> 
+          <i class="fa fa-reorder"></i>
+        </div>
+        <div class="menu-wrapper">
+          <div class="">
+            <div class="logo">
+              <a href="https://blog.shunzi.tech"><img src="\media\images\custom-headerLogo.jpg" alt=""></a>
+            </div>
+            <!-- start: .main-nav -->
+
+            <nav class="main-nav grid-container grid-parent">
+              <ul id="menu-header" class="menu gradient-effect">
+                <li class=""><a href="https://blog.shunzi.tech" class="menu">首页</a></li>
+                
+                  <li class="" >
+                    <a href="/archives" class="menu">
+                      归档
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/tag/diary" class="menu">
+                      随笔
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/movies" class="menu">
+                      观影
+                    </a>
+                  </li>
+                
+                  <li class="" >
+                    <a href="/post/about" class="menu">
+                      关于
+                    </a>
+                  </li>
+                
+                <li class="search-menu-item hide-on-mobile hide-on-tablet"><a href="#search-lightbox" class="lightbox mfp-inline"><i class="fa fa-search-line"></i></a></li>
+              </ul>
+            </nav>
+            <a href="#search-lightbox" class="lightbox epcl-search-button mfp-inline hide-on-tablet hide-on-desktop"><i class="fa fa-search-line"></i></a>
+            <!-- end: .main-nav -->
+            <div class="clear"></div>
+            <div class="border hide-on-tablet hide-on-mobile"></div>
+          </div>    
+          <div class="clear"></div>
+        </div>
+        <!-- end: .menu-wrapper -->
+        <div class="clear"></div>
+      </header>
+      <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
+        <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
+          <div class="search-wrapper section">
+            <form id="gridea-search-form" data-update="1623466729068" action="/search/index.html" class="search-form" _lpchecked="1">
+              <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
+              <button type="submit" class="submit" aria-label="Submit">
+                <i class="fa fa-search-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <main id="single" class="main grid-container fullcover no-sidebar aos-init aos-animate" data-aos="fade">
+
+        <div class="center content">
+          <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610214450.png');">
+            <div class="meta top"> 
+              <time class="meta-info" style="float:left;" datetime="2021-06-05"><i class="fa fa-calendar"></i><span class="lately">7 天前</span></time>
+              
+              <a href="https://blog.shunzi.tech/post/REMIX/#comments" class="comments meta-info" title="">
+                <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/REMIX/"> </span>
+              </a>
+              <span id="/REMIX/" class="leancloud_visitors views-counter meta-info" title=""><i class="fa fa-leancloud remixicon"></i><span class="leancloud-visitors-count"></span></span>
+              
+            </div>
+            <div class="info">
+              <div class="tags ">
+                
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-1 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-2 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+              </div>
+              <h1 class="title ularge white bold">REMIX: Efficient Range Query for LSM-trees</h1>
+            </div>
+          </div>
+        </div>  
+
+        <div class="epcl-page-wrapper">
+          <div class="left-content grid-70 np-mobile">
+            <article class="main-article post">
+              <section class="post-content">
+                <div class="text">
+                  <blockquote>
+<ul>
+<li>FAST21 REMIX: Efficient Range Query for LSM-trees</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li>LSM 本身是为高速写操作优化的，而范围查询在传统的 LSM-tree 上需要 seek 且归并排序来自多个 Table 的数据，开销是很大的且经常导致较差的读性能。为了提升范围查询的性能，我们提出了一个空间高效的的 KV 索引数据结构 REMIX，记录跨多个表文件的KV数据的全局排序视图。对多个 REMIX 索引数据文件的范围查询可以使用二分搜索快速定位目标键，并在不进行键比较的情况下按排序顺序检索后续键。基于此构建了 RemixDB，一个采用了一个更高效的压缩策略并使用 REMIX 来进行快速的点查询和范围查询的 KV 存储。实验结果表明，在基于写优化 LSM 树的 KV-store 中，REMIX 可以显著提高范围查询性能。</li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<ul>
+<li>LSM 代表的是更新开销和读开销的一种权衡，相比于 B+tree 保证了更小的写开销以及更大的读开销。关于读开销的优化就有，驻留在内存中的为每个 Table 维护的 BloomFilters，来减小不必要的 Table 访问。但是 BloomFilter 不能处理范围查询，所以出现了 Range Filters，如 SIGMOD18-SuRF、SIGMOD20-Rosetta 来在范围查询时过滤掉 Tables。<strong>但是当范围查询内的 Key 位于很多个候选的 Tables 中时</strong>，filtering 就很难提升查询性能了，特别是大范围查询，而且当查询请求可以在缓存中处理时，访问 Filters 的计算开销可能导致性能表现一般，这是真实负载中比较普遍的情况。</li>
+<li>LSM 本身是有 Compaction 来减少查询时检索的 SSTable 数量的，选择 Table 的策略又分为了 leveled 和 tiering。
+<ul>
+<li>LevelDB、RocksDB 采用的 Leveled 的策略就是把小的 sorted run 合并一个更大的 sorted run 来保证重叠的 Tables 数量小于阈值，该策略却是保证了较好的读性能但是因为归并排序的方式导致写放大比较严峻</li>
+<li>Tiered 则是等待多个相近大小的 sorted runs 达到阈值后合并到一个更大的 runs，从而提供更小的写放大以及更高的写吞吐。Cassandra、ScyllaDB 就采用了这样的方式。但是没有限制重叠的 Tables 的数量从而导致较大的查询开销。</li>
+<li>SIGMOD18 Dostoevsky 和 SIGMOD19 The Log-Structured Merge-Bush &amp; the Wacky Continuum 提出的 compaction 策略虽然做了一定程度上的读写的平衡，但是还是没能同时实现最好的读和写。</li>
+</ul>
+</li>
+<li>问题的关键其实在于限制 sorted runs 的数量以及 KV 存储不得不归并排序且重写现有的数据。如今的硬件技术使得随机访问的效率也很高了，因此 KV 存储不再说必须保证物理上的有序，而可以只保证逻辑有序同时避免大量的重写。</li>
+<li>为此，我们设计了REMIX，现有的范围查询解决方案很难在物理重写数据和动态执行昂贵的排序合并之间进行改进，与此不同的是，REMIX 使用了一个空间效率高的数据结构来记录跨多个表文件的 KV 数据的全局排序视图。使用 REMIX，基于 LSM 树的 KV-store 可以利用高效写压缩策略，而不会牺牲搜索性能。基于此我们还构建了 RemixDB，和高效的 Tiered 压缩策略以及分区的布局集成，同时实现了较低的写放大和快速的查询。</li>
+</ul>
+<h2 id="background">Background</h2>
+<ul>
+<li>了解几个概念就好：
+<ul>
+<li><strong>minor compaction</strong>：其实就是我们说的 flush 过程，数据从内存持久化到存储设备。这个过程写是比较快的，因为是顺序批量写入且不需要合并存储中的现有数据，但也就意味着查询操作需要检索所有的重叠的 Tables，查询开销较大，所以出现了 major compaction。</li>
+<li><strong>major compaction</strong>：其实就是把几个重叠的 runs 归并排序排序成更少的的 runs。也就是我们更为熟知的 compaction 操作。常说的 compaction 策略也是指 major compaction 过程中使用的策略。示例如下图<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610211420.png" alt="20210610211420" loading="lazy"></li>
+<li><strong>Range Query</strong>：范围查询是在 LevelDB/RocksDB 中是通过迭代器来定位多个 Tables 实现的，首先初始化一个迭代器，对一个 key 进行 seek，也就是范围查询的下届，seek 操作则定位对应的迭代器让其指向大于等于该 Key 的最小位置，然后 next 操作则相应地按顺序移动迭代器指向下一个 key，直到遇到了范围查询的边界。由于 sorted run 是按时间顺序生成的，所以目标键可以驻留在任何 runs 中。因此，迭代器必须跟踪所有 sorted runs。如上图所示的查询过程，找到了对应的 Keys 之后构建一个小顶堆进行归并排序，从而得到结果。</li>
+</ul>
+</li>
+</ul>
+<h2 id="remix">REMIX</h2>
+<ul>
+<li>范围查询其实依赖全局有序视图，而全局有序视图其实本身是从 SSTables 的不变性继承过来的，也就是说该全局有序视图本身可以保证很长一段时间有效，直到 SSTables 结构发生了变化，被删除了重写了之类的操作。<strong>现有的方案没有利用到不变性的这个优势，而是在每次范围查询过程中重复构建该全局有序视图</strong>，因为大量的计算开销和 I/O 而导致较差的读性能。所以 REMIX 就是想利用 table files 的不变性来维护一个全局有序视图，从而加速后续的查询操作。</li>
+<li>为了让 I/O 更高效，LSM 的 KV 存储常使用一些内存高效的元数据格式，譬如稀疏索引和布隆过滤器，如果我们记录了全局有序视图，势必也需要保证内存的空间高效。不能因为存储更多的元数据而导致读写性能损失。</li>
+</ul>
+<h3 id="the-remix-data-structure">The REMIX Data Structure</h3>
+<ul>
+<li>图示很好理解，简单解释一下概念。下图所示例子包含了三个 sorted runs，顺序对应地由箭头表示，共计 15 个 Keys，为了构建 REMIX，首先进行了个划分，划分为一定数量的 segments，每个分段包含的 Keys 数量相等。每个 Segment 对应包含一个起始 Key，也就是 Anchor Key，包含一组游标偏移，对应就是记录每个 Sorted Runs 现在的指针位置，也就是大于等于起始锚点的指针位置，还有一个 Run Selectors，包含了真正的顺序，即下一个 Key 所在的 runs 编号。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610214450.png" alt="20210610214450" loading="lazy"></li>
+<li>范围查询的过程就变成了：
+<ul>
+<li>首先检索稀疏索引，也就是 Anchor Key，二分查找找到所属的 segment</li>
+<li>迭代器对应被 seek 到该 segment 对应的 Anchor Key，然后使用该 segment 的游标偏移来移动迭代器指针，根据 selectors 中的顺序来进行 seek</li>
+<li>最后通过在全局有序的视图上找到了对应的目标 Key</li>
+</ul>
+</li>
+<li>例子：图示中找到 Key 17，首先二分找到 Segment2。然后游标从 11 开始移动，根据 Seletors 发现 11 在 R0 上，以及 Offset 的结果，即在 R0 的索引为 1 的地方开始，因为 11 &lt; 17，那么要继续移动游标，直到找到大于等于 17 的 Key，也就是图中的 17，这时候 offset 变成了 2 2 1，根据 Selectors 那么找到了 R1，根据 offset 也就找到了 17。</li>
+</ul>
+<h3 id="efficient-search-in-a-segment">Efficient Search in a Segment</h3>
+<ul>
+<li>Segement 的划分是一个可调的配置，Size 太大，Anchor Keys 就少了，二分查找更快，但是 Segment 内平均访问次数增多，因此在目标的 Segment 内也使用二分查找。</li>
+</ul>
+<h4 id="binary-search">Binary Search</h4>
+<ul>
+<li>为了在一个段中执行二分搜索，我们必须能够随机访问段中的每个键。段中的键属于 run，由相应的 run 选择器指示。要访问一个键，我们需要将 run 的游标放在正确的位置。这可以通过计算相同的 run 选择器在键之前的段中出现的次数，并将相应的游标向前移动相同的次数来实现。可以使用现代 CPU 上的 SIMD 指令快速计算出现次数。搜索范围可以通过对段的一些随机访问快速缩小，直到识别出目标键。为了结束查找操作，我们使用每个 run 选择器在目标键之前出现的次数初始化所有游标。</li>
+<li>图示很清楚，很好理解就不解释了。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610220752.png" alt="20210610220752" loading="lazy"></li>
+</ul>
+<h4 id="io-optimization">I/O Optimization</h4>
+<ul>
+<li>执行段内二分查找当然是为了减少比较的次数，但是，搜索路径上的键可能驻留在不同的 runs 中，如果各自的数据块没有被缓存，则必须通过单独的 I/O 请求来检索。上图所示就比较了四次 Key，对应访问了 3 个 runs，但是像 41 43 这两个 Key 其实属于一个 Run，甚至可能属于一个数据块。因此，在进行键比较之后，搜索可以利用相同数据块中的其余键，在必须访问不同的 Run 之前进一步缩小搜索范围。这样，R3 中的每个键都可以在不访问任何其他 Run 的情况下找到。比如为了查找 79，访问 R3 可以将搜索范围缩小到键 43 和键 83 之间，这时候二分查找找到了 71，也就是 R0，然后在 R0 中找到了 79。</li>
+</ul>
+<h3 id="search-efficiency">Search Efficiency</h3>
+<ul>
+<li>总结下来，具体的提升体现在下面三个方面
+<ul>
+<li><strong>REMIXes find the target key using one binary search</strong>：说白了就是执行一次二分查找就能找到 Key（这个一次其实是指完整的一次，包括段内的，因为全局有序视图，就花一次也很好理解）</li>
+<li><strong>REMIXes move the iterator without key comparisons</strong>：这个就是说不用再比较很多个 runs 的 Key 之后再移动了，这个还是因为全局有序，可以跳过一些没必要的比较操作。</li>
+<li><strong>REMIXes skip runs that are not on the search path</strong>：就是说可以跳过一些 run，但这个其实是看数据重叠的情况的，总是是因为读一个数据块的粒度导致可能读上来的数据块恰好就包含了这个 key，或者减小了查询的范围。</li>
+</ul>
+</li>
+<li>作者表明对点查询也是有优化的。</li>
+</ul>
+<h3 id="remix-storage-cost">REMIX Storage Cost</h3>
+<ul>
+<li>具体公式就不列了，看个数据就行。</li>
+<li>其实空间开销不小，特别是那个快 10% 的 USR。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610223144.png" alt="20210610223144" loading="lazy"></li>
+</ul>
+<h2 id="remixdb">RemixDB</h2>
+<ul>
+<li>RemixDB 使用了 Tiered Compaction 加一个分区的布局。因为有很多研究表明真实负载大多有很强的空间局部性，然后分区存储的话可以很好地降低压缩开销。所以 RemixDB 将键空间划分为不重叠键范围的分区。REMIX 对每个分区中的表文件进行索引，提供分区的排序视图。通过这种方式，RemixDB 本质上是一个使用分层压缩的单层 LSM 树。RemixDB 不仅继承了 Tiered 压缩的写效率，而且在 REMIX 的帮助下实现了高效的读取。RemixDB 的点查询操作(GET)执行一个 seek 操作，如果它与目标键匹配，则返回迭代器下的键。RemixDB 不使用Bloom过滤器。</li>
+<li>下图展示了 RemixDB 的结构，内存组件和 LevelDB 这些是一样的。分区中的压缩创建分区的新版本，其中包含新旧表文件的混合以及一个新的 REMIX 文件。旧版本在压缩后进行垃圾收集。</li>
+<li>在多级 LSM-tree 设计中，MemTable 的大小通常只有几十 MB，接近于默认的 SSTable 大小。在分区存储布局中，较大的 Memtable 在触发压缩之前可以积累更多的更新，这有助于减少 WA。MemTables 和 WAL 的空间成本几乎不变，考虑到当今数据中心的大内存和存储容量，这是合理的。在 RemixDB 中，MemTable 的最大大小被设置为 4GB。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610223337.png" alt="20210610223337" loading="lazy"></li>
+</ul>
+<h3 id="the-structures-of-remixdb-files">The Structures of RemixDB Files</h3>
+<h4 id="table-files">Table Files</h4>
+<ul>
+<li>图 6 显示了 RemixDB 中的表文件格式。数据块默认为 4KB。一个大的 KV-pair 如果不能容纳在一个 4KB 的块中，就会独占一个 4K 的倍数的巨型块。每个数据块在块的开始包含一个小数组的 KV 对的块偏移量，用于随机访问单独的 KV 对。</li>
+<li>元数据块是一个 8bit value 的数组，每个都记录着一个 4KB block 中的 Keys 的数量。一个块可以包含 255 个 KV，在一个大 Block 中，除了第一个 4KB 外，其余的都将其对应的数字设为0，这样一个非零的数字总是对应于一个块的头部。使用偏移数组和元数据块，搜索可以快速到达任何相邻的块，并跳过任意数量的键，而不访问数据块。因为 KV 对是由 REMIX 索引的，所以表文件不包含索引或过滤器。</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611115230.png" alt="20210611115230" loading="lazy"></figure>
+<h4 id="remix-files">REMIX Files</h4>
+<ul>
+<li>图 7 展示了 REMIX 文件格式，anchor key 是在一个不可变的类似于 B+Tree 的索引中维护的，相当于 LevelDB/RocksDB 的块索引，来辅助二分查找。每个 Anchor Key 和一个 Segment ID 关联，对应关联游标偏移和 run selectors。游标偏移由 16 位的块索引和 8 位的 key 索引组成，即图示中的 blk-id 和 key-id。块索引可以索引 65536 个 4KB 的块，也就是 256MB，每个块可以包含 256 个 KV 对。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611115712.png" alt="20210611115712" loading="lazy"></li>
+<li>一个 Key 的多个版本可以存在于一个分区的不同 table 文件中，一个范围查询操作必须跳过老版本并返回对应的最新的数据，所以 REMIX 构建的全局有序视图按照了从最新到最老的顺序排序，每个 run 选择器的最高位被保留来区分新旧版本。forward scan operation 将总是最先遇到最新版本的 Key，然后通过检查每个 run selector 的保留位来跳过老版本，而不用进行 Key 的比较。</li>
+<li>如果一个 Key 有多版本，这些版本可能分布在两个 Segments，查询操作可能需要检索两个 Segments 来获得最新的版本。为了简化查询，当构造一个 REMIX 时，通过在第一个段中插入特殊的 run 选择器作为占位符，我们将键的所有版本向前移动到第二个段。还需要确保一个 Segment 中的 Key 的最大数量等于或大于由 REMIX 索引的 runs 的个数，才能保证每个 Segment 足够大以容纳一个 Key 的所有版本的数据。</li>
+<li>为了容纳上面描述的特殊值，每个 run selector 占据了一个 byte，run selector 的第 8 位和第 7 位 (0x80 and 0x40) 分别表示老版本和删除的 Key。特殊值 63 (0x3f) 意味 placeholder，通过这种方式，RemixDB 可以在一个分区中管理多达 63 个 sorted tuns。</li>
+</ul>
+<h3 id="compaction">Compaction</h3>
+<ul>
+<li>在每个分区中，compaction 进程基于进入分区的新数据的大小和现有的 tables 的布局来估计 compaction cost，基于估算出来的开销，可能执行下列操作：
+<ul>
+<li><strong>Abort</strong>：取消分区 compaction 并保留 Memtable 和 WAL 中的新数据</li>
+<li><strong>Minor Compaction</strong>：写新数据到一个或多个 tables 而不用重写现有的 tables</li>
+<li><strong>Major Compaction</strong>：将新数据和一些甚至全部的现有数据合并</li>
+<li><strong>Split Compaction</strong>：将新数据和所有的现有数据合并，并拆分分区到几个新分区上</li>
+</ul>
+</li>
+<li><strong>Abort</strong>：Compaction 之后，一个分区如果有文件将重建该分区的 REMIX 索引，当一个小的表文件因为 minor compacion 在分区中创建，重建 REMIX 可能导致比较大的 I/O 开销。例如，表1 中的 USR 负载就有最高的空间开销比例。写 100MB 新数据到一个 1GB 的分区，将创建一个大约 100M 的索引。为了最小化 I/O 开销，RemixDB 可能丢弃一个分区的 compaction，如果估算出的 I/O 开销超过了阈值。该场景下，新的 KV 数据应该保留在 MemTables 和 WAL 中直到下一次 Compaction。
+<ul>
+<li>但是还有一个极端例子，如果一个 uniform 的负载，当所有分区都有 compaction 被Aborted 的时候，compaction 进程不能高效地当移动数据到分区。为了避免这个问题，我们限制了可以驻留在 Memtables 和 WAL 中的新数据的大小，不能超过最大 MemTable 大小的 15%，compaction 进程可以丢弃掉那些 I/O 开销最大的 compactions 如果达到了限制的话。</li>
+</ul>
+</li>
+<li><strong>Minor Compaction</strong>：minor compaction 就是从 immutable memtable 中把数据写入到分区中，而不用重写分区中原有的数据，但是需要重建 REMIX 索引。根据新写入的数据大小，minor compaction 创建一个或者多个新的 table files，Minor Compaction 只有在 compaction 后的预期 table 文件数量低于阈值 T 的时候才会执行，我们的实现中该阈值设定为了 10。下图展示了 minor compaction 的例子。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611145307.png" alt="20210611145307" loading="lazy"></li>
+<li><strong>Major Compaction</strong>：当一个分区中的预期文件数量达到了阈值 T 将执行 major 或者 split compaction。major compaction 将归并排序现有的 table files 合并成更少的 tables。随着 tables 数量的减少，minor compaction 的效率也就可以根据输入表文件的数量与输出表文件的数量的比率来估计。下图展示了 major compaction 的过程，该例子中，新数据合并到了三个小的 tables，只有一个新的 table 在 compaction 之后被创建，比例为 3/1，如果整个分区被归并排序，compactions 需要重写更多的数据并且仍然输出三个 tables，比例 5/3，因为 table file 大小的限制。相应的，major compaction 选择能够产生最高比率的输入文件的数量。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611145910.png" alt="20210611145910" loading="lazy"></li>
+<li><strong>Split Compaction</strong>：major compaction 可能不会很快地减少填满了大 table 的分区中 tables 的数量，这可以通过一个较低的估计输入/输出比率(例如10/9)来预测。该例子下，分区需要被分成多个分区，从而保证每个分区中的 tables 的数量可以持续减少。Split Compaction 归并排序了新数据和现有的 table fils，产生新的 tables 来组成几个新的分区。下图展示了过程。为了避免创建太多的小分区，compaction process 在一个分区里创建了 M 个新的 table files，M 默认为 2，这样来保证创建了 E/M 个分区，E 为新产生的 tables 的数量。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611150559.png" alt="20210611150559" loading="lazy"></li>
+</ul>
+<h3 id="rebuilding-remixes">Rebuilding REMIXes</h3>
+<ul>
+<li>分区存储布局可以通过利用较强的空间局部性来有效最小化真实负载 compaction cost，具体的，RemixDB 可以在几个分区中吸收大多数更新，在接受少量的分区中的 compaction 可以被避免。但是如果负载没有空间局部性，许多分区不可避免地必须执行压缩并进行少量的更新。Tiered Compaction 可以最小化这些分区的写操作，但是在一个分区中重建 REMIX 仍然需要读取已经存在的 tables。在我们的实现中，RemixDB 利用了现有的 REMIX 索引并使用了一个搞笑的合并算法来最小化重建过程的 I/O 开销。</li>
+<li>当重建分区的 REMIX，现有的表已经被 REMIX 索引，这些表可以被视为一个 Sorted Run，相应的，重建过程相当于归并排序两个 sorted runs，一个来自现有的数据，另一个来自新数据，当现有的这个 sorted run 比新的大很多的时候，generalized binary merging algorithm 算法通过使用小顶堆实现了更少的 Key 比较，相比于归并排序、算法根据两个 sorted run 之间的 size ratio 估计出了下一次合并点的 location 信息，并在相邻的范围中进行搜索。在RemixDB中，我们通过使用锚键来定位包含合并点的目标段，最后在该段中应用二叉搜索。在这个过程中，访问锚定键不会产生任何I/O，因为它们存储在 REMIX 中。在目标段中进行二分搜索，最多读取 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>l</mi><mi>o</mi><msub><mi>g</mi><mn>2</mn></msub><mi>D</mi></mrow><annotation encoding="application/x-tex">log_2D</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">o</span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03588em;">g</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.03588em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathdefault" style="margin-right:0.02778em;">D</span></span></span></span> 键来找到合并点。现有表的所有 run 选择器和游标偏移量都可以从现有的 REMIX 中派生出来，而不需要任何 I/O。要为新的分段创建锚定键，我们最多需要在新的排序视图上对每个分段访问一个键。</li>
+<li>重建 REMIX 的读开销被分区中的所有表的大小限制，重建过程导致对现有表的读 I/O，为了降低 WA 并提升未来的读性能。构建 REMIX 是否是成本高效的取决于想要节省多少个写 I/O 以及未来想提升多少读性能。实际上，在 SSDs 中的写操作通常比读操作更慢而且可能对设备造成永久的破坏。因此读相比于写来说更经济，特别是有空闲 I/O 带宽的系统。在期望具有弱空间局部性的密集写操作的系统中，采用多层 tiered 压缩策略或延迟在单个分区中重建 REMIX 可以降低以拥有更多级别已排序视图为代价的重建成本。调整 REMIX 与不同的存储布局超出了本文的范围。我们对 RemixDB 在不同工作负载下的重建成本进行了实证评估</li>
+</ul>
+<h2 id="evaluations">Evaluations</h2>
+<ul>
+<li>实验搭建：
+<ul>
+<li>在每个实验中，我们首先创建一组 H 个表文件(1≤H≤16)，它们类似于RemixDB中的一个分区或LSM-tree中的一个级别，使用 tiered compaction。每个表文件包含 64MB 的KV-pairs，其中键和值的大小分别为 16B 和 100B。当 H≥2 时，KV 对可以用两种不同的模式分配到表中:
+<ul>
+<li><strong>Weak locality</strong>：每个键被分配给一个随机选择的表，这提供了弱访问局域性，因为逻辑上连续的键经常驻留在不同的表中</li>
+<li><strong>Strong locality</strong>：每64个逻辑上连续的键被分配给一个随机选择的表，这提供了强访问局域性，因为一个范围查询可以从几个表中检索多个连续的键</li>
+</ul>
+</li>
+<li>D=32，段内二分查找可以开启或关闭，对应图中的 full/partial<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162158.png" alt="20210611162158" loading="lazy"></li>
+</ul>
+</li>
+<li>单次 Seek：Merge Iterator 在只有一个 Table 的时候表现更好，因为和 REMIX 需要执行相同次数的二分查找，但是 REMIX 需要动态地计算出现次数，并将迭代器从段的开头移动到一个键进行比较，开销相对更大。随着 Tables 数量增加，REMIX 的性能优势渐渐体现出来了。</li>
+<li>Seek+Next50 整体性能低于 Seek 因为要拷贝数据到 Buffer。开启段内二分查找影响不大，因为 next 操作主要影响执行时间，在段中对寻道操作的线性扫描预热了块缓存，这使得未来的操作更快。</li>
+<li>点查询：当少于 14 个 tables 的时候，REMIX 都不如带布隆过滤器的点查询，因为搜索可以只需要检查Bloom过滤器来有效地缩小到一个表文件。其次，在SSTable中搜索比在管理更多的键的 REMIX 中要快。在最坏的情况下，REMIX的吞吐量比Bloom过滤器(有3个表)低20%。不出所料，在没有Bloom过滤器的情况下，使用两个以上sstable的搜索速度会慢得多</li>
+<li>强局部性的时候在 range query 的结果上差距不大，通常，改进的局部性允许更快的二分搜索，因为在这种情况下，最后几个键比较通常可以使用相同数据块中的键。但是，合并迭代器的吞吐量仍然很低，因为密集的键比较操作占据了搜索时间。带有部分二分搜索的 REMIX 比完全二分搜索的改进更多，是因为局部性的提升减少了在目标 segment 里 scan 的开销，导致更少的缓存缺失。</li>
+<li>REMIX 点查询性能也得到了改善，因为强大的局域性加快了底层查找操作的速度。同时，Bloom 过滤器的结果保持不变，因为搜索代价主要由假阳性率和对单个表的搜索代价决定。因此，当包含超过9个表时，remix的性能可以超过Bloom过滤器。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162216.png" alt="20210611162216" loading="lazy"></li>
+<li>8 个 tables，不同的 segment size，如果关闭了段内二分查找，只 seek 的负载下， D 的大小影响最大，这是因为段中的线性扫描显著增加了较大的 D 值的成本。由于段内的随机访问速度较慢，较大的段大小仍然会导致较高的开销。在 Seek+Next50 实验中，数据复制在执行时间中占主导地位，使用不同的 D 时没有显著差异<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162225.png" alt="20210611162225" loading="lazy"></li>
+<li>不同的 range query 展现出了大约相同的趋势，实验中顺序加载相应的数据，所以在每种存储系统中都不会有重叠的文件，也就意味着 seek 操作只会访问一个文件。然而一个合并迭代器必须检查每个 sorted run 即便他们没有重叠的键范围，所以如果有多个 sorted runs 的话检索每个 run 的操作将占据 seek 时间的很大一部分。具体的，每一个在 LevelDB 和 RocksDB 中的 L0 表都是一个独立的 run，但是每一层 Li 又只包含一个 run。PebblesDB 允许一个 Level 有多个 runs，话虽如此，LevelDB 的性能至少比RocksDB高出2倍，尽管它们都使用了 Leveled 压缩。观察发现 RocksDB 在顺序加载过程中，在 L0 层保留了好几个 tables，总共八个，而没有把这些文件移动到更深的层次。相反，LevelDB 直接把这个 Table 推向了更深的层次 （L2 或 L3），如果这个 Table 和别的 Tables 不重叠的话，从而让 LevelDB 的 L0 层总是为空。因此，RocksDB 中的一个 seek 操作需要动态地排序-合并至少 12 个 sorted run，而这个数字在 LevelDB 中只有 3 或 4。</li>
+<li>查找性能对访问的局部性是敏感的。较弱的局部性会增加搜索路径上的CPU和I/O开销。在每个特定 value 大小的实验中，采用 uniform 访问模式的吞吐量比顺序访问低50%左右。同时，顺序访问的性能对值大小不太敏感，因为内存复制成本不显著<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162232.png" alt="20210611162232" loading="lazy"></li>
+<li>另外的实验测试了不同的存储总量大小下 query 长度对范围扫描的性能影响。每个实验以随机的顺序将具有 120B 值大小的固定大小的 KV 数据集加载到存储中，然后使用 Zipfian 访问模式使用四个线程执行范围扫描。REMIX 表现最好，但随着范围查询的长度增加，性能差异逐渐变小，这是因为长范围的查询在每个 sorted run 上展示出了顺序访问的特性，也就意味着在 scan 过程中更多的数据已经被预取，同时内存拷贝也给每个存储增加了固定的开销。</li>
+<li>还有观察发现 LevelDB 在 256GB 的时候性能下降到和 RocksDB 一样。因为实验中配置了 4GB 的 block cache，缓存丢失导致大量的 I/O 占据了查询时间。与此同时 RocksDB 展示出了极大的计算开销，因为在数据量较小的时候 L0 层包含了太多 Tables。在更大数据量的存储中，过多的 I/O 掩盖了开销。与此同时 REMIX 保证了最好的访问局部性，因为导致了最少的随机访问和缓存丢失。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162249.png" alt="20210611162249" loading="lazy"></li>
+<li>单线程随机插入 256GB 的数据，数据集有 20 个 KV 对，value 大小是 120B，负载有 uniform 的访问特征，代表着最差的情况。REMIX 和 PebblesDB 吞吐量最高，因为使用了利于写的 tiered compaction 策略，对应写放大为 4.99、9.26。比 LevelDB/RocksDB 小了很多。RocksDB 和 RemixDB 有更多的读 I/O，因为 RocksDB 使用了四个线程进行 Compaction 来充分利用 SSD 带宽，因为 Block Cache 和 Page Cache 的低效利用导致读 I/O 较多，LevelDB 只支持单线程压缩。尽管 RemixDB 读 I/O 多于 RocksDB 但是总的 I/O 还是小于 RocksDB 的。综上所述，RemixDB 以增加读 I/O 为代价实现了低 WA 和高写吞吐量。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162259.png" alt="20210611162259" loading="lazy"></li>
+<li>顺序的负载展现出最高的吞吐，因为每一轮压缩只影响很少的分区。写 I/O 主要包含日志和创建新的表，大约是用户写入量的 2 倍。读 I/O 主要是重建 REMIX 和数据本身的大小基本相同。相比之下，两个倾斜负载，在 Memtable 中重复 overwrites 导致写 I/O 大幅减少，但是会创建分散的更新，将导致 Memtable 中更新较慢以及更多的分区被 Compacted。Zipfian-Composite 有更差的空间局部性比 Zipfian，导致了更大的 Compaction I/O 开销。</li>
+<li>YCSB 中，RemixDB 除了负载 D 表现都比其他的好。也就是 95% 的读请求访问最近的 5% 的写入，这种访问模式有很强的局部性，大部分请求直接是由存储中的 Memtables 来处理的，单线程压缩导致的缓慢插入阻碍了 LevelDB 的性能(1.1 MOPS)。</li>
+<li>即便 REMIX 没有显示出相比于布隆过滤器足够的优势，但是在 YCSB-B，C 中比其他表现好，这两种负载下点查询占据大部分。是因为点查询在多级的 LSM 中在搜索路径上选择对应的 tables 的开销很大，具体而言就是每一个 L0 的 table，大约有两个键比较用于检查 seek 键是否被表覆盖，如果在 L0 中没找到，在每一个更深的层次中执行二分查找，直到 Key 被找到。布隆过滤器的大小大约 600KB，对于一个 64MB 的表而言，访问一个布隆过滤器会导致大约七次内存随机访问，在一个很大的存储中将导致严重的缓存缺失。REMIX 索引的分区形成了一个全局有序视图，基于此的二分查找可以很快得到应答。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611195131.png" alt="20210611195131" loading="lazy"></li>
+</ul>
+
+                </div>
+                <div class="clear"></div>
+              </section>
+            </article>
+            <div class="clear"></div>
+
+            <section class="related section">
+              
+              
+              <article class="next grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://blog.shunzi.tech/post-images/cpp-basic.jpg');"></div>
+                 <a href="https://blog.shunzi.tech/post/cpp-std/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2021-05-12">2021-05-12</time>
+                  <h4 class="title white no-margin">C++ STL</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
+
+                <div class="clear"></div>
+            </section>
+
+              <div class="clear"></div>
+              
+            
+              <div id="comments" class="bg-white hosted ">
+                <div class="clear"></div>
+<script>
+jQuery(document).ready(function($){
+    $('.vemoji-btn').text('😀');
+    $("#comments").on('click', 'span.vat',function(){
+        $(this).parent('div.vmeta').next("div.vcontent").after($("div.vwrap"));
+        $('textarea#veditor').focus();
+    })
+    if(window.location.hash){
+        var checkExist = setInterval(function() {
+            if ($(window.location.hash).length) {
+                $('html, body').animate({scrollTop: $(window.location.hash).offset().top-200}, 600);
+                clearInterval(checkExist);
+            }
+        }, 100);
+    }
+})
+</script>
+
+              </div>
+            
+
+            </div>
+          </div>
+      </main>
+
+          <footer id="footer" class="grid-container">
+        <div class="widgets row gradient-effect">
+            <div class="default-sidebar border-effect">
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_epcl_posts_thumbs underline-effect">
+                  <h4 class="widget-title title white bordered">最新文章</h4>
+                  
+                  
+                  <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/REMIX/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610214450.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-06-05">2021-06-05</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/REMIX/">REMIX: Efficient Range Query for LSM-trees</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/cpp-std/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://blog.shunzi.tech/post-images/cpp-basic.jpg');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-05-12">2021-05-12</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/cpp-std/">C++ STL</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
+                    <a href="https://blog.shunzi.tech/post/HashKV/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324112600.png');"></span>
+                    </a>
+                    <div class="info gradient-effect">
+                      <time datetime="2021-05-11">2021-05-11</time>
+                      <h4 class="title usmall">
+                        <a href="https://blog.shunzi.tech/post/HashKV/">HashKV: Enabling Efficient Updates in KV Storage via Hashing</a>
+                      </h4>
+                    </div>
+                    <div class="clear"></div>
+                  </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="tag_cloud-2" class="widget widget_tag_cloud underline-effect">
+                  <h4 class="widget-title title white bordered">标签云</h4>
+                  <div class="tagcloud">
+                    
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-1 ctag-3zCwFWPHxH" aria-label="">存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-2 ctag-_jfuTNqah" aria-label="">LSM</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-3 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/RxQjurMnD/" class="ctag ctag-4 ctag-RxQjurMnD" aria-label="">Survey</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-5 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-6 ctag-os" aria-label="">OS</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-7 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-8 ctag-hbaTDSglx-" aria-label="">工具</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-9 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/wAFV_pvXZ/" class="ctag ctag-10 ctag-wAFV_pvXZ" aria-label="">cs-course</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/VqiGqmxbod/" class="ctag ctag-11 ctag-VqiGqmxbod" aria-label="">6.824</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-12 ctag-geK0jEW-T" aria-label="">分布式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-13 ctag-9msH-lUaA" aria-label="">缓存</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-14 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-15 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-16 ctag-gqgftpk_y" aria-label="">AI</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-17 ctag-shu-ju-ku" aria-label="">数据库</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-18 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-19 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-20 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-21 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-22 ctag-PhD" aria-label="">Ph.D</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-23 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-24 ctag-PuY19cs53" aria-label="">仿真</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-25 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-26 ctag-fu-wu-qi" aria-label="">服务器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-27 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-28 ctag-5h7k39FKw" aria-label="">C语言</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
+                    
+                  </div>
+                  <div class="clear"></div>
+                </section>
+              </div>
+
+              <div class="grid-33 tablet-grid-50 mobile-grid-100">
+                <section id="epcl_about-2" class="widget widget_epcl_about underline-effect">
+                  <h4 class="widget-title title white bordered">关于我</h4>
+                  <div class="avatar">
+                    <a href="" class="translate-effect thumb"><span class="fullimage cover" style="background-image: url(https://blog.shunzi.tech/images/avatar.png);"></span></a>
+                  </div>
+                  <div class="info">
+                    <h4 class="title small author-name gradient-effect no-margin"><a href="">Elvis Zhang</a></h4>
+                    <p class="founder">The easy way or the right way.</p>
+                    <div class="social">
+                      
+                          
+                            <a href="https://github.com/zjs1224522500" class="translate-effect" target="_blank"><i class="fa fa-github"></i></a>
+                        
+                      
+                          
+                            <a href="https://twitter.com/1224522500Elvis" class="translate-effect" target="_blank"><i class="fa fa-twitter"></i></a>
+                        
+                      
+                        
+                      
+                        
+                      
+                        
+                      
+                    </div> 
+                  </div>
+                  <div class="clear"></div>
+                  </section>
+              </div>
+
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div class="logo">
+          <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
+        </div>
+        <p class="published border-effect">
+          ©2019 共 121 篇文章
+          <br/>
+          Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
+        </p>
+        
+        <a href="javascript:void(0)" id="back-to-top" class="epcl-button dark" style="display:none">
+          <i class="fa fa-arrow"></i>
+        </a>
+    </footer>
+    
+    <div class="clear"></div>
+
+        
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
+<script type="text/javascript" src="https://cdn.staticfile.org/valine/1.3.10/Valine.Pure.min.js"></script>
+<script>
+    new Valine({
+        el: '#comments',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI' ,
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 30,
+        placeholder: '既然来了，那就留个痕迹吧~',
+        visitor: true // 阅读量统计
+    })
+</script>
+    
+
+      
+    <script src="https://blog.shunzi.tech/media/js/functions-post.js"></script>
+
+    </div>
+    <!-- end: #wrapper -->
+  </body>
+</html>

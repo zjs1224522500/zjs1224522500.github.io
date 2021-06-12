@@ -89,7 +89,7 @@ C++ 多线程封装，以及一些并发处理机制的资料
       <div class="hide-on-mobile hide-on-tablet hide-on-desktop">
         <div id="search-lightbox" class="grid-container grid-small grid-parent mfp-hide">
           <div class="search-wrapper section">
-            <form id="gridea-search-form" data-update="1620954331293" action="/search/index.html" class="search-form" _lpchecked="1">
+            <form id="gridea-search-form" data-update="1623466729068" action="/search/index.html" class="search-form" _lpchecked="1">
               <input type="text" name="q" id="s" value="" class="search-field" placeholder="搜点啥..." aria-label="搜点啥..." required="">
               <button type="submit" class="submit" aria-label="Submit">
                 <i class="fa fa-search-line"></i>
@@ -104,7 +104,7 @@ C++ 多线程封装，以及一些并发处理机制的资料
         <div class="center content">
           <div class="featured-image cover" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210513192958.png');">
             <div class="meta top"> 
-              <time class="meta-info" style="float:left;" datetime="2021-05-06"><i class="fa fa-calendar"></i><span class="lately">8 天前</span></time>
+              <time class="meta-info" style="float:left;" datetime="2021-05-06"><i class="fa fa-calendar"></i><span class="lately">1 个月前</span></time>
               
               <a href="https://blog.shunzi.tech/post/cpp-multi-thread/#comments" class="comments meta-info" title="">
                 <i class="fa fa-comment remixicon"></i><span class="comment-count valine-comment-count" data-xid="/cpp-multi-thread/"> </span>
@@ -143,10 +143,67 @@ C++ 多线程封装，以及一些并发处理机制的资料
 <li><a href="https://www.jianshu.com/p/8c1bb012d5f8">[6] 简书：c++11 多线程（3）atomic 总结</a></li>
 <li><a href="https://www.cnblogs.com/haippy/p/3301408.html">[7] 博客园：C++11 并发指南六( <atomic> 类型详解二 std::atomic )</a></li>
 <li><a href="https://support.huaweicloud.com/prtg-kunpengdbs/kunpengdbsolution_12_0002.html">[8] 华为云：常见原子操作（C语言）</a></li>
+<li><a href="http://events.jianshu.io/p/a25e0754e2b9">[9] 简书：LevelDB 中的跳表实现</a></li>
 </ul>
 <h3 id="atomic">atomic</h3>
 <ul>
 <li>所谓原子操作，就是多线程程序中“最小的且不可并行化的”操作。对于在多个线程间共享的一个资源而言，这意味着同一时刻，多个线程中有且仅有一个线程在对这个资源进行操作，即互斥访问。</li>
+<li>而关于原子性，我们应当具有一个基本的认知：<strong>高级语言层面，单条语句并不能保证对应的操作具有原子性</strong>。</li>
+</ul>
+<h4 id="举例说明">举例说明</h4>
+<ul>
+<li>在使用 C、C++、Java 等各种高级语言编写代码时，不少人会下意识的认为一条不可再分的单条语句具有原子性，例如常见 i++。</li>
+</ul>
+<pre><code class="language-C">// 伪码
+
+int i = 0;
+
+void increase() {
+  i++;
+}
+
+int main() {
+  /* 创建两个线程，每个线程循环进行 100 次 increase */
+  // 线程 1
+  Thread thread1 = new Thread(
+    run() {
+      for (int i = 0; i &lt; 100; i++) increase();
+    }
+  );
+  // 线程 2
+  Thread thread2 = new Thread(
+    run() {
+      for (int i = 0; i &lt; 100; i++) increase();
+    }
+  );
+}
+</code></pre>
+<ul>
+<li>如果 i++ 是原子操作，则上述伪码中的 i 最终结果为 200。但实际上每次运行结果可能都不相同，且通常小于 200。</li>
+<li>之所以出现这样的情况是因为 <strong>i++ 在执行时通常还会继续划分为多条 CPU 指令</strong>。以 Java 为例，i++ 编译将形成四条字节码指令，以下四条指令是 Java 虚拟机中的字节码指令，字节码指令是 JVM 执行的指令。实际每条字节码指令还可以继续划分为更底层的机器指令。但字节码指令已经足够演示原子性的含义了。如下所示：
+<ul>
+<li><a href="https://blog.csdn.net/tanggao1314/article/details/53260891">CSDN：JVM指令集及各指令的详细使用说明</a></li>
+</ul>
+</li>
+</ul>
+<pre><code>// Java 字节码指令
+0:  getstatic     # 获取静态属性指令，获取指定类的静态域，并将其值压入栈顶  
+1:  iconst_1      # 当int取值-1~5时，JVM采用iconst指令将常量压入栈中，也就是将 1 压入栈中
+2:  iadd          # 将栈顶两 int 型数值相加并将结果压入栈顶
+3:  putstatic     # 为指定的类的静态域赋值
+</code></pre>
+<ul>
+<li>而上述四条指令的执行并不保证原子性，即执行过程可被打断。考虑如下 CPU 执行序列：
+<ol>
+<li>线程 1 执行 getstatic 指令，获得 i = 1</li>
+<li>CPU 切换到线程 2，也执行了 getstatic 指令，获得 i = 1。</li>
+<li>CPU 切回线程 1 执行剩下指令，此时 i = 2</li>
+<li>CPU 切到线程 2，由于步骤 2 读到的是 i = 1，固执行剩下指令最终只会得到 i = 2</li>
+</ol>
+</li>
+</ul>
+<h3 id="c-stdatomic">C++ std::atomic</h3>
+<ul>
 <li>std::atomic 为C++11封装的原子数据类型。原子数据类型不会发生数据竞争，能直接用在多线程中而不必我们用户对其进行添加互斥资源锁的类型。从实现上，大家可以理解为这些原子类型内部自己加了锁。</li>
 <li>原子类型在头文件 <atomic> 中，使用atomic有两套命名模式：一种是使用替代名称，一种是使用atomic的特化。
 <ul>
@@ -256,6 +313,147 @@ b.compare_exchange_weak(expected, new_value);
 <li>其余使用方法和compare_exchange_weak完全一致。</li>
 <li>这两个版本的区别是：Weak版本如果数据符合条件被修改，其也可能返回false，就好像不符合修改状态一致；而Strong版本不会有这个问题，但在某些平台上Strong版本比Weak版本慢 [注:在x86平台我没发现他们之间有任何性能差距]；绝大多数情况下，我们应该优先选择使用Strong版本；</li>
 </ul>
+<h4 id="memory-order">memory order</h4>
+<ul>
+<li>在介绍 Memory Order 之前首先介绍 <strong>有序性</strong></li>
+</ul>
+<h5 id="有序性">有序性</h5>
+<ul>
+<li>上述已经提到 CPU 的一条指令执行时，通常会有多个步骤，如取指IF 即从主存储器中取出指令、ID 译码即翻译指令、EX 执行指令、存储器访问 MEM 取数、WB 写回。</li>
+<li>即指令执行将经历：<strong>IF、ID、EX、MEM、WB</strong> 阶段。</li>
+<li>现在考虑 CPU 在执行一条又一条指令时该如何完成上述步骤？最容易想到并是顺序串行，指令 1 依次完成上述五个步骤，完成之后，指令 2 再开始依次完成上述步骤。这种方式简单直接，但执行效率显然存在很大的优化空间。</li>
+<li>思考一种流水线工作：</li>
+</ul>
+<pre><code>指令1   IF ID EX MEM WB
+指令2      IF ID EX MEM WB
+指令3         IF ID EX MEM WB
+</code></pre>
+<ul>
+<li>采用这种流水线的工作方式，将避免 CPU 、存储器中各个器件的空闲，从而充分利用每个器件，提升性能。同时注意到由于每条指令执行的情况有所不同，指令执行的先后顺序将会影响到这条流水线的负载情况，而我们的目标则是让整个流水线满载紧凑的运行。</li>
+<li>为此 CPU 又实现了「指令重排」技术，CPU 将有选择性的对部分指令进行重排来提高 CPU 执行的性能和效率。例如：</li>
+</ul>
+<pre><code class="language-C">x = 100;    // #1
+y = 200;    // #2
+z = x + y;  // #3
+</code></pre>
+<ul>
+<li>虽然上述高级语言的语句会编译成多条机器指令，多条机器指令还会进行「指令重排」，#1 语句与 #2 语句完全有可能被 CPU 重新排序，所以程序实际运行时可能会先执行 y = 200; 然后再执行 x = 100;</li>
+<li>但另一方面，指令重排的前提是不会影响线程内程序的串行语义，CPU 在重排指令时必须保证线程内语义不变，例如：</li>
+</ul>
+<pre><code class="language-C">x = 0; // #1
+x = 1; // #2
+y = x; // #3
+</code></pre>
+<ul>
+<li>上述的 y 一定会按照正常的串行逻辑被赋值为 1。</li>
+<li>但不幸的是，CPU 只能保证线程内的串行语义。在多线程的视角下，「指令重排」造成的影响需要程序员自己关注。</li>
+</ul>
+<pre><code class="language-C">
+// 公共资源
+int x = 0;
+int y = 0;
+int z = 0;
+
+Thread_1:             Thread_2:
+x = 100;              while (y != 200);
+y = 200;              print x
+z = x + y;
+</code></pre>
+<ul>
+<li>如果 CPU 不进行「乱序优化」执行，那么 y = 200 时，x 已经被赋值为 100，此时线程 2 输出 x = 200。但实际运行时，线程 1 可能先执行 y = 200，此时 x 还是初始值 0。线程 2 观察到 y = 200 后，退出循环，输出 x = 0;</li>
+</ul>
+<h5 id="memory-order-2">memory order</h5>
+<ul>
+<li>C++ 提供了 std::atomic 类模板，以保证操作原子性。同时也提供了内存顺序模型 memory_order指定内存访问，以便提供有序性和可见性。
+<ul>
+<li><strong>memory_order_relaxed</strong>: 只保证原子操作的原子性，不提供有序性的保证</li>
+<li><strong>memory_order_consume</strong>	当前线程中依赖于当前加载的该值的读或写不能被重排到此加载前</li>
+<li><strong>memory_order_acquire</strong>	在其影响的内存位置进行获得操作：当前线程中读或写不能被重排到此加载前</li>
+<li><strong>memory_order_release</strong>	当前线程中的读或写不能被重排到此存储后</li>
+<li><strong>memory_order_acq_rel</strong>	带此内存顺序的读修改写操作既是获得操作又是释放操作</li>
+<li><strong>memory_order_seq_cst</strong>	有此内存顺序的加载操作进行获得操作，存储操作进行释放操作，而读修改写操作进行获得操作和释放操作，再加上存在一个单独全序，其中所有线程以同一顺序观测到所有修改</li>
+</ul>
+</li>
+<li>组合出四种顺序：
+<ul>
+<li><strong>Relaxed ordering 宽松顺序</strong>：宽松顺序只保证原子变量的原子性（变量操作的机器指令不进行重排序），但无其他同步操作，不保证多线程的有序性。</li>
+</ul>
+<pre><code class="language-C">Thread1: 
+y.load(std::memory_order_relaxed);
+
+Thread2:
+y.store(h, std::memory_order_relaxed);
+</code></pre>
+<ul>
+<li><strong>Release-Acquire ordering 释放获得顺序</strong>，store 使用 memory_order_release，load 使用 memory_order_acquire，CPU 将保证如下两点：
+<ul>
+<li>store 之前的语句不允许被重排序到 store 之后（例子中的 #1 和 #2 语句一定在 store 之前执行）</li>
+<li>load 之后的语句不允许被重排序到 load 之前（例子中的 #3 和 #4 一定在 load 之后执行）</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-C++">std::atomic&lt;std::string*&gt; ptr;
+int data;
+
+void producer()
+{
+    std::string* p  = new std::string(&quot;Hello&quot;); // #1
+    data = 42;  // #2
+    ptr.store(p, std::memory_order_release);
+}
+
+void consumer()
+{
+    std::string* p2;
+    while (!(p2 = ptr.load(std::memory_order_acquire)))
+        ;
+    assert(*p2 == &quot;Hello&quot;); // 绝无问题 #3
+    assert(data == 42); // 绝无问题 #4
+}
+
+int main()
+{
+    std::thread t1(producer);
+    std::thread t2(consumer);
+    t1.join(); t2.join();
+}
+</code></pre>
+<ul>
+<li>同时 CPU 将保证 store 之前的语句比 load 之后的语句「先行发生」，即先执行 #1、#2，然后执行 #3、#4。这实际上就意味着线程 1 中 store 之前的读写操作对线程 2 中 load 执行后是可见的。<strong>注意是所有操作都同步了，不管 #3 是否依赖了 #1 或 #2</strong></li>
+<li>值得关注的是这种顺序模型在一些强顺序系统例如 x86、SPARC TSO、IBM 主框架上是自动进行的。但在另外一些系统如 ARM、Power PC 等需要额外指令来保障。</li>
+<li><strong>Release-Consume ordering 释放消费顺序</strong>:store 使用 memory_order_release，load 使用 memory_order_consume。其效果与 Release-Acquire ordering 释放获得顺序类似，唯一不同的是并不是所有操作都同步（不够高效），而是只对依赖操作进行同步，保证其有序性上例就是 #3 一定发生在 #1 之后，因为这两个操作依赖于 ptr。但不会保证 #4 一定发生在 #2 之后（注意「释放获得顺序」可以保证这一点）。</li>
+</ul>
+<pre><code class="language-C++">std::atomic&lt;std::string*&gt; ptr;
+int data;
+
+void producer()
+{
+    std::string* p  = new std::string(&quot;Hello&quot;); // #1
+    data = 42; // #2
+    ptr.store(p, std::memory_order_release);
+}
+
+void consumer()
+{
+    std::string* p2;
+    while (!(p2 = ptr.load(std::memory_order_consume)))
+        ;
+    assert(*p2 == &quot;Hello&quot;); // #3 绝无出错： *p2 从 ptr 携带依赖
+    assert(data == 42); // #4 可能也可能不会出错： data 不从 ptr 携带依赖
+}
+
+int main()
+{
+    std::thread t1(producer);
+    std::thread t2(consumer);
+    t1.join(); t2.join();
+}
+</code></pre>
+<ul>
+<li><strong>Sequential consistency 序列一致顺序</strong>: 「释放获得顺序」是对某一个变量进行同步，Sequential consistency 序列一致顺序则是对所有变量的所有操作都进行同步。store 和 load 都使用 memory_order_seq_cst，可以理解对每个变量都进行 Release-Acquire 操作。所以这也是最慢的一种顺序模型。</li>
+</ul>
+</li>
+</ul>
 
                 </div>
                 <div class="clear"></div>
@@ -265,13 +463,26 @@ b.compare_exchange_weak(expected, new_value);
 
             <section class="related section">
               
+              <article class="prev grid-50 tablet-grid-50 grid-parent">
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324112600.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/HashKV/" class="full-link"></a>
+                 <div class="info">
+                  <time datetime="2021-05-11">2021-05-11</time>
+                  <h4 class="title white no-margin">HashKV: Enabling Efficient Updates in KV Storage via Hashing</h4>
+                </div>
+                 <span class="epcl-button red">
+                  <img src="https://blog.shunzi.tech/media/images/left-arrow.svg" width="15" alt="Left Arrow">
+                </span>
+                <div class="overlay"></div>
+              </article>
+              
               
               <article class="next grid-50 tablet-grid-50 grid-parent">
-                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210513192631.png');"></div>
-                 <a href="https://blog.shunzi.tech/post/c-basic/" class="full-link"></a>
+                <div class="thumb cover lazy loaded" style="background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210330151553.png');"></div>
+                 <a href="https://blog.shunzi.tech/post/FloDB/" class="full-link"></a>
                  <div class="info">
-                  <time datetime="2021-04-06">2021-04-06</time>
-                  <h4 class="title white no-margin">C 基础</h4>
+                  <time datetime="2021-04-09">2021-04-09</time>
+                  <h4 class="title white no-margin">FloDB: Unlocking Memory in Persistent Key-Value Stores</h4>
                 </div>
                  <span class="epcl-button red">
                   <img src="https://blog.shunzi.tech/media/images/right-arrow.svg" width="15" alt="Left Arrow">
@@ -322,13 +533,13 @@ jQuery(document).ready(function($){
                   
                   
                   <article class="item post-0 post type-post status-publish format-standard has-post-thumbnail hentry">
-                    <a href="https://blog.shunzi.tech/post/cpp-multi-thread/" class="thumb hover-effect">
-                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210513192958.png');"></span>
+                    <a href="https://blog.shunzi.tech/post/REMIX/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610214450.png');"></span>
                     </a>
                     <div class="info gradient-effect">
-                      <time datetime="2021-05-06">2021-05-06</time>
+                      <time datetime="2021-06-05">2021-06-05</time>
                       <h4 class="title usmall">
-                        <a href="https://blog.shunzi.tech/post/cpp-multi-thread/">C++ 多线程</a>
+                        <a href="https://blog.shunzi.tech/post/REMIX/">REMIX: Efficient Range Query for LSM-trees</a>
                       </h4>
                     </div>
                     <div class="clear"></div>
@@ -337,13 +548,13 @@ jQuery(document).ready(function($){
                   
                   
                   <article class="item post-1 post type-post status-publish format-standard has-post-thumbnail hentry">
-                    <a href="https://blog.shunzi.tech/post/c-basic/" class="thumb hover-effect">
-                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210513192631.png');"></span>
+                    <a href="https://blog.shunzi.tech/post/cpp-std/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://blog.shunzi.tech/post-images/cpp-basic.jpg');"></span>
                     </a>
                     <div class="info gradient-effect">
-                      <time datetime="2021-04-06">2021-04-06</time>
+                      <time datetime="2021-05-12">2021-05-12</time>
                       <h4 class="title usmall">
-                        <a href="https://blog.shunzi.tech/post/c-basic/">C 基础</a>
+                        <a href="https://blog.shunzi.tech/post/cpp-std/">C++ STL</a>
                       </h4>
                     </div>
                     <div class="clear"></div>
@@ -352,17 +563,29 @@ jQuery(document).ready(function($){
                   
                   
                   <article class="item post-2 post type-post status-publish format-standard has-post-thumbnail hentry">
-                    <a href="https://blog.shunzi.tech/post/basic-of-concurrency-one/" class="thumb hover-effect">
-                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20200717213648.png');"></span>
+                    <a href="https://blog.shunzi.tech/post/HashKV/" class="thumb hover-effect">
+                      <span class="fullimage cover" style="display:block;border-radius:50%;background-image: url('https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324112600.png');"></span>
                     </a>
                     <div class="info gradient-effect">
-                      <time datetime="2021-04-05">2021-04-05</time>
+                      <time datetime="2021-05-11">2021-05-11</time>
                       <h4 class="title usmall">
-                        <a href="https://blog.shunzi.tech/post/basic-of-concurrency-one/">Series Three of Basic of Concurrency - Condition Variables</a>
+                        <a href="https://blog.shunzi.tech/post/HashKV/">HashKV: Enabling Efficient Updates in KV Storage via Hashing</a>
                       </h4>
                     </div>
                     <div class="clear"></div>
                   </article>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
                   
                   
                   
@@ -598,89 +821,91 @@ jQuery(document).ready(function($){
                   <h4 class="widget-title title white bordered">标签云</h4>
                   <div class="tagcloud">
                     
-                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-0 ctag-n2w6bz87h" aria-label="">编程语言</a>
+                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-0 ctag-l8sKsLUAi" aria-label="">KVS</a>
                     
                       <a href="https://blog.shunzi.tech/tag/3zCwFWPHxH/" class="ctag ctag-1 ctag-3zCwFWPHxH" aria-label="">存储</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-2 ctag-la-n8a0mo" aria-label="">读书笔记</a>
+                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-2 ctag-_jfuTNqah" aria-label="">LSM</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-3 ctag-os" aria-label="">OS</a>
+                      <a href="https://blog.shunzi.tech/tag/n2w6bz87h/" class="ctag ctag-3 ctag-n2w6bz87h" aria-label="">编程语言</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-4 ctag-5uQUdLlSC" aria-label="">Paper</a>
+                      <a href="https://blog.shunzi.tech/tag/RxQjurMnD/" class="ctag ctag-4 ctag-RxQjurMnD" aria-label="">Survey</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/_jfuTNqah/" class="ctag ctag-5 ctag-_jfuTNqah" aria-label="">LSM</a>
+                      <a href="https://blog.shunzi.tech/tag/la-n8a0mo/" class="ctag ctag-5 ctag-la-n8a0mo" aria-label="">读书笔记</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-6 ctag-hbaTDSglx-" aria-label="">工具</a>
+                      <a href="https://blog.shunzi.tech/tag/os/" class="ctag ctag-6 ctag-os" aria-label="">OS</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-7 ctag-EO3XpMf_y" aria-label="">Linux</a>
+                      <a href="https://blog.shunzi.tech/tag/5uQUdLlSC/" class="ctag ctag-7 ctag-5uQUdLlSC" aria-label="">Paper</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/wAFV_pvXZ/" class="ctag ctag-8 ctag-wAFV_pvXZ" aria-label="">cs-course</a>
+                      <a href="https://blog.shunzi.tech/tag/hbaTDSglx-/" class="ctag ctag-8 ctag-hbaTDSglx-" aria-label="">工具</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/VqiGqmxbod/" class="ctag ctag-9 ctag-VqiGqmxbod" aria-label="">6.824</a>
+                      <a href="https://blog.shunzi.tech/tag/EO3XpMf_y/" class="ctag ctag-9 ctag-EO3XpMf_y" aria-label="">Linux</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-10 ctag-geK0jEW-T" aria-label="">分布式</a>
+                      <a href="https://blog.shunzi.tech/tag/wAFV_pvXZ/" class="ctag ctag-10 ctag-wAFV_pvXZ" aria-label="">cs-course</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/l8sKsLUAi/" class="ctag ctag-11 ctag-l8sKsLUAi" aria-label="">KVS</a>
+                      <a href="https://blog.shunzi.tech/tag/VqiGqmxbod/" class="ctag ctag-11 ctag-VqiGqmxbod" aria-label="">6.824</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-12 ctag-9msH-lUaA" aria-label="">缓存</a>
+                      <a href="https://blog.shunzi.tech/tag/geK0jEW-T/" class="ctag ctag-12 ctag-geK0jEW-T" aria-label="">分布式</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-13 ctag-i2b42Y2j6" aria-label="">Ceph</a>
+                      <a href="https://blog.shunzi.tech/tag/9msH-lUaA/" class="ctag ctag-13 ctag-9msH-lUaA" aria-label="">缓存</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-14 ctag-oBVOD8v4ou" aria-label="">一致性</a>
+                      <a href="https://blog.shunzi.tech/tag/i2b42Y2j6/" class="ctag ctag-14 ctag-i2b42Y2j6" aria-label="">Ceph</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-15 ctag-gqgftpk_y" aria-label="">AI</a>
+                      <a href="https://blog.shunzi.tech/tag/oBVOD8v4ou/" class="ctag ctag-15 ctag-oBVOD8v4ou" aria-label="">一致性</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-16 ctag-shu-ju-ku" aria-label="">数据库</a>
+                      <a href="https://blog.shunzi.tech/tag/gqgftpk_y/" class="ctag ctag-16 ctag-gqgftpk_y" aria-label="">AI</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-17 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
+                      <a href="https://blog.shunzi.tech/tag/shu-ju-ku/" class="ctag ctag-17 ctag-shu-ju-ku" aria-label="">数据库</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-18 ctag-4zx4ysLGro" aria-label="">云计算</a>
+                      <a href="https://blog.shunzi.tech/tag/ZnIN9Ge-w/" class="ctag ctag-18 ctag-ZnIN9Ge-w" aria-label="">对象存储</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-19 ctag-Y_nsOD1At" aria-label="">SSD</a>
+                      <a href="https://blog.shunzi.tech/tag/4zx4ysLGro/" class="ctag ctag-19 ctag-4zx4ysLGro" aria-label="">云计算</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-20 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
+                      <a href="https://blog.shunzi.tech/tag/Y_nsOD1At/" class="ctag ctag-20 ctag-Y_nsOD1At" aria-label="">SSD</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-21 ctag-PhD" aria-label="">Ph.D</a>
+                      <a href="https://blog.shunzi.tech/tag/E2d1yYZcV8/" class="ctag ctag-21 ctag-E2d1yYZcV8" aria-label="">虚拟化</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-22 ctag-ZqEqvRTvl" aria-label="">网络</a>
+                      <a href="https://blog.shunzi.tech/tag/PhD/" class="ctag ctag-22 ctag-PhD" aria-label="">Ph.D</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-23 ctag-PuY19cs53" aria-label="">仿真</a>
+                      <a href="https://blog.shunzi.tech/tag/ZqEqvRTvl/" class="ctag ctag-23 ctag-ZqEqvRTvl" aria-label="">网络</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-24 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
+                      <a href="https://blog.shunzi.tech/tag/PuY19cs53/" class="ctag ctag-24 ctag-PuY19cs53" aria-label="">仿真</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-25 ctag-fu-wu-qi" aria-label="">服务器</a>
+                      <a href="https://blog.shunzi.tech/tag/rIIc9E-ZvN/" class="ctag ctag-25 ctag-rIIc9E-ZvN" aria-label="">系统结构</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-26 ctag-X-lnqf1Ex" aria-label="">容器</a>
+                      <a href="https://blog.shunzi.tech/tag/fu-wu-qi/" class="ctag ctag-26 ctag-fu-wu-qi" aria-label="">服务器</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-27 ctag-5h7k39FKw" aria-label="">C语言</a>
+                      <a href="https://blog.shunzi.tech/tag/X-lnqf1Ex/" class="ctag ctag-27 ctag-X-lnqf1Ex" aria-label="">容器</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-28 ctag-diary" aria-label="">Diary</a>
+                      <a href="https://blog.shunzi.tech/tag/5h7k39FKw/" class="ctag ctag-28 ctag-5h7k39FKw" aria-label="">C语言</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-29 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
+                      <a href="https://blog.shunzi.tech/tag/diary/" class="ctag ctag-29 ctag-diary" aria-label="">Diary</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-30 ctag-oqE3oKihb" aria-label="">OpenStack</a>
+                      <a href="https://blog.shunzi.tech/tag/DyzFtOe6x/" class="ctag ctag-30 ctag-DyzFtOe6x" aria-label="">计算机基础</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-31 ctag-p_z7gKe6R" aria-label="">中间件</a>
+                      <a href="https://blog.shunzi.tech/tag/oqE3oKihb/" class="ctag ctag-31 ctag-oqE3oKihb" aria-label="">OpenStack</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-32 ctag-Test" aria-label="">测试</a>
+                      <a href="https://blog.shunzi.tech/tag/p_z7gKe6R/" class="ctag ctag-32 ctag-p_z7gKe6R" aria-label="">中间件</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-33 ctag-Product-Standard" aria-label="">Product Standard</a>
+                      <a href="https://blog.shunzi.tech/tag/Test/" class="ctag ctag-33 ctag-Test" aria-label="">测试</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-34 ctag-spring" aria-label="">Spring</a>
+                      <a href="https://blog.shunzi.tech/tag/Product-Standard/" class="ctag ctag-34 ctag-Product-Standard" aria-label="">Product Standard</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-35 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
+                      <a href="https://blog.shunzi.tech/tag/spring/" class="ctag ctag-35 ctag-spring" aria-label="">Spring</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-36 ctag-mian-jing" aria-label="">面经</a>
+                      <a href="https://blog.shunzi.tech/tag/she-ji-mo-shi/" class="ctag ctag-36 ctag-she-ji-mo-shi" aria-label="">设计模式</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-37 ctag-suan-fa" aria-label="">算法</a>
+                      <a href="https://blog.shunzi.tech/tag/mian-jing/" class="ctag ctag-37 ctag-mian-jing" aria-label="">面经</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-38 ctag-redis" aria-label="">Redis</a>
+                      <a href="https://blog.shunzi.tech/tag/suan-fa/" class="ctag ctag-38 ctag-suan-fa" aria-label="">算法</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-39 ctag-javaweb" aria-label="">JavaWeb</a>
+                      <a href="https://blog.shunzi.tech/tag/redis/" class="ctag ctag-39 ctag-redis" aria-label="">Redis</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-40 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                      <a href="https://blog.shunzi.tech/tag/javaweb/" class="ctag ctag-40 ctag-javaweb" aria-label="">JavaWeb</a>
                     
-                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-41 ctag-javase" aria-label="">JavaSE</a>
+                      <a href="https://blog.shunzi.tech/tag/KyMCZj2Wl/" class="ctag ctag-41 ctag-KyMCZj2Wl" aria-label="">WEB容器</a>
+                    
+                      <a href="https://blog.shunzi.tech/tag/javase/" class="ctag ctag-42 ctag-javase" aria-label="">JavaSE</a>
                     
                   </div>
                   <div class="clear"></div>
@@ -726,7 +951,7 @@ jQuery(document).ready(function($){
           <a href="https://blog.shunzi.tech"><img src="\media\images\custom-footerLogo.jpg" alt=""></a>
         </div>
         <p class="published border-effect">
-          ©2019 共 115 篇文章
+          ©2019 共 121 篇文章
           <br/>
           Theme <a href="https://gridea.dev/" target="_blank">「breek」</a> Powered by <a href="https://gridea.dev/" target="_blank">「Gridea」</a>
         </p>
