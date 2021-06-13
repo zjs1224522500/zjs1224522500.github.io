@@ -31,6 +31,9 @@
                 <!--点击特效-->
                 <script src="https://cdn.jsdelivr.net/gh/ITJoker233/ITJoker233.github.io@latest/CDN/js/love.min.js"></script>
                 
+                    <script src="https://cdn.jsdelivr.net/gh/itjoker233/Gridea-theme-Chic@latest/assets/media/script/APlayer.min.js"></script>
+                    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css">
+                    
                         <!--CDN样式-->
                         <script src="https://cdn.jsdelivr.net/gh/ITJoker233/ITJoker233.github.io@latest/CDN/js/hit-kounter-lc-0.3.0.js"></script>
                         <script src="https://cdn1.lncld.net/static/js/av-min-1.5.0.js"></script>
@@ -60,6 +63,16 @@
                                     gtag('config', 'UA-143818020-1');
                                 </script>
                                 
+                                    <script type="text/javascript">
+                                        var _hmt = _hmt || [];
+                                        (function() {
+                                            var hm = document.createElement("script");
+                                            hm.src = "https://hm.baidu.com/hm.js?225d600be3e5bb9ae41b903854555ba8";
+                                            var s = document.getElementsByTagName("script")[0];
+                                            s.parentNode.insertBefore(hm, s);
+                                        })();
+                                    </script>
+                                    
 </head>
 
 <body>
@@ -75,8 +88,8 @@
             <div id="tp-weather-widget"></div>
             <div class="menu navbar-right">
                 
-                    <a class="menu-item" href="/">
-                        主页
+                    <a class="menu-item" href="/posts">
+                        博客
                     </a>
                     
                     <a class="menu-item" href="/archives">
@@ -98,7 +111,7 @@
                         <input id="switch_default" type="checkbox" class="switch_default">
                         <label for="switch_default" class="toggleBtn"></label>
             </div>
-            <form id="gridea-search-form" data-update="1623475546024" action="/search/index.html">
+            <form id="gridea-search-form" data-update="1623555653669" action="/search/index.html">
                 <input class="search-input" autocomplete="off" spellcheck="false" name="q" autofocus="true" placeholder="Search...">
             </form>
         </div>
@@ -117,7 +130,7 @@
                         <!--zh-->
                         <a id="mobile-toggle-theme-zh" class="a zh">&nbsp;&#x6697;&#x9ED1;</a>
                     </div>
-                    <form id="gridea-search-form" data-update="1623475546024" action="/search/index.html">
+                    <form id="gridea-search-form" data-update="1623555653669" action="/search/index.html">
                         <input class="search-input" autocomplete="off" spellcheck="false" name="q" autofocus="true" placeholder="Search...">
                     </form>
                     <!--en-->
@@ -128,8 +141,8 @@
                 </div>
                 <div class="menu" id="mobile-menu">
                     
-                        <a class="menu-item" href="/">
-                            主页
+                        <a class="menu-item" href="/posts">
+                            博客
                         </a>
                         
                         <a class="menu-item" href="/archives">
@@ -899,7 +912,7 @@ typedef std::map&lt;std::string, class FdEntity*&gt; fdent_map_t;   // key=path,
                         <i class="post-share"></i>
                         <span>&#x5206;&#x4EAB;:</span>
                                                                     <a title="QR 码" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://blog.shunzi.tech/post/s3fs/"><i class="fa fa-qrcode"></i></a>
-                                                                    <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://blog.shunzi.tech/post/s3fs/&sharesource=qzone&title=S3FS&pics=https://blog.shunzi.tech/images/avatar.png?v=1623475546024&summary=&lt;blockquote&gt;
+                                                                    <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://blog.shunzi.tech/post/s3fs/&sharesource=qzone&title=S3FS&pics=https://blog.shunzi.tech/images/avatar.png?v=1623555653669&summary=&lt;blockquote&gt;
 &lt;ul&gt;
 &lt;li&gt;FUSE-based file system backed by Amazon S3&lt;/li&gt;
 &lt;li&gt;基于对象存储的文件系统，国内有 aliyun/ossfs, huaweicloud/obsfs&lt;/li&gt;
@@ -914,7 +927,7 @@ typedef std::map&lt;std::string, class FdEntity*&gt; fdent_map_t;   // key=path,
 &lt;li&gt;本质是实现了将对象存储的 Bucket 挂载到了本地文件系统中，从而通过本地文件系统操作 OSS 上的对象&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/blockquote&gt;
-&pic="https://blog.shunzi.tech/images/avatar.png?v=1623475546024 "><i class="fa fa-weibo "></i></a>
+&pic="https://blog.shunzi.tech/images/avatar.png?v=1623555653669 "><i class="fa fa-weibo "></i></a>
 
                                                                     </span>
                                                                     
@@ -987,6 +1000,8 @@ typedef std::map&lt;std::string, class FdEntity*&gt; fdent_map_t;   // key=path,
     </div>
     </div>
     
+    <div id="player"></div>
+    
         <footer id="footer" class="footer">
             <div class="copyright">
                 
@@ -1028,6 +1043,28 @@ typedef std::map&lt;std::string, class FdEntity*&gt; fdent_map_t;   // key=path,
             
                 <script>
                     
+
+                    function LoadPlayer() {
+                        var musicList = [];
+                        
+                        musicList.push({
+                            name: 'See you again',
+                            url: 'https://nl02.mp3snow.com/579893185c49d6cd3cb53/Wiz%20Khalifa%20-%20See%20You%20Again%20ft.%20Charlie%20Puth.mp3',
+                            artist: '',
+                            cover: 'https://4.bp.blogspot.com/-tk-Dzg0cHNQ/WnxPiEImF8I/AAAAAAAAMbg/FisRjWssG3kMFGiMh1BE3j4U6QnI2O3rwCLcBGAs/s1600/wiz-khalifa-see-you-again.jpg',
+                        });
+                        
+                        console.log(" MusicList: " + musicList);
+                        
+                        const ap = new APlayer({
+                            container: document.getElementById('player'),
+                            fixed: true,
+                            audio: musicList
+                        });
+                        
+                    }
+                    LoadPlayer();
+                    
                     
                     loadlive2d();
                     
@@ -1041,7 +1078,7 @@ typedef std::map&lt;std::string, class FdEntity*&gt; fdent_map_t;   // key=path,
                     CheckVersion();
                     
                     var newDate = new Date();
-                    newDate.setTime(1623475546024);
+                    newDate.setTime(1623555653669);
                     console.log(" Blog Update Time: " + newDate.toLocaleDateString());
                     console.log("\n %c \u26a1Theme:Chic Author's Blog:https://blog.itjoker.cn  Write By ITJoker  \n\n", "color: #ffffff; background: rgba(49, 49, 49, 0.85); padding:5px 0;border-radius:5px;");
                 </script>
