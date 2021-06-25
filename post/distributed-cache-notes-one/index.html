@@ -115,7 +115,7 @@
                         <input id="switch_default" type="checkbox" class="switch_default">
                         <label for="switch_default" class="toggleBtn"></label>
             </div>
-            <form id="gridea-search-form" data-update="1624327255085" action="/search/index.html">
+            <form id="gridea-search-form" data-update="1624611892575" action="/search/index.html">
                 <input class="search-input" autocomplete="off" spellcheck="false" name="q" autofocus="true" placeholder="Search...">
             </form>
         </div>
@@ -134,7 +134,7 @@
                         <!--zh-->
                         <a id="mobile-toggle-theme-zh" class="a zh">&nbsp;&#x6697;&#x9ED1;</a>
                     </div>
-                    <form id="gridea-search-form" data-update="1624327255085" action="/search/index.html">
+                    <form id="gridea-search-form" data-update="1624611892575" action="/search/index.html">
                         <input class="search-input" autocomplete="off" spellcheck="false" name="q" autofocus="true" placeholder="Search...">
                     </form>
                     <!--en-->
@@ -252,9 +252,9 @@
                                         </a>
                                         <span class="post-time">&#x65E5;&#x671F;: <a href="#">2019-09-03</a></span>
                                         <span class="post-readtime">&#x9605;&#x8BFB;&#x65F6;&#x95F4;:<a
-                                    href="#">55.0
+                                    href="#">60.8
                                     &#x5206;&#x949F;</a></span>
-                                        <span class="post-words">&#x5B57;&#x6570;:<a href="#">15262</a></span>
+                                        <span class="post-words">&#x5B57;&#x6570;:<a href="#">16815</a></span>
                                         
                                             <span class="post-category">&#x5206;&#x7C7B;:
                                 
@@ -315,19 +315,65 @@
 <h3 id="缓存算法替代策略">缓存算法（替代策略）</h3>
 <h4 id="lru-least-recently-used">LRU - Least Recently Used</h4>
 <ul>
+<li>最近最少使用</li>
 <li>在CPU缓存淘汰和虚拟内存系统中使用的效果很好，浏览器缓存一般也使用了该算法。</li>
+<li>如下所示例子。B 和 A 都在淘汰进程之前使用过，更新最新的使用时间。 C 则一直没有被使用，虽然不是最久的数据，但是根据 LRU，它需要被淘汰。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210622112341.png" alt="20210622112341" loading="lazy"></li>
+<li>最近最少使用页面置换算法，也就是首先淘汰最长时间未被使用的页面。</li>
+<li>关键是看页面最后一次被使用到发生调度的时间长短。</li>
+<li>优点：
+<ul>
+<li>热点缓存将被持久命中</li>
+</ul>
+</li>
+<li>缺点：
+<ul>
+<li>当所有缓存数据都变成热点后，将失去 LRU 的优点.</li>
+</ul>
+</li>
 </ul>
 <h4 id="lfu-least-frequently-used">LFU - Least Frequently Used</h4>
 <ul>
+<li>最近最不常用</li>
 <li>替换访问次数最少的缓存。针对某些一开始可能有很高的使用频率但之后再也不会使用的场景，容易导致缓存污染。</li>
+<li>如下所示例子，每当缓存被使用的时候( C B A)，则将使用频率加 1，当进行淘汰进程的时候，将使用频率最低的数据淘汰( E )。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210622112522.png" alt="20210622112522" loading="lazy"></li>
+<li>优点：
+<ul>
+<li>提高频繁使用的数据的命中效率</li>
+</ul>
+</li>
+<li>缺点：
+<ul>
+<li>当所有数据都很频繁访问的时候，将失去优点</li>
+<li>单纯的 LFU 会有个问题会导致缓存失效，当最新加入的 E 在 F 进来之前，没有被访问过，那么它将被淘汰。还没有给 E 被访问的机会，E 就被淘汰了。所以我们可以在 E 进来的时候，设置一个中位数的访问频率，保证新数据不会被马上被淘汰</li>
+</ul>
+</li>
 </ul>
 <h4 id="lru2-least-recently-used-2">LRU2 - Least Recently Used 2</h4>
 <ul>
-<li>LRU的一个变种，把被两次访问过的对象放入缓存池，缓存池满后对应的清除两次最少使用的缓存对象去除。因为需要跟踪对象2次，访问负载会随着缓存池的增加而增加。同理 LRUK</li>
+<li>LRU的一个变种，把被两次访问过的对象放入缓存池，缓存池满后对应的清除两次最少使用的缓存对象去除。因为需要跟踪对象2次，访问负载会随着缓存池的增加而增加。同理 LRU-K</li>
+</ul>
+<h4 id="lru-k">LRU-K</h4>
+<ul>
+<li>相比LRU，LRU-K需要多维护一个队列，用于记录所有缓存数据被访问的历史。只有当数据的访问次数达到K次的时候，才将数据放入缓存。当需要淘汰数据时，LRU-K会淘汰第K次访问时间距当前时间最大的数据。详细实现如下<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210622114609.png" alt="20210622114609" loading="lazy"></li>
+<li>(1). 数据第一次被访问，加入到访问历史列表；</li>
+<li>(2). 如果数据在访问历史列表里后没有达到K次访问，则按照一定规则（FIFO，LRU）淘汰；</li>
+<li>(3). 当访问历史队列中的数据访问次数达到K次后，将数据索引从历史队列删除，将数据移到缓存队列中，并缓存此数据，缓存队列重新按照时间排序；</li>
+<li>(4). 缓存数据队列中被再次访问后，重新排序；</li>
+<li>(5). 需要淘汰数据时，淘汰缓存队列中排在末尾的数据，即：淘汰“倒数第K次访问离现在最久”的数据。</li>
+<li>LRU-K具有LRU的优点，同时能够避免LRU的缺点，实际应用中LRU-2是综合各种因素后最优的选择，LRU-3或者更大的K值命中率会高，但适应性差，需要大量的数据访问才能将历史访问记录清除掉</li>
 </ul>
 <h4 id="2q-two-queue">2Q - Two Queue</h4>
 <ul>
-<li>LRU的另一个变种。把被访问的数据放在LRU的缓存中，如果这个对象再一次被访问，就把他转移到第二个更大的LRU缓存中，使用了多级缓存的方式。去除缓存对象是为了保持第一个缓存池是第二个缓存池的1/3，当缓存的访问负载是固定的时候，把   LRU换成LRU2，就比增加缓存的容量更好。</li>
+<li>LRU的另一个变种。把被访问的数据放在LRU的缓存中，如果这个对象再一次被访问，就把他转移到第二个更大的LRU缓存中，使用了多级缓存的方式。去除缓存对象是为了保持第一个缓存池是第二个缓存池的1/3，当缓存的访问负载是固定的时候，把   LRU换成LRU2，就比增加缓存的容量更好。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210622115434.png" alt="20210622115434" loading="lazy"></li>
+<li>(1). 新访问的数据插入到FIFO队列；</li>
+<li>(2). 如果数据在FIFO队列中一直没有被再次访问，则最终按照FIFO规则淘汰；</li>
+<li>(3). 如果数据在FIFO队列中被再次访问，则将数据移到LRU队列头部；</li>
+<li>(4). 如果数据在LRU队列再次被访问，则将数据移到LRU队列头部；</li>
+<li>(5). LRU队列淘汰末尾的数据。</li>
 </ul>
 <h4 id="size">SIZE</h4>
 <ul>
@@ -351,7 +397,24 @@
 </ul>
 <h4 id="arc-adaptive-replacement-cache">ARC - Adaptive Replacement Cache</h4>
 <ul>
-<li>ARC 介于 LRU 和 LFU 之间，为了提高效果，由两个 LRU 组成，第一个包含的条目时最近只被使用过一次的，而第二个 LRU 包含的是最近被使用过两次的条目，因此得到了新的对象和常用的对象。ARC能够自我调节并且是低负载的。</li>
+<li>[FAST'03] ARC: A Self-Tuning, Low Overhead Replacement Cache</li>
+<li>自适应缓存替换</li>
+<li>ARC 的精髓就是根据被淘汰数据的访问情况，而增加对应 LRU 还是 LFU 链表的大小。</li>
+<li>ARC 包含了四个链表。 LRU 和 LRU Ghost ， LFU 和 LFU Ghost， Ghost 链表为对应淘汰的数据记录链表，不记录数据，只记录 ID 等信息。</li>
+<li>当数据 A 加入 LRU 后，如果 A 再次被访问，则同时被放到 LFU 链表中。所以 LFU 链表的缓存为 LRU 链表的多次访问的数据。</li>
+<li>当 LRU 链表淘汰了 B，那么 B 的信息则进入到 LRU Ghost 链表。如果 B 在之后再次被访问，则增加 LRU 链表的大小，同时缩减 LFU 链表的大小。LFU 链表同理。</li>
+<li>所以，这是一个根据最近未使用和最少频率使用动态调整的算法。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210622114230.png" alt="20210622114230" loading="lazy"></li>
+<li>优点：
+<ul>
+<li>根据内存使用方式动态调整 LRU 和 LFU 的大小，以适应当前最佳的缓存命中。</li>
+</ul>
+</li>
+<li>缺点：
+<ul>
+<li>占用更多的内存空间</li>
+</ul>
+</li>
 </ul>
 <h4 id="mru-most-recently-used">MRU - Most Recently Used</h4>
 <ul>
@@ -363,8 +426,24 @@
 </ul>
 <h4 id="random-cache">Random Cache</h4>
 <ul>
-<li>随即缓存就是随意地替换缓存数据，比FIFO机制好，某些特殊情况下甚至优于LRU</li>
+<li>随机缓存就是随意地替换缓存数据，比FIFO机制好，某些特殊情况下甚至优于LRU</li>
 </ul>
+<h4 id="lirs">LIRS</h4>
+<ul>
+<li>LIRS 算法全称 Low Inter-reference Recency Set，LIRS 使用 IRR（Inter-Reference Recency）来表示记录数据块访问历史信息，IRR 表示最近连续访问同一个数据块之间访问其他不同数据块非重复个数：<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210622150312.png" alt="20210622150312" loading="lazy"></li>
+<li>Cache1 的 IRR=3，连续两次访问 Cache1 之间访问 2,3,4，3 虽然访问两次但这里只算一次。同时，一个数据块从上一次访问到当前时间访问其他不同数据块非重复个数称为这个数据块的 recency，如图 Cache1 的 R=2，LIRS 与 LRU 最大的不同就是在淘汰 Cache 时候不仅考虑 Recency，同时会将 IRR 纳入考量范围中。LIRS 动态维护两个集合：
+<ul>
+<li>LIR（low IRR block set）具有较小 IRR 的数据块集合，可以将这部分数据块理解为热数据，因为 IRR 低说明访问的频次高</li>
+<li>HIR（high IRR block set）具有较高 IRR 的数据块集合，可以将这部分数据块理解为冷数据。同时，在 HIR 集合中有部分数据块不在缓存中，但我们记录了它们的历史信息并标记为未驻留在缓存中，我们称这部分数据块为 nonresident-HIR，另外一部分驻留在缓存中的数据块称为 resident-HIR。</li>
+</ul>
+</li>
+<li>LIRS 会限制 LIR 集合大小，保证所有的 LIR 数据块在缓存中，当发生缓存块淘汰时候，只会淘汰 HIR 集合中的数据块，这里用变量 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mrow><mi>l</mi><mi>i</mi><mi>r</mi><mi>s</mi></mrow></msub></mrow><annotation encoding="application/x-tex">L_{lirs}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.01968em;">l</span><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight" style="margin-right:0.02778em;">r</span><span class="mord mathdefault mtight">s</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 表示 LIR 集合大小，<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mrow><mi>h</mi><mi>i</mi><mi>r</mi><mi>s</mi></mrow></msub></mrow><annotation encoding="application/x-tex">L_{hirs}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">h</span><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight" style="margin-right:0.02778em;">r</span><span class="mord mathdefault mtight">s</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 表示 HIR 集合中驻留在内存的数据块（resident-HIR）大小，用 L 表示驻留在缓存中的数据块总数：<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>L</mi><mo>=</mo><msub><mi>L</mi><mrow><mi>l</mi><mi>i</mi><mi>r</mi><mi>s</mi></mrow></msub><mo>+</mo><msub><mi>L</mi><mrow><mi>h</mi><mi>i</mi><mi>r</mi><mi>s</mi></mrow></msub></mrow><annotation encoding="application/x-tex">L = L_{lirs} + L_{hirs}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathdefault">L</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.01968em;">l</span><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight" style="margin-right:0.02778em;">r</span><span class="mord mathdefault mtight">s</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">h</span><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight" style="margin-right:0.02778em;">r</span><span class="mord mathdefault mtight">s</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></li>
+<li>因为 LIR 集合在缓存中，所以访问 LIR 集合的数据块是百分百命中缓存的，而 HIR 集合分为 resident-HIR 和 nonresident-HIR 两部分，所以会遇到未命中情况。当发生缓存未命中需要置换缓存块时候，会选择优先淘汰置换 resident-HIR。如果 HIR 集合的数据块 IRR 经过更新比 LIR 集合中的小，那么 LIR 集合数据块就会被 HIR 集合中 IRR 小的数据块挤出并转换为 HIR。</li>
+<li>https://blog.csdn.net/z69183787/article/details/105534151/?utm_medium=distribute.pc_relevant.none-task-blog-baidujs_baidulandingword-1&amp;spm=1001.2101.3001.4242</li>
+</ul>
+<h4 id="dlirs">DLIRS</h4>
+<h4 id="lirs2">LIRS2</h4>
 <h3 id="缓存的原理">缓存的原理</h3>
 <h4 id="缓存的规范">缓存的规范</h4>
 <ul>
@@ -1279,6 +1358,7 @@ state;     // 类型状态
 <li><a href="#lru-least-recently-used">LRU - Least Recently Used</a></li>
 <li><a href="#lfu-least-frequently-used">LFU - Least Frequently Used</a></li>
 <li><a href="#lru2-least-recently-used-2">LRU2 - Least Recently Used 2</a></li>
+<li><a href="#lru-k">LRU-K</a></li>
 <li><a href="#2q-two-queue">2Q - Two Queue</a></li>
 <li><a href="#size">SIZE</a></li>
 <li><a href="#lru-threshold">LRU-Threshold</a></li>
@@ -1289,6 +1369,9 @@ state;     // 类型状态
 <li><a href="#mru-most-recently-used">MRU - Most Recently Used</a></li>
 <li><a href="#fifo-first-in-first-out">FIFO - First In First Out</a></li>
 <li><a href="#random-cache">Random Cache</a></li>
+<li><a href="#lirs">LIRS</a></li>
+<li><a href="#dlirs">DLIRS</a></li>
+<li><a href="#lirs2">LIRS2</a></li>
 </ul>
 </li>
 <li><a href="#%E7%BC%93%E5%AD%98%E7%9A%84%E5%8E%9F%E7%90%86">缓存的原理</a>
@@ -1556,7 +1639,7 @@ state;     // 类型状态
                         <i class="post-share"></i>
                         <span>&#x5206;&#x4EAB;:</span>
                                                                     <a title="QR 码" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://blog.shunzi.tech/post/distributed-cache-notes-one/"><i class="fa fa-qrcode"></i></a>
-                                                                    <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://blog.shunzi.tech/post/distributed-cache-notes-one/&sharesource=qzone&title=分布式缓存读书笔记（一）&pics=https://blog.shunzi.tech/images/avatar.png?v=1624327255085&summary=&lt;blockquote&gt;
+                                                                    <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://blog.shunzi.tech/post/distributed-cache-notes-one/&sharesource=qzone&title=分布式缓存读书笔记（一）&pics=https://blog.shunzi.tech/images/avatar.png?v=1624611892575&summary=&lt;blockquote&gt;
 &lt;ul&gt;
 &lt;li&gt;分布式缓存读书笔记系列之一&lt;/li&gt;
 &lt;li&gt;从缓存的基本概念以及淘汰算法简单介绍入手&lt;/li&gt;
@@ -1571,7 +1654,7 @@ state;     // 类型状态
 &lt;li&gt;介绍优秀缓存框架的实现（本地缓存和集中式缓存）&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/blockquote&gt;
-&pic="https://blog.shunzi.tech/images/avatar.png?v=1624327255085 "><i class="fa fa-weibo "></i></a>
+&pic="https://blog.shunzi.tech/images/avatar.png?v=1624611892575 "><i class="fa fa-weibo "></i></a>
 
                                                                     </span>
                                                                     
@@ -1720,7 +1803,7 @@ state;     // 类型状态
                     CheckVersion();
                     
                     var newDate = new Date();
-                    newDate.setTime(1624327255085);
+                    newDate.setTime(1624611892575);
                     console.log(" Blog Update Time: " + newDate.toLocaleDateString());
                     console.log("\n %c \u26a1Theme:Chic Author's Blog:https://blog.itjoker.cn  Write By ITJoker  \n\n", "color: #ffffff; background: rgba(49, 49, 49, 0.85); padding:5px 0;border-radius:5px;");
                 </script>
