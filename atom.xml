@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://blog.shunzi.tech</id>
     <title>Elvis Zhang</title>
-    <updated>2021-08-05T08:29:47.958Z</updated>
+    <updated>2021-08-24T02:26:31.054Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://blog.shunzi.tech"/>
     <link rel="self" href="https://blog.shunzi.tech/atom.xml"/>
@@ -10,6 +10,590 @@
     <logo>https://blog.shunzi.tech/images/avatar.png</logo>
     <icon>https://blog.shunzi.tech/favicon.ico</icon>
     <rights>All rights reserved 2021, Elvis Zhang</rights>
+    <entry>
+        <title type="html"><![CDATA[Cache Replacement Policies - Fine-Grained Other]]></title>
+        <id>https://blog.shunzi.tech/post/CRP-Fine-Grained-Three-Other/</id>
+        <link href="https://blog.shunzi.tech/post/CRP-Fine-Grained-Three-Other/">
+        </link>
+        <updated>2021-08-20T09:40:00.000Z</updated>
+        <content type="html"><![CDATA[<blockquote>
+<ul>
+<li>Cache Replacement Policies - Fine-Grained Other</li>
+</ul>
+</blockquote>
+<h3 id="other-prediction-metrics">OTHER PREDICTION METRICS</h3>
+<ul>
+<li>并非所有细粒度策略都预测重用距离或二分标签，当然可以使用不同的预测目标捕获过去的行为。例如，Kharbutli 和 Solihin[2005] 死块预测器的一个组件可以<strong>预测一个缓存行在缓存中被重用的最大次数</strong>。作为这类解决方案的一个例子，我们现在详细讨论 <strong>EVA 策略</strong> [Beckmann和Sanchez, 2017]，它引入了一种新的预测目标，称为 EVA，这是少数几个使用历史信息来指导老化过程的细粒度解决方案之一。</li>
+</ul>
+<h4 id="economic-value-addedeva">ECONOMIC VALUE ADDED(EVA)</h4>
+<ul>
+<li>贝克曼和桑切斯认为，只有当我们对未来拥有完美的知识时，用预期时间最长的候选人替代重用是最优的 [Belady, 1966]，但这一策略对于面临未来固有不确定性的实际解决方案是不够的 [Beckmann和桑切斯，2017]。因此，实际的解决方案需要平衡两个相互竞争的目标:
+<ul>
+<li>(1) <strong>最大限度地提高给定行的命中缓存的概率</strong>，</li>
+<li>(2) <strong>限制该行消耗缓存空间的持续时间</strong>。</li>
+</ul>
+</li>
+<li>仅仅基于重用距离的解决方案只考虑了权衡的一方面。</li>
+<li>为了解决这一限制，Beckmann 和 Sanchez[2017] 提出了一个称为经济附加值(EVA)的新指标，将这两个因素合并为一个单一指标。<strong>EVA 被定义为候选对象可能产生的命中数与其在缓存中的平均占用率的比值</strong>。方程 (4.1) 表明 EVA 是对给定缓存行计算的。我们看到一个缓存行的 EVA 有两个组成部分。首先，该行将因其预期的未来命中次数而获得奖励(具有较高重用概率的该行将具有较高的EVA值)。其次，这一行会因为它所消耗的缓存空间而受到惩罚。这个惩罚是通过对每个候选对象在缓存中花费的时间进行收费来计算的，收费的速率是一行的平均命中率(缓存命中率除以其大小)，这是消耗缓存空间的长期机会成本。因此，EVA 指标通过计算该行命中的几率是否值得它所消耗的缓存空间来获取缓存行的成本效益权衡。$$ EVA = Expected_hits - (Cache_hit_rate / Cache_size) * Expected_time$$</li>
+<li>候选人的 EVA 是从他们的年龄推断出来的，并随着候选人的年龄进行修正。例如，左边的图4.6 显示了 EVA 是如何随着候选应用程序年龄的变化而变化的，该应用程序遍历一个小数组和一个大数组(右边显示了同一应用程序的重用距离分布)。首先，EVA 较高，因为访问很有可能来自一个小数组，这意味着替换策略可以赌候选者会很快命中。但是，当年龄超过短数组的长度时，EVA 急剧下降，因为从大数组缓存行的代价要高得多。此时，低 EVA 使大数组中的行很可能被逐出。缓存来自大数组的行所带来的代价随着行的老化和接近大数组的重用距离而降低。这种惩罚反映在年龄从 50 岁到 250 岁的 EVA 逐渐增加，在这一点上 EVA 替换策略保护缓存行免受大数组替代，即使它们是老的。因此，在面临不确定性时，EVA 替代策略会随着候选人年龄的增长而对他们有更多的了解。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210821160012.png" alt="20210821160012" loading="lazy"></li>
+<li>当然，<strong>另一种减少不确定性的方法是将缓存行分为不同的类别</strong>。例如，如果我们将小数组和大数组划分为不同的类别，图 4.7 显示了与年龄相关的 EVA，我们可以看到每个类别的 EVA 曲线要简单得多。理论上，可以扩展 EVA 以支持分类，但实现的复杂性将这种扩展限制在少数类。在下一节中，我们将讨论依赖于许多细粒度类的替换策略，但学习每个类的更简单的指标。相比之下，EVA 以细粒度对年龄进行排序，但这限制了 EVA 使用更少的类。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210821160331.png" alt="20210821160331" loading="lazy"></li>
+<li>EVA 替换策略通过记录命中和驱逐的年龄分布并使用轻量级软件运行时处理有关这些驱逐的信息来计算 EVA 曲线。为了预测一条缓存行的 EVA，将其年龄作为索引，建立一个代表 EVA 曲线的驱逐优先级数组。</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Cache Replacement Policies - Fine-Grained Classification]]></title>
+        <id>https://blog.shunzi.tech/post/CRP-Fine-Grained-Two-Classification/</id>
+        <link href="https://blog.shunzi.tech/post/CRP-Fine-Grained-Two-Classification/">
+        </link>
+        <updated>2021-08-20T08:40:00.000Z</updated>
+        <content type="html"><![CDATA[<blockquote>
+<ul>
+<li>Cache Replacement Policies - Fine-Grained Classification</li>
+</ul>
+</blockquote>
+<h3 id="classification-based-policies">CLASSIFICATION-BASED POLICIES</h3>
+<ul>
+<li><strong>基于分类的策略学习了传入行的二分类：缓存访问是否可能导致未来的命中？</strong> 对缓存友好的行，预期会导致缓存命中的行以更高的优先级插入缓存，以便它们有足够的机会接收缓存命中，而不喜欢缓存的行(不期望缓存命中的行)则以较低的优先级插入，这样它们就可以在不浪费缓存资源的情况下被快速清除。</li>
+<li>与其他类替换策略相比，基于分类的策略有几个优点。与混合替换策略对给定时间段内的所有行进行统一决策相比，<strong>基于分类的替换策略可以插入一些高优先级的行和一些低优先级的行</strong>。与基于重用距离的策略(目标是数值的重用距离预测)相比，<strong>基于分类的策略解决了一个更简单的二分预测问题</strong>。</li>
+<li>正如我们将看到的，基于分类的政策起源于两种不同的文献。<strong>基于采样的死块预测器(SDBP)</strong> [Khan等人，2010] (章节4.2.1) 建立在死块预测文献的基础上，而<strong>基于签名的命中预测 (SHiP)</strong> [Wu等人，2011a] (章节4.2.2)则来源于缓存替换策略文献。有趣的是，这两种解决方案都得到了概念上相似的想法，而且事后看来，这两篇论文共同统一了这两个领域。</li>
+<li>现在我们将讨论这些和其他最近的基于分类的策略。虽然这些政策之间存在显著差异，但它们都有两个特点。
+<ul>
+<li>首先，它们<strong>都包含一个二分预测器</strong>，该预测器可以学习过去的缓存行为，以指导各个行的插入优先级。</li>
+<li>其次，他们<strong>都从最先进的粗粒度政策中借鉴了 Promotion、老化 和 驱逐模式，这有助于解释不准确的预测</strong>。</li>
+</ul>
+</li>
+<li>在描述这些策略时，我们将考虑以下设计问题。
+<ul>
+<li>哪种缓存解决方案是策略学习？</li>
+<li>预测机制是什么，预测的粒度是什么？</li>
+<li>是什么老化机制确保不准确的预测最终被淘汰？</li>
+</ul>
+</li>
+</ul>
+<h4 id="sampling-based-dead-block-prediction-sdbp">SAMPLING BASED DEAD BLOCK PREDICTION (SDBP)</h4>
+<ul>
+<li>许多研究发现，由于LLC中的大部分块都是死块(它们在被驱逐之前不会再次重用)，<strong>死块预测可以用来指导缓存替换和死块的早期旁路（旁路即为不缓存）</strong> [Khan等人，2010,Lai和Falsafi, 2000]。Lai 和 Falsafi[2000] 引入了使用死块预测器将数据预取到 L1 中的死块的思想。他们的 reftrace 预测器预测，如果指令地址的 trace 导致最后一次访问一个块，那么同样的 trace 也会导致最后一次访问其他块。为了降低为所有缓存块维护指令跟踪的成本，Khan 等人[2010] <strong>引入了基于采样的死块预测器(SDBP)，它对程序计数器(PC)的缓存行为进行采样，以确定传入的块是否可能 dead</strong>。来自已知插入死块的 PC 的未来缓存访问被 Bypass，这样他们就不会污染缓存。来自没有插入死块的 PC 的访问将使用一些基本策略(即随机或 LRU 替换策略)插入缓存。</li>
+<li>值得注意的是，<strong>SDBP 从使用一小部分缓存访问填充的解耦采样器学习</strong>(参见图4.2)。如果一个块被从采样器中移除而不被重用，则对相应的 PC 进行负向训练；否则，预测器被积极训练。解耦采样器有几个优点：
+<ul>
+<li>首先，只使用所有缓存访问的一小部分样本来训练预测器，这导致了功率和空间效率高的预测器设计和采样器中易管理的元数据(为每个采样器条目维护 PC)。</li>
+<li>其次，采样器的替换策略不必与缓存的替换策略相匹配。Khan 等人[2010] 对采样器使用 LRU 策略，他们对主缓存使用随机替换。</li>
+<li>最后，采样器的结合性独立于缓存的结合性，这允许开销更小的采样器设计。Khan 等人使用 12 路采样器作为 16 路缓存。表 4.1 总结了SDBP的关键操作。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210821115233.png" alt="20210821115233" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210821115325.png" alt="20210821115325" loading="lazy"></li>
+</ul>
+</li>
+<li>因此，为了回答我们在本节开始时概述的问题:
+<ul>
+<li>(1) SDBP 学习基于 LRU 的采样器的缓存决策;</li>
+<li>(2) 它预测死块(缓存厌恶与缓存友好) 使用一个倾斜的预测器设计，以 PC 的粒度进行这些预测;</li>
+<li>(3) SDBP 绕过所有预测为缓存厌恶的传入块，使用基线替换策略管理剩余的行，因此假阳性(预测为缓存友好的缓存厌恶块)使用基线替换策略老化，而假阴性(缓存友好的块被预测为缓存厌恶)没有任何机会重用。</li>
+</ul>
+</li>
+</ul>
+<h4 id="signature-based-hit-prediction-ship">SIGNATURE BASED HIT PREDICTION (SHIP)</h4>
+<ul>
+<li>像 SDBP 一样，<strong>SHiP</strong> [Wu et al.， 2011a] 学习了底层替换策略的淘汰行为，但 SHiP 背后的主要观点是，<strong>重用行为与将该行插入缓存的 PC 更紧密相关，而不是与最后访问该行的 PC</strong>。因此，在缓存淘汰时，SHiP 的预测器被 PC 训练，PC 首先在缓存丢失时插入该行，预测器只在缓存 MISS 时被咨询(在命中时，行被提升到最高优先级而不咨询预测器)。</li>
+<li>更具体地说，SHiP 训练一个预测器，它可以学习给定的签名是否具有近或远的重引用间隔。<strong>在缓存中采样一些集合以维护签名和训练预测器。在一个采样集中的缓存命中，与这条缓存行相关联的签名被训练为正，以指示一个近重引用，而在驱逐一条从未被重用的行时，该签名被训练为负，以指示一个远重引用</strong>。当插入新行时，将使用传入行的签名来咨询预测器，并确定传入行的重新引用间隔(对所有访问执行预测，而不仅仅是对采样集)。一旦插入到缓存中，行就使用一个简单的 RRIP 策略进行管理(参见表4.2)。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210821115906.png" alt="20210821115906" loading="lazy"></li>
+<li>签名的选择对 SHiP 的有效性至关重要。Jaleel 等人 [2010b] 评估了一个程序计数器签名(PC)、一个内存区域签名和一个指令序列历史签名，他们发现 <strong>PC 签名性能最好</strong>。</li>
+<li>SHiP 基于 DRRIP [Jaleel et al.，2010b] 创建细粒度策略。<strong>DRRIP 对 epoch 中的所有缓存行进行统一的重新引用预测，而 SHiP 进行更细粒度的预测：它通过将每个引用与一个唯一的签名关联起来，将传入行的分类到不同的组中。</strong> 假设具有相同签名的缓存行具有相似的重引用行为，但允许具有不同签名的缓存行在同一 epoch 内具有不同的重引用行为。</li>
+<li>现在我们回答本节开始时提到的问题。
+<ul>
+<li>(1) 最初，SHiP 从 SRRIP 中学习，但一旦 SHiP 的预测器被训练，进一步的训练更新来自 SHiP 自身的重用和驱逐行为。</li>
+<li>(2) SHiP 使用基于 PC 的预测器，其中与一行相关联的 PC 就是插入一行缓存 miss 的 PC，其中每个 PC 与一个饱和计数器相关联。</li>
+<li>(3) SHiP 依靠 RRIP 政策来老化所有行。</li>
+</ul>
+</li>
+</ul>
+<h4 id="hawkeye">HAWKEYE</h4>
+<ul>
+<li>为了避免基于启发式的解决方案(如LRU)的病态，Hawkeye [Jain和Lin, 2016] 构建了 Belady 的 MIN 解[Belady, 1966]，这是有趣的两个原因。
+<ul>
+<li>首先，Belady 的 MIN 对于任何引用序列都是最优的，因此基于 MIN 的解决方案可能适用于任何访问模式。</li>
+<li>其次，Belady 的 MIN 算法是一种不切实际的算法，因为它替换了将来重复使用最多的行；因此，它依赖于未来的知识。</li>
+</ul>
+</li>
+<li>Hawkeye 的核心见解是，<strong>虽然无法预测未来，但可以将 Belady 的 MIN 算法应用到过去的内存引用中。此外，如果一个程序过去的行为是它未来行为的一个很好的预测器，那么通过学习过去的最优解，Hawkeye 可以训练一个预测器，它应该在未来访问中表现良好</strong>。</li>
+<li>为了理解模拟过去事件的 MIN 需要多少历史信息，Jain 和 Lin[2016] 通过限制其未来的窗口来研究 MIN 的性能。图 4.3 显示，虽然 MIN 需要一个很长的窗口到未来(SPECint 2006的 8x 缓存大小)，但它不需要一个无边界窗口。因此，要将 MIN 应用到过去的事件，我们需要一个缓存大小为 8x 的历史记录。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210821124850.png" alt="20210821124850" loading="lazy"></li>
+<li>由于维持缓存大小 8x 的历史信息开销巨大，Hawkeye 只计算几个抽样集的最优解，并<strong>引入 OPTgen 算法，为这些抽样集计算与 Belady 的 MIN 策略相同的答案</strong>。<strong>OPTgen 确定如果使用 MIN 策略将被缓存的行</strong>。OPTgen 背后的关键观点是，<strong>当一行再次被重用时，可以准确地确定该行的最佳缓存决策</strong>。因此，在每次重用时，OPTgen 都会回答以下问题: 这一行是否会在 MIN 情况下是缓存命中还是缓存丢失？这种洞察力使得 OPTgen 能够使用少量的硬件预算和简单的硬件操作，以 O(n) 复杂性再现 Belady 的解决方案。</li>
+<li>图4.4 显示了 Hawkeye 替换策略的总体设计。OPTgen 训练 Hawkeye 预测器，这是一种基于 PC 的预测器，它可以了解 PC 插入的行是倾向于缓存友好型还是缓存反对型。当 OPTgen 确定一条行将被 MIN 命中时，该行对应的 PC 被正训练，否则被负训练。每次使用传入行的 PC 进行缓存插入和提升时，都会参考预测器。被预测为缓存友好的行将以高优先级插入，而被预测为缓存厌恶的行将以低优先级插入(参见表4.3)。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210821125001.png" alt="20210821125001" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210821125202.png" alt="20210821125202" loading="lazy"></li>
+<li>回答本节开头的问题:
+<ul>
+<li>(1) Hawkeye 从最优缓存解决方案中学习，而不是从 LRU 或 SRRIP 中学习；</li>
+<li>(2) Hawkeye 使用基于 PC 的预测器学习最优解;</li>
+<li>(3) Hawkeye 还依赖于 RRIP 的老化机制，以高优先级插入 age line。为了纠正不准确的预测，Hawkeye 还对预测器进行负训练，当预测到不喜欢缓存的行被取消而没有被重用时。</li>
+</ul>
+</li>
+<li>Hawkeye 在概念上做出了一个有趣的贡献: <strong>它将缓存替换描述为一个有监督的学习问题</strong>，这令人惊讶，因为不像分支预测，程序执行最终提供每个分支的正确结果，硬件缓存不提供这样的标记数据。通过对过去事件应用最优解决方案，Hawkeye 提供了标记数据，这<strong>表明缓存替换领域可能会从监督学习的大量研究中受益</strong>。</li>
+</ul>
+<h4 id="perceptron-based-prediction">PERCEPTRON-BASED PREDICTION</h4>
+<ul>
+<li>预测性策略在很大程度上取决于预测者的准确性。<strong>SDBP、SHiP 和 Hawkeye 都使用基于 PC 的预测器，准确率约为 70 - 80%</strong>。Jiménez 和 Teran 旨在通过使用更好的特征和更好的预测模型来提高预测精度 [Jiménez和Teran, 2017, Teran等人，2016]。例如,<strong>感知器预测 [Teran et al., 2016] 使用简单的人工神经网络 [Rosenblatt, 1962]，以增加使用带有更丰富的特性的 PC</strong> ，如 (1) PCs 历史信息，(2) 来自内存地址的位，(3) 数据的压缩表示，和(4) 一个块被访问的次数。每个特征被用来索引一个不同的饱和计数器表，然后求和并与一个阈值进行比较，生成一个二分预测。一小部分的访问被采样以使用感知器更新策略更新感知器预测器：如果预测是错误的，或者如果总和没有超过某个大小，那么计数器在访问时减少，在驱逐时增加。图 4.5 对比了感知器预测器(右)和先前基于 PC 的预测器(左)。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210821140306.png" alt="20210821140306" loading="lazy"></li>
+<li>Multiperspective Reuse Predictor [Jiménez和Teran, 2017] 探索了一组广泛的特性，这些特性捕获了程序的各种属性，生成了一个从多个角度获得信息的预测器。特征被参数化，包含了关于每个训练输入的 LRU 堆栈位置、每个特征被哈希的 PC 位和 PC 历史的长度的更丰富的信息。这些参数一起创建了一个大的特征空间，从而导致更高的预测精度。</li>
+</ul>
+<h4 id="evicted-address-filtereaf">EVICTED ADDRESS FILTER(EAF)</h4>
+<ul>
+<li><strong>EAF 策略</strong> [Seshadri等人，2012] <strong>单独预测每个缺失块的重用行为，允许比 PC 更细粒度的差异</strong>。关键的观察是，如果一个高重用的块被过早地从缓存中逐出，那么它将在逐出后不久被访问，而低重用的块在逐出后很长一段时间内都不会被访问。因此，<strong>EAF 策略使用 bloom 过滤器</strong> [bloom, 1970] (一种概率性的、空间效率高的结构，用于确定集合中某个元素的存在或缺失) <strong>来跟踪一小组最近被驱逐的地址</strong>。在<strong>缓存丢失时，如果新行出现在 bloom 过滤器(也称为逐出地址过滤器)中，那么预测该行是重用友好的，并以高优先级插入</strong>; 否则，<strong>根据双峰插入策略 the Bimodal Insertion policy 插入新行</strong>(参见3.1.2节)。当 <strong>bloom 过滤器满时，它被重置</strong>。EAF 在概念上类似于一个小型的候选缓存，它跟踪最近从主缓存中删除的行。表 4.4 总结了 EAF 策略的操作。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210821154831.png" alt="20210821154831" loading="lazy"></li>
+<li>从概念上讲，EAF 策略延长了缓存行的生存期，超过了淘汰时间，因此一行的生存期从它的插入开始，但当该行从 bloom 过滤器中删除时结束。随着生命周期的延长，对于具有较长重用间隔的行，EAF 观察重用变得可行，从而获得更好的抗扫描能力和抗抖动能力，从而获得更好的性能。</li>
+<li><strong>重用检测器 (ReD)</strong> [crc, 2017, Albericio等人，2013] 提出了类似的想法，因为它<strong>绕过 LLC 或地址重用表中没有击中的任何缓存行，跟踪最近的缓存丢失。因此，ReD 只在第二次重用时将行插入缓存中</strong>。为了避免在第一次看到所有行时绕过它们，ReD 还使用基于 PC 的预测器来预测在第一次访问后可能被重用的行。</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Cache Replacement Policies - Fine-Grained Reuse Distance]]></title>
+        <id>https://blog.shunzi.tech/post/CRP-Fine-Grained-One-Reuse-Distance/</id>
+        <link href="https://blog.shunzi.tech/post/CRP-Fine-Grained-One-Reuse-Distance/">
+        </link>
+        <updated>2021-08-20T07:40:00.000Z</updated>
+        <content type="html"><![CDATA[<blockquote>
+<ul>
+<li>Cache Replacement Policies - Fine-Grained Reuse Distance</li>
+</ul>
+</blockquote>
+<h2 id="fine-grained-replacement-policies">Fine-Grained Replacement Policies</h2>
+<ul>
+<li>细粒度策略在插入时区分高速缓存行，这种区分通常基于类似高速缓存行的前一个生存期的回收信息。例如，如果细粒度策略得知某一行在其之前的生命周期中没有被重用而被逐出，那么它可以以低优先级将该行插入到缓存中。相比之下，粗粒度策略(如LRU)只有在从MRU位置迁移到LRU位置后才会驱逐一行，所以该方案强制缓存行驻留在缓存很长一段时间，消耗宝贵的缓存空间来确定行应该驱逐。因此，<strong>通过学习以前缓存行的行为，细粒度策略可以更有效地使用缓存</strong>。</li>
+<li>根据用于预测插入优先级的指标，我们将细粒度策略分为三大类。
+<ul>
+<li>第一类(第4.1节) 包含<strong>预测传入行预期重用时间间隔</strong>的解决方案。</li>
+<li>第二类(第4.2节) 包含<strong>预测二分缓存决策</strong>的解决方案 (<strong>缓存友好 vs. 缓存不友好</strong>)。</li>
+<li>第三类比其他两类要小得多，包括<strong>引入新的预测指标的策略</strong> [Beckmann and Sanchez, 2017, Kharbutli and Solihin, 2005]。</li>
+</ul>
+</li>
+<li>细粒度解决方案有其他几个设计维度。首先，由于要记住跨多个缓存生存期的单个行的缓存行为可能很麻烦，所以这些策略<strong>学习一组行的缓存行为</strong>。例如，<strong>许多解决方案根据加载行的指令的地址 (PC) 对行进行分组，因为由同一 PC 加载的行往往具有类似的缓存行为</strong>。最近的解决方案着眼于更复杂的方法来分组缓存行 [Jiménez 和 Teran, 2017, Teran et al.， 2016]。第二个设计维度是用于学习缓存行为的历史记录量。</li>
+<li>细粒度替换策略起源于两个看起来不同的上下文中。
+<ul>
+<li><strong>其中一个使用预测来识别死块（即在被移除之前不会被使用的块），然后就可以重新用于其他用途</strong>。例如，识别死块的最早动机之一是将它们用作预取缓冲区 [Hu等人，2002,Lai等人，2001]。另一个动机是关闭已死的缓存行 [Abella等人，2005,Kaxiras等人，2001]。</li>
+<li><strong>第二个工作推广了混合重引用间隔策略</strong> [Jaleel et al.， 2010b]，<strong>使它们更有 learning 的基础</strong>。</li>
+</ul>
+</li>
+<li>尽管它们的起源不同，这两种研究方向已经趋同为概念上相似的解决方案。</li>
+</ul>
+<blockquote>
+<ul>
+<li>PC 程序计数器是计算机处理器中的寄存器，它包含当前正在执行的指令的地址（位置）。当每个指令被获取，程序计数器的存储地址加一。在每个指令被获取之后，程序计数器指向顺序中的下一个指令。当计算机重启或复位时，程序计数器通常恢复到零。</li>
+</ul>
+</blockquote>
+<h3 id="reuse-distance-prediction-policies">REUSE DISTANCE PREDICTION POLICIES</h3>
+<ul>
+<li>基于重用距离的策略预估块的重用距离，重用距离可以根据连续引用块之间的访问次数或循环次数来定义。对重用距离的完美预测足以模拟 Belady 的最优解决方案，但<strong>由于重用距离值的高变化，很难精确预测重用距离。因此，现实的解决方案估计重用距离分布或其他聚合的重用距离统计</strong>。</li>
+</ul>
+<h4 id="expiration-based-dead-block-predictors">EXPIRATION-BASED DEAD BLOCK PREDICTORS</h4>
+<ul>
+<li>许多死块预测器使用<strong>过去的驱逐信息</strong>来估计平均重用距离统计数据，它们驱逐未在预期重用距离内重用的行 [Abella et al.， 2005, Faldu和Grot, 2017, Hu et al.， 2002, Kharbutli 和 Solihin, 2005, Liu et al.， 2008, Takagi 和 Hiraki, 2004]。</li>
+<li>Hu 等人了解了缓存块的存活时间，其中<strong>存活时间定义为一个块在缓存中保持存活的周期数</strong> [Hu等人，2002]。当插入一个块时，它的生命周期预计与最近的一次的生命周期相近。如果块在缓存中停留了两倍的生命周期而没有收到缓存命中，则这样的块被定义为死亡块并将从缓存中移除。</li>
+<li>Abella 等人使用了类似的死块预测策略来关闭 L2 高速缓存行，但他们没有使用周期数，而是<strong>根据连续引用之间的缓存访问次数来定义重用距离</strong> [Abella等人，2005]。</li>
+<li>Kharbutli 和 Solihin[2005] <strong>使用计数器来跟踪每条缓存行的访问间隔，其中一行的访问间隔被定义为在对该行的后续访问之前被访问的其他缓存行的数量</strong>。而且，如果访问间隔超过一定的阈值，它们就会预测一个缓存行是死的。该阈值由访问间隔预测器(AIP)预测，该预测器跟踪所有过去驱逐的访问间隔，并记住基于 PC 的表中所有此类间隔的最大值。</li>
+<li>Faldu 和 Grot [2017] 展示了 Leeway 策略，<strong>该策略使用了 live distance 的概念，即在缓存行生命周期中观察到的最大栈距离，以识别死块</strong>。缓存块的活动距离是从块的前几代学习的，当一个块超过它的活动距离时，它被预测为死块。使用每个 PC 的活距离预测表(LDPT)来保存前面的活距离。LDPT 为传入的块预测活动距离，任何在 LRU 堆栈中移动超过其预测活动距离的块都被预测为死块。<strong>为了避免跨生存期和跨同一 PC 访问的块的活动距离的高可变性，Leeway 部署了两个更新策略</strong>，它们控制基于工作负载特征调整 LDPT 中的活动距离值的速率。第一种策略是激进的，支持 bypassing；第二种策略是保守的，有利于缓存。Leeway 使用 Set Dueling [Qureshi et al.， 2007] 来选择这两种策略。</li>
+</ul>
+<h4 id="reuse-distance-ordering">REUSE DISTANCE ORDERING</h4>
+<ul>
+<li>Keramidas 等人 [2007] 使用重用距离预测来代替驱逐预计在未来被重用最多的缓存行。他们的策略学习每个 LOAD 指令 (PC) 的重用距离，对于每个传入行，它<strong>计算一个估计的访问时间 (ETA)，这是当前时间和预期的重用间隔的总和。然后，它根据 ETA 值来排序缓存行，并驱逐 ETA 值最大的行</strong>。</li>
+<li>为了防止 ETA 预测不可用的情况，该方案<strong>还跟踪行衰减，这是对一行在缓存中未被访问的时间的估计，如果该行的衰减间隔大于其 ETA，它将驱逐该行</strong>。</li>
+<li>更具体地说，图4.1显示了替换策略有两个候选行:
+<ul>
+<li>(1) ETA最大的行(ETA行)；</li>
+<li>(2) 衰减时间最大的行(LRU行)</li>
+</ul>
+</li>
+<li>选择两个值中最大的行进行驱逐。因此，该策略在有条件时依赖 ETA，否则转变回 LRU。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210821112316.png" alt="20210821112316" loading="lazy"></li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Cache Replacement Policies - Coarse-Grained Hybrid]]></title>
+        <id>https://blog.shunzi.tech/post/CRP-Coarse-Grained-Three-Hybrid/</id>
+        <link href="https://blog.shunzi.tech/post/CRP-Coarse-Grained-Three-Hybrid/">
+        </link>
+        <updated>2021-08-20T06:40:00.000Z</updated>
+        <content type="html"><![CDATA[<blockquote>
+<ul>
+<li>Cache Replacement Policies - Coarse-Grained Hybrid</li>
+</ul>
+</blockquote>
+<h2 id="hybrid-policies">Hybrid Policies</h2>
+<ul>
+<li>混合策略 [Jaleel et al.， 2010b, Qureshi et al.， 2006, 2007] 认识到不同的工作负载，甚至相同工作负载中的不同阶段，可以从不同的替代策略中受益。例如，如果程序在小工作集和大工作集之间交替，<strong>当工作集较小时，它将受益于最近友好策略，当工作集较大时，它将受益于抗抖动策略</strong>。因此，混合策略评估应用程序当前工作集的需求，并从多个竞争策略中动态选择。混合策略面临的两个主要挑战是 (1) 准确识别最有利的策略，以及 (2 以较低的硬件成本管理多个策略。我们现在讨论解决这些挑战的两种解决方案。</li>
+</ul>
+<h3 id="adaptive-replacement-cache-arc">ADAPTIVE REPLACEMENT CACHE (ARC)</h3>
+<ul>
+<li>自适应替换缓存(ARC) [Megiddo 和 Modha, 2003] 通过动态平衡基于最近次数和基于频率的驱逐，结合了最近次数和频率的优势。特别是，ARC 保持跟踪两个额外的标签目录，L1 和 L2，它们一起记住的元素是基线缓存所能容纳的两倍。L1 目录维护最近使用过的、只访问一次的页面，L2 目录维护最近访问过的、至少访问过两次的页面。ARC 的目标是动态地为 L1 和 L2 选择适当的缓存量(见图3.10)。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820231629.png" alt="20210820231629" loading="lazy"></li>
+<li>更具体地说，ARC 将基线缓存目录分为两个列表 T1 和 T2，分别用于最近和经常引用的条目。T1 和 T2 使用幽灵列表(分别为 B1 和 B2)进行扩展，幽灵列表分别跟踪 T1 和 T2 中最近被逐出的缓存项。幽灵链表只包含标签元数据，而不是实际数据，当相应的数据从缓存中被移除时，条目就会被添加到幽灵链表中。T1 和 B1 共同构成基于最近的 L1 目录，T2 和 B2 共同构成基于频率的L2 目录。</li>
+<li>ARC 动态调制 T1 和 T2 专用的缓存空间。一般来说，B1 中的命中会增加 T1 的大小(专用于最近访问的元素的缓存的比例)，B2 中的命中会增加 T2 的大小(专用于至少访问过两次的元素的缓存的比例)。来自 T1 和 T2 的驱逐项分别被添加到 B1 和 B2。</li>
+</ul>
+<h3 id="set-dueling">SET DUELING</h3>
+<ul>
+<li>ARC 等混合策略的一个问题是维护附加标记目录的巨大开销。Qureshi 等人[2006] 引入了 Set Dueling，这是一种以较低的硬件成本对不同策略的行为进行抽样的精确机制。Set Dueling 建立在这样的观察之上:一些随机选择的集合可以准确地表示整个缓存上不同替换策略的行为。Qureshi 等人[2006] 用数学方法表明，对于 1-4MB(1024–4096 sets) 的缓存，64 个集合就足以捕获整个缓存的行为。现在，我们通过讨论两个具有代表性的策略来更详细地讨论 Set Dueling。</li>
+</ul>
+<h4 id="dynamic-insertionpolicydip">Dynamic InsertionPolicy(DIP)</h4>
+<ul>
+<li>Dynamic InsertionPolicy(DIP) 动态插入策略(DIP)通过动态调制传入缓存行的插入位置，结合了最近友好策略和抗抖动策略的优点 [Qureshi等人，2007]。特别地，DIP 在最近友好的 LRU(表3.1) 和抗抖动的双模态插入策略(表3.6)之间交替使用。</li>
+<li>为了在两个策略中进行选择，DIP 使用 Set Dueling 动态跟踪每个策略的命中率。图 3.11 显示 DIP 专用于 LRU (图3.11中的集0、5、10和15) 和 BIP(图3.11中的集3、6、9和12)。这些专用集被称为 Set Dueling 监视器(SDM)，而其余集被称为跟随集。策略选择(PSEL)饱和计数器通过识别接收更多缓存命中的 SDM 来决定获胜策略。特别地，当专用于 LRU 的 SDM 接收到命中时，PSEL 增加，当专用于 BIP 的 SDM 接收到命中时，PSEL 减少( k 位 PSEL 计数器初始化为 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{k-1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8491079999999999em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span></span></span></span>)。获胜的策略由 PSEL 的 MSB 确定。如果 PSEL 的 MSB 为 0，跟随集使用 LRU 策略；否则跟踪集将使用 BIP。因此，Set Dueling 不需要任何单独的存储结构，除了 PSEL 计数器。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210821094915.png" alt="20210821094915" loading="lazy"></li>
+</ul>
+<h4 id="dynamic-re-reference-interval-policy-drrip">Dynamic Re-Reference Interval Policy (DRRIP)</h4>
+<ul>
+<li>DRRIP 建立在 DIP 的基础上，增加了抗扫描的能力。特别是，DRRIP 使用set dueling 创建了 SRRIP 和 BRRIP 的混合，SRRIP 是 LRU 的抗扫描版本(表3.7)，BRRIP 是 BIP 的抗扫描版本(表3.8)。</li>
+<li>正如我们将在第 4 章中看到的，Set Dueling 背后的洞察力对许多后续细粒度策略产生了很大的影响，这些策略使用 Set 采样的概念来有效地跟踪元数据，以确定细粒度缓存行为。</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Cache Replacement Policies - Coarse-Grained Frequency]]></title>
+        <id>https://blog.shunzi.tech/post/CRP-Coarse-Grained-Two-Frequency/</id>
+        <link href="https://blog.shunzi.tech/post/CRP-Coarse-Grained-Two-Frequency/">
+        </link>
+        <updated>2021-08-20T05:40:00.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<ul>
+<li>Cache Replacement Policies - Coarse-Grained Frequency</li>
+</ul>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<ul>
+<li>Cache Replacement Policies - Coarse-Grained Frequency</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="frequency-based-policies">FREQUENCY-BASED POLICIES</h2>
+<ul>
+<li>基于频率的策略不依赖于最近的访问频率，而是使用访问频率来识别受害者，因此访问频率较高的行优先缓存在访问频率较低的行之上。这种方法不太容易受到扫描的干扰，并且在较长一段时间内考虑重用行为，而不仅仅是最后一次使用。</li>
+<li>最简单的基于频率的策略是最少频繁使用(LFU)策略[Coffman and Denning, 1973]，它将频率计数器与每条缓存行关联起来。当该行插入缓存时，频率计数器初始化为 0，每次访问该行时，频率计数器都增加。在缓存丢失时，频率最低的候选对象将被逐出。表 3.9 总结了这些操作。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820170200.png" alt="20210820170200" loading="lazy"></li>
+<li>不幸的是，基于频率的策略不能很好地适应应用程序阶段中的更改，因为即使不再访问前一阶段中具有高频率计数的行，它们仍然会缓存到新的阶段中。为了解决这个问题，有几个解决方案[Lee等人，2001年，O Neil等人，1993年，Robinson和Devarakonda, 1990年，Shasha和Johnson, 1994] 用最近的信息增加频率信息，让旧的行优雅地老化。这里我们讨论两种这样的解决方案。</li>
+</ul>
+<h4 id="frequency-based-replacement-fbr">Frequency-Based Replacement (FBR)</h4>
+<ul>
+<li>FBR [Robinson和Devarakonda, 1990] 指出，<strong>基于频率的方法容易受到短时局域性突发的高计数器值的误导</strong>。因此，FBR 通过选择性地增加频率计数器从频率计数中剔除局部性。特别是，FBR 不增加 LRU 堆栈的顶部部分的频率计数器，这被称为新部分。因此，时间局部性的短突发不会影响频率计数器。图 3.8 说明了这个策略。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820170345.png" alt="20210820170345" loading="lazy"></li>
+<li>不幸的是，这种策略有一个缺点，即一旦新部分的行老化，即使是经常使用的行也会很快被淘汰，因为它们没有足够的时间来建立频率计数。因此，FBR 进一步限制替换在一个旧的部分中使用最少的行，其中包括最近没有被访问的行(LRU堆栈的底部)。堆栈的其余部分称为中间部分，它为经常使用的行提供了足够的时间来建立它们的频率值。</li>
+<li>表 3.10 总结了 FBR 的操作策略。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820222332.png" alt="20210820222332" loading="lazy"></li>
+</ul>
+<h4 id="least-recentlyfrequentlyused-lrfu">Least Recently/FrequentlyUsed (LRFU)</h4>
+<ul>
+<li>LRFU 策略 [Lee等人，2001] 建立在这样的观察之上：LRU 和 LFU 策略代表了结合了最近和频率信息的一系列政策的极端点(见图3.9)。LRFU 使用一种名为联合近期和频率(Combined Recency and Frequency, CRF)的新指标，通过允许近期和频率之间的灵活权衡来探索这个频谱。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820222453.png" alt="20210820222453" loading="lazy"></li>
+<li>与基于频率的策略一样，<strong>LRFU 将每个过去对块的引用计算进去</strong>，但与基于频率的策略不同的是，<strong>LRFU 通过一个权重函数来衡量每个引用的相对贡献</strong>。特别地，LRFU 为每个区块计算 CRF 值，<strong>CRF 值是权重函数 F(x) 对每个过去的参考的总和，其中 x 是过去的引用距离当前时间的距离</strong>。因此，对于纯粹基于频率的策略仿真，权重函数可以对所有过去的引用给予同等的优先级，而对于基于最近的策略仿真，权重函数可以对最后的引用给予较高的优先级。</li>
+<li>LRFU采用式3.1中的权重函数，其中 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>λ</mi></mrow><annotation encoding="application/x-tex">\lambda</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathdefault">λ</span></span></span></span> 是经验选择的参数。权重函数为老的缓存行提供指数级的低优先级，这使得 LRFU 保留了 FBR 的好处，同时支持优雅的老化。$$F(x) = (\frac{1}{p})^{{\lambda}x}$$</li>
+<li>表 3.11 总结了块 b 在不同决策点上的 LFRU 策略操作。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820225822.png" alt="20210820225822" loading="lazy"></li>
+<li>LRFU 的性能很大程度上依赖于此，因此随后开发的 ALRFU 策略动态调整了<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>λ</mi></mrow><annotation encoding="application/x-tex">\lambda</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathdefault">λ</span></span></span></span> 的值 [Lee et al.， 1999]。</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Cache Replacement Policies - Coarse-Grained Recency]]></title>
+        <id>https://blog.shunzi.tech/post/CRP-Coarse-Grained-One-Recency/</id>
+        <link href="https://blog.shunzi.tech/post/CRP-Coarse-Grained-One-Recency/">
+        </link>
+        <updated>2021-08-20T04:40:00.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<ul>
+<li>Cache Replacement Policies - Coarse-Grained Recency</li>
+</ul>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<ul>
+<li>Cache Replacement Policies - Coarse-Grained Recency</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="粗粒度缓存">粗粒度缓存</h2>
+<ul>
+<li>缓存替换文献跨越了50年，首先是在操作系统页面替换的上下文中，然后是在硬件缓存的上下文中。在此期间，大多数研究都集中在更智能的粗粒度策略的开发上，这可能可以用这些策略的简单性来解释:每个缓存行都与少量的替换状态相关联，对所有新插入的行进行统一初始化，然后在重用这些行时使用简单的操作进行操作。</li>
+<li>在本章中，我们将讨论粗粒度策略的关键进展。我们将粗粒度策略划分为三个类，根据它们在插入到缓存后区分行的方式。
+<ul>
+<li>第一类包括绝大多数粗粒度策略，使用最近信息来排序行(基于最近的策略)。</li>
+<li>第二个类使用频率来排序行(基于频率的策略)。</li>
+<li>最后，第三类(混合策略)动态地选择不同的粗粒度替换策略。</li>
+</ul>
+</li>
+<li>粗粒度策略设计中的一个运行主题是识别三种常见的缓存访问模式，即最近友好访问、抖动访问[Denning, 1968]和扫描[Jaleel et al.， 2010b]。当应用程序的工作集小到足以容纳缓存时，就会出现最近友好访问，这样大多数内存引用的重用距离小于缓存的大小。相比之下，当应用程序的工作集超过缓存的大小时，就会发生抖动访问，这样大多数内存引用的重用距离都大于缓存的大小。最后，<strong>扫描是一个永不重复的流访问序列</strong>。正如我们将在本章中看到的，几乎所有粗粒度替换策略都专门针对这些访问模式或这三种访问模式的混合进行了优化。</li>
+</ul>
+<h3 id="recency-based-policies">RECENCY-BASED POLICIES</h3>
+<ul>
+<li>基于最近的策略根据最近的信息对行进行优先排序。LRU策略[Mattson et al.， 1970]是这些策略中最简单和最广泛使用的。在缓存回收中，LRU策略只是从一组给定的候选缓存行中删除最老的行。为了找到最老的行，LRU策略在概念上维护一个最近栈，其中栈的顶部代表 MRU 行，堆栈的底部代表 LRU 行。通过为每一行关联一个计数器并更新它，可以精确地或近似地维护这个最近堆栈，如表3.1所示<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820100316.png" alt="20210820100316" loading="lazy"></li>
+<li>当引用存在时间局域性时，即最近使用的数据可能在不久的将来被重用时，LRU的性能很好。但是对于两种类型的访问模式，它的性能很差。
+<ul>
+<li>首先，当应用程序的工作集大小超过缓存大小时，它可能是悲观的，导致一种称为抖动的现象[Denning, 1968] (见图3.1)。</li>
+<li>其次，LRU在有扫描的情况下表现很差，因为它缓存了最近使用的扫描，代价是更有可能被重用的旧行。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820100424.png" alt="20210820100424" loading="lazy"></li>
+</ul>
+</li>
+</ul>
+<h4 id="variants-of-lru">VARIANTS OF LRU</h4>
+<ul>
+<li>我们现在描述一些显著的 LRU 变体，用于检测和容纳抖动或流访问。</li>
+</ul>
+<h5 id="most-recently-used-mru">Most Recently Used (MRU)</h5>
+<ul>
+<li>MRU 策略通过取消新行以保留旧行来解决问题。因此，当工作集大于缓存时，它能够保留工作集的一部分。例如, 图3.2显示了抖动, 访问模式如图3.1所示,系统提高了 LRU 年代缓存命中率的一小部分工作集在这个例子中没有驱逐行a .表3.2显示, MRU 和 LRU的系统最新政策是相同的,除了 MRU 就清除系统的缓存行最新位置而不是LRU的位置。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820100725.png" alt="20210820100725" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820100846.png" alt="20210820100846" loading="lazy"></li>
+<li><strong>然而 MRU 对于抖动访问是理想的，但它在最近友好访问出现时表现很差，而且它对应用程序工作集的变化适应性很差，因为它不太可能缓存来自新工作集的任何行</strong>。</li>
+</ul>
+<h5 id="early-evictionlrueelru">Early EvictionLRU(EELRU)</h5>
+<ul>
+<li>EELRU政策也避免了抖动[Smaragdakis等人，1999]。其<strong>主要思想是检测工作集大小超过缓存大小的情况，在这种情况下，有几行会提前被逐出。因此，早期驱逐会丢弃一些随机选择的行，这样剩余的行就可以通过 LRU 策略进行有效管理</strong>。更具体地说，当工作集与缓存匹配时，EELRU 会收回 LRU 行，但当它观察到在一个比主内存大的粗略循环模式中接触了太多行时，它会驱逐 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mi>e</mi><mrow><mi>t</mi><mi>h</mi></mrow></msup></mrow><annotation encoding="application/x-tex">e^{th}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.849108em;vertical-align:0em;"></span><span class="mord"><span class="mord mathdefault">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.849108em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">t</span><span class="mord mathdefault mtight">h</span></span></span></span></span></span></span></span></span></span></span></span> 最近使用的行</li>
+<li>图 3.3 显示了EELRU在最近轴的三个区域之间的区别。最近轴的左端点表示MRU线，右端点表示LRU线。LRU内存区域由最近使用的行组成，位置e和M分别表示早期驱逐区域和晚期驱逐区域的开始。在 miss 时，EELRU 策略要么淘汰最近最少使用的位置(晚区域)的行，要么淘汰 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mi>e</mi><mrow><mi>t</mi><mi>h</mi></mrow></msup></mrow><annotation encoding="application/x-tex">e^{th}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.849108em;vertical-align:0em;"></span><span class="mord"><span class="mord mathdefault">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.849108em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">t</span><span class="mord mathdefault mtight">h</span></span></span></span></span></span></span></span></span></span></span></span> 位置(早区域)的行。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820104234.png" alt="20210820104234" loading="lazy"></li>
+<li>为了决定是使用早期驱逐还是 LRU 驱逐，<strong>EELRU 跟踪每个地区收到的命中次数。如果该分布是单调递减的，则 EELRU 假设没有振荡，并将 LRU 行逐出</strong>。但是，如果分布显示晚期区域比早期区域的命中次数更多，那么 EELRU 将从早期区域删除，这使得晚期区域的行在缓存中保留的时间更长。表3.3总结了 EELRU 的操作。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820104648.png" alt="20210820104648" loading="lazy"></li>
+</ul>
+<h5 id="segmented-lru-seg-lru">Segmented LRU (Seg-LRU)</h5>
+<ul>
+<li>分段 LRU 通过<strong>优先保留至少访问过两次的行来处理扫描访问</strong>[Karedla et al.， 1994]。Seg-LRU将LRU堆栈划分为两个逻辑段(见图3.4)，即<strong>适用段段和受保护段</strong>。新进来的缓存行被添加到试用段，当他们收到再次命中，被提升到保护段。因此，受保护段中的行至少被访问了两次，而扫描访问永远不会提升到受保护段。在驱逐中，从试用部分中选择最近使用最少的一行。</li>
+<li>表 3.4 总结了 seg-lru 的操作。在预备段的 MRU 位置插入新的行，在缓存命中时，行被提升到保护段的 MRU 位置。因为受保护的部分是有限的，提升到受保护的部分可能会迫使受保护部分的 LRU 线迁移到试用部分的 MRU 末端，使这一行在从试用部分被驱逐之前有另一个机会获得 hit。因此，Seg-LRU 可以适应工作集的变化，因为老的缓存行最终被降级到试用段。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820105040.png" alt="20210820105040" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820105221.png" alt="20210820105221" loading="lazy"></li>
+<li>Seg-LRU 策略的一个变体赢得了第一次缓存替换锦标赛[Gao和Wilkerson, 2010]。</li>
+</ul>
+<h4 id="beyond-lru-insertion-and-promotion-policies">BEYOND LRU: INSERTION AND PROMOTION POLICIES</h4>
+<ul>
+<li>Qureshi 等人[2007]观察到，通过修改插入策略，同时保持驱逐策略不变(将缓存行逐出LRU位置)，可以实现基于最近的策略的变体。例如，可以使用 <strong>LRU Insertion policy (LIP)</strong> [Qureshi et al.， 2007] 来模拟 MRU (表3.2)，该策略在 LRU 位置插入新行，而不是 MRU 位置(见表3.5)。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820105811.png" alt="20210820105811" loading="lazy"></li>
+<li>这种见解促进了使用新的插入和 promotion 策略的替换策略的设计。通过以不同的方式解释最近的信息，这些策略可以处理比 LRU 更广泛的访问模式类。在本节中，我们将讨论这方面的一些值得注意的解决方案。由于应用程序通常由许多不同的访问模式组成，这些策略本身都不够，通常被用作混合解决方案的一部分，我们将在3.3节中讨论。</li>
+</ul>
+<h5 id="bimodal-insertion-policy-bip">Bimodal Insertion Policy (BIP)</h5>
+<ul>
+<li>由于像 LIP(和MRU) 这样的抗抖动策略不能适应在阶段变化期间工作集的变化，<strong>BIP</strong> [Qureshi等人，2007] 修改LIP，<strong>使缓存行偶尔(以低概率)插入到 MRU 位置</strong>。BIP 保持 LIP 的抗抖动，因为它在大多数时间插入 LRU 位置，但它也可以通过偶尔保留较新的行来适应阶段变化。表3.6显示，BIP 插入到 MRU 位置的概率为 e，设为 1/32 或 1/64。e 取值为 1 表示在 MRU 位置插入(模拟 LRU 插入策略)，e 取值为 0 表示在 LRU 位置插入(模拟LIP插入策略)。因此，从实现的角度来看，<strong>BIP 的参数统一了 LRU 和 MRU 插入光谱中不同位置的所有插入策略</strong>。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820110509.png" alt="20210820110509" loading="lazy"></li>
+</ul>
+<h5 id="static-re-reference-interval-prediction-srrip">Static Re-Reference Interval Prediction (SRRIP)</h5>
+<ul>
+<li>Jaleel等人[2010b]认为<strong>缓存替换可以被认为是一个重新引用区间预测 (RRIP) 问题</strong>，传统的 LRU 链可以被认为是一个 RRIP 链; LRU 链上一行的位置代表了自上次使用以来的时间，而 RRIP 链上一行的位置代表了它被预测重新引用的顺序[Jaleel et al.， 2010b]。特别是，预测在 RRIP 链首的行将被最快的重新引用(最短的重新引用间隔)，而在 RRIP 链尾的行将被最远的重新引用(最大的重新引用间隔)。当缓存丢失时，位于 RRIP 链尾部的行将被替换。</li>
+<li>在这个视图中，我们可以看到，LRU策略预计，新的缓存行将有 near immediate re-reference 间隔（插入在 RRIP 链的头），而 thrash-resistant LIP 策略预测，新行将有一个遥远的 re-reference 间隔（插入在 RRIP 的尾部）。图 3.5 用一个 2bit 重引用预测值(RRPV)表示的RRIP 链说明了这一点：00 对应最近的重参考区间预测，11 对应遥远的重参考区间预测。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820111229.png" alt="20210820111229" loading="lazy"></li>
+<li>Jaleel等人[2010b]表明，与预测位于 RRIP 链末端的重新引用间隔不同，<strong>预测中间的重新引用间隔有很大的好处，它允许替换策略适应不同访问模式的混合</strong>。特别是，扫描对未重用数据的引用会破坏最近友好策略(如 LRU)，因为它们会丢弃应用程序的工作集，而不会产生任何缓存命中。<strong>为了适应最近友好访问和扫描的混合，Jaleel等人[2010b] 提出了SRRIP</strong>，它<strong>给进入的行一个中间的重新引用间隔</strong>，然后如果它们被重用，将它们提升到链首。因此，SRRIP 为最近友好的策略增加了抗扫描的能力，因为它防止具有远重引用间隔的行(扫描)驱逐具有近重引用间隔的行。</li>
+<li>在大多数情况下，SRRIP 为每个缓存块关联一个 m 位值来存储它的 Re-Reference Prediction value (RRPV)，但是 Jaleel 等人[2010b] 发现一个 2 位的RRPV值就足以提供抗扫描能力。表 3.7 总结了2位 RPRV 值对SRRIP的操作。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820115551.png" alt="20210820115551" loading="lazy"></li>
+<li><strong>和 LRU 一样，当所有块的重引用间隔大于可用缓存时，SRRIP会对缓存进行震荡。</strong> 为了添加 thrash-resistance scan-resistant 策略)，Jaleel et al. [2010b] 提出 <strong>BimodalRRIP (BRRIP)</strong>, BIP[Qureshi et al., 2007] 的一个变种，大多数缓存块都插入了一个远端重引用间隔预测(即 RRPV 为 3)，它很少插入一个中间重引用间隔预测(即 RRPV 为 2 )的缓存块。. BRRIP 业务的 RRPV 汇总于表 3.8。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820120340.png" alt="20210820120340" loading="lazy"></li>
+<li>由于应用程序可以在最近友好型和抖动型工作集之间交替使用，因此 SRRIP 和 BRRIP 本身都是不够的。在3.3节中，我们将讨论可以解决所有三种常见访问模式(最近友好、抖动和扫描)的 SRRIP 和 BRRIP 的混合版本，为许多应用程序带来性能改进。</li>
+</ul>
+<h5 id="protecting-distance-based-policy-pdp">Protecting Distance-Based Policy (PDP)</h5>
+<ul>
+<li><strong>PDP</strong> 策略[Duong et al.， 2012]是 RRIP 的一种推广，因为它<strong>动态估计保护距离(PD)，所有的缓存行在 PD 访问时都受到保护，然后才能被驱逐。PD 是一个单独的值，用于插入到缓存中的所有行，但它会根据应用程序的动态行为不断更新</strong>。</li>
+<li>为了估计 PD, PDP 计算重用距离分布(RDD)，这是在程序执行的最近间隔内观察到的重用距离分布。使用 RDD, <strong>PD 被定义为覆盖缓存中大多数行的重用距离</strong>，这样大多数行在 PD 或更小的距离被重用。例如，图 3.6 显示了 436.cactusADM 的 RDD。这里 PD 设置为 64。使用小型专用处理器很少重新计算 PD。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820152114.png" alt="20210820152114" loading="lazy"></li>
+<li>更具体地说，在插入或提升时，每条缓存行都被赋一个值来表示其剩余的 PD (RPD)，即它仍然受到保护的访问的次数；这个值被初始化为 PD。每次访问一个集合后，该集合中每一行的 RPD 值都是通过递减的 RPD 值 (在0处饱和) 来老化的。只有当该行的 RPD 大于 0 时，该行才会受到保护。未受保护的行被选为受害者进行逐出。</li>
+</ul>
+<h5 id="pseudolru-置换gippr-的起源插入和-promotion">PseudoLRU 置换(GIPPR) 的起源插入和 Promotion</h5>
+<ul>
+<li>受 RRIP 的启发，Jiménez[2013] 观察到在插入和 Promote 的选择上有很多自由度，因此他们使用 <strong>插入/Promote 向量(IPV)</strong> 的概念概括了插入和 Promote 策略的修改。当块被插入到缓存中，或者从最近栈的不同位置提升时，IPV 则指示块在最近栈中的新位置。特别是，k 路 set-associative 缓存，IPV 是一个 k+1 个项组成的向量的，其中每个项的整数从 0 到 k-1，<strong>其中第 I 个位置的值表示位置 I 的块在被重新引用时应该提升到的新位置</strong>。IPV 中的第 k 个项表示应该插入一个新的传入块的位置。如果最近堆栈中的新位置小于旧位置，则块向下移动以腾出空间；否则，块会向上移动以腾出空间。</li>
+<li>图3.7显示了两个样本IPVs，第一个代表LRU，第二个代表更复杂的插入和提升策略。</li>
+<li>虽然 IPVs 的广义概念非常强大，但可能的 IPVs 数量呈指数增长，(k-way 缓存的可能的 IPVs 有 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mi>k</mi><mrow><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">k^{k+1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8491079999999999em;vertical-align:0em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span></span></span></span>)，因此 Jiménez[2013] 使用离线遗传搜索来为 SPEC 2006 基准开发良好的 IPVs。遗传搜索得到的IPV如图3.7底部所示。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820153014.png" alt="20210820153014" loading="lazy"></li>
+<li>正如不存在适用于所有工作负载的单一插入策略或 RRIP 策略一样，每个工作负载的最佳 IPV 也是不同的。因此，Jiménez[2013] 提出了一种混合解决方案，使用 set dueling (见章节3.3) 来考虑多个 IPVs。</li>
+</ul>
+<h4 id="extended-lifetime-recency-based-policies">EXTENDED LIFETIME RECENCY-BASED POLICIES</h4>
+<ul>
+<li>延长生存期策略是基于最近的策略的一个特殊类，它通过将一些缓存行存储在辅助缓冲区或受害缓存中人为地延长它们的生存期。这里的<strong>关键动机是将驱逐决定推迟到更晚的时候，以便做出更明智的决定</strong>。此策略<strong>允许粗粒度策略稍微增大缓存命中的重用窗口，使其大于缓存的大小</strong>。</li>
+</ul>
+<h5 id="shepherd-cache">Shepherd Cache</h5>
+<ul>
+<li>Shepherd Cache (SC) 模仿了 Belady 的最优策略 [Rajan and Govindarajan, 2007]。由于 Belady 的策略需要未来访问的知识，Rajan 和 Govindarajan 在一个叫做 Shepherd Cache 的辅助缓存的帮助下模拟了这个未来的前瞻性。特别地，缓存在逻辑上分为两个组件，<strong>模拟最佳替换的主缓存(MC)<strong>和</strong>使用简单的FIFO替换策略的 SC</strong>。SC 通过提供一个前视窗口来支持 MC 的最佳替换。新行最初在 SC 中进行缓冲，直到新行离开 SC 时，才从 MC 决定替换受害者。当新行在 SC 中时，将收集关于替换候选人在 MC 中重用顺序的信息。</li>
+<li>例如，由于 Belady 的策略驱逐了在未来被重用最多的行，所以早期被重用的行就不太可能被驱逐。当从 SC 中移除新行(由于 SC 中的其他插入)时，将通过从前瞻性窗口中尚未重用的 MC 中选择一个候选者或最后重用的候选者来选择一个替换候选者; 如果 MC 中的所有行在 SC 行重用之前被重用，那么 SC 行将替换自己。尽管 SC 和 MC 在逻辑上是分离的，Rajan 和 Govindarajan[2007] 通过组织缓存避免了数据从一个组件到另一个组件的任何移动，这样两个逻辑组件可以被组织为一个单一的物理结构。</li>
+<li>因此，SC 通过在 SC的帮助下延长 MC 缓存中的行的生命周期，模拟了一种更好的替换方案, SC 的权衡是 MC 中的替换以高 lookahead 接近真正的最优，而更高的 lookahead 是以降低 MC 容量为代价的。不幸的是，Jain 和 Lin[2016] 的后续工作表明，为了接近 belady 的最优策略的行为，该策略需要提前 8x 缓存的大小。</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Cache Replacement Policies - Taxonomy]]></title>
+        <id>https://blog.shunzi.tech/post/CRP-Taxonomy/</id>
+        <link href="https://blog.shunzi.tech/post/CRP-Taxonomy/">
+        </link>
+        <updated>2021-08-20T03:40:00.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<ul>
+<li>Cache Replacement Policies - Taxonomy</li>
+</ul>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<ul>
+<li>Cache Replacement Policies - Taxonomy</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="缓存替换策略的分类">缓存替换策略的分类</h2>
+<ul>
+<li>为了组织这本书和几十年来研究过的许多思想，我们提出了缓存替换问题的解决方案的分类。我们的分类法建立在这样一个观察之上:缓存替换策略解决了一个预测问题，其<strong>目标是预测是否应该允许任何给定的行留在缓存中</strong>。该决定在缓存行生命周期的多个点重新计算，从该行插入缓存时开始，到该行从缓存中删除时结束。</li>
+<li>因此，在我们的分类法中，我们首先根据插入决策的粒度将缓存替换策略分为两大类。在第一类策略中，我们称之为<strong>粗粒度策略</strong>，当所有的行插入缓存时，它们被<strong>相同地对待</strong>，并且<strong>只根据它们在缓存中的行为来区分行</strong>。例如，由于一个缓存行驻留在缓存中，它的优先级可能会在每次重用时增加。相比之下，<strong>细粒度策略在插入到缓存时区分行</strong>(除了观察它们驻留在缓存中的行为)。为了在插入时进行区分，<strong>细粒度策略通常依赖于关于缓存访问行为的历史信息</strong>。例如，如果细粒度策略了解到某个特定指令加载的行在过去往往会被逐出而不会被重用，那么它可以以低优先级插入该行。</li>
+<li>为了更好地理解我们的分类，了解替换策略通常是通过将少量替换状态与每个缓存行关联来实现的，这一点很有用。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210819182902.png" alt="20210819182902" loading="lazy"></li>
+</ul>
+<h3 id="缓存生命周期中的相关概念">缓存生命周期中的相关概念</h3>
+<ul>
+<li><strong>Insertion Policy</strong>：当新行插入缓存时，替换策略如何<strong>初始化</strong>它的替换状态?</li>
+<li><strong>Promotion Policy</strong>：当缓存行在缓存中命中的时候，替换策略如何<strong>更新</strong>该行的替换状态?</li>
+<li><strong>Aging Policy</strong>：当插入或提升<strong>竞争行</strong>时，替换策略如何更新该行的替换状态?</li>
+<li><strong>Eviction Policy</strong>：给定固定数量的选择，哪一行执行替换策略驱逐？</li>
+<li>从缓存线的生命周期来看，我们可以看到<strong>粗粒度策略在插入时对所有缓存行的处理是相同的</strong>，所以它们主要依赖于聪明的老化和 promotion 策略来操作替换优先级。相反，<strong>细粒度策略使用更智能的插入策略</strong>。当然，细粒度策略还需要适当的老化和 promotion 来更新替换状态，因为在插入时并不能预测所有行为</li>
+</ul>
+<h3 id="粗粒度缓存">粗粒度缓存</h3>
+<ul>
+<li><strong>粗粒度策略在第一次插入缓存时对所有行的处理都是相同的</strong>，它们通过<strong>观察驻留在缓存中的行的重用行为来区分对缓存友好的行和对缓存不友好的行</strong>。根据用于区分缓存驻留行的指标，我们将粗粒度策略进一步划分为三个类。
+<ul>
+<li>第一个类包括绝大多数粗粒度策略，描述了基于最近访问时间对高速缓存行进行排序的策略。</li>
+<li>第二个类包括基于访问频率对高速缓存行进行排序的策略。</li>
+<li>最后，第三类中的策略随着时间的推移监视缓存行为，以便在给定的时间段内动态地选择最佳粗粒度策略。</li>
+</ul>
+</li>
+</ul>
+<h4 id="recency-based-policies">Recency-Based Policies</h4>
+<ul>
+<li>基于最近的策略基于每一行在其生命周期内的最新引用来排序行。为了达到这个顺序，基于最近的策略维护了一个概念性的 recency stack，该栈提供了引用行的相对顺序。不同的政策以不同的方式利用最新信息。例如，常用的LRU(最近最少使用)策略(及其变体)优先驱逐最近最少使用的行，而MRU(最近最常使用)等策略优先驱逐最近使用的行；其他政策利用中间解决方案。</li>
+<li>我们进一步划分基于最近行为的生命周期定义的基于最近行为的策略。
+<ul>
+<li>第一个类，包括绝大多数基于 recency-based 的策略，描述了当一行被从缓存中移除时结束该行生命周期的策略。我们认为这种策略有 <strong>固定的生命周期</strong>。</li>
+<li>第二个类包括一些策略，这些策略通过引入一个临时结构来<strong>延长缓存行的生命周期</strong>，使其超越回收，该结构为具有较长重用距离的行提供第二次接收缓存命中的机会。我们说，这样的政策有一个<strong>延长的寿命</strong>。</li>
+</ul>
+</li>
+</ul>
+<h4 id="frequency-basedpolicies">Frequency-BasedPolicies</h4>
+<ul>
+<li>基于频率的策略维护频率计数器，以<strong>根据它们被引用的频率对行进行排序</strong>。不同的替换策略使用不同的策略来更新和解释这些频率计数器。例如，<strong>一些策略单调地增加计数器，而另一些策略则随着时间的推移使计数器老化</strong>(降低其值)。另一个例子是，一些策略驱逐频率最低的行，而另一些策略驱逐频率满足预定义标准的行</li>
+</ul>
+<h4 id="hybrid-policies">Hybrid Policies</h4>
+<ul>
+<li><strong>由于不同的粗粒度策略适用于不同的缓存访问模式，因此混合策略可以在几个预先确定的粗粒度策略中动态选择，以适应程序执行中的阶段变化</strong>。特别是，混合策略在评估期间观察一些候选粗粒度策略的命中率，并使用此反馈来为未来访问选择最佳的粗粒度策略。自适应策略是有利的，因为它们有助于克服单个粗粒度策略的问题。在第三章中,我们将看到,最先进的混合政策调节粗粒度之间使用不同的插入优先的政策,我们注意到,尽管插入优先级的变化随着时间的推移,这些策略仍是粗粒度的,因为在一个时期,所有的处理是完全相同的。</li>
+</ul>
+<h3 id="细粒度缓存">细粒度缓存</h3>
+<ul>
+<li><strong>细粒度策略在将行插入缓存时区分行</strong>。它们通过使用来自高速缓存行以前生命周期的信息来进行这些区分。例如，如果一行在过去没有收到命中，那么它可以以低优先级插入。由于记住所有缓存行的过去行为是不可行的，细粒度策略通常记住一组缓存行的行为。例如，许多策略组合成一组最后被相同的加载指令访问的缓存行。</li>
+<li>当然，所有细粒度策略都需要考虑的一个问题是在插入时用于区分这些组的指标。基于使用的度量，我们将细粒度策略分为两大类:
+<ul>
+<li>(1) 基于分类的策略与每一组可能的预测之一相关联，即缓存友好型和缓存厌恶型;</li>
+<li>(2) 基于重用距离的策略尝试预测每组缓存线的详细重用距离信息。</li>
+</ul>
+</li>
+<li>这两类定义了一个频谱的极端，频谱一端的策略只有两个可能的预测值，而频谱另一端的政策有许多可能的预测值;许多策略将会在四个或八个可能值中预测其中之一。最后，Beckmann 和 Sanchez 提出了新的度量标准 [Beckmann和Sanchez, 2017]，我们将在第三类中讨论</li>
+</ul>
+<h4 id="classification-based-policies">Classification-Based Policies</h4>
+<ul>
+<li>基于分类的策略将传入的缓存行分为两类: 友好缓存行或反对缓存线。其<strong>主要思想是优先清除不支持缓存的行，以便为支持缓存的行留下更多的空间</strong>，因此，支持缓存的行会以比反对缓存的行更高的优先级插入。<strong>在缓存友好的行之间维护二级排序，通常基于最近次数</strong>。基于分类的策略被广泛认为是最先进的，因为 (1) 它们可以利用过去行为的长期历史来为未来做出更明智的决定，(2) 它们可以容纳所有类型的缓存访问模式。</li>
+</ul>
+<h4 id="reuse-distance-based-policies">Reuse Distance-Based Policies</h4>
+<ul>
+<li>基于重用距离的策略预测传入行的详细重用距离信息。<strong>超过预期重用距离而没有接收到命中的行将从缓存中删除</strong>。这些策略可以被视为基于最近的策略或基于频率的策略的预测变体，因为<strong>基于最近的和基于频率的策略都通过监视缓存线在缓存驻留时的重用行为隐式地估计重用距离</strong>(分别通过最近和频率)。利用历史信息对重用距离的显式预测有其独特的优点和缺点</li>
+</ul>
+<h3 id="设计考量">设计考量</h3>
+<ul>
+<li>替换策略的主要目标是提高缓存命中率，许多设计因素有助于实现更高的命中率：
+<ul>
+<li>粒度: 在插入时，行的粒度是多少?是否所有的高速缓存行都被相同的处理，或者它们是否根据历史信息分配不同的优先级</li>
+<li>历史: 替换策略在做决策时利用了多少历史信息?</li>
+<li>访问模式: 替换策略对特定访问模式的专门化程度如何?它对访问模式的更改或不同访问模式的混合是否健壮?</li>
+</ul>
+</li>
+<li>图 2.2 总结了我们完整的分类，并显示了替换策略的不同类别是如何处理这些设计因素的。一般来说，当我们移到图的右侧(通常与更新的策略相对应)时，趋势是<strong>趋向于使用较长的历史记录并能够适应各种访问模式的更细粒度的解决方案</strong>。在细粒度预测缓存行为的重要性可以通过观察最近的cache Replacement Championship(2017)的前四个解决方案都是细粒度的来衡量。细粒度预测为最新的细粒度策略提供了两个优势。
+<ul>
+<li>首先，它们允许细粒度策略只将缓存空间专用于最有可能从缓存中受益的行;相比之下，粗粒度策略倾向于重复将缓存资源分配给没有产生任何命中的行。</li>
+<li>其次，它们允许细粒度策略动态地确定不同组的行的访问模式;相比之下，粗粒度策略假设整个缓存遵循统一的缓存访问模式。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820095251.png" alt="20210820095251" loading="lazy"></li>
+</ul>
+</li>
+<li>在细粒度的政策中,趋势是使用更长的历史作为state-ofthe-art细粒度策略(Jain and Lin, 2016)从历史是8样本信息缓存的大小(见第4章)。悠久的历史的应用让策略检测缓存友好长期重用行,否则就会被一长串厌恶缓存的中间访问所混淆。</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Cache Replacement Policies - Introduction]]></title>
+        <id>https://blog.shunzi.tech/post/CRP-Introduction/</id>
+        <link href="https://blog.shunzi.tech/post/CRP-Introduction/">
+        </link>
+        <updated>2021-08-20T02:40:00.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<ul>
+<li>Cache Replacement Policies - Introduction</li>
+</ul>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<ul>
+<li>Cache Replacement Policies - Introduction</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li>这本书总结了CPU数据缓存的缓存替换策略。重点是算法问题，因此作者首先定义了一个分类法，将以前的策略分为两大类，他们称之为<strong>粗粒度策略</strong>和<strong>细粒度策略</strong>。然后每一类又分为三个子类，描述了解决缓存替换问题的不同方法，并总结了每一类的重要工作。然后探讨了更丰富的因素，包括优化缓存miss率之外的指标的解决方案、针对多核设置定制的解决方案、考虑与预取器的交互的解决方案以及考虑新的内存技术的解决方案。本书最后讨论了未来工作的趋势和挑战。这本书假定读者将对计算机架构和缓存有一个基本的了解，将对整个领域的学者和从业者有用。</li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<ul>
+<li>几十年来，移动数据的延迟大大超过了执行一条指令的延迟，所以缓存，既减少了内存延迟又减少了内存流量，是所有现代微处理器的重要组成部分。因为缓存的大小和延迟之间有一个一般的权衡，大多数微处理器维持一个缓存的层次结构，较小的低延迟缓存由较大的高延迟缓存提供下层支持，后者最终由 DRAM 提供。对于每一个缓存，有效性可以通过它的命中率来衡量，我们定义为 s/r，其中 s 是缓存服务的内存请求的数量，r 是向缓存发出的内存请求的总数。</li>
+<li>有几种方法可以提高缓存命中率。<strong>一种方法是增加缓存的大小</strong>，通常以增加延迟为代价。<strong>第二种方法是增加缓存的关联性</strong>，这就增加了缓存行可以映射到的可能缓存位置的数量。在一种极端情况下，直接映射缓存(关联性为1)将每条缓存行映射到缓存中的单个位置。在另一个极端，完全关联缓存允许缓存线放置在缓存的任何位置。不幸的是，随着关联性的增加，功耗和硬件复杂度都会增加。<strong>第三种方法，也是本书的主题，是选择一个好的缓存替换策略</strong>，它回答了这样一个问题:<strong>当一个新行要插入到缓存中，哪一行应该被移除以为新行腾出空间</strong>?</li>
+<li>写一本关于缓存替换的书似乎有些奇怪，因为Lazslo Belady在50多年前就提出了一个可证明的最优策略。但Belady的政策是不可实现的，因为它依赖于未来的知识，它抛弃了在未来会被重复使用最多的缓存行。因此，多年来，研究人员已经探索了几种不同的方法来解决缓存替换问题，通常依赖于考虑访问频率、访问近期和最近的预测技术的启发式方法。</li>
+<li>此外，还有一个问题是缓存替换策略与死块预测器之间的关系，死块预测器试图预测缓存中不再需要的行。我们现在知道，缓存行的生命周期有多个决策点，从插入该行开始，随着时间的推移，直到最终退出该行，我们知道在这些不同的决策点执行操作有不同的技术。基于这个观点，我们认为死块预测器是缓存替换策略的一种特殊情况，我们发现缓存替换策略的空间非常丰富。</li>
+<li>最后，缓存在软件系统中也很普遍。事实上，第一个替代策略是为操作系统的分页系统开发的，虽然软件缓存和硬件缓存之间存在技术上的差异，但我们希望本书中的一些想法也能对软件缓存的开发人员有用。</li>
+<li><strong>Scope</strong>：本书主要介绍CPU数据缓存的硬件cache替换策略。虽然我们讨论的大多数研究都是在一级缓存的背景下进行的，智能缓存替换的好处是最明显的，但一般的想法通常适用于缓存层次结构的其他级别。</li>
+<li><strong>Roadmap</strong>：在第2章中，我们首先定义一个二维分类法。主要维度描述替换决策的粒度。第二个维度描述了用于做出替换决策的度量。然后第3章和第4章使用我们的分类法来描述现有的替换策略。第5章介绍了使缓存替换复杂化的其他考虑因素，包括数据预取、共享缓存、可变丢失成本、压缩和新技术。在第六章中，我们总结了2017年举行的Cache replace锦标赛的结果，总结了最近的Cache replace趋势，然后后退一步，总结未来研究的更大趋势和挑战。</li>
+</ul>
+<h3 id="相关介绍">相关介绍</h3>
+<h4 id="参考资料">参考资料</h4>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/102293437">知乎 - CPU Cache 的基本原理</a></li>
+</ul>
+<h4 id="概念理解延申">概念理解延申</h4>
+<h5 id="提高缓存命中率的方法二增加缓存的关联性">提高缓存命中率的方法二：增加缓存的关联性</h5>
+<p><strong>什么是缓存的关联性</strong></p>
+<ul>
+<li>
+<p>在Cache中，地址映射是指把主存地址空间映射到Cache地址空间，在将主存块复制到Cache中的时候遵循一定的映射规则，标志位为1时候，表示其Cache映射的主存块数据有效。（注意与地址变换的区别，地址变换是指CPU在访存的时候，将主存地址按照映射规则换算成Cache地址的过程 ）。 地址映射有三种方式：直接映射，全相联映射，组相联映射</p>
+</li>
+<li>
+<p><strong>直接映射</strong></p>
+<ul>
+<li>优点：硬件设计上会更加简单，因此成本上也会较低</li>
+<li>缺点：会出现 cache 颠簸（cache thrashing）<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210819150201.png" alt="20210819150201" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210819122855.png" alt="20210819122855" loading="lazy"></li>
+</ul>
+</li>
+<li>
+<p><strong>两路组相连</strong>：两路组相连缓存较直接映射缓存最大的差异就是：第一个地址对应的数据可以对应 2 个 cache line，而直接映射缓存一个地址只对应一个cache line。 <strong>组相联的本质就是组内是全相联，组间是直接相连</strong></p>
+<ul>
+<li>两路组相连缓存的硬件成本相对于直接映射缓存更高。因为其每次比较tag的时候需要比较多个cache line对应的tag（某些硬件可能还会做并行比较，增加比较速度，这就增加了硬件设计复杂度）</li>
+<li>两路组相联缓存可以有助于降低 cache 颠簸可能性<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210819150037.png" alt="20210819150037" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210819150219.png" alt="20210819150219" loading="lazy"></li>
+</ul>
+</li>
+<li>
+<p><strong>全相联</strong>：所有的cache line都在一个组内，因此地址中不需要set index部分。因为，只有一个组让你选择，间接来说就是你没得选。我们根据地址中的tag部分和所有的cache line对应的tag进行比较（硬件上可能并行比较也可能串行比较）。</p>
+<ul>
+<li>在全相连缓存中，任意地址的数据可以缓存在任意的cache line中。所以，这可以最大程度的降低cache颠簸的频率。但是硬件成本上也是更高。</li>
+<li>由于Cache比较电路的设计和实现比较困难，这种方式只适合于小容量Cache采用。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210819174545.png" alt="20210819174545" loading="lazy"></li>
+</ul>
+</li>
+</ul>
+<p><strong>缓存关联性如何影响缓存效率？</strong></p>
+<ul>
+<li>直接相连也就是对应的缓存关联性较差，对应的会造成缓存的频繁写入淘汰，因为映射关系固定，而增加了相联性之后，因为映射关系不再固定，缓存缺失的概率降低，命中率得到提升</li>
+</ul>
+<h4 id="béládys-algorithm">Bélády's algorithm</h4>
+<ul>
+<li>https://en.wikipedia.org/wiki/Cache_replacement_policies#B%C3%A9l%C3%A1dy's_algorithm</li>
+<li>最有效的缓存算法是总是丢弃那些在未来很长一段时间内不需要的信息。这个最优结果被称为 Bélády 的最优算法/简单地说最优替换策略或千里眼算法。由于通常不可能预测未来需要多少信息，这在实践中通常是不可实现的。只有经过实验才能计算出实际的最小值，并且可以比较实际选择的缓存算法的有效性。</li>
+</ul>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[UniKV: Toward High-Performance and Scalable KV Storage in Mixed Workloads via Unified Indexing]]></title>
         <id>https://blog.shunzi.tech/post/UniKV/</id>
@@ -434,2381 +1018,6 @@
 <figure data-type="image" tabindex="3"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210618213715.png" alt="20210618213715" loading="lazy"></figure>
 <figure data-type="image" tabindex="4"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210618213702.png" alt="20210618213702" loading="lazy"></figure>
 <figure data-type="image" tabindex="5"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210618213857.png" alt="20210618213857" loading="lazy"></figure>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[REMIX: Efficient Range Query for LSM-trees]]></title>
-        <id>https://blog.shunzi.tech/post/REMIX/</id>
-        <link href="https://blog.shunzi.tech/post/REMIX/">
-        </link>
-        <updated>2021-06-05T04:21:02.000Z</updated>
-        <summary type="html"><![CDATA[<blockquote>
-<ul>
-<li>FAST21 REMIX: Efficient Range Query for LSM-trees</li>
-</ul>
-</blockquote>
-]]></summary>
-        <content type="html"><![CDATA[<blockquote>
-<ul>
-<li>FAST21 REMIX: Efficient Range Query for LSM-trees</li>
-</ul>
-</blockquote>
-<!--more-->
-<h2 id="abstract">Abstract</h2>
-<ul>
-<li>LSM 本身是为高速写操作优化的，而范围查询在传统的 LSM-tree 上需要 seek 且归并排序来自多个 Table 的数据，开销是很大的且经常导致较差的读性能。为了提升范围查询的性能，我们提出了一个空间高效的的 KV 索引数据结构 REMIX，记录跨多个表文件的KV数据的全局排序视图。对多个 REMIX 索引数据文件的范围查询可以使用二分搜索快速定位目标键，并在不进行键比较的情况下按排序顺序检索后续键。基于此构建了 RemixDB，一个采用了一个更高效的压缩策略并使用 REMIX 来进行快速的点查询和范围查询的 KV 存储。实验结果表明，在基于写优化 LSM 树的 KV-store 中，REMIX 可以显著提高范围查询性能。</li>
-</ul>
-<h2 id="introduction">Introduction</h2>
-<ul>
-<li>LSM 代表的是更新开销和读开销的一种权衡，相比于 B+tree 保证了更小的写开销以及更大的读开销。关于读开销的优化就有，驻留在内存中的为每个 Table 维护的 BloomFilters，来减小不必要的 Table 访问。但是 BloomFilter 不能处理范围查询，所以出现了 Range Filters，如 SIGMOD18-SuRF、SIGMOD20-Rosetta 来在范围查询时过滤掉 Tables。<strong>但是当范围查询内的 Key 位于很多个候选的 Tables 中时</strong>，filtering 就很难提升查询性能了，特别是大范围查询，而且当查询请求可以在缓存中处理时，访问 Filters 的计算开销可能导致性能表现一般，这是真实负载中比较普遍的情况。</li>
-<li>LSM 本身是有 Compaction 来减少查询时检索的 SSTable 数量的，选择 Table 的策略又分为了 leveled 和 tiering。
-<ul>
-<li>LevelDB、RocksDB 采用的 Leveled 的策略就是把小的 sorted run 合并一个更大的 sorted run 来保证重叠的 Tables 数量小于阈值，该策略却是保证了较好的读性能但是因为归并排序的方式导致写放大比较严峻</li>
-<li>Tiered 则是等待多个相近大小的 sorted runs 达到阈值后合并到一个更大的 runs，从而提供更小的写放大以及更高的写吞吐。Cassandra、ScyllaDB 就采用了这样的方式。但是没有限制重叠的 Tables 的数量从而导致较大的查询开销。</li>
-<li>SIGMOD18 Dostoevsky 和 SIGMOD19 The Log-Structured Merge-Bush &amp; the Wacky Continuum 提出的 compaction 策略虽然做了一定程度上的读写的平衡，但是还是没能同时实现最好的读和写。</li>
-</ul>
-</li>
-<li>问题的关键其实在于限制 sorted runs 的数量以及 KV 存储不得不归并排序且重写现有的数据。如今的硬件技术使得随机访问的效率也很高了，因此 KV 存储不再说必须保证物理上的有序，而可以只保证逻辑有序同时避免大量的重写。</li>
-<li>为此，我们设计了REMIX，现有的范围查询解决方案很难在物理重写数据和动态执行昂贵的排序合并之间进行改进，与此不同的是，REMIX 使用了一个空间效率高的数据结构来记录跨多个表文件的 KV 数据的全局排序视图。使用 REMIX，基于 LSM 树的 KV-store 可以利用高效写压缩策略，而不会牺牲搜索性能。基于此我们还构建了 RemixDB，和高效的 Tiered 压缩策略以及分区的布局集成，同时实现了较低的写放大和快速的查询。</li>
-</ul>
-<h2 id="background">Background</h2>
-<ul>
-<li>了解几个概念就好：
-<ul>
-<li><strong>minor compaction</strong>：其实就是我们说的 flush 过程，数据从内存持久化到存储设备。这个过程写是比较快的，因为是顺序批量写入且不需要合并存储中的现有数据，但也就意味着查询操作需要检索所有的重叠的 Tables，查询开销较大，所以出现了 major compaction。</li>
-<li><strong>major compaction</strong>：其实就是把几个重叠的 runs 归并排序排序成更少的的 runs。也就是我们更为熟知的 compaction 操作。常说的 compaction 策略也是指 major compaction 过程中使用的策略。示例如下图<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610211420.png" alt="20210610211420" loading="lazy"></li>
-<li><strong>Range Query</strong>：范围查询是在 LevelDB/RocksDB 中是通过迭代器来定位多个 Tables 实现的，首先初始化一个迭代器，对一个 key 进行 seek，也就是范围查询的下届，seek 操作则定位对应的迭代器让其指向大于等于该 Key 的最小位置，然后 next 操作则相应地按顺序移动迭代器指向下一个 key，直到遇到了范围查询的边界。由于 sorted run 是按时间顺序生成的，所以目标键可以驻留在任何 runs 中。因此，迭代器必须跟踪所有 sorted runs。如上图所示的查询过程，找到了对应的 Keys 之后构建一个小顶堆进行归并排序，从而得到结果。</li>
-</ul>
-</li>
-</ul>
-<h2 id="remix">REMIX</h2>
-<ul>
-<li>范围查询其实依赖全局有序视图，而全局有序视图其实本身是从 SSTables 的不变性继承过来的，也就是说该全局有序视图本身可以保证很长一段时间有效，直到 SSTables 结构发生了变化，被删除了重写了之类的操作。<strong>现有的方案没有利用到不变性的这个优势，而是在每次范围查询过程中重复构建该全局有序视图</strong>，因为大量的计算开销和 I/O 而导致较差的读性能。所以 REMIX 就是想利用 table files 的不变性来维护一个全局有序视图，从而加速后续的查询操作。</li>
-<li>为了让 I/O 更高效，LSM 的 KV 存储常使用一些内存高效的元数据格式，譬如稀疏索引和布隆过滤器，如果我们记录了全局有序视图，势必也需要保证内存的空间高效。不能因为存储更多的元数据而导致读写性能损失。</li>
-</ul>
-<h3 id="the-remix-data-structure">The REMIX Data Structure</h3>
-<ul>
-<li>图示很好理解，简单解释一下概念。下图所示例子包含了三个 sorted runs，顺序对应地由箭头表示，共计 15 个 Keys，为了构建 REMIX，首先进行了个划分，划分为一定数量的 segments，每个分段包含的 Keys 数量相等。每个 Segment 对应包含一个起始 Key，也就是 Anchor Key，包含一组游标偏移，对应就是记录每个 Sorted Runs 现在的指针位置，也就是大于等于起始锚点的指针位置，还有一个 Run Selectors，包含了真正的顺序，即下一个 Key 所在的 runs 编号。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610214450.png" alt="20210610214450" loading="lazy"></li>
-<li>范围查询的过程就变成了：
-<ul>
-<li>首先检索稀疏索引，也就是 Anchor Key，二分查找找到所属的 segment</li>
-<li>迭代器对应被 seek 到该 segment 对应的 Anchor Key，然后使用该 segment 的游标偏移来移动迭代器指针，根据 selectors 中的顺序来进行 seek</li>
-<li>最后通过在全局有序的视图上找到了对应的目标 Key</li>
-</ul>
-</li>
-<li>例子：图示中找到 Key 17，首先二分找到 Segment2。然后游标从 11 开始移动，根据 Seletors 发现 11 在 R0 上，以及 Offset 的结果，即在 R0 的索引为 1 的地方开始，因为 11 &lt; 17，那么要继续移动游标，直到找到大于等于 17 的 Key，也就是图中的 17，这时候 offset 变成了 2 2 1，根据 Selectors 那么找到了 R1，根据 offset 也就找到了 17。</li>
-</ul>
-<h3 id="efficient-search-in-a-segment">Efficient Search in a Segment</h3>
-<ul>
-<li>Segement 的划分是一个可调的配置，Size 太大，Anchor Keys 就少了，二分查找更快，但是 Segment 内平均访问次数增多，因此在目标的 Segment 内也使用二分查找。</li>
-</ul>
-<h4 id="binary-search">Binary Search</h4>
-<ul>
-<li>为了在一个段中执行二分搜索，我们必须能够随机访问段中的每个键。段中的键属于 run，由相应的 run 选择器指示。要访问一个键，我们需要将 run 的游标放在正确的位置。这可以通过计算相同的 run 选择器在键之前的段中出现的次数，并将相应的游标向前移动相同的次数来实现。可以使用现代 CPU 上的 SIMD 指令快速计算出现次数。搜索范围可以通过对段的一些随机访问快速缩小，直到识别出目标键。为了结束查找操作，我们使用每个 run 选择器在目标键之前出现的次数初始化所有游标。</li>
-<li>图示很清楚，很好理解就不解释了。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610220752.png" alt="20210610220752" loading="lazy"></li>
-</ul>
-<h4 id="io-optimization">I/O Optimization</h4>
-<ul>
-<li>执行段内二分查找当然是为了减少比较的次数，但是，搜索路径上的键可能驻留在不同的 runs 中，如果各自的数据块没有被缓存，则必须通过单独的 I/O 请求来检索。上图所示就比较了四次 Key，对应访问了 3 个 runs，但是像 41 43 这两个 Key 其实属于一个 Run，甚至可能属于一个数据块。因此，在进行键比较之后，搜索可以利用相同数据块中的其余键，在必须访问不同的 Run 之前进一步缩小搜索范围。这样，R3 中的每个键都可以在不访问任何其他 Run 的情况下找到。比如为了查找 79，访问 R3 可以将搜索范围缩小到键 43 和键 83 之间，这时候二分查找找到了 71，也就是 R0，然后在 R0 中找到了 79。</li>
-</ul>
-<h3 id="search-efficiency">Search Efficiency</h3>
-<ul>
-<li>总结下来，具体的提升体现在下面三个方面
-<ul>
-<li><strong>REMIXes find the target key using one binary search</strong>：说白了就是执行一次二分查找就能找到 Key（这个一次其实是指完整的一次，包括段内的，因为全局有序视图，就花一次也很好理解）</li>
-<li><strong>REMIXes move the iterator without key comparisons</strong>：这个就是说不用再比较很多个 runs 的 Key 之后再移动了，这个还是因为全局有序，可以跳过一些没必要的比较操作。</li>
-<li><strong>REMIXes skip runs that are not on the search path</strong>：就是说可以跳过一些 run，但这个其实是看数据重叠的情况的，总是是因为读一个数据块的粒度导致可能读上来的数据块恰好就包含了这个 key，或者减小了查询的范围。</li>
-</ul>
-</li>
-<li>作者表明对点查询也是有优化的。</li>
-</ul>
-<h3 id="remix-storage-cost">REMIX Storage Cost</h3>
-<ul>
-<li>具体公式就不列了，看个数据就行。</li>
-<li>其实空间开销不小，特别是那个快 10% 的 USR。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610223144.png" alt="20210610223144" loading="lazy"></li>
-</ul>
-<h2 id="remixdb">RemixDB</h2>
-<ul>
-<li>RemixDB 使用了 Tiered Compaction 加一个分区的布局。因为有很多研究表明真实负载大多有很强的空间局部性，然后分区存储的话可以很好地降低压缩开销。所以 RemixDB 将键空间划分为不重叠键范围的分区。REMIX 对每个分区中的表文件进行索引，提供分区的排序视图。通过这种方式，RemixDB 本质上是一个使用分层压缩的单层 LSM 树。RemixDB 不仅继承了 Tiered 压缩的写效率，而且在 REMIX 的帮助下实现了高效的读取。RemixDB 的点查询操作(GET)执行一个 seek 操作，如果它与目标键匹配，则返回迭代器下的键。RemixDB 不使用Bloom过滤器。</li>
-<li>下图展示了 RemixDB 的结构，内存组件和 LevelDB 这些是一样的。分区中的压缩创建分区的新版本，其中包含新旧表文件的混合以及一个新的 REMIX 文件。旧版本在压缩后进行垃圾收集。</li>
-<li>在多级 LSM-tree 设计中，MemTable 的大小通常只有几十 MB，接近于默认的 SSTable 大小。在分区存储布局中，较大的 Memtable 在触发压缩之前可以积累更多的更新，这有助于减少 WA。MemTables 和 WAL 的空间成本几乎不变，考虑到当今数据中心的大内存和存储容量，这是合理的。在 RemixDB 中，MemTable 的最大大小被设置为 4GB。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210610223337.png" alt="20210610223337" loading="lazy"></li>
-</ul>
-<h3 id="the-structures-of-remixdb-files">The Structures of RemixDB Files</h3>
-<h4 id="table-files">Table Files</h4>
-<ul>
-<li>图 6 显示了 RemixDB 中的表文件格式。数据块默认为 4KB。一个大的 KV-pair 如果不能容纳在一个 4KB 的块中，就会独占一个 4K 的倍数的巨型块。每个数据块在块的开始包含一个小数组的 KV 对的块偏移量，用于随机访问单独的 KV 对。</li>
-<li>元数据块是一个 8bit value 的数组，每个都记录着一个 4KB block 中的 Keys 的数量。一个块可以包含 255 个 KV，在一个大 Block 中，除了第一个 4KB 外，其余的都将其对应的数字设为0，这样一个非零的数字总是对应于一个块的头部。使用偏移数组和元数据块，搜索可以快速到达任何相邻的块，并跳过任意数量的键，而不访问数据块。因为 KV 对是由 REMIX 索引的，所以表文件不包含索引或过滤器。</li>
-</ul>
-<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611115230.png" alt="20210611115230" loading="lazy"></figure>
-<h4 id="remix-files">REMIX Files</h4>
-<ul>
-<li>图 7 展示了 REMIX 文件格式，anchor key 是在一个不可变的类似于 B+Tree 的索引中维护的，相当于 LevelDB/RocksDB 的块索引，来辅助二分查找。每个 Anchor Key 和一个 Segment ID 关联，对应关联游标偏移和 run selectors。游标偏移由 16 位的块索引和 8 位的 key 索引组成，即图示中的 blk-id 和 key-id。块索引可以索引 65536 个 4KB 的块，也就是 256MB，每个块可以包含 256 个 KV 对。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611115712.png" alt="20210611115712" loading="lazy"></li>
-<li>一个 Key 的多个版本可以存在于一个分区的不同 table 文件中，一个范围查询操作必须跳过老版本并返回对应的最新的数据，所以 REMIX 构建的全局有序视图按照了从最新到最老的顺序排序，每个 run 选择器的最高位被保留来区分新旧版本。forward scan operation 将总是最先遇到最新版本的 Key，然后通过检查每个 run selector 的保留位来跳过老版本，而不用进行 Key 的比较。</li>
-<li>如果一个 Key 有多版本，这些版本可能分布在两个 Segments，查询操作可能需要检索两个 Segments 来获得最新的版本。为了简化查询，当构造一个 REMIX 时，通过在第一个段中插入特殊的 run 选择器作为占位符，我们将键的所有版本向前移动到第二个段。还需要确保一个 Segment 中的 Key 的最大数量等于或大于由 REMIX 索引的 runs 的个数，才能保证每个 Segment 足够大以容纳一个 Key 的所有版本的数据。</li>
-<li>为了容纳上面描述的特殊值，每个 run selector 占据了一个 byte，run selector 的第 8 位和第 7 位 (0x80 and 0x40) 分别表示老版本和删除的 Key。特殊值 63 (0x3f) 意味 placeholder，通过这种方式，RemixDB 可以在一个分区中管理多达 63 个 sorted tuns。</li>
-</ul>
-<h3 id="compaction">Compaction</h3>
-<ul>
-<li>在每个分区中，compaction 进程基于进入分区的新数据的大小和现有的 tables 的布局来估计 compaction cost，基于估算出来的开销，可能执行下列操作：
-<ul>
-<li><strong>Abort</strong>：取消分区 compaction 并保留 Memtable 和 WAL 中的新数据</li>
-<li><strong>Minor Compaction</strong>：写新数据到一个或多个 tables 而不用重写现有的 tables</li>
-<li><strong>Major Compaction</strong>：将新数据和一些甚至全部的现有数据合并</li>
-<li><strong>Split Compaction</strong>：将新数据和所有的现有数据合并，并拆分分区到几个新分区上</li>
-</ul>
-</li>
-<li><strong>Abort</strong>：Compaction 之后，一个分区如果有文件将重建该分区的 REMIX 索引，当一个小的表文件因为 minor compacion 在分区中创建，重建 REMIX 可能导致比较大的 I/O 开销。例如，表1 中的 USR 负载就有最高的空间开销比例。写 100MB 新数据到一个 1GB 的分区，将创建一个大约 100M 的索引。为了最小化 I/O 开销，RemixDB 可能丢弃一个分区的 compaction，如果估算出的 I/O 开销超过了阈值。该场景下，新的 KV 数据应该保留在 MemTables 和 WAL 中直到下一次 Compaction。
-<ul>
-<li>但是还有一个极端例子，如果一个 uniform 的负载，当所有分区都有 compaction 被Aborted 的时候，compaction 进程不能高效地当移动数据到分区。为了避免这个问题，我们限制了可以驻留在 Memtables 和 WAL 中的新数据的大小，不能超过最大 MemTable 大小的 15%，compaction 进程可以丢弃掉那些 I/O 开销最大的 compactions 如果达到了限制的话。</li>
-</ul>
-</li>
-<li><strong>Minor Compaction</strong>：minor compaction 就是从 immutable memtable 中把数据写入到分区中，而不用重写分区中原有的数据，但是需要重建 REMIX 索引。根据新写入的数据大小，minor compaction 创建一个或者多个新的 table files，Minor Compaction 只有在 compaction 后的预期 table 文件数量低于阈值 T 的时候才会执行，我们的实现中该阈值设定为了 10。下图展示了 minor compaction 的例子。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611145307.png" alt="20210611145307" loading="lazy"></li>
-<li><strong>Major Compaction</strong>：当一个分区中的预期文件数量达到了阈值 T 将执行 major 或者 split compaction。major compaction 将归并排序现有的 table files 合并成更少的 tables。随着 tables 数量的减少，minor compaction 的效率也就可以根据输入表文件的数量与输出表文件的数量的比率来估计。下图展示了 major compaction 的过程，该例子中，新数据合并到了三个小的 tables，只有一个新的 table 在 compaction 之后被创建，比例为 3/1，如果整个分区被归并排序，compactions 需要重写更多的数据并且仍然输出三个 tables，比例 5/3，因为 table file 大小的限制。相应的，major compaction 选择能够产生最高比率的输入文件的数量。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611145910.png" alt="20210611145910" loading="lazy"></li>
-<li><strong>Split Compaction</strong>：major compaction 可能不会很快地减少填满了大 table 的分区中 tables 的数量，这可以通过一个较低的估计输入/输出比率(例如10/9)来预测。该例子下，分区需要被分成多个分区，从而保证每个分区中的 tables 的数量可以持续减少。Split Compaction 归并排序了新数据和现有的 table fils，产生新的 tables 来组成几个新的分区。下图展示了过程。为了避免创建太多的小分区，compaction process 在一个分区里创建了 M 个新的 table files，M 默认为 2，这样来保证创建了 E/M 个分区，E 为新产生的 tables 的数量。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611150559.png" alt="20210611150559" loading="lazy"></li>
-</ul>
-<h3 id="rebuilding-remixes">Rebuilding REMIXes</h3>
-<ul>
-<li>分区存储布局可以通过利用较强的空间局部性来有效最小化真实负载 compaction cost，具体的，RemixDB 可以在几个分区中吸收大多数更新，在接受少量的分区中的 compaction 可以被避免。但是如果负载没有空间局部性，许多分区不可避免地必须执行压缩并进行少量的更新。Tiered Compaction 可以最小化这些分区的写操作，但是在一个分区中重建 REMIX 仍然需要读取已经存在的 tables。在我们的实现中，RemixDB 利用了现有的 REMIX 索引并使用了一个搞笑的合并算法来最小化重建过程的 I/O 开销。</li>
-<li>当重建分区的 REMIX，现有的表已经被 REMIX 索引，这些表可以被视为一个 Sorted Run，相应的，重建过程相当于归并排序两个 sorted runs，一个来自现有的数据，另一个来自新数据，当现有的这个 sorted run 比新的大很多的时候，generalized binary merging algorithm 算法通过使用小顶堆实现了更少的 Key 比较，相比于归并排序、算法根据两个 sorted run 之间的 size ratio 估计出了下一次合并点的 location 信息，并在相邻的范围中进行搜索。在RemixDB中，我们通过使用锚键来定位包含合并点的目标段，最后在该段中应用二叉搜索。在这个过程中，访问锚定键不会产生任何I/O，因为它们存储在 REMIX 中。在目标段中进行二分搜索，最多读取 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>l</mi><mi>o</mi><msub><mi>g</mi><mn>2</mn></msub><mi>D</mi></mrow><annotation encoding="application/x-tex">log_2D</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">o</span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03588em;">g</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.03588em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathdefault" style="margin-right:0.02778em;">D</span></span></span></span> 键来找到合并点。现有表的所有 run 选择器和游标偏移量都可以从现有的 REMIX 中派生出来，而不需要任何 I/O。要为新的分段创建锚定键，我们最多需要在新的排序视图上对每个分段访问一个键。</li>
-<li>重建 REMIX 的读开销被分区中的所有表的大小限制，重建过程导致对现有表的读 I/O，为了降低 WA 并提升未来的读性能。构建 REMIX 是否是成本高效的取决于想要节省多少个写 I/O 以及未来想提升多少读性能。实际上，在 SSDs 中的写操作通常比读操作更慢而且可能对设备造成永久的破坏。因此读相比于写来说更经济，特别是有空闲 I/O 带宽的系统。在期望具有弱空间局部性的密集写操作的系统中，采用多层 tiered 压缩策略或延迟在单个分区中重建 REMIX 可以降低以拥有更多级别已排序视图为代价的重建成本。调整 REMIX 与不同的存储布局超出了本文的范围。我们对 RemixDB 在不同工作负载下的重建成本进行了实证评估</li>
-</ul>
-<h2 id="evaluations">Evaluations</h2>
-<ul>
-<li>实验搭建：
-<ul>
-<li>在每个实验中，我们首先创建一组 H 个表文件(1≤H≤16)，它们类似于RemixDB中的一个分区或LSM-tree中的一个级别，使用 tiered compaction。每个表文件包含 64MB 的KV-pairs，其中键和值的大小分别为 16B 和 100B。当 H≥2 时，KV 对可以用两种不同的模式分配到表中:
-<ul>
-<li><strong>Weak locality</strong>：每个键被分配给一个随机选择的表，这提供了弱访问局域性，因为逻辑上连续的键经常驻留在不同的表中</li>
-<li><strong>Strong locality</strong>：每64个逻辑上连续的键被分配给一个随机选择的表，这提供了强访问局域性，因为一个范围查询可以从几个表中检索多个连续的键</li>
-</ul>
-</li>
-<li>D=32，段内二分查找可以开启或关闭，对应图中的 full/partial<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162158.png" alt="20210611162158" loading="lazy"></li>
-</ul>
-</li>
-<li>单次 Seek：Merge Iterator 在只有一个 Table 的时候表现更好，因为和 REMIX 需要执行相同次数的二分查找，但是 REMIX 需要动态地计算出现次数，并将迭代器从段的开头移动到一个键进行比较，开销相对更大。随着 Tables 数量增加，REMIX 的性能优势渐渐体现出来了。</li>
-<li>Seek+Next50 整体性能低于 Seek 因为要拷贝数据到 Buffer。开启段内二分查找影响不大，因为 next 操作主要影响执行时间，在段中对寻道操作的线性扫描预热了块缓存，这使得未来的操作更快。</li>
-<li>点查询：当少于 14 个 tables 的时候，REMIX 都不如带布隆过滤器的点查询，因为搜索可以只需要检查Bloom过滤器来有效地缩小到一个表文件。其次，在SSTable中搜索比在管理更多的键的 REMIX 中要快。在最坏的情况下，REMIX的吞吐量比Bloom过滤器(有3个表)低20%。不出所料，在没有Bloom过滤器的情况下，使用两个以上sstable的搜索速度会慢得多</li>
-<li>强局部性的时候在 range query 的结果上差距不大，通常，改进的局部性允许更快的二分搜索，因为在这种情况下，最后几个键比较通常可以使用相同数据块中的键。但是，合并迭代器的吞吐量仍然很低，因为密集的键比较操作占据了搜索时间。带有部分二分搜索的 REMIX 比完全二分搜索的改进更多，是因为局部性的提升减少了在目标 segment 里 scan 的开销，导致更少的缓存缺失。</li>
-<li>REMIX 点查询性能也得到了改善，因为强大的局域性加快了底层查找操作的速度。同时，Bloom 过滤器的结果保持不变，因为搜索代价主要由假阳性率和对单个表的搜索代价决定。因此，当包含超过9个表时，remix的性能可以超过Bloom过滤器。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162216.png" alt="20210611162216" loading="lazy"></li>
-<li>8 个 tables，不同的 segment size，如果关闭了段内二分查找，只 seek 的负载下， D 的大小影响最大，这是因为段中的线性扫描显著增加了较大的 D 值的成本。由于段内的随机访问速度较慢，较大的段大小仍然会导致较高的开销。在 Seek+Next50 实验中，数据复制在执行时间中占主导地位，使用不同的 D 时没有显著差异<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162225.png" alt="20210611162225" loading="lazy"></li>
-<li>不同的 range query 展现出了大约相同的趋势，实验中顺序加载相应的数据，所以在每种存储系统中都不会有重叠的文件，也就意味着 seek 操作只会访问一个文件。然而一个合并迭代器必须检查每个 sorted run 即便他们没有重叠的键范围，所以如果有多个 sorted runs 的话检索每个 run 的操作将占据 seek 时间的很大一部分。具体的，每一个在 LevelDB 和 RocksDB 中的 L0 表都是一个独立的 run，但是每一层 Li 又只包含一个 run。PebblesDB 允许一个 Level 有多个 runs，话虽如此，LevelDB 的性能至少比RocksDB高出2倍，尽管它们都使用了 Leveled 压缩。观察发现 RocksDB 在顺序加载过程中，在 L0 层保留了好几个 tables，总共八个，而没有把这些文件移动到更深的层次。相反，LevelDB 直接把这个 Table 推向了更深的层次 （L2 或 L3），如果这个 Table 和别的 Tables 不重叠的话，从而让 LevelDB 的 L0 层总是为空。因此，RocksDB 中的一个 seek 操作需要动态地排序-合并至少 12 个 sorted run，而这个数字在 LevelDB 中只有 3 或 4。</li>
-<li>查找性能对访问的局部性是敏感的。较弱的局部性会增加搜索路径上的CPU和I/O开销。在每个特定 value 大小的实验中，采用 uniform 访问模式的吞吐量比顺序访问低50%左右。同时，顺序访问的性能对值大小不太敏感，因为内存复制成本不显著<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162232.png" alt="20210611162232" loading="lazy"></li>
-<li>另外的实验测试了不同的存储总量大小下 query 长度对范围扫描的性能影响。每个实验以随机的顺序将具有 120B 值大小的固定大小的 KV 数据集加载到存储中，然后使用 Zipfian 访问模式使用四个线程执行范围扫描。REMIX 表现最好，但随着范围查询的长度增加，性能差异逐渐变小，这是因为长范围的查询在每个 sorted run 上展示出了顺序访问的特性，也就意味着在 scan 过程中更多的数据已经被预取，同时内存拷贝也给每个存储增加了固定的开销。</li>
-<li>还有观察发现 LevelDB 在 256GB 的时候性能下降到和 RocksDB 一样。因为实验中配置了 4GB 的 block cache，缓存丢失导致大量的 I/O 占据了查询时间。与此同时 RocksDB 展示出了极大的计算开销，因为在数据量较小的时候 L0 层包含了太多 Tables。在更大数据量的存储中，过多的 I/O 掩盖了开销。与此同时 REMIX 保证了最好的访问局部性，因为导致了最少的随机访问和缓存丢失。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162249.png" alt="20210611162249" loading="lazy"></li>
-<li>单线程随机插入 256GB 的数据，数据集有 20 个 KV 对，value 大小是 120B，负载有 uniform 的访问特征，代表着最差的情况。REMIX 和 PebblesDB 吞吐量最高，因为使用了利于写的 tiered compaction 策略，对应写放大为 4.99、9.26。比 LevelDB/RocksDB 小了很多。RocksDB 和 RemixDB 有更多的读 I/O，因为 RocksDB 使用了四个线程进行 Compaction 来充分利用 SSD 带宽，因为 Block Cache 和 Page Cache 的低效利用导致读 I/O 较多，LevelDB 只支持单线程压缩。尽管 RemixDB 读 I/O 多于 RocksDB 但是总的 I/O 还是小于 RocksDB 的。综上所述，RemixDB 以增加读 I/O 为代价实现了低 WA 和高写吞吐量。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611162259.png" alt="20210611162259" loading="lazy"></li>
-<li>顺序的负载展现出最高的吞吐，因为每一轮压缩只影响很少的分区。写 I/O 主要包含日志和创建新的表，大约是用户写入量的 2 倍。读 I/O 主要是重建 REMIX 和数据本身的大小基本相同。相比之下，两个倾斜负载，在 Memtable 中重复 overwrites 导致写 I/O 大幅减少，但是会创建分散的更新，将导致 Memtable 中更新较慢以及更多的分区被 Compacted。Zipfian-Composite 有更差的空间局部性比 Zipfian，导致了更大的 Compaction I/O 开销。</li>
-<li>YCSB 中，RemixDB 除了负载 D 表现都比其他的好。也就是 95% 的读请求访问最近的 5% 的写入，这种访问模式有很强的局部性，大部分请求直接是由存储中的 Memtables 来处理的，单线程压缩导致的缓慢插入阻碍了 LevelDB 的性能(1.1 MOPS)。</li>
-<li>即便 REMIX 没有显示出相比于布隆过滤器足够的优势，但是在 YCSB-B，C 中比其他表现好，这两种负载下点查询占据大部分。是因为点查询在多级的 LSM 中在搜索路径上选择对应的 tables 的开销很大，具体而言就是每一个 L0 的 table，大约有两个键比较用于检查 seek 键是否被表覆盖，如果在 L0 中没找到，在每一个更深的层次中执行二分查找，直到 Key 被找到。布隆过滤器的大小大约 600KB，对于一个 64MB 的表而言，访问一个布隆过滤器会导致大约七次内存随机访问，在一个很大的存储中将导致严重的缓存缺失。REMIX 索引的分区形成了一个全局有序视图，基于此的二分查找可以很快得到应答。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210611195131.png" alt="20210611195131" loading="lazy"></li>
-</ul>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[C++ STL]]></title>
-        <id>https://blog.shunzi.tech/post/cpp-std/</id>
-        <link href="https://blog.shunzi.tech/post/cpp-std/">
-        </link>
-        <updated>2021-05-12T01:36:30.000Z</updated>
-        <summary type="html"><![CDATA[<ul>
-<li>C++ STL 的相关资料记录</li>
-<li>持续更新</li>
-</ul>
-]]></summary>
-        <content type="html"><![CDATA[<ul>
-<li>C++ STL 的相关资料记录</li>
-<li>持续更新</li>
-</ul>
-<!--more-->
-<h2 id="stl">STL</h2>
-<ul>
-<li>C++ STL（标准模板库）是一套功能强大的 C++ 模板类，提供了通用的模板类和函数，这些模板类和函数可以实现多种流行和常用的算法和数据结构，如向量、链表、队列、栈。</li>
-</ul>
-<h3 id="参考链接">参考链接</h3>
-<ul>
-<li><a href="https://www.runoob.com/cplusplus/cpp-stl-tutorial.html">[1] 菜鸟教程：C++ STL 教程</a></li>
-<li><a href="https://blog.csdn.net/u010183728/article/details/81913729">[2] CSDN - C++中STL用法超详细总结</a></li>
-<li><a href="https://github.com/czs108/Cpp-Primer-5th-Notes-CN">[3] Github - 《C++ Primer中文版（第5版）》笔记</a></li>
-</ul>
-<h3 id="stl-容器">STL 容器</h3>
-<h4 id="顺序容器-sequential-containers">顺序容器 Sequential Containers</h4>
-<ul>
-<li><strong>概览</strong></li>
-</ul>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">类型</th>
-<th style="text-align:center">特性</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center"><code>vector</code></td>
-<td style="text-align:center">可变大小数组。支持快速随机访问。在尾部之外的位置插入/删除元素可能很慢</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>deque</code></td>
-<td style="text-align:center">双端队列。支持快速随机访问。在头尾位置插入/删除速度很快</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>list</code></td>
-<td style="text-align:center">双向链表。只支持双向顺序访问。在任何位置插入/删除速度都很快</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>forward_list</code></td>
-<td style="text-align:center">单向链表。只支持单向顺序访问。在任何位置插入/删除速度都很快</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>array</code></td>
-<td style="text-align:center">固定大小数组。支持快速随机访问。不能添加/删除元素</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>string</code></td>
-<td style="text-align:center">类似<code>vector</code>，但用于保存字符。支持快速随机访问。在尾部插入/删除速度很快</td>
-</tr>
-</tbody>
-</table>
-<ul>
-<li><code>forward_list</code>和<code>array</code>是C++11新增类型。与内置数组相比，<code>array</code>更安全易用。<code>forward_list</code>没有<code>size</code>操作。</li>
-</ul>
-<p><strong>容器选择原则</strong></p>
-<ul>
-<li>除非有合适的理由选择其他容器，否则应该使用<code>vector</code>。</li>
-<li>如果程序有很多小的元素，且空间的额外开销很重要，则不要使用<code>list</code>或<code>forward_list</code>。</li>
-<li>如果程序要求随机访问容器元素，则应该使用<code>vector</code>或<code>deque</code>。</li>
-<li>如果程序需要在容器头尾位置插入/删除元素，但不会在中间位置操作，则应该使用<code>deque</code>。</li>
-<li>如果程序只有在读取输入时才需要在容器中间位置插入元素，之后需要随机访问元素。则：
-<ul>
-<li>先确定是否真的需要在容器中间位置插入元素。当处理输入数据时，可以先向<code>vector</code>追加数据，再调用标准库的<code>sort</code>函数重排元素，从而避免在中间位置添加元素。</li>
-<li>如果必须在中间位置插入元素，可以在输入阶段使用<code>list</code>。输入完成后将<code>list</code>中的内容拷贝到<code>vector</code>中。</li>
-</ul>
-</li>
-<li>不确定应该使用哪种容器时，可以先只使用<code>vector</code>和<code>list</code>的公共操作：使用迭代器，不使用下标操作，避免随机访问。这样在必要时选择<code>vector</code>或<code>list</code>都很方便。</li>
-</ul>
-<h4 id="关联容器">关联容器</h4>
-<p>关联容器支持高效的关键字查找和访问操作。2个主要的关联容器（associative-container）类型是<code>map</code>和<code>set</code>。</p>
-<ul>
-<li><code>map</code>中的元素是一些键值对（key-value）：关键字起索引作用，值表示与索引相关联的数据。</li>
-<li><code>set</code>中每个元素只包含一个关键字，支持高效的关键字查询操作：检查一个给定关键字是否在<code>set</code>中。</li>
-</ul>
-<p>标准库提供了8个关联容器，它们之间的不同体现在三个方面：</p>
-<ul>
-<li>是<code>map</code>还是<code>set</code>类型。</li>
-<li>是否允许保存重复的关键字。</li>
-<li>是否按顺序保存元素。</li>
-</ul>
-<p>允许重复保存关键字的容器名字都包含单词<code>multi</code>；无序保存元素的容器名字都以单词<code>unordered</code>开头。</p>
-<h5 id="使用关联容器using-an-associative-container">使用关联容器（Using an Associative Container）</h5>
-<p><code>map</code>类型通常被称为关联数组（associative array）。</p>
-<p>从<code>map</code>中提取一个元素时，会得到一个<code>pair</code>类型的对象。<code>pair</code>是一个模板类型，保存两个名为<code>first</code>和<code>second</code>的公有数据成员。<code>map</code>所使用的<code>pair</code>用<code>first</code>成员保存关键字，用<code>second</code>成员保存对应的值。</p>
-<pre><code class="language-c++">// count the number of times each word occurs in the input
-map&lt;string, size_t&gt; word_count;     // empty map from string to size_t
-string word;
-while (cin &gt;&gt; word)
-    ++word_count[word];     // fetch and increment the counter for word
-for (const auto &amp;w : word_count)    // for each element in the map
-    // print the results
-    cout &lt;&lt; w.first &lt;&lt; &quot; occurs &quot; &lt;&lt; w.second
-        &lt;&lt; ((w.second &gt; 1) ? &quot; times&quot; : &quot; time&quot;) &lt;&lt; endl;
-</code></pre>
-<p><code>set</code>类型的<code>find</code>成员返回一个迭代器。如果给定关键字在<code>set</code>中，则迭代器指向该关键字，否则返回的是尾后迭代器。</p>
-<h6 id="pair">pair</h6>
-<p><code>pair</code>定义在头文件<em>utility</em>中。一个<code>pair</code>可以保存两个数据成员，分别命名为<code>first</code>和<code>second</code>。</p>
-<pre><code class="language-c++">pair&lt;string, string&gt; anon;        // holds two strings
-pair&lt;string, size_t&gt; word_count;  // holds a string and an size_t
-pair&lt;string, vector&lt;int&gt;&gt; line;   // holds string and vector&lt;int&gt;
-</code></pre>
-<p><code>pair</code>的默认构造函数对数据成员进行值初始化。</p>
-<h3 id="stl-常用算法">STL 常用算法</h3>
-<h4 id="搜索">搜索</h4>
-<h5 id="二分查找">二分查找</h5>
-<ul>
-<li><strong>upper_bound()</strong></li>
-</ul>
-<pre><code class="language-C++">//查找[first, last)区域中第一个大于 val 的元素。
-ForwardIterator upper_bound (ForwardIterator first, ForwardIterator last,
-                             const T&amp; val);
-//查找[first, last)区域中第一个不符合 comp 规则的元素
-ForwardIterator upper_bound (ForwardIterator first, ForwardIterator last,
-                             const T&amp; val, Compare comp);
-</code></pre>
-<ul>
-<li><strong>lower_bound()</strong></li>
-</ul>
-<pre><code class="language-C++">//在 [first, last) 区域内查找不小于 val 的元素
-ForwardIterator lower_bound (ForwardIterator first, ForwardIterator last,
-                             const T&amp; val);
-//在 [first, last) 区域内查找第一个不符合 comp 规则的元素
-ForwardIterator lower_bound (ForwardIterator first, ForwardIterator last,
-                             const T&amp; val, Compare comp);
-</code></pre>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[HashKV: Enabling Efficient Updates in KV Storage via Hashing]]></title>
-        <id>https://blog.shunzi.tech/post/HashKV/</id>
-        <link href="https://blog.shunzi.tech/post/HashKV/">
-        </link>
-        <updated>2021-05-11T04:21:02.000Z</updated>
-        <summary type="html"><![CDATA[<blockquote>
-<ul>
-<li>HashKV: Enabling Efficient Updates in KV Storage via Hashing</li>
-<li>http://adslab.cse.cuhk.edu.hk/software/hashkv/</li>
-<li>ATC18 &amp; TOS19</li>
-</ul>
-</blockquote>
-]]></summary>
-        <content type="html"><![CDATA[<blockquote>
-<ul>
-<li>HashKV: Enabling Efficient Updates in KV Storage via Hashing</li>
-<li>http://adslab.cse.cuhk.edu.hk/software/hashkv/</li>
-<li>ATC18 &amp; TOS19</li>
-</ul>
-</blockquote>
-<!--more-->
-<h2 id="个人总结">个人总结</h2>
-<h2 id="abstract">Abstract</h2>
-<ul>
-<li>持久键值(KV)存储主要构建在日志结构的合并树(LSM)上，以获得较高的写性能，但是LSM树存在固有的较高的I/O放大问题。KV分离通过在LSM-tree中只存储键和在单独存储中的值来减轻I/O放大。<strong>然而，当前的KV分离设计在更新密集型工作负载下仍然是低效的，因为它在值存储方面的垃圾收集(GC)开销很大</strong>。我们提出了HashKV，它的目标是在更新密集型工作负载下，在KV分离的基础上提高更新性能。HashKV使用基于哈希的数据分组，它确定地将值映射到存储空间，从而提高更新和GC的效率。我们通过简单但有用的设计扩展进一步放宽了这种确定性映射的限制。通过大量的实验，我们将HashKV与最先进的KV存储进行了比较，并表明与当前的KV分离设计相比，HashKV实现了4.6×吞吐量和减少了53.4%的写流量。</li>
-</ul>
-<h2 id="introduction">Introduction</h2>
-<ul>
-<li>持久性 KV 存储应用广泛，用于存储海量结构化数据：Bigtable, Dynamo, Atlas。虽然现实中的KV存储工作负载主要是读密集型的(例如，在Facebook的Memcached工作负载中，Get/Update的比率可以达到30:1)，但更新密集型的工作负载在许多存储场景中也占主导地位（例如,雅虎报告其低延迟工作负载越来越多地从读转移到写）</li>
-<li>现代的针对写操作优化的 KV 存储大多是基于 LSM 树，思想源于最初的 LSF，LSM-tree设计不仅通过避免小的随机更新(这也有害于固态硬盘(SSD)的寿命)来提高写性能，而且通过在每个节点中保留已排序的KV对来提高范围扫描性能。<strong>但是写放大严重，读放大更严重</strong>。</li>
-<li><strong>已有方案</strong>：WiscKey 采用 KV 分离来减少 Compaction 操作带来的影响，<strong>但是我们发现 KV 分离还是无法在更新密集型工作负载下完全实现高性能</strong>。</li>
-<li><strong>根本原因</strong>在于用于值存储的循环日志需要频繁的垃圾收集(GC)，以从被删除或被新更新取代的KV对中回收空间。然而，由于循环日志的两个限制，GC开销实际上是昂贵的。
-<ul>
-<li>首先，循环日志保持严格的GC顺序，因为它总是在日志的开始处执行GC，即最近写入的KV对所在的位置。这可能会导致<strong>大量不必要的数据重定位</strong>(例如，当最近写的KV对仍然有效时)。</li>
-<li>其次，<strong>GC 操作需要查询LSM-tree</strong>，检查每个KV对的有效性。这些查询具有<strong>很高的延迟</strong>，特别是当LSM-tree在大工作负载下变得相当大时。</li>
-</ul>
-</li>
-<li>所以提出了 HashKV，为更新密集型工作负载量身定制的高性能KV存储。HashKV建立在KV分离的基础上，并使用一种新的基于哈希的数据分组设计来存储值。其思想是将值存储划分为固定大小的分区，并通过散列其键确定地将每个写入KV对的值映射到一个分区。基于哈希的数据分组支持<strong>基于确定性映射的轻量级更新</strong>。更重要的是，它显著地减轻了GC开销，因为每个GC操作<strong>不仅具有选择一个分区来回收空间的灵活性，而且还消除了为了检查KV对的有效性而对LSM-tree的查询</strong>。</li>
-<li>另一方面，基于哈希的数据分组的确定性限制了KV对的存储位置。因此，我们提出了三种新的设计扩展来放松基于哈希的数据分组的限制：
-<ul>
-<li>(i)  <strong>动态预留空间分配</strong>，在给定大小限制的情况下，动态分配预留空间给额外的写操作</li>
-<li>(ii)  <strong>热感知</strong>，受现有SSD设计的启发，将热KV和冷KV对的存储分开，以提高GC效率</li>
-<li>(iii) <strong>有选择性的KV分离</strong>，在LSM-tree中保持较小的KV对的完整，以简化查找</li>
-</ul>
-</li>
-<li>基于 LevelDB 实现了 HashKV 的原型，通过测试实验表明，在更新密集型的工作负载下，HashKV 的吞吐量达到 4.6×，与 wisckey 中的循环日志设计相比，写流量减少了 53.4%。此外，在各种情况下，与现代KV存储(如LevelDB和RocksDB)相比，HashKV通常能够实现更高的吞吐量和更少的写流量。</li>
-<li>我们的工作只是增加 KV 分离与一个新的Value管理设计的案例。虽然HashKV的密钥和元数据管理现在建立在LevelDB上，但它也可以采用带有新的LSM树设计的其他KV存储。在KV分离条件下，哈希KV如何影响各种基于lsm树的KV存储的性能是未来研究的重点。</li>
-</ul>
-<h2 id="motivation">Motivation</h2>
-<ul>
-<li>这一章节主要介绍 LevelDB 的读写放大问题，以及 WiscKey 这种 KV 分离方案带来的改善，同时分析普通的 KV 分离无法在写密集负载中实现高性能的原因。</li>
-</ul>
-<h3 id="leveldb">LevelDB</h3>
-<ul>
-<li>原理不过多介绍，重点是读写放大问题。
-<ul>
-<li>首先，压缩过程不可避免地产生额外的读写。在最坏的情况下，要将一个SSTable从Li−1合并到Li，它需要读取并排序10个SSTable，然后写回所有SSTable。先前的研究表明，LevelDB可以有至少50倍的总体写放大，因为在大的工作负载下，它可能会触发不止一次的压缩，将一个KV对向下移动多个级别。</li>
-<li>查找操作可以在多个级别搜索一个KV对，并导致多个磁盘访问。原因是，每个级别的搜索都需要读取相关SSTable中的索引元数据和Bloom过滤器，虽然使用了Bloom过滤器，但它可能会引入误报。在这种情况下，即使KV对实际上不存在，仍然需要从磁盘读取SSTable。因此，每次查找通常会导致多次磁盘访问。这种读放大在大的工作负载下会进一步恶化，因为LSMtree会逐级累积。测量结果表明，在最坏的情况下，读放大可达300倍以上<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324103632.png" alt="20210324103632" loading="lazy"></li>
-</ul>
-</li>
-</ul>
-<h3 id="kv-separation">KV Separation</h3>
-<h4 id="wisckey-原理">WiscKey 原理</h4>
-<ul>
-<li>KV分离，由 Wisckey 提出，对键和值的管理进行解耦，以减轻写和读的放大。其基本原理是，在 LSM-tree 中存储值对于索引来说是不必要的。因此，在LSM-tree中，wisckey 只存储键和元数据(例如键/值的大小、值的位置等)，而将值存储在一个单独的仅追加的循环日志vLog 中。KV 分离有效地减轻了LevelDB的写和读放大，因为它显著地减少了 lsm 树的大小，从而同时减少了压缩和查找开销。</li>
-<li>由于vLog遵循日志结构设计，KV分离在vLog中实现轻量级的垃圾收集(GC)是至关重要的，即在有限的开销下从无效值中回收空闲空间。具体来说，wisckey跟踪的是vLog头部和vLog尾部，分别对应于vLog的结束和开始。它总是向vLog头插入新的值。当它执行GC操作时，它从vLog尾部读取一大块KV对。它首先查询lsm树，查看每个KV对是否有效。然后丢弃无效KV对的值，并将有效值写回vLog头。它最后更新LSM-tree以获取有效值的最新位置。为了在GC期间支持有效的LSM-tree查询，wisckey还将相关的键和元数据与值一起存储在vLog中。请注意，vLog经常为减少GC开销而提供额外的预留空间。<br>
-<img src="https://github.com/zjs1224522500/files-and-images/blob/master/blog/pic/papers/WiscKey%20Garbage%20Collection.png?raw=true" alt="image" loading="lazy"></li>
-</ul>
-<h4 id="limitations">Limitations</h4>
-<ul>
-<li>虽然KV分离降低了压缩和查找开销，但我们认为它受到了vLog中大量GC开销的影响。另外，如果预留空间有限，GC开销会变得更加严重。原因有两方面:
-<ul>
-<li>首先，由于它的循环日志设计，vLog只能从它的vLog尾部回收空间。这个约束可能会导致不必要的数据移动。特别是，真实世界的KV存储往往表现出很强的局部性，其中一小部分的热KV对经常更新，而其余的冷KV对只接收到很少甚至没有更新。在vLog中保持严格的顺序不可避免地会多次重新定位冷KV对，从而增加GC开销。</li>
-<li>此外，每个GC操作都查询LSM-tree，以检查vLog尾部chunk中每个KV对的有效性。由于KV对的键可能分散在整个LSM-tree中，查询开销很高，并增加了GC操作的延迟。虽然KV分离已经减少了LSM-tree的大小，但是LSM-tree在大的工作负载下仍然是相当大的，这加剧了查询成本。</li>
-</ul>
-</li>
-<li><strong>分别总结一下这两个问题</strong>：
-<ul>
-<li>GC 过程中需要对有效数据进行拷贝，<strong>热数据进行 GC 是必须的，确保频繁更新的数据的老旧版本的空间能够及时回收，冷数据 GC 其实意义不大，反而因为 GC 过程中的数据迁移引入了开销</strong>。GC 最好的情况就是遇到需要删除和回收的数据，因为在 WiscKey 这样的设计背景下，无需进行回收的数据就肯定会进行数据的拷贝来回收对应的这一段空间（为了避免碎片或者说hole 的产生，因为碎片相应地容易引发随机 I/O）</li>
-<li><strong>GC 操作每个都需要检查数据的有效性，需要去 LSM 树中进行查询，相当于 GC 操作引入了额外的查询开销，并增加了 GC 操作的延迟</strong>（这个是因为 LSM 树本身读的一部分原因，造成了读操作需要读很多层，延迟就比较高，本来 LSM 树读性能就不是特别好）
-<ul>
-<li>那 KV 分离为啥是用 LSM + Value Log 的方案，而不是 B tree + Value Log 呢？思想就是找一个小写读写性能比 LSM 相对更好的数据结构来代替 LSM 存储 Key。Key 大小甚至可以固定，使用一些定长编码的策略。<strong>换一个更高效的索引结构似乎就能解决查询延迟的问题？但仿佛又会牺牲写</strong></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h4 id="实验验证">实验验证</h4>
-<ul>
-<li>为了验证KV分离的局限性，我们实现了一个基于vLog的KV存储原型(见§3.8)，并评估其写入放大。我们考虑两个阶段:加载和更新。在加载阶段，将40GiB的1-KiB KV对插入到初始为空的vLog中;在更新阶段，我们基于Zipf分布，Zipfian常数为0.99，发起了40GiB对现有KV对的更新。我们为视频日志提供40GiB的空间，并额外预留30% (12GiB)的空间。我们也在原型中禁用了写缓存(见§3.2)。图2显示了加载和更新阶段vLog的写放大结果，即由于插入或更新导致的总设备写大小与实际写大小的比例。</li>
-<li>为了进行比较，我们还考虑两个现代KV存储，LevelDB和RocksDB，基于它们的默认参数。在 Load 阶段，vLog有足够的空间容纳所有KV对，不触发GC，由于KV分离，它的写入放大只有1.6×。但是，在更新阶段，更新会填满保留的空间并开始触发GC。我们可以看到，vLog的写放大倍数为19.7×，接近LevelDB (19.1×)，高于RocksDB (7.9×)。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324111831.png" alt="20210324111831" loading="lazy"></li>
-<li>为了减轻vLog的GC开销，一种方法是将vLog划分成段，并根据成本-收益策略或其变体 [如下参考文献 ]  选择最佳的候选段来减少GC开销。但是，热KV和冷KV对仍然可以在vLog中混合在一起，所以为GC选择的段可能仍然包含冷KV对，并且不必要地移动。
-<ul>
-<li>[SOSP1997  Improving the Performance of Log-Structured File Systems with Adaptive Methods]</li>
-<li>[TOCS1992 The Design and Implementation of a Log-structured File System]</li>
-<li>[FAST14 Logstructured Memory for DRAM-based Storage]</li>
-</ul>
-</li>
-<li>为了解决热数据和冷数据的混合问题，更好的方法是像SSD设计中那样执行热-冷数据分组，其中，我们将热KV和冷KV的存储分成两个区域，并分别对每个区域应用GC(更多的GC操作将应用于热KV的存储区域)。然而，直接实现热-冷数据分组不可避免地增加了KV分离过程中的更新延迟。由于KV对可能存储在热或冷数据区，每次更新都需要首先查询LSM-tree以获得KV对的确切存储位置。因此，我们工作的一个关键动机是在不使用 LSM 树查找的情况下启用热状态识别。</li>
-</ul>
-<h2 id="design">Design</h2>
-<ul>
-<li>HashKV是一个持久的KV存储，专门针对更新密集型工作负载。在KV分离的基础上改进了 Value 存储的管理，实现了高更新性能。它支持标准的KV操作:PUT(即写入一个KV对)、GET(即检索一个键的值)、DELETE(即删除一个KV对)和SCAN(即检索一个键范围的值)。</li>
-</ul>
-<h3 id="main-idea">Main Idea</h3>
-<ul>
-<li>在KV分离之上，HashKV引入了几个核心设计元素来实现高效的 Value 存储管理：
-<ul>
-<li><strong>Hash-based data grouping</strong>: 回想一下，vLog在值存储方面会招致大量的GC开销。相反，HashKV通过散列相关的键将值映射到值存储中固定大小的分区中。这种设计实现了:
-<ul>
-<li>(i)分区隔离，在这种情况下，所有版本的值更新都必须被写入到相同的分区中，</li>
-<li>(ii)确定性分组，在这种情况下，一个值应该存储在哪个分区中是通过哈希来确定的。我们利用这种设计来实现灵活和轻量级的GC</li>
-</ul>
-</li>
-<li><strong>Dynamic reserved space allocation</strong>: 由于我们将值映射到固定大小的分区中，一个挑战是一个分区接收的更新可能多于它能容纳的更新。HashKV通过在值存储中分配部分保留空间，允许分区动态增长，超过其大小限制。</li>
-<li><strong>Hotness awareness</strong>：由于确定性分组，分区可能会被来自热KV对和冷KV对的混合值填满，在这种情况下，GC操作会不必要地读取和回写冷KV对的值。HashKV使用标记方法将冷KV对的值重新定位到不同的存储区域，并将热KV对和冷KV对分开，这样我们就可以只对热KV对使用GC，避免重复复制冷KV对。</li>
-<li><strong>Selective KV separation</strong>：HashKV通过其值大小来区分KV对，小的KV对可以直接存储在LSM-tree中，而不需要分离KV。这节省了访问小KV对的LSM-tree和值存储的开销，而在LSM-tree中存储小KV对的压缩开销是有限的。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324112600.png" alt="20210324112600" loading="lazy"></li>
-</ul>
-</li>
-<li>HashKV维护一个单一的LSM-tree来进行索引(而不是像值存储中那样对LSM-tree进行哈希分区)，以保持键的顺序和范围扫描性能。由于基于哈希的数据分组将KV对分散到值存储中，因此会导致随机写操作;相反，vLog使用日志结构的存储布局来维护顺序写入。我们的HashKV原型(见§3.8)利用<strong>多线程和批处理写来限制随机写开销</strong>。</li>
-</ul>
-<h3 id="storage-management">Storage Management</h3>
-<ul>
-<li>将 value store 的逻辑地址空间划分成固定大小的单元，称之为 main segments，此外，它还过度规定了保留空间的固定部分，将其再次划分为固定大小的单元，称为 log segments。注意，主段和日志段的大小可能不同;缺省情况下，分别设置为64MiB和1MiB。</li>
-<li>对于每一个KV对的插入或更新，HashKV将其密钥散列到一个主要段中。如果主段没有被填满，HashKV会把这个值添加到主段的末尾，以一种日志结构的方式存储这个值;另一方面，如果主段已满，HashKV会动态分配一个空闲的日志段，以日志结构的方式存储额外的值。同样，如果当前日志段已满，它将进一步分配额外的空闲日志段。我们统称一个主段和它的所有关联的日志段为段组。</li>
-<li>此外，HashKV更新LSM-tree以获得最新的值位置。为了跟踪段组和段的存储状态，HashKV使用一个内存中的全局段表来存储每个段组的当前结束位置，以供后续的插入或更新，以及与每个段组相关的日志段列表。我们的设计<strong>确保了每个插入或更新都可以直接映射到正确的写位置，而无需在写路径上执行LSM-tree查找</strong>（直接 HASH 得到对应的分区，然后在分区中进行追加写），从而实现了较高的写性能。另外，与同一个键相关联的值的更新必须转到同一个段组，这简化了GC。<strong>为了容错，HashKV checkpoints 段表到持久存储</strong>（内存中的段表数据恢复方式）。</li>
-<li>为了便于GC, HashKV还存储键和元数据(例如,键/值大小)，和 WiscKey 一样和值存储在一起(参见图3)。这使GC操作能够在 scan value store 时，快速识别关联到某一个值的键。然而，我们的GC设计与 WiscKey 使用的 vLog 有本质上的不同。</li>
-<li>为了提高写性能，<strong>HashKV在内存中保存了一个写缓存，以降低可靠性为代价来存储最近写的KV对。如果在写缓存中找到了要写的新KV对的键，HashKV就直接就地更新缓存的键的值，而不用向LSM-tree和值存储区发出写操作</strong>。它还可以从写缓存中返回KV对用于读取。如果写缓存已满，HashKV将所有缓存的KV对刷新到lsm 树和值存储中。注意，写缓存是一个可选组件，可以出于可靠性考虑禁用它。</li>
-<li>HashKV 通过将冷值保存在单独的冷数据日志 cold data log 中来支持热感知(见§3.4)。它还通过在 write journal 和 GC journal 中跟踪更新来解决崩溃一致性问题(见3.7)。</li>
-</ul>
-<h3 id="garbage-collection-gc">Garbage Collection (GC)</h3>
-<ul>
-<li>HashKV要求GC回收值存储中无效值所占用的空间。在HashKV中，GC以段组为单位进行操作，当保留空间中的空闲日志段用完时将触发GC。在较高的级别上，<strong>GC操作首先选择一个候选段组，并识别组中所有有效的KV对(即最新版本的KV对)。然后，它以日志结构的方式将所有有效的KV对写回主段，或者在需要时写到附加的日志段。它还释放任何未使用的日志段，这些日志段以后可以被其他段组使用</strong>。最后，它更新LSM-tree中最新的值位置。这里，GC操作需要解决两个问题:
-<ul>
-<li>(i)  应该为GC选择哪个段组;</li>
-<li>(ii) GC操作如何快速识别所选段组中的有效KV对。</li>
-</ul>
-</li>
-<li>不同于vLog，它要求GC操作遵循严格的顺序，HashKV可以灵活地选择执行GC的段组。<strong>目前采用的是贪婪的方法，选择写量最大的段组</strong>。我们的基本原理是，所选的段组通常保存有许多更新，因此有大量写操作的hot KV对。因此，为GC选择这个段组可能会回收最多的空闲空间。<strong>为了实现贪婪的方法，HashKV跟踪内存段表中每个段组的写量</strong>(见§3.2)，<strong>并使用堆 heap 来快速识别哪个段组收到的写量最大</strong></li>
-<li>为了检查所选段组中KV对的有效性，HashKV顺序扫描段组中的KV对，而不查询LSM-tree(注意，它还检查写缓存，以查找段组中最新的KV对)。由于KV对以日志结构的方式写入段组，所以必须按照更新的顺序依次放置KV对。对于一个有多个版本更新的KV对，最接近段组末尾的版本必须是最新的版本，并且对应于有效的KV对，而其他版本是无效的。因此，<strong>每个GC操作的运行时间只取决于需要扫描的段组的大小</strong>。相反，vLog中的GC操作从vLog尾部读取一大块KV对(见§2.2)。它查询LSM-tree(基于与值一起存储的键)以获取每个KV对的最新存储位置，以检查KV对是否为有效的。在大的工作负载下，查询LSM-tree的开销会变得很大。</li>
-<li>在段组的GC操作期间，<strong>HashKV构造一个临时内存哈希表(按键索引)来缓冲在段组中找到的有效KV对的地址</strong>。由于键和地址的大小通常比较小，并且一个段组中的 KV 对数量有限，所以哈希表的大小有限，可以全部存储在内存中。</li>
-</ul>
-<h3 id="hotness-awareness">Hotness Awareness</h3>
-<ul>
-<li>冷热数据分离提高了日志结构存储中的GC性能。事实上，当前基于散列的数据分组设计实现了某种形式的冷热数据分离，因为对热KV对的更新必须散列到同一段组，而我们当前的GC策略总是选择可能存储热KV对的段组。然而，不可避免的是，一些冷KV对被散列到为GC选择的段组中，导致不必要的数据重写。因此，充分实现冷热数据分离，进一步提高GC性能是一个挑战。</li>
-<li>HashKV通过标记方法放松了基于哈希的数据分组的限制(见图4)。具体来说，当HashKV对一个段组<strong>执行GC操作时，它将段组中的每个KV对划分为热的或冷的</strong>。目前，我们将自<strong>最后一次插入以来至少更新过一次</strong>的KV对视为热的，否则是冷的(可以使用更精确的热-冷数据识别方法）
-<ul>
-<li><strong>对于热KV对，HashKV仍然通过散列将它们的最新版本写回同一个段组。</strong></li>
-<li>对于冷KV对，它现在将它们的值写入一个单独的存储区域，并在段组中只保留它们的元数据(即没有值)。此外，<strong>它在每个冷KV对的元数据中添加一个标记，以表明它在段组中的存在</strong>。</li>
-</ul>
-</li>
-<li>因此，如果一个冷KV对后来被更新，我们直接从标签(不查询LSM-tree)知道冷KV对已经被存储，因此我们可以根据我们的分类策略将其视为热；标记的KV对也将失效。最后，<strong>在GC操作结束时，HashKV更新LSM-tree中最新的值位置，这样冷KV对的位置（LSM存储的地址）就指向单独的区域</strong>。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324165745.png" alt="20210324165745" loading="lazy"></li>
-<li>通过标记，HashKV避免了将冷KV对的值存储在段组中，并在GC期间重写它们。而且，<strong>标记只在GC期间触发，不会给写路径增加额外的开销</strong>。目前，我们为冷KV对实现了单独的存储区域，作为值存储中的一个仅追加的日志(称为冷数据日志)，并像vLog一样对冷数据日志执行gc（这里就和 WiscKey 一样了）。如果冷KV对很少被访问，冷数据日志也可以放在容量更大的二级存储中(如硬盘)。
-<ul>
-<li><strong>其实这里有三个问题：</strong>
-<ul>
-<li>热数据特别少，冷数据特别多的时候，空间分配会是个问题。</li>
-<li>所有的数据第一次访问的时候都是冷数据，第二次访问就成了热数据了，要是冷数据变热数据之间的时间较长，中间进行了 GC，就会导致数据拷贝（至少一次 segment group 到 cold Value Log），然后再引入一次 Cold Value Log 中的 GC 操作，这时候就退化成了 WiscKey 的 GC，需要检查 LSM Tree。</li>
-<li>这种过于简单的冷热数据识别，应对不了热数据变冷的问题，热数据变冷会一直在 segment group 中进行拷贝，还是会一直进行数据的拷贝，还是退化成了 WiscKey 的 GC。（<strong>这种简单的冷热数据识别只能对 只访问一次的冷数据为主要组成部分的负载 产生比较好的效果</strong>）</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><strong>本质是将冷数据只进行一次拷贝操作，减少了冷数据的数据迁移，同时验证冷数据的有效性直接通过 tag 验证，不用查询 LSM 树，热数据的有效性的话还是需要通过内存中临时内存哈希表来进行验证。</strong></li>
-<li>我们评估了热度感知对HashKV更新性能的影响。我们考虑两个Zipfian常量，0.9和0.99，以捕获工作负载中的不同偏度。图10显示了禁用和启用热感知功能时的结果。当启用热感知功能时，更新吞吐量增加了113.1%和121.3%，而对于Zipfian常数0.9和0.99，写大小分别减少了42.8%和42.5%。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324215235.png" alt="20210324215235" loading="lazy"></li>
-</ul>
-<h3 id="selective-kv-separation">Selective KV Separation</h3>
-<ul>
-<li>HashKV支持具有一般值大小的工作负载。我们的理论基础是，KV分离降低了压缩开销，特别是对于大型KV对，但它对小型KV对的好处是有限的，而且它会导致访问 LSM 树和值存储的额外开销。因此，我们提出了选择KV分离的方法，<strong>即对较大值的KV对仍然采用KV分离，而较小值的KV对则全部存储在LSM-tree中</strong>。选择KV分离的一个关键挑战是选择区分小尺寸和大尺寸KV对的KV对大小阈值(假设键大小不变)。我们认为选择取决于部署环境。在实践中，我们可以对不同的值大小进行性能测试，看看什么时候选择性KV分离的吞吐量增益显著。</li>
-<li>我们观察到，由于在KV分离下存储的小KV对的高更新开销，当小KV对的比例较高时，此时工作负载下，KV分离的性能增益更高。同时 40B-1KB 的组合相比于 40B-4KB 的组合优化效果更明显。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324214027.png" alt="20210324214027" loading="lazy"></li>
-</ul>
-<h3 id="range-scans">Range Scans</h3>
-<ul>
-<li>使用LSM-tree进行索引的一个关键原因是它对范围扫描的有效支持。由于LSMtree按键存储和排序KV对，因此它可以通过顺序读取返回一系列键的值。然而，KV分离现在将值存储在单独的存储空间中，因此它会招致额外的值读取。在HashKV中，这些值分散在不同的段组中，因此范围扫描将触发许多随机读取，从而降低性能。<strong>HashKV目前利用预读机制通过将值预取到页面缓存中来加速范围扫描</strong>。对于每个扫描请求，HashKV遍历LSM-tree中排序键的范围，并(通过posix fadvise)向每个值发出预读请求。然后读取所有值并返回排序的KV对。</li>
-<li>在KV对大小上，HashKV具有与vLog相似的扫描性能。然而，对于256-B和1-KiB KV对，HashKV的扫描吞吐量分别比LevelDB低70.0%和36.3%，主要是因为HashKV需要向LSM-tree和值存储发出读操作，而且通过随机读操作从值存储中检索小值的开销也很大。然而，对于4KiB或更大的KV对，HashKV的性能优于LevelDB，例如，4KiB KV对的性能为94.2%。</li>
-<li>注意，预读机制(见§3.6)是使HashKV实现高范围扫描性能的关键。例如，与没有预读的情况相比，256-B KV对的HashKV的范围扫描吞吐量增加了81.0%<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324214413.png" alt="20210324214413" loading="lazy"></li>
-</ul>
-<h3 id="crash-consistency">Crash Consistency</h3>
-<ul>
-<li>
-<p>当HashKV问题写入持久性存储时，可能会发生崩溃。HashKV基于元数据日志记录解决崩溃一致性问题，主要关注两个方面:</p>
-<ul>
-<li>(i) 刷新写缓存</li>
-<li>(ii) GC操作。</li>
-</ul>
-</li>
-<li>
-<p>刷新写缓存涉及将KV对写入值存储并更新LSM-tree中的元数据。<strong>HashKV维护一个写日志 write journal 来跟踪每次 flush 操作</strong>。它在刷新写缓存时执行以下步骤：</p>
-<ul>
-<li>(i) 将缓存的KV对刷新到值存储中;</li>
-<li>(ii) 在 write journal 中追加写入元数据更新;</li>
-<li>(iii) 在 journal end 写入一个提交记录;</li>
-<li>(iv) 更新 LSM-tree 中的 keys 和元数据;</li>
-<li>(v) 在日志中标记 flush 操作为 free 状态( free 的日志记录可以稍后回收)。</li>
-</ul>
-</li>
-<li>
-<p>如果在步骤(iii)完成后发生崩溃，HashKV在写日志中回放更新，并确保LSMtree和值存储是一致的。</p>
-</li>
-<li>
-<p>GC 操作中崩溃一致性的处理是不同的，因为它们可能会覆盖现有的有效 KV 对。因此，我们还需要保护现有的有效 KV 对，防止在GC 期间崩溃。<strong>HashKV 维护一个GC日志来跟踪每个GC操作。</strong> 在GC操作中识别出所有有效的KV对后，它将执行以下步骤:</p>
-<ul>
-<li>(i)  将被覆盖的有效KV对以及元数据更新一起添加到GC日志中;</li>
-<li>(ii) 将所有有效KV对写回段组;</li>
-<li>(iii) 更新LSM-tree中的元数据;</li>
-<li>(iv) 在日志中标记GC操作对应的记录为 free 状态。</li>
-</ul>
-</li>
-<li>
-<p>我们研究了崩溃一致性机制对HashKV性能的影响。表1显示了结果。当启用了崩溃一致性机制时，P3阶段的HashKV的更新吞吐量减少了6.5%，总写大小增加了4.2%，这表明崩溃一致性机制的影响仍然有限。请注意，我们在运行时通过代码注入和意外终止来使HashKV崩溃，从而验证崩溃一致性机制的正确性。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324221131.png" alt="20210324221131" loading="lazy"></p>
-</li>
-</ul>
-<h3 id="implementation-details">Implementation Details</h3>
-<ul>
-<li>基于 LevelDB v1.20 实现</li>
-<li><strong>Storage organization</strong>: 我们目前将HashKV部署在具有多个ssd的RAID阵列上，以获得更高的I/O性能。我们使用 mdadm 创建一个软件RAID卷，并将RAID卷挂载为Ext4文件系统，在该文件系统上运行LevelDB和值存储。特别地，HashKV将值存储管理为一个大文件。它根据预先配置的段大小，将value store文件划分为两个区域，一个用于主段，另一个用于日志段。所有的段在value store文件中对齐，这样每个 main/log 段的起始偏移量是 main 段大小的倍数。<strong>如果启用了热感知功能(见§3.4)，HashKV会在值存储文件中为冷数据日志添加一个单独的区域。此外，为了解决崩溃一致性(见3.7)，HashKV使用单独的文件来存储写和GC日志。</strong></li>
-<li><strong>Multi-threading</strong>：<strong>HashKV通过线程池实现了多线程，当把写缓存中的KV对刷新到不同的段时(见§3.2)，并且在GC(见§3.3）过程中从段组中并行检索段，从而提高I/O性能</strong>。</li>
-<li>为了减轻确定性分组带来的随机写开销(见§3.1)，HashKV实现了批量写。<strong>当HashKV在写缓存中刷新KV对时，它首先识别并缓冲一批被散列到同一个分段组中的KV对，然后(通过线程)发出一个顺序写来刷新批处理。更大的批处理大小减少了随机写开销，但它也降低了并行性。</strong> 目前，我们配置了一个批写入阈值，在批中添加KV对后，如果批大小达到或超过批大小阈值，批将被刷新;换句话说，如果一个KV对的大小大于批写阈值，HashKV就直接刷新它。</li>
-</ul>
-<h2 id="evaluation">Evaluation</h2>
-<ul>
-<li>我们评估了LevelDB (LDB)、RocksDB (RDB)、HyperLevelDB (HDB)、PebblesDB (PDB)、vLog和HashKV (HKV)在更新密集型工作负载下的性能。我们首先比较LevelDB, RocksDB, vLog和HashKV;之后，我们还将HyperLevelDB和pebblesdb纳入比较中。</li>
-<li>图5(a)显示了每个阶段的性能。对于vLog和HashKV，加载阶段的吞吐量比更新阶段的吞吐量高，因为更新阶段主要由GC开销控制。在 load 阶段，hashkv的吞吐量分别比LevelDB和RocksDB大17.1×和3.0×。HashKV的吞吐量比vLog慢7.9%，这是由于通过哈希来分发KV对而引入了随机写。在更新阶段，HashKV的吞吐量在LevelDB、RocksDB和vLog上分别为6.3-7.9×、1.3-1.4×和3.7-4.6×。由于压缩开销很大，LevelDB的吞吐量在所有KV存储中是最低的，而vLog的GC开销也很高。</li>
-<li>图5(b)和5(c)显示了总写大小和所有加载和更新请求发出后，不同KV存储的大小。HashKV将LevelDB、RocksDB和vLog的总写大小分别减少了71.5%、66.7%和49.6%。而且，它们有非常相似的 KV 存储大小。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210324221302.png" alt="20210324221302" loading="lazy"></li>
-<li>对于 HyperLevelDB 和 peblesdb，两者都是如此，由于压缩开销较低，因此具有较高的负载和更新吞吐量。例如，PebblesDB将sstable的片段从较高的级别添加到较低的级别，而不重写较低级别的sstable。<strong>HyperLevelDB和PebblesDB都至少实现了HashKV的两倍吞吐量，同时产生的写大小也小于HashKV。</strong> 另一方面，<strong>它们的存储开销很大，其最终KV存储大小分别为2.2× HashKV和1.7× HashKV。主要原因是HyperLevelDB和PebblesDB都只对选定范围的键进行压缩，以减少写放大，这样在压缩后可能仍然会有很多无效的KV对。它们触发压缩操作的频率也低于LevelDB。这两个因素都会导致较高的存储开销。</strong> 在接下来的实验中，我们关注LevelDB、RocksDB、vLog和HashKV，因为它们的存储开销相当。</li>
-<li><strong>写放大 PebblesDB/HyperLevelDB 做得更好，但空间放大 HASHKV 更好</strong></li>
-</ul>
-<h2 id="related-work">Related Work</h2>
-<ul>
-<li><strong>General KV stores</strong>:
-<ul>
-<li>DRAM: Redis, MemC3, NSDI13 Distributed Caching with Memcached, NSDI14 MICA</li>
-<li>SSDs: FlashStore, SIGMOD11 SkimpyStash, SOSP11 SILT, FAST16 WiscKey</li>
-<li>NVM: ATC15 NVMKV, ATC17 HiKV</li>
-</ul>
-</li>
-<li><strong>LSM-tree-based KV stores</strong>
-<ul>
-<li>bLSM</li>
-<li>VT-tree</li>
-<li>LSM-trie</li>
-<li>LWC-store</li>
-<li>SkipStore</li>
-<li>PebblesDB</li>
-</ul>
-</li>
-<li><strong>KV separation</strong>
-<ul>
-<li>WiscKey</li>
-<li>Atlas</li>
-<li>Cocytus</li>
-</ul>
-</li>
-<li><strong>Hash-based data organization</strong>
-<ul>
-<li>Dynamo</li>
-<li>Kinesis</li>
-<li>Ceph</li>
-<li>NVMKV</li>
-</ul>
-</li>
-</ul>
-<h2 id="conclusion">Conclusion</h2>
-<ul>
-<li>本文提出了HashKV算法，它能够在更新密集型工作负载下对KV存储进行有效的更新。它的新颖之处在于利用基于哈希的数据分组进行确定性数据组织，从而减轻GC开销。我们通过几个扩展进一步增强了HashKV，包括动态预留空间分配、热度感知和选择性KV分离。试验台实验表明，HashKV实现了较高的更新吞吐量，并减少了总写大小。</li>
-</ul>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[C++ 多线程]]></title>
-        <id>https://blog.shunzi.tech/post/cpp-multi-thread/</id>
-        <link href="https://blog.shunzi.tech/post/cpp-multi-thread/">
-        </link>
-        <updated>2021-05-06T01:36:30.000Z</updated>
-        <summary type="html"><![CDATA[<ul>
-<li>C++ 多线程封装，以及一些并发处理机制的资料</li>
-<li>持续更新ing</li>
-</ul>
-]]></summary>
-        <content type="html"><![CDATA[<ul>
-<li>C++ 多线程封装，以及一些并发处理机制的资料</li>
-<li>持续更新ing</li>
-</ul>
-<!-- more -->
-<h2 id="参考链接">参考链接</h2>
-<ul>
-<li><a href="https://blog.csdn.net/deng821776892/article/details/106984687/">[1] CSDB: C++多线程之旅-atomic原子类型</a></li>
-<li><a href="https://www.runoob.com/cplusplus/cpp-multithreading.html">[2] 菜鸟教程：C++ 多线程</a></li>
-<li><a href="http://www.cplusplus.com/reference/atomic/">[3] cplusplus.com - atomic</a></li>
-<li><a href="http://shouce.jb51.net/cpp_concurrency_in_action/content/chapter5/5.2-chinese.html">[4] C++ 并发编程</a></li>
-<li><a href="https://zhuanlan.zhihu.com/p/24983412">[5] 知乎：C++11原子操作与无锁编程</a></li>
-<li><a href="https://www.jianshu.com/p/8c1bb012d5f8">[6] 简书：c++11 多线程（3）atomic 总结</a></li>
-<li><a href="https://www.cnblogs.com/haippy/p/3301408.html">[7] 博客园：C++11 并发指南六( <atomic> 类型详解二 std::atomic )</a></li>
-<li><a href="https://support.huaweicloud.com/prtg-kunpengdbs/kunpengdbsolution_12_0002.html">[8] 华为云：常见原子操作（C语言）</a></li>
-<li><a href="http://events.jianshu.io/p/a25e0754e2b9">[9] 简书：LevelDB 中的跳表实现</a></li>
-</ul>
-<h3 id="atomic">atomic</h3>
-<ul>
-<li>所谓原子操作，就是多线程程序中“最小的且不可并行化的”操作。对于在多个线程间共享的一个资源而言，这意味着同一时刻，多个线程中有且仅有一个线程在对这个资源进行操作，即互斥访问。</li>
-<li>而关于原子性，我们应当具有一个基本的认知：<strong>高级语言层面，单条语句并不能保证对应的操作具有原子性</strong>。</li>
-</ul>
-<h4 id="举例说明">举例说明</h4>
-<ul>
-<li>在使用 C、C++、Java 等各种高级语言编写代码时，不少人会下意识的认为一条不可再分的单条语句具有原子性，例如常见 i++。</li>
-</ul>
-<pre><code class="language-C">// 伪码
-
-int i = 0;
-
-void increase() {
-  i++;
-}
-
-int main() {
-  /* 创建两个线程，每个线程循环进行 100 次 increase */
-  // 线程 1
-  Thread thread1 = new Thread(
-    run() {
-      for (int i = 0; i &lt; 100; i++) increase();
-    }
-  );
-  // 线程 2
-  Thread thread2 = new Thread(
-    run() {
-      for (int i = 0; i &lt; 100; i++) increase();
-    }
-  );
-}
-</code></pre>
-<ul>
-<li>如果 i++ 是原子操作，则上述伪码中的 i 最终结果为 200。但实际上每次运行结果可能都不相同，且通常小于 200。</li>
-<li>之所以出现这样的情况是因为 <strong>i++ 在执行时通常还会继续划分为多条 CPU 指令</strong>。以 Java 为例，i++ 编译将形成四条字节码指令，以下四条指令是 Java 虚拟机中的字节码指令，字节码指令是 JVM 执行的指令。实际每条字节码指令还可以继续划分为更底层的机器指令。但字节码指令已经足够演示原子性的含义了。如下所示：
-<ul>
-<li><a href="https://blog.csdn.net/tanggao1314/article/details/53260891">CSDN：JVM指令集及各指令的详细使用说明</a></li>
-</ul>
-</li>
-</ul>
-<pre><code>// Java 字节码指令
-0:  getstatic     # 获取静态属性指令，获取指定类的静态域，并将其值压入栈顶  
-1:  iconst_1      # 当int取值-1~5时，JVM采用iconst指令将常量压入栈中，也就是将 1 压入栈中
-2:  iadd          # 将栈顶两 int 型数值相加并将结果压入栈顶
-3:  putstatic     # 为指定的类的静态域赋值
-</code></pre>
-<ul>
-<li>而上述四条指令的执行并不保证原子性，即执行过程可被打断。考虑如下 CPU 执行序列：
-<ol>
-<li>线程 1 执行 getstatic 指令，获得 i = 1</li>
-<li>CPU 切换到线程 2，也执行了 getstatic 指令，获得 i = 1。</li>
-<li>CPU 切回线程 1 执行剩下指令，此时 i = 2</li>
-<li>CPU 切到线程 2，由于步骤 2 读到的是 i = 1，固执行剩下指令最终只会得到 i = 2</li>
-</ol>
-</li>
-</ul>
-<h3 id="c-stdatomic">C++ std::atomic</h3>
-<ul>
-<li>std::atomic 为C++11封装的原子数据类型。原子数据类型不会发生数据竞争，能直接用在多线程中而不必我们用户对其进行添加互斥资源锁的类型。从实现上，大家可以理解为这些原子类型内部自己加了锁。</li>
-<li>原子类型在头文件 <atomic> 中，使用atomic有两套命名模式：一种是使用替代名称，一种是使用atomic的特化。
-<ul>
-<li>atomic_bool &lt;=&gt; atomic &lt; bool &gt;</li>
-<li>atomic_char &lt;=&gt; atomic&lt; char &gt;</li>
-<li>atomic_int  &lt;=&gt; atomic&lt; int &gt;</li>
-<li>...<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210513164522.png" alt="20210513164522" loading="lazy"></li>
-</ul>
-</li>
-<li>并非所有的类型都能提供原子操作，这是因为原子操作的可行性取决于 CPU 的架构以及所实例化的类型结构是否满足该架构对内存对齐条件的要求，因而我们总是可以通过 std::atomic<T>::is_lock_free来检查该原子类型是否需支持原子操作。这个函数让用户可以查询某原子类型的操作是直接用的原子指令(x.is_lock_free()返回true)， 还是编译器和库内部用了一个锁(x.is_lock_free()返回false)。</li>
-</ul>
-<pre><code class="language-C++">template &lt; class T &gt; struct atomic {
-    bool is_lock_free() const volatile;
-    bool is_lock_free() const;
-    void store(T, memory_order = memory_order_seq_cst) volatile;
-    void store(T, memory_order = memory_order_seq_cst);
-    T load(memory_order = memory_order_seq_cst) const volatile;
-    T load(memory_order = memory_order_seq_cst) const;
-    operator  T() const volatile;
-    operator  T() const;
-    T exchange(T, memory_order = memory_order_seq_cst) volatile;
-    T exchange(T, memory_order = memory_order_seq_cst);
-    bool compare_exchange_weak(T &amp;, T, memory_order, memory_order) volatile;
-    bool compare_exchange_weak(T &amp;, T, memory_order, memory_order);
-    bool compare_exchange_strong(T &amp;, T, memory_order, memory_order) volatile;
-    bool compare_exchange_strong(T &amp;, T, memory_order, memory_order);
-    bool compare_exchange_weak(T &amp;, T, memory_order = memory_order_seq_cst) volatile;
-    bool compare_exchange_weak(T &amp;, T, memory_order = memory_order_seq_cst);
-    bool compare_exchange_strong(T &amp;, T, memory_order = memory_order_seq_cst) volatile;
-    bool compare_exchange_strong(T &amp;, T, memory_order = memory_order_seq_cst);
-    atomic() = default;
-    constexpr atomic(T);
-    atomic(const atomic &amp;) = delete;
-    atomic &amp; operator=(const atomic &amp;) = delete;
-    atomic &amp; operator=(const atomic &amp;) volatile = delete;
-    T operator=(T) volatile;
-    T operator=(T);
-};
-</code></pre>
-<h4 id="主要操作">主要操作</h4>
-<h5 id="load">load()</h5>
-<ul>
-<li>加载原子对象中存入的值，等价于直接使用原子变量。</li>
-</ul>
-<pre><code class="language-C++">T load (memory_order sync = memory_order_seq_cst) const volatile noexcept;
-T load (memory_order sync = memory_order_seq_cst) const noexcept;
-</code></pre>
-<ul>
-<li>读取被封装的值，参数 sync 设置内存序(Memory Order)，可能的取值如下：
-<ul>
-<li>memory_order_relaxed</li>
-<li>memory_order_consume</li>
-<li>memory_order_acquire</li>
-<li>memory_order_seq_cst</li>
-</ul>
-</li>
-</ul>
-<h5 id="store">store()</h5>
-<ul>
-<li>存储一个值到原子对象，等价于使用等号。</li>
-</ul>
-<pre><code class="language-C++">void store (T val, memory_order sync = memory_order_seq_cst) volatile noexcept;
-void store (T val, memory_order sync = memory_order_seq_cst) noexcept;
-</code></pre>
-<ul>
-<li>修改被封装的值，std::atomic::store 函数将类型为 T 的参数 val 复制给原子对象所封装的值。T 是 std::atomic 类模板参数。另外参数 sync 指定内存序(Memory Order)，可能的取值:
-<ul>
-<li>memory_order_relaxed</li>
-<li>memory_order_release</li>
-<li>memory_order_seq_cst</li>
-</ul>
-</li>
-</ul>
-<h5 id="exchange-原子操作">exchange() 原子操作</h5>
-<ul>
-<li>返回原来里面存储的值，然后在存储一个新的值，相当于将上面两个 load() 和 store() 合成起来的参数。</li>
-</ul>
-<pre><code class="language-C++">T exchange (T val, memory_order sync = memory_order_seq_cst) volatile noexcept;
-T exchange (T val, memory_order sync = memory_order_seq_cst) noexcept;
-</code></pre>
-<ul>
-<li>读取并修改被封装的值，exchange 会将 val 指定的值替换掉之前该原子对象封装的值，并返回之前该原子对象封装的值，整个过程是原子的(因此exchange 操作也称为 read-modify-write 操作)。sync参数指定内存序(Memory Order)，可能的取值如下：
-<ul>
-<li>memory_order_relaxed</li>
-<li>memory_order_consume</li>
-<li>memory_order_acquire</li>
-<li>memory_order_release</li>
-<li>memory_order_acq_rel</li>
-<li>memory_order_seq_cst</li>
-</ul>
-</li>
-</ul>
-<h5 id="compare_exchange_weak">compare_exchange_weak()</h5>
-<ul>
-<li>交换-比较操作是比较原子变量值和所提供的期望值，如果二者相等，则存储提供的期望值，如果不等则将期望值更新为原子变量的实际值，更新成功则返回true反之则返回false。</li>
-</ul>
-<pre><code class="language-C++">atomic&lt;bool&gt; b;
-b.compare_exchange_weak(expected, new_value);
-</code></pre>
-<ul>
-<li>当存储的值和expected相等时则将则更新为new_value，如果不等时则不变。其中expected必须是类型变量，而不能是常量。</li>
-</ul>
-<h5 id="compare_exchange_strong">compare_exchange_strong()</h5>
-<ul>
-<li>不像compare_exchange_weak，此版本必须始终true在预期确实与所包含的对象相等时返回，不允许出现虚假故障。但是，在某些计算机上，对于某些在循环中进行检查的算法，compare_exchange_weak 可能会明显改善性能。</li>
-<li>其余使用方法和compare_exchange_weak完全一致。</li>
-<li>这两个版本的区别是：Weak版本如果数据符合条件被修改，其也可能返回false，就好像不符合修改状态一致；而Strong版本不会有这个问题，但在某些平台上Strong版本比Weak版本慢 [注:在x86平台我没发现他们之间有任何性能差距]；绝大多数情况下，我们应该优先选择使用Strong版本；</li>
-</ul>
-<h4 id="memory-order">memory order</h4>
-<ul>
-<li>在介绍 Memory Order 之前首先介绍 <strong>有序性</strong></li>
-</ul>
-<h5 id="有序性">有序性</h5>
-<ul>
-<li>上述已经提到 CPU 的一条指令执行时，通常会有多个步骤，如取指IF 即从主存储器中取出指令、ID 译码即翻译指令、EX 执行指令、存储器访问 MEM 取数、WB 写回。</li>
-<li>即指令执行将经历：<strong>IF、ID、EX、MEM、WB</strong> 阶段。</li>
-<li>现在考虑 CPU 在执行一条又一条指令时该如何完成上述步骤？最容易想到并是顺序串行，指令 1 依次完成上述五个步骤，完成之后，指令 2 再开始依次完成上述步骤。这种方式简单直接，但执行效率显然存在很大的优化空间。</li>
-<li>思考一种流水线工作：</li>
-</ul>
-<pre><code>指令1   IF ID EX MEM WB
-指令2      IF ID EX MEM WB
-指令3         IF ID EX MEM WB
-</code></pre>
-<ul>
-<li>采用这种流水线的工作方式，将避免 CPU 、存储器中各个器件的空闲，从而充分利用每个器件，提升性能。同时注意到由于每条指令执行的情况有所不同，指令执行的先后顺序将会影响到这条流水线的负载情况，而我们的目标则是让整个流水线满载紧凑的运行。</li>
-<li>为此 CPU 又实现了「指令重排」技术，CPU 将有选择性的对部分指令进行重排来提高 CPU 执行的性能和效率。例如：</li>
-</ul>
-<pre><code class="language-C">x = 100;    // #1
-y = 200;    // #2
-z = x + y;  // #3
-</code></pre>
-<ul>
-<li>虽然上述高级语言的语句会编译成多条机器指令，多条机器指令还会进行「指令重排」，#1 语句与 #2 语句完全有可能被 CPU 重新排序，所以程序实际运行时可能会先执行 y = 200; 然后再执行 x = 100;</li>
-<li>但另一方面，指令重排的前提是不会影响线程内程序的串行语义，CPU 在重排指令时必须保证线程内语义不变，例如：</li>
-</ul>
-<pre><code class="language-C">x = 0; // #1
-x = 1; // #2
-y = x; // #3
-</code></pre>
-<ul>
-<li>上述的 y 一定会按照正常的串行逻辑被赋值为 1。</li>
-<li>但不幸的是，CPU 只能保证线程内的串行语义。在多线程的视角下，「指令重排」造成的影响需要程序员自己关注。</li>
-</ul>
-<pre><code class="language-C">
-// 公共资源
-int x = 0;
-int y = 0;
-int z = 0;
-
-Thread_1:             Thread_2:
-x = 100;              while (y != 200);
-y = 200;              print x
-z = x + y;
-</code></pre>
-<ul>
-<li>如果 CPU 不进行「乱序优化」执行，那么 y = 200 时，x 已经被赋值为 100，此时线程 2 输出 x = 200。但实际运行时，线程 1 可能先执行 y = 200，此时 x 还是初始值 0。线程 2 观察到 y = 200 后，退出循环，输出 x = 0;</li>
-</ul>
-<h5 id="memory-order-2">memory order</h5>
-<ul>
-<li>C++ 提供了 std::atomic 类模板，以保证操作原子性。同时也提供了内存顺序模型 memory_order指定内存访问，以便提供有序性和可见性。
-<ul>
-<li><strong>memory_order_relaxed</strong>: 只保证原子操作的原子性，不提供有序性的保证</li>
-<li><strong>memory_order_consume</strong>	当前线程中依赖于当前加载的该值的读或写不能被重排到此加载前</li>
-<li><strong>memory_order_acquire</strong>	在其影响的内存位置进行获得操作：当前线程中读或写不能被重排到此加载前</li>
-<li><strong>memory_order_release</strong>	当前线程中的读或写不能被重排到此存储后</li>
-<li><strong>memory_order_acq_rel</strong>	带此内存顺序的读修改写操作既是获得操作又是释放操作</li>
-<li><strong>memory_order_seq_cst</strong>	有此内存顺序的加载操作进行获得操作，存储操作进行释放操作，而读修改写操作进行获得操作和释放操作，再加上存在一个单独全序，其中所有线程以同一顺序观测到所有修改</li>
-</ul>
-</li>
-<li>组合出四种顺序：
-<ul>
-<li><strong>Relaxed ordering 宽松顺序</strong>：宽松顺序只保证原子变量的原子性（变量操作的机器指令不进行重排序），但无其他同步操作，不保证多线程的有序性。</li>
-</ul>
-<pre><code class="language-C">Thread1: 
-y.load(std::memory_order_relaxed);
-
-Thread2:
-y.store(h, std::memory_order_relaxed);
-</code></pre>
-<ul>
-<li><strong>Release-Acquire ordering 释放获得顺序</strong>，store 使用 memory_order_release，load 使用 memory_order_acquire，CPU 将保证如下两点：
-<ul>
-<li>store 之前的语句不允许被重排序到 store 之后（例子中的 #1 和 #2 语句一定在 store 之前执行）</li>
-<li>load 之后的语句不允许被重排序到 load 之前（例子中的 #3 和 #4 一定在 load 之后执行）</li>
-</ul>
-</li>
-</ul>
-<pre><code class="language-C++">std::atomic&lt;std::string*&gt; ptr;
-int data;
-
-void producer()
-{
-    std::string* p  = new std::string(&quot;Hello&quot;); // #1
-    data = 42;  // #2
-    ptr.store(p, std::memory_order_release);
-}
-
-void consumer()
-{
-    std::string* p2;
-    while (!(p2 = ptr.load(std::memory_order_acquire)))
-        ;
-    assert(*p2 == &quot;Hello&quot;); // 绝无问题 #3
-    assert(data == 42); // 绝无问题 #4
-}
-
-int main()
-{
-    std::thread t1(producer);
-    std::thread t2(consumer);
-    t1.join(); t2.join();
-}
-</code></pre>
-<ul>
-<li>同时 CPU 将保证 store 之前的语句比 load 之后的语句「先行发生」，即先执行 #1、#2，然后执行 #3、#4。这实际上就意味着线程 1 中 store 之前的读写操作对线程 2 中 load 执行后是可见的。<strong>注意是所有操作都同步了，不管 #3 是否依赖了 #1 或 #2</strong></li>
-<li>值得关注的是这种顺序模型在一些强顺序系统例如 x86、SPARC TSO、IBM 主框架上是自动进行的。但在另外一些系统如 ARM、Power PC 等需要额外指令来保障。</li>
-<li><strong>Release-Consume ordering 释放消费顺序</strong>:store 使用 memory_order_release，load 使用 memory_order_consume。其效果与 Release-Acquire ordering 释放获得顺序类似，唯一不同的是并不是所有操作都同步（不够高效），而是只对依赖操作进行同步，保证其有序性上例就是 #3 一定发生在 #1 之后，因为这两个操作依赖于 ptr。但不会保证 #4 一定发生在 #2 之后（注意「释放获得顺序」可以保证这一点）。</li>
-</ul>
-<pre><code class="language-C++">std::atomic&lt;std::string*&gt; ptr;
-int data;
-
-void producer()
-{
-    std::string* p  = new std::string(&quot;Hello&quot;); // #1
-    data = 42; // #2
-    ptr.store(p, std::memory_order_release);
-}
-
-void consumer()
-{
-    std::string* p2;
-    while (!(p2 = ptr.load(std::memory_order_consume)))
-        ;
-    assert(*p2 == &quot;Hello&quot;); // #3 绝无出错： *p2 从 ptr 携带依赖
-    assert(data == 42); // #4 可能也可能不会出错： data 不从 ptr 携带依赖
-}
-
-int main()
-{
-    std::thread t1(producer);
-    std::thread t2(consumer);
-    t1.join(); t2.join();
-}
-</code></pre>
-<ul>
-<li><strong>Sequential consistency 序列一致顺序</strong>: 「释放获得顺序」是对某一个变量进行同步，Sequential consistency 序列一致顺序则是对所有变量的所有操作都进行同步。store 和 load 都使用 memory_order_seq_cst，可以理解对每个变量都进行 Release-Acquire 操作。所以这也是最慢的一种顺序模型。</li>
-</ul>
-</li>
-</ul>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[FloDB: Unlocking Memory in Persistent Key-Value Stores]]></title>
-        <id>https://blog.shunzi.tech/post/FloDB/</id>
-        <link href="https://blog.shunzi.tech/post/FloDB/">
-        </link>
-        <updated>2021-04-09T04:21:02.000Z</updated>
-        <summary type="html"><![CDATA[<blockquote>
-<ul>
-<li>EuroSys17: FloDB: Unlocking Memory in Persistent Key-Value Stores</li>
-<li>https://dcl.epfl.ch/site/flodb</li>
-</ul>
-</blockquote>
-]]></summary>
-        <content type="html"><![CDATA[<blockquote>
-<ul>
-<li>EuroSys17: FloDB: Unlocking Memory in Persistent Key-Value Stores</li>
-<li>https://dcl.epfl.ch/site/flodb</li>
-</ul>
-</blockquote>
-<!--more-->
-<h2 id="abstract">Abstract</h2>
-<ul>
-<li>日志结构合并(LSM)数据存储允许存储和处理大量数据，同时保持良好的性能。它们通过吸收内存层中的更新并按顺序分批地将它们传输到磁盘层来缓解I/O瓶颈。然而，LSM体系结构基本上要求元素按排序顺序排列。随着内存中数据量的增长，维护这种排序顺序的成本越来越高。与直觉相反，现有的LSM系统在使用较大的内存组件时实际上可能会损失吞吐量。</li>
-<li>在本文中，我们介绍了FloDB，一种LSM内存组件架构，它允许吞吐量在具有充足内存大小的现代多核机器上扩展。<strong>FloDB的主要思想本质上是通过在内存组件上添加一个小的内存缓冲层来引导传统的LSM体系结构</strong>。该缓冲区提供低延迟操作，屏蔽排序内存组件的写延迟。将这个缓冲区集成到经典的LSM内存组件中以变成 FloDB 并非易事，需要重新访问面向用户的 LSM 操作(搜索、更新、扫描)的算法。FloDB 的两层可以用最先进的、高并发的数据结构来实现。通过这种方式，正如我们在本文中所展示的那样，FloDB 消除了经典 LSM 设计中显著的同步瓶颈，同时提供了一个丰富的 LSM API。</li>
-<li>我们实现FloDB作为LevelDB的扩展，谷歌流行的LSM键值存储。我们将FloDB的性能与最先进的LSMs进行比较。简而言之，在各种多线程工作负载下，FloDB的性能比性能仅次于它的竞争对手高出一个数量级。</li>
-</ul>
-<h2 id="introduction">Introduction</h2>
-<ul>
-<li>键值存储是许多系统的关键组件，这些系统需要对大量数据进行低延迟的访问。这些存储的特点是扁平的数据组织和简化的接口，这允许有效的实现。然而，键值存储的目标数据量通常大于主存;因此，通常需要持久化存储。由于访问持久存储的速度比 CPU 慢，直接在磁盘上更新数据产生了一个严重的瓶颈。所以很多 KV 存储系统使用了 LSM 结构。LSM 数据存储适用于需要低延迟访问的应用程序，例如需要进行大量更新的消息队列，以及在面向用户的应用程序中维护会话状态。基本上，LSM 体系结构一方面通过缓存读，另一方面通过在内存中吸收写并稍后批量写入磁盘，掩盖了磁盘访问瓶颈。<strong>尽管 LSM 键值存储在解决I/O瓶颈带来的挑战方面发挥了很大的作用，但它们的性能不会随着内存组件的大小而扩展，也不会随着线程的数量而扩展</strong>。换句话说，可能令人惊讶的是，<strong>增加现有lsm的内存部分只能在相对较小的尺寸下提高性能。类似地，添加线程并不能提高许多现有lsm的吞吐量，因为它们使用了全局阻塞同步</strong>。</li>
-<li>上面描述的两种限制在 LSM 的传统设计中是固定存在的。我们通过引入 FloDB 来规避这些限制，FloDB 是一种新颖的 LSM 内存组件，其设计目的是随线程数量及其在内存中的大小而扩展。传统上，LSMs 一直采用两层存储层次结构，一层在内存中，一层在磁盘上。我们建议增加一个内存级别。换句话说，<strong>FloDB 是一个位于磁盘组件之上的两级内存组件(图1)，每个in-memory 级别都是一个并发数据结构。内存顶层是一个小而快速的数据结构，而内存底层是一个更大的、排序的数据结构</strong>。在存储到磁盘之前，新条目被插入到顶层，然后在后台被排到底层。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210330151553.png" alt="20210330151553" loading="lazy"></li>
-<li>这个方案有几个优点：
-<ul>
-<li>首先，它允许扫描和写入并行进行，分别在底层和顶层。</li>
-<li>其次，无论内存组件大小如何，使用小型、快速的顶级级别都可以实现低延迟的更新，而现有的 LSM 会随着内存组件大小的增加而性能下降。更大的内存组件可能在峰值吞吐量时造成更长的写突发。</li>
-<li>第三，维护底层内存层的排序允许在不进行额外的(昂贵的)排序步骤的情况下对磁盘进行刷新。</li>
-</ul>
-</li>
-<li>我们使用一个<strong>小型的高性能并发哈希表来实现 FloDB</strong>，并使用一个<strong>较大的并发跳表</strong>来实现底部的内存级别。乍一看，实现 FloDB 似乎只需要在现有的 LSM 体系结构上添加一个额外的基于哈希表的缓冲区级别。然而，这个看似很小的步骤却带来了微妙的技术挑战。
-<ul>
-<li>第一个挑战是<strong>确保两个内存级别之间的有效数据流动</strong>，以便充分利用额外的缓冲区，同时不耗尽系统资源。为此，我们引入了多插入操作，这是一种用于并发跳表的新操作。其<strong>主要思想是在一个操作中在跳跃列表中插入 n 个排序的元素，使用前面插入元素的位置作为插入下一个元素的起点，从而重用已经遍历过的 hops</strong>。Skiplist 多插入是独立的，通过增加内存组件更新的吞吐量，它也可以使以前的单写入器 LSM 实现受益。</li>
-<li>第二个挑战是<strong>确保面向用户的 LSM 操作的一致性</strong>，同时在这些操作之间启用高级别的并发性。特别是，FloDB 是第一个同时支持一致扫描和就地更新的LSM系统。</li>
-</ul>
-</li>
-<li>我们的实验表明，FloDB的性能优于当前的键值存储解决方案，特别是在写密集型场景中。例如，在只写的工作负载中，FloDB 可以用一个工作线程来饱和磁盘组件的吞吐量，并且在最多有16个工作线程的情况下，它的性能继续超过性能第二好的系统，平均是后者的2倍。此外，对于倾斜的读写工作负载，FloDB 获得比性能最高的竞争对手高一个数量级的吞吐量：
-<ul>
-<li>FloDB，一个用于 log-structured merge 内存组件的两级架构。FloDB 可以根据主内存的大小进行扩展，并且具有丰富的API，读取、写入和扫描都可以并发进行。</li>
-<li>在Xeon多核机器上，作为LevelDB的扩展，FloDB体系结构的一个公开的c++实现，以及一个高达192GB内存组件大小的实验。</li>
-<li>一种用于并行跳过表的新型多插入操作的算法。除了FloDB，多插入还可以使任何使用skiplist 的 LSM 体系结构受益</li>
-</ul>
-</li>
-<li><strong>尽管 FloDB 有很多优点，但我们并不认为它是一剂灵丹妙药;它确实有局限性</strong>。
-<ul>
-<li>首先，与所有lsm一样，稳态吞吐量受到层次结构中最慢组件的限制:将内存组件写入磁盘。FloDB在内存组件中所做的改进与潜在的磁盘级改进是正交的，这超出了本文的讨论范围。磁盘级别的改进可以与FloDB结合使用，进一步提高LSMs的总体性能。</li>
-<li>其次，可以设计出对FloDB扫描有问题的工作负载。例如，在写密集型工作负载和严重争用中，长时间运行扫描的性能会下降。第三，对于比主存大得多的数据集，FloDB提高的读性能要小于写性能。这是因为在LSMs中，读取性能很大程度上取决于缓存的有效性，这也不在我们的论文讨论范围之内。</li>
-</ul>
-</li>
-</ul>
-<h2 id="shortcomings-of-current-lsms">Shortcomings of Current LSMs</h2>
-<h3 id="lsm-key-value-store-overview">LSM Key-Value Store Overview</h3>
-<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210330155255.png" alt="20210330155255" loading="lazy"></figure>
-<h3 id="limitationscalability-with-number-of-threads">Limitation—Scalability with Number of Threads</h3>
-<ul>
-<li>多个处理核心的存在可以提高LSM数据存储的性能。虽然现有的LSM系统允许某种程度的并发，但它们仍留有大量的并行机会。例如，
-<ul>
-<li>leveldb——许多LSM键值存储的基础——支持多个写线程，但通过让线程将其预期的写操作存储在一个并发队列中来序列化写操作;这个队列中的写操作由单个线程一个接一个地应用到键值存储。此外，LevelDB还要求读取器在每次操作中获取全局锁，以便访问或更新元数据</li>
-<li>HyperLevelDB 建立在LevelDB之上，通过允许并发更新来提高并发性;然而，为了通过版本号来维护更新的顺序，仍然需要昂贵的同步</li>
-<li>RocksDB 也是源自LevelDB的一个键值存储，它通过引入磁盘组件的多线程合并来提高并发性。虽然多线程压缩确实提高了整体性能，但RocksDB仍然保持全局同步来访问内存结构和更新版本号，这与HyperLevelDB类似</li>
-<li>cLSM 甚至更进一步，从只读路径上删除了任何阻塞的同步，但是使用全局共享独占锁来协调更新和后台磁盘写操作，仍然削弱了系统的可伸缩性。正如我们在第5节中所展示的，这些可伸缩性瓶颈确实在实践中表现出来</li>
-</ul>
-</li>
-</ul>
-<h3 id="limitationscalability-with-memory-size">Limitation—Scalability with Memory Size</h3>
-<ul>
-<li>现有的LSM内存组件可以排序(例如，skiplist)或未排序的(例如，哈希表)。这两种选择都有各自的优点和缺点，但令人惊讶的是，它们都不能扩展到大型内存组件。</li>
-<li>一方面，当使用skiplist时，顺序扫描是自然的。而且，压缩阶段只不过是将组件直接复制到磁盘;因此它的开销很低。然而，写需要数据结构大小的对数时间来维持排序顺序(直接从内存组件读取也需要数据结构大小的对数时间。然而，对于大型数据集，大多数读操作都是从磁盘组件上读取的，因此<strong>内存组件数据结构的选择对读延迟的影响小于写延迟</strong>)。因此，从图3中可以看出，分配更多的内存实际上增加了写延迟。该图显示了作为RocksDB(最流行的最先进的lsm之一)中内存组件大小的函数的读和写延迟的中值。在第99百分位，我们观察到类似的读写延迟趋势。延迟使用RocksDB的读写基准测试，有八个读线程和一个写线程在一个有100万个条目的数据库上运行。密钥大小为8字节，值大小为256字节。延迟被规范化为128 MB内存组件。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210330161949.png" alt="20210330161949" loading="lazy"></li>
-<li>另一方面，对于哈希表，写操作在常量时间内完成，但是顺序扫描是不实用的，而且压缩阶段更复杂。压缩在将内存组件写入磁盘之前需要对其进行完全排序，以保存LSM结构。实际上，我们的测量结果表明，基于哈希表的内存组件的平均压缩时间至少比相同大小的基于skiplist的内存组件的平均压缩时间高一个数量级：因为随着哈希表变得越来越大，排序和持久化到磁盘所需的时间也越来越长。在对不可变内存组件进行排序和持久化时，活动(可变)内存组件也可能被填满。在这种情况下，writer 被延迟，因为在内存中没有空间来完成它们的操作。结果，端到端写延迟随着内存大小而增加，如图4所示，图4展示了与图3相同的实验，使用的是哈希表而不是跳过列表。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210330163009.png" alt="20210330163009" loading="lazy"></li>
-<li>因此，对于跳过列表和哈希表，<strong>端到端系统吞吐量随着内存的增加而趋于稳定，甚至下降。这种限制是传统 LSM 的单级内存组件固有的，限制了 LSM 用户利用现代多核中的丰富内存</strong>。在接下来的部分中，我们将展示将哈希表和跳过表的优点结合起来是可能的，从而提高 LSMs的写吞吐量，同时仍然允许 inorder 扫描。</li>
-</ul>
-<h2 id="flodb-design">FloDB Design</h2>
-<ul>
-<li>现有的 LSM 存在固有的可伸缩性问题，包括内存大小和线程数量方面的问题。后者是由可伸缩性瓶颈引起的，而前者则源于大小-延迟的权衡。</li>
-<li>这种权衡体现在排序和未排序的内存组件上。有序的组件允许扫描，并且可以直接持久化到磁盘，但是随着内存组件变大，其内存组件对应就会有显著更高的访问次数。未排序组件的速度可能与大小无关，但对于扫描来说并不实用，并且需要在被刷新到磁盘之前排序，需要耗费线性时间，这可能会延迟 writers。FloDB 的内存组件体系结构就是为了避免这些问题而设计的。FloDB 的主要目标是:
-<ul>
-<li>(1) 根据给定的内存量进行扩展;</li>
-<li>(2) 使用最小的同步(以扩大规模);</li>
-<li>(3) 利用内存组件提高写性能，而不牺牲读性能。</li>
-</ul>
-</li>
-<li>下面，我们将概述FloDB的内存组件架构，以及利用这个新结构的主要操作:Get、Put、Delete和Scan。</li>
-</ul>
-<h3 id="in-memory-levels">In-memory Levels</h3>
-<ul>
-<li>简而言之，FloDB的基本思想是使用两层内存组件，其中一层是小型、快速的数据结构，第二层是大型、排序的数据结构。这种设计允许FloDB打破大小延迟的平衡，并最小化同步。</li>
-<li>第一级称为 Membuffer，它又小又快，但不一定要排序。第二级称为Memtable，规模更大，以便捕获更大的工作集，从而更好地屏蔽高I/O延迟。此外，Memtable 保持元素的排序，所以它可以直接刷新到磁盘。<strong>这两个级别都是并发的数据结构，使得操作可以并行进行</strong>。与其他LSMs 类似，数据从最小的组件(Membuffer)流向最大的组件(磁盘)，因为各个级别都满了。</li>
-<li>磁盘级组件不是我们的重点，也不在本文的讨论范围之内。由于磁盘组件和内存中对数据的处理在 LSM 键值存储中是相互正交的，所以我们展示的内存中优化方法可以与任何持久化到磁盘的机制一起使用。例如，FloDB的内存组件可以与类似于 RocksDB 的多线程压缩方案相结合，或者像LSM-trie中那样，可以减少写放大，从而获得更好的磁盘结构。</li>
-</ul>
-<h3 id="operations">Operations</h3>
-<ul>
-<li>我们给出了FloDB主要操作的高层设计。在第4.4节中，我们将描述该设计的具体实现。FloDB的两层内存组件允许非常简单的基本操作(即Get、Put、Delete)，但在扫描的情况下会带来额外的复杂性。</li>
-</ul>
-<h4 id="get">Get</h4>
-<ul>
-<li>除了LSM数据结构中的同步外，FloDB中的Get操作不需要同步。首先搜索的是Membuffer，然后是Memtable，最后是磁盘。如果在某个级别找到所需的元素，则read可以立即返回。显然，一旦找到了元素，就没有必要在较低的层次中进行搜索，因为层次结构中的较高层次总是包含最新的值。</li>
-</ul>
-<h4 id="update">Update</h4>
-<ul>
-<li>Put和Delete操作本质上是相同的。删除是通过插入一个特殊的tombstone值来完成的。从现在开始，我们将把Put和Delete操作都称为Update。首先，<strong>在Membuffer中尝试更新。如果Membuffer中没有空间，则直接在Memtable中进行更新。如果键已经存在于Membuffer或Memtable中，相应的值将就地更新</strong>。</li>
-<li>就地更新的另一种方法是多版本化:保留相同键的多个版本，仅在压缩阶段丢弃旧版本。所有现有的 LSMs 都使用多版本控制。然而，多版本控制方法不能利用倾斜工作负载的局部性。事实上，不断地更新一个键就足以填满内存组件并触发频繁刷新磁盘。相比之下，在就地更新中，重复写同一个键不会占用额外的内存，因此内存中的存储是按照数据大小的顺序排列的。就地更新，结合一个大型内存组件，允许我们有效地捕获大型的、写密集型的、倾斜的工作负载，如第5节所示。</li>
-</ul>
-<h4 id="scan">Scan</h4>
-<ul>
-<li>我们的扫描算法背后的<strong>主要思想是扫描Memtable和磁盘的同时允许在Membuffer中完成并发更新</strong>。这种方法的一个挑战是，扫描Memtable 可能返回一个过时的键值，当扫描开始时，这个键仍然在Membuffer 中。我们通过在扫描前清空 Memtable 中的 MemBuffer 来解决这个问题。</li>
-<li>另一个挑战是，如果扫描需要很长时间才能完成，如果经常调用扫描，或者在扫描期间有很多线程执行更新，那么吸收更新的 Membuffer 可能会被填满。在这种情况下，我们允许写入器和扫描器在 Memtable 中并行进行。然而，如果允许写入者在扫描 A 期间天真地更新 Memtable，那么在 A 的范围内的一个条目可能会在 A 进行时被修改，导致不一致。我们<strong>通过在 Memtable 级别引入每个条目的序列号来解决这个问题</strong>。通过这种方式，扫描 A 可以验证自 A 启动以来是否在其范围内写入了 Memtable 中的新值；如果是这种情况，扫描 A 将失效并重新启动。A 的 fallback 机制来确保 liveness(即，扫描不会被 writers 无限期重启)。值得注意的是，我们使用序列号的方式与上面提到的多版本控制不同;在我们的算法中，当 Memtable 中存在的键 k 发生更新时，k 的值和序列号就地更新 （<strong>这里感觉讲的不是很清楚，有些含糊</strong>）</li>
-</ul>
-<h4 id="summary">Summary</h4>
-<ul>
-<li>FloDB 的两级设计有几个好处。
-<ul>
-<li>首先，很大一部分写操作是在Membuffer 中完成的，因此 FloDB 从快速内存组件(通常为整体未排序的内存组件保留，如哈希表)中获得好处。</li>
-<li>第二，排序的底部组件允许扫描，并可以直接刷新到磁盘。</li>
-<li>第三，级别的分离使写和读能够与扫描并行进行。</li>
-<li>两层层次结构的另一个好处是，可以增加内存组件的总体大小，以获得更好的性能(与现有系统相比)。</li>
-<li>最后，我们的设计允许就地更新，同时支持一致扫描</li>
-</ul>
-</li>
-</ul>
-<h2 id="flodb-implementation">FloDB Implementation</h2>
-<ul>
-<li>我们在谷歌的 LevelDB 上实现FloDB。LevelDB的内存组件完全被FloDB架构所取代。我们保留了 LevelDB 的持久化和压缩机制。</li>
-</ul>
-<blockquote>
-<p>LevelDB中的原始方法是在内存中保留 thread-local 版本和文件描述符缓存(fd-cache)的一个共享版本，并在必要时获取一个全局锁来访问fd-cache的共享版本。在我们的初步测试中，我们发现这个全局锁是一个主要的可伸缩性瓶颈。为了消除这个瓶颈，作为内存优化的一部分，我们将LevelDB fd-cache实现替换为一个更可伸缩、并发的哈希表</p>
-</blockquote>
-<ul>
-<li>在下面,我们将讨论的关键实现细节FloDB:
-<ul>
-<li>(1) 对于 Memtable 和 Membuffer 数据结构的选择</li>
-<li>(2) 机制将用于 level 之间的数据移动</li>
-<li>(3) 我们的新型 multi-insert 操作用于简化在 Memtable 和 Membuffer 之间的数据流</li>
-<li>(4) 面向用户的操作的实现</li>
-</ul>
-</li>
-</ul>
-<h3 id="memory-component-implementation">Memory Component Implementation</h3>
-<ul>
-<li>在实现FloDB体系结构时，需要解决的一个重要问题是，在内存级别上如何选择良好的数据结构。为了使写操作尽可能快，第一级的合适选择是哈希表。如图5所示，一个现代哈希表可以提供超过100 Mops/s的吞吐量，即使有10亿个条目的工作负载。然而，即使哈希表很快，它们也不会对它们的条目进行排序，这意味着不能直接对数据进行顺序迭代。由于这个原因，保持数据有序且易于迭代的数据结构(例如在传统LSM实现中已经用作内存组件的skiplist)是第二级的良好选择。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331115947.png" alt="20210331115947" loading="lazy"></li>
-<li>因此，FloDB的内存层次结构由一个小型的高性能并发哈希表和一个较大的并发跳表组成。哈希表存储键-值元组。skiplist存储用于扫描操作的键-值元组和序列号。</li>
-<li><strong>Membuffer和Memtable之间的大小比例是一种权衡</strong>。一方面，相对较小的Membuffer会更快地填满，迫使更多的更新在Memtable中完成。这是有问题的，因为Memtable较慢，但也因为Memtable绑定的更新可能会迫使更多的扫描重新启动。另一方面，一个大的Membuffer将花费更长的时间来进入Memtable，这可能会延迟扫描。</li>
-</ul>
-<h3 id="interaction-between-levels">Interaction Between Levels</h3>
-<ul>
-<li><strong>Background threads</strong>：因为我们不希望数据是静态的(也就是说，数据不断地被插入或更新)，所以FloDB有两种机制来跨层次结构的级别移动数据:<strong>持久化和draining</strong>。
-<ul>
-<li>持久化通过一个专门的后台线程将项从Memtable移动到磁盘——这是LSM实现中的一种既定技术。当Memtable被填满时，持久化被触发。</li>
-<li>Draining 将条目从Membuffer移动到Memtable，这是由一个或多个专门的后台线程完成的。Draining 是一个持续不断的过程，因为人们希望保持尽可能低的 Membuffer 占用率。<strong>实际上，只有在 Membuffer 中完成写操作时，才会从两级层次结构中获益</strong>。</li>
-</ul>
-</li>
-<li><strong>Persisting</strong>：在LSMs中，将内存组件持久化到磁盘的一种标准技术是使该组件不可变，安装一个新的、可变的组件，并在后台将旧组件写入磁盘。通过这种方式，当旧组件被持久化时，写入者仍然可以继续处理新组件，并且不可变组件中的数据对读者仍然是可见的。然而，内存组件之间的切换通常是使用锁定完成的。<strong>FloDB有一个更高效的RCU（Read-Copy-Update）方法来切换内存组件，它不会阻塞任何更新或读取</strong>。当持久化的时候，RCU 是用来确保在后台线程将Memtable复制到磁盘之前，所有对不可变Memtable的待处理的更新都已经完成。第二，在Memtable被复制到磁盘之后，我们使用RCU来确保在后台线程可以继续释放不可变Memtable之前，没有reader线程正在读取它。</li>
-<li><strong>Draining</strong>：Draining(图6)是由一个或多个专门的后台线程与更新、读取或其他Draining同时进行的，并按照以下步骤进行。要将一个key-value 条目 e 从 Membuffer 移动到 Memtable 中，e 首先被检索并在 Membuffer 中标记。这样做是为了确保没有其他后台线程也试图将 e 移动到 Memtable 中。然后，e 被分配一个序列号(通过原子递增操作获得)，并被后台线程插入到 Memtable 中。最后，e 从 Membuffer 中移除。有一种特殊情况，扫描开始时发生 Draining，为了使扫描能够只在Memtable和磁盘级别上进行，但仍然包括Membuffer中最近的更新，在扫描开始时将Membuffer中所有的内存都 Draining 到Memtable中。<strong>这种类型的 Draining 是通过使当前的 Membuffer 不可变，安装一个新的 Membuffer(使用RCU)，然后将旧的 Membuffer 中的所有条目移动到 Memtable 中，类似于Memtable是如何持久化到磁盘上的</strong>。</li>
-<li><strong>RCU 的本质是转变数据可写状态，然后创建新的空的数据结构</strong><br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331144829.png" alt="20210331144829" loading="lazy"></li>
-</ul>
-<h3 id="skiplist-multi-inserts">Skiplist Multi-inserts</h3>
-<ul>
-<li>图5和图7显示了一个并发跳表大约比一个相同大小的并发哈希表慢一到两个数量级。因此，为了使大量的更新可以直接在哈希表中进行，我们需要尽可能快地在各级之间移动项。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331144936.png" alt="20210331144936" loading="lazy"></li>
-</ul>
-<h4 id="intuition">Intuition</h4>
-<ul>
-<li>我们为并发跳过表引入了一种新的多插入操作，以增加 Draining 线程的吞吐量。多插入操作背后的直观感觉很简单。在跳过列表中插入 n 个元素，而不是调用 n 次插入操作，只需在一次多插入操作中插入这些元素。<strong>n个元素按升序插入，使用已经完成的进度(即所经过的跃点)插入前一个元素，作为插入下一个元素的起点</strong>。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331161934.png" alt="20210331161934" loading="lazy"></li>
-<li>除了增加FloDB中的吞吐量，多插入还可以使使用并发跳过表的其他应用程序受益。例如，像LevelDB这样的lsm使用了来进行更新(第2.2节)，它们可以通过以下方式加速更新。组合线程可以在一个多插入操作中应用所有更新，而不是一个接一个地分别应用它们。更重要的是，几个组合线程可以通过多次插入并发地应用更新。</li>
-</ul>
-<h4 id="pseudocode">Pseudocode</h4>
-<ul>
-<li>多插入操作的伪代码见算法1。操作输入是一个由(键、值)元组组成的数组。首先，输入元组按升序排序。然后，对于每个元组，使用FindFromPreds定位其在跳过列表中的位置。FindFromPreds从前面插入的元素的前身开始搜索当前元素在跳过列表中的位置(第5-8行)。如果当前 level 中存储的前一个元素的键大于要插入的当前元素的键，则可以直接从前一个元素跳转到存储的前一个元素。这是多插入操作的核心，其中应用了路径重用的思想。在跳过列表中找到一个元组的位置后，对该元组的插入操作类似于普通的插入操作。</li>
-</ul>
-<pre><code class="language-C++">FindFromPreds(key , preds , succs): 
-// returns true iff key was found
-// side -effect: updates preds and succs 
-  pred = root
-  for level from levelmax downto 0: 
-    if (preds[level].key &gt; pred.key):
-      pred = preds[level]
-  curr = pred.next[level] 
-  while(true):
-    succ = curr.next[level] 
-    if (curr.key &lt; key): 
-      pred = curr
-      curr = succ 
-    else: 
-      break
-  preds[level] = pred 
-  succs[level] = curr
-  return (curr.key == key)
-
-MultiInsert(keys , values): 
-  sortByKey(keys , values)
-  for i from 0 to levelmax: 
-    preds[i] = root
-  for each key -value pair (k,v): 
-    node = new node(k,v) 
-    while(true):
-      if (FindFromPreds(k, preds , succs)): 
-        SWAP(succs [0].val , v)
-        break 
-      else:
-        for lvl from 0 to node.toplvl: 
-          node.next[lvl] = succs[lvl]
-      if (CAS(preds [0]. next[0], succs[0], node)):
-        for lvl from 1 to node.toplvl: 
-          while(true):
-            if (CAS(preds[lvl].next[lvl], succs[lvl], node)):
-              break 
-            else: 
-              FindFromPreds(k, preds , succs) 
-        break
-</code></pre>
-<h4 id="concurrency">Concurrency</h4>
-<ul>
-<li>多个插入相互并发，简单的插入和读取也是如此。然而，多插入的正确性依赖于这样一个事实，即元素不会同时从跳过列表中删除。从设计上讲，这在 FloDB 中不是一个问题;只有当条目持久化到磁盘时，才会从跳过列表中删除它们。此外，虽然多重插入中的每个插入都是原子的，但多重插入本身是不能线性化的，也就是说，整个元素数组不会被视为在单个时间点插入(即中间状态是可见的)。</li>
-</ul>
-<h4 id="neighborhoods">Neighborhoods</h4>
-<ul>
-<li><strong>键的邻近性是多插入性能的一个主要因素。直观地说，如果在跳跃列表中多次插入的键最终会在跳跃列表中靠近，路径重用就会最大化</strong>。图8描述了一个实验的结果，这个实验比较了简单插入和5个键多插入的吞吐量，这是一个只进行更新的测试中键接近度的函数。在本实验中，如果键范围的邻域大小为n，则一次多插入中的所有键之间的距离最大为2n。可以清楚地看到，随着邻域大小的减小，多插入的效率也会提高。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331155201.png" alt="20210331155201" loading="lazy"></li>
-<li>在FloDB中，我们<strong>在哈希表中创建分区，以利用在多次插入中键靠得更近的性能优势(邻域效应)</strong>。当一个key-value元组插入到FloDB中时，该键的最有效位 ℓ 将用于确定该元组应该插入到哈希表的哪个分区。然后，键的其余位被散列，以确定分区(即桶)中的位置。因为 ℓ 是一个参数，所以可以很容易地控制邻居的大小。</li>
-<li><strong>虽然我们的分区方案利用了多插入的性能优势，但它也使哈希表容易受到数据倾斜的影响</strong>。如果存在具有公共前缀的流行键(如果数据倾斜涉及某个键范围)，那么与流行键对应的桶将比与流行度较低的键对应的桶更快地满满。这反过来会导致在 Membuffer 中能够完成的更新比例更小。倾斜工作负载的这种影响将在第5节中讨论。</li>
-</ul>
-<h4 id="implementation-of-flodb-operations">Implementation of FloDB Operations</h4>
-<ul>
-<li>算法2给出了Get, Put和Delete操作的伪代码(为了提高可读性，我们省略了进入和退出RCU临界区的代码)。</li>
-<li><strong>Get</strong>: Get操作简单地在每一层上搜索一个键，顺序如下:Membuffer (MBF)，不可变Membuffer (IMM_MBF)，如果有的话，Memtable (MTB)，不可变Memtable (IMM_MTB)，如果有的话，最后在磁盘上搜索。Get返回它遇到的第一个键，这保证是最新的一个，因为级别是按照与数据流相同的顺序检查的。</li>
-<li><strong>Update</strong>: 如前所述，Delete操作是一个带有特殊tombstone值的Put操作，因此我们只需要描述后一个操作。实际上，Put操作是通过尝试在Membuffer中插入键值对e来进行的(第10行);如果e的目标哈希表桶没有满，添加到Membuffer成功，操作返回(第11行);否则，e将被插入Memtable中(第20行)。此外，算法2中的完整Put伪代码还包括与持久化线程和并发扫描器同步的机制。首先，如果不成功地将e插入到Membuffer中，并且设置了pauseWriters标志，那么writer将在必要时帮助 Draining 不可变的Membuffer，或者等待标志被取消设置(第12-16行)。正如我们在下面解释的那样，扫描使用pauseWriters标志向写入者发出信号:Membuffer已经被完全清空到memtable中，为扫描做准备，写入者应该等待或者帮助完成清空。第二，写入者会等到Memtable中有空间时才开始执行Put(第17-18行)。这通常是一个非常短的等待，即当前 Memtable 被填满后，持久化线程准备新 Memtable 的时间。</li>
-</ul>
-<pre><code class="language-C++">Get(key):
-  for c in MBF IMM_MBF MTB IMM_MTB DISK: 
-    if (c != NULL):
-      value = c.search(key) 
-      if (value != not_found):
-        return value 
-      return not_found 
-
-Put(key , value):
-  if (MBF.add(key , value) == success): 
-    return
-  while pauseWriters:
-    if MBFNeedsDraining (): 
-      IMM_MBF.helpDrain ()
-    else: 
-      wait()
-  while MTB.size &gt; MTB_TARGET_SIZE: 
-    wait() 
-  seq = globalSeqNumber.fetchAndIncrement() 
-  MTB.add(key , value , seq)
-
-Delete(key):
-  Put(key , TOMBSTONE)
-</code></pre>
-<h5 id="scan-2">Scan</h5>
-<ul>
-<li><strong>Scan</strong>：扫描操作以两个参数作为输入:lowKey和highKey。它返回一个数组，其中包含数据存储中介于低输入键和高输入键之间的所有键和对应值。为清楚起见，我们将扫描算法的介绍分为两部分。首先，我们提出了一种扫描算法，该算法可以并行进行读和写操作，但不能与另一个扫描一起进行。然后，我们介绍必要的额外部分，即允许多线程扫描。</li>
-<li><strong>Single-threaded scans, multithreaded reads and writes</strong>：单线程扫描的伪代码在算法3中显示(为了更清晰，我们再次忽略了RCU临界区边界)。第一步是冻结对当前Membuffer和Memtable的更新，并将当前Membuffer的内容释放到Memtable中。为此，我们暂停后台 Draining(第4行)，通知写入者停止直接在Memtable中进行更新(第5行)，并等待所有正在进行的Memtable写入完成(第9行)。注意，<strong>扫描从来不会完全阻塞写入器;即使写入者不能在扫描的第5行和第13行之间更新Memtable，他们也可以尝试更新Membuffer或帮助处理Draining。帮助确保即使扫描程序线程很慢，也能完成 Draining，从而减少写入程序不允许更新Memtable的时间。</strong></li>
-<li>然后，将当前的Membuffer变为不可变的，并创建一个新的Membuffer，用于吸收未来的更新(第6-8行)。然后，发起扫描的线程开始将Membuffer清空到Memtable(第10行)。在Membuffer被清空后，扫描将获得一个序列号(通过原子递增操作)(第12行)。现在，允许后台从新的Membuffer中抽取数据，并允许写入者在Memtable上进行更新(如有必要，第13-14行)是安全的，因为扫描的序列号将用于确保一致性。实际的扫描操作(第15-28行)现在开始，首先是在Memtable和不可变Memtable(如果存在的话)上，最后是在磁盘上。当遇到扫描范围内的键时，将检查其序列号。如果小于扫描序列号，则保存key-value元组。如果遇到已经保存的键，则保留与小于扫描序列号的最大序列号对应的值。否则，如果键序列号高于扫描序列号，扫描将重启，因为序列号高于扫描序列号可能意味着该键对应的值被并发操作覆盖。最后，对保存的键和值数组进行排序并返回。</li>
-<li>重启是昂贵的，因为它们需要完全 re-drain Membuffer.。<strong>为了避免在写密集型工作负载中任意多次重启扫描，我们添加了一种称为 fallbackScan 的回退机制，当扫描被迫重启过多次时将触发该机制</strong>。fallbackScan 的工作原理是阻止 Memtable 的写入者，直到完成扫描。在我们的实验中(第5节)，回退扫描很少被触发，并且不会增加显著的开销。</li>
-</ul>
-<pre><code class="language-C++">Scan(lowKey , highKey): 
-  restartCount = 0
-restart:
-  pauseDrainingThreads = true 
-  pauseWriters = true 
-  IMM_MBF = MBF
-  MBF = new MemBuffer () 
-  MemBufferRCUWait () 
-  MemTableRCUWait () 
-  IMM_MBF.drain() 
-  IMM_MBF.destroy ()
-  seq = globalSeqNumber.fetchAndIncrement () 
-  pauseWriters = false
-  pauseDrainingThreads = false 
-  results = ∅
-for dataStructure in MTB IMM_MTB DISK: 
-  iter = dataStructure.newIterator () 
-  iter.seek(lowKey)
-  while (iter.isValid () and iter.key &lt; highKey):
-    if iter.seq &gt; seq: 
-      restartCount += 1
-      if restartCount &lt; RESTART_THRESHOLD: 
-        goto restart
-      else:
-      return fallbackScan(lowKey , highKey) 
-    results.add(iter.key , iter.value) 
-    iter.next()
-  results.sort() 
-  return results
-</code></pre>
-<h5 id="multithreaded-scans">Multithreaded scans</h5>
-<ul>
-<li>如果多个线程同时进行扫描，则需要进行额外的同步，以避免多个线程各自创建一个Membuffer的副本并试图耗尽它的情况。为此，我们区分了两种类型的扫描:主扫描和 piggybacking 扫描。<strong>主扫描是在没有其他扫描并发运行时启动的扫描。piggybacking扫描是在其他扫描同时运行时启动的扫描</strong>。在任何给定的时间，只有一个主扫描可能正在运行。我们确保主扫描执行算法3的第4-14行，所有扫描执行第2行和第15-30行。piggyback扫描将等待，直到主扫描程序发布第12行获得的序列号，然后继续进行第15-28行中的实际扫描。请注意，如果在主扫描运行时启动的另一个piggyback扫描与主扫描并发，则在主扫描未运行时启动的piggyback扫描也可以启动。这个过程可以自我重复，创建长长的 piggybacking 扫描链，在链的开始处重用相同的主扫描序列号。我们通过一个系统参数来限制这些链的长度，以避免由于使用陈旧的序列号而重新启动的大量扫描。</li>
-<li>当多个扫描并发运行时，上述方案会产生良好的性能，这是由于负载机制将耗尽的开销分散到多个扫描调用上，并且负载扫描在重新启动时不会重新耗尽Membuffer。针对低并发情况的一种优化方法是允许主扫描(除了附带扫描之外)重用前一个主扫描的序列号。这样可以避免过于频繁地完全耗尽内存缓冲区。</li>
-</ul>
-<h5 id="correctness">Correctness</h5>
-<ul>
-<li>在安全方面，建立一个新的扫描序列号的主扫描对于更新来说是线性化的。线性化点在算法3的第7行，在安装新的可变Membuffer的指令上。Draining 不可变的Membuffer可以确保线性化点之前的所有更新都包含在扫描中，并且第12行中获得的序列号可以确保线性化点之后的更新都不包含在扫描中。然而，piggyback扫描(以及重用现有序列号的主扫描)对于更新是不能线性化的(但它们是可序列化的)，因为它们可能会错过在它们的序列号建立之后发生的更新。如果在应用程序级别需要更严格的扫描一致性，可以指示扫描等待，直到它能够建立一个新的序列号，或者可以完全禁用扫描 piggyback。因此，FloDB中的所有扫描在更新方面都可以线性化，但要以性能为代价(每次扫描在继续之前都必须耗尽Membuffer，这是一个昂贵的操作)。就活性而言，所有的扫描最终都会完成，这是由于 fallbackScan 机制，该机制不能被写入器作废，因此保证会返回。</li>
-</ul>
-<h4 id="implementation-trade-offs">Implementation Trade-offs</h4>
-<ul>
-<li>如第5节所示，在各种工作负载下，FloDB比它的竞争对手获得更好的性能。尽管如此，FloDB的性能是有代价的:我们用资源来换取性能。连接两个inmemory级别需要至少一个后台线程(即引流线程)在写密集型工作负载下几乎持续运行。此外，FloDB的扫描操作存在以下局限性。虽然理论上可以调用范围(−∞，+∞)上的扫描(这将返回整个数据库的快照)，但大型扫描可能会重启多次，为了成功完成，会触发针对所有 writer 的 block 操作，开销较大。该扫描算法仅适用于中小型扫描。</li>
-</ul>
-<h2 id="evaluation">Evaluation</h2>
-<ul>
-<li>测试结果重点是测扩展性，就是说在不同的内存大小或者线程数上性能的提升，因为以往是到了一定程度性能会有所下降的，同时对比其他几个方案表明 FloDB 其实在扩展性这一块确实做的更好，从而把这个故事讲的更完整。</li>
-<li>但是看下图结果很容易发现对于只读负载，在线程数大于等于 16 的时候，FloDB 就不如 RocksDB 及其变种 cLSM 了。作者给的解释是 FloDB 比 LevelDB 及其变体要好是因为毕竟采用了简化后的并发性支持更好的 Get 操作，但是比 RocksDB 差是因为在磁盘组件上没有像 RocksDB 那样做这么多优化，而大数据量的读操作很多都是在磁盘组件上最终进行的。这地方其实前面读者也有埋伏笔，就是说内存组件对于写的影响比对读的影响可能更大，所以才有 MemBuffer，然后当时也降到了和其他磁盘组件优化是正交的，所以也算是自圆其说吧。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331225435.png" alt="20210331225435" loading="lazy"></li>
-<li>其他测试就看原文吧，没啥特别想讲的了。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210331230132.png" alt="20210331230132" loading="lazy"></li>
-</ul>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[C 基础]]></title>
-        <id>https://blog.shunzi.tech/post/c-basic/</id>
-        <link href="https://blog.shunzi.tech/post/c-basic/">
-        </link>
-        <updated>2021-04-06T01:36:30.000Z</updated>
-        <summary type="html"><![CDATA[<ul>
-<li>C 语言基础汇总，主要包括一些容易混淆的、容易忘记的知识点，经常需要查询的。好吧，其实就是菜~</li>
-<li>持续更新ing</li>
-</ul>
-]]></summary>
-        <content type="html"><![CDATA[<ul>
-<li>C 语言基础汇总，主要包括一些容易混淆的、容易忘记的知识点，经常需要查询的。好吧，其实就是菜~</li>
-<li>持续更新ing</li>
-</ul>
-<!-- more -->
-<h2 id="struct-union">struct &amp; union</h2>
-<ul>
-<li><a href="https://www.runoob.com/cprogramming/c-structures.html">菜鸟教程 - C 结构体</a></li>
-<li><a href="https://www.runoob.com/cprogramming/c-unions.html">菜鸟教程 - C 共用体</a></li>
-</ul>
-<h3 id="union">union</h3>
-<h4 id="定义">定义</h4>
-<pre><code class="language-C">union [union tag]
-{
-   member definition;
-   member definition;
-   ...
-   member definition;
-} [one or more union variables];
-</code></pre>
-<h4 id="示例">示例</h4>
-<ul>
-<li>Data 类型的变量可以存储一个整数、一个浮点数，或者一个字符串。这意味着一个变量（相同的内存位置）可以存储多个多种类型的数据。您可以根据需要在一个共用体内使用任何内置的或者用户自定义的数据类型。</li>
-</ul>
-<pre><code class="language-C">union Data
-{
-   int i;
-   float f;
-   char  str[20];
-} data;
-</code></pre>
-<ul>
-<li>共用体占用的内存应足够存储共用体中最大的成员。例如，在上面的实例中，Data 将占用 20 个字节的内存空间，因为在各个成员中，字符串所占用的空间是最大的。下面的实例将显示上面的共用体占用的总内存大小：</li>
-</ul>
-<pre><code class="language-c">#include &lt;stdio.h&gt;
-#include &lt;string.h&gt;
- 
-union Data
-{
-   int i;
-   float f;
-   char  str[20];
-};
- 
-int main( )
-{
-   union Data data;     
-   // Memory size occupied by data : 20
-   printf( &quot;Memory size occupied by data : %d\n&quot;, sizeof(data));
-   
- 
-   data.i = 10;
-   data.f = 220.5;
-   strcpy( data.str, &quot;C Programming&quot;);
- 
-   printf( &quot;data.i : %d\n&quot;, data.i);
-   printf( &quot;data.f : %f\n&quot;, data.f);
-   printf( &quot;data.str : %s\n&quot;, data.str);
- 
-   return 0;
-}
-
-data.i : 1917853763
-data.f : 4122360580327794860452759994368.000000
-data.str : C Programming
-</code></pre>
-<ul>
-<li>共用体的 i 和 f 成员的值有损坏，因为最后赋给变量的值占用了内存位置，这也是 str 成员能够完好输出的原因。</li>
-</ul>
-<h4 id="作用">作用</h4>
-<ul>
-<li>节省内存，有两个很长的数据结构，不会同时使用，比如一个表示老师，一个表示学生，如果要统计教师和学生的情况用结构体的话就有点浪费了！用共用体的话，只占用最长的那个数据结构所占用的空间，就足够了！</li>
-<li>通信中的数据包会用到共用体:因为不知道对方会发一个什么包过来，用共用体的话就很简单了，定义几种格式的包，收到包之后就可以直接根据包的格式取出数据。</li>
-</ul>
-<h4 id="大小分配">大小分配</h4>
-<ul>
-<li>结构体变量所占内存长度是其中最大字段大小的整数倍（参考：结构体大小的计算）。</li>
-<li>共用体变量所占的内存长度等于最长的成员变量的长度。例如，教程中定义的共用体Data各占20个字节（因为char str[20]变量占20个字节）,而不是各占4+4+20=28个字节。</li>
-<li>union的长度取决于其中的长度最大的那个成员变量的长度。即union中成员变量是重叠摆放的，其开始地址相同。</li>
-</ul>
-<pre><code class="language-C">  union   mm{   
-   char   a;//元长度1   
-   int   b[5];//元长度4   
-   double   c;//元长度8   
-   int   d[3]; //元长度4
-  };   
-</code></pre>
-<ul>
-<li>本来mm的空间应该是sizeof(int)*5=20;但是如果只是20个单元的话,那可以存几个double型(8位)呢?两个半?当然不可以,所以mm的空间延伸为既要大于20,又要满足其他成员所需空间的整数倍,,因为含有double元长度8，故大小为24。</li>
-</ul>
-<h3 id="struct">struct</h3>
-<h4 id="定义-2">定义</h4>
-<pre><code class="language-C">struct tag { 
-    member-list
-    member-list 
-    member-list  
-    ...
-} variable-list ;
-</code></pre>
-<h4 id="示例-2">示例</h4>
-<ul>
-<li>在一般情况下，tag、member-list、variable-list 这 3 部分至少要出现 2 个。以下为实例：</li>
-</ul>
-<pre><code class="language-C">//此声明声明了拥有3个成员的结构体，分别为整型的a，字符型的b和双精度的c
-//同时又声明了结构体变量s1
-//这个结构体并没有标明其标签
-struct 
-{
-    int a;
-    char b;
-    double c;
-} s1;
- 
-//此声明声明了拥有3个成员的结构体，分别为整型的a，字符型的b和双精度的c
-//结构体的标签被命名为SIMPLE,没有声明变量
-struct SIMPLE
-{
-    int a;
-    char b;
-    double c;
-};
-//用SIMPLE标签的结构体，另外声明了变量t1、t2、t3
-struct SIMPLE t1, t2[20], *t3;
- 
-//也可以用typedef创建新类型
-typedef struct
-{
-    int a;
-    char b;
-    double c; 
-} Simple2;
-//现在可以用Simple2作为类型声明新的结构体变量
-Simple2 u1, u2[20], *u3;
-</code></pre>
-<ul>
-<li>在上面的声明中，第一个和第二声明被编译器当作两个完全不同的类型，即使他们的成员列表是一样的，如果令 t3=&amp;s1，则是非法的。</li>
-<li>结构体的成员可以包含其他结构体，也可以包含指向自己结构体类型的指针，而通常这种指针的应用是为了实现一些更高级的数据结构如链表和树等。</li>
-</ul>
-<pre><code class="language-C">//此结构体的声明包含了其他的结构体
-struct COMPLEX
-{
-    char string[100];
-    struct SIMPLE a;
-};
- 
-//此结构体的声明包含了指向自己类型的指针
-struct NODE
-{
-    char string[100];
-    struct NODE *next_node;
-};
-</code></pre>
-<ul>
-<li>如果两个结构体互相包含，则需要对其中一个结构体进行不完整声明，如下所示：</li>
-</ul>
-<pre><code class="language-C">struct B;    //对结构体B进行不完整声明
- 
-//结构体A中包含指向结构体B的指针
-struct A
-{
-    struct B *partner;
-    //other members;
-};
- 
-//结构体B中包含指向结构体A的指针，在A声明完后，B也随之进行声明
-struct B
-{
-    struct A *partner;
-    //other members;
-};
-</code></pre>
-<ul>
-<li><strong>实际使用示例</strong></li>
-</ul>
-<pre><code class="language-C">#include &lt;stdio.h&gt;
-#include &lt;string.h&gt;
- 
-struct Books
-{
-   char  title[50];
-   char  author[50];
-   char  subject[100];
-   int   book_id;
-};
- 
-/* 函数声明 */
-void printBook( struct Books *book );
-int main( )
-{
-   struct Books Book1;        /* 声明 Book1，类型为 Books */
-   struct Books Book2;        /* 声明 Book2，类型为 Books */
- 
-   /* Book1 详述 */
-   strcpy( Book1.title, &quot;C Programming&quot;);
-   strcpy( Book1.author, &quot;Nuha Ali&quot;); 
-   strcpy( Book1.subject, &quot;C Programming Tutorial&quot;);
-   Book1.book_id = 6495407;
- 
-   /* Book2 详述 */
-   strcpy( Book2.title, &quot;Telecom Billing&quot;);
-   strcpy( Book2.author, &quot;Zara Ali&quot;);
-   strcpy( Book2.subject, &quot;Telecom Billing Tutorial&quot;);
-   Book2.book_id = 6495700;
- 
-   /* 通过传 Book1 的地址来输出 Book1 信息 */
-   printBook( &amp;Book1 );
- 
-   /* 通过传 Book2 的地址来输出 Book2 信息 */
-   printBook( &amp;Book2 );
- 
-   return 0;
-}
-void printBook( struct Books *book )
-{
-   printf( &quot;Book title : %s\n&quot;, book-&gt;title);
-   printf( &quot;Book author : %s\n&quot;, book-&gt;author);
-   printf( &quot;Book subject : %s\n&quot;, book-&gt;subject);
-   printf( &quot;Book book_id : %d\n&quot;, book-&gt;book_id);
-}
-
-Book title : C Programming
-Book author : Nuha Ali
-Book subject : C Programming Tutorial
-Book book_id : 6495407
-Book title : Telecom Billing
-Book author : Zara Ali
-Book subject : Telecom Billing Tutorial
-Book book_id : 6495700
-</code></pre>
-<h4 id="大小分配-2">大小分配</h4>
-<ul>
-<li><a href="https://www.cnblogs.com/lykbk/archive/2013/04/02/krtmbhrkhoirtj9468945.html">博客园：结构体大小的计算</a></li>
-<li><strong>结构体中成员变量分配的空间是按照成员变量中占用空间最大的来作为分配单位</strong>,同样成员变量的存储空间也是不能跨分配单位的,如果当前的空间不足,则会存储到下一个分配单位中。</li>
-<li>结构体变量的首地址能够被其最宽基本类型成员的大小所整除。</li>
-<li>结构体每个成员相对于结构体首地址的偏移量(offset)都是成员大小的整数倍，如有需要编译器会在成员之间加上填充字节(internal adding)。即结构体成员的末地址减去结构体首地址(第一个结构体成员的首地址)得到的偏移量都要是对应成员大小的整数倍。</li>
-<li>结构体的总大小为结构体最宽基本类型成员大小的整数倍，如有需要编译器会在成员末尾加上填充字节。</li>
-</ul>
-<h2 id="弹性数组">弹性数组</h2>
-<ul>
-<li>定义数组时，没有指明其长度，此为弹性数组。</li>
-<li>弹性数组只能存在于结构体中，并且必须满足如下<strong>条件</strong>：
-<ul>
-<li>弹性数组必须为<strong>结构体的最后一个成员</strong>；</li>
-<li>该结构体必须<strong>包含一个非弹性数组的成员</strong>；</li>
-<li>编译器需要支持 <strong>C99</strong> 标准。</li>
-</ul>
-</li>
-</ul>
-<h3 id="示例-3">示例</h3>
-<pre><code class="language-C"> #include &lt;stdio.h&gt;
- #include &lt;stdlib.h&gt;
- #include &lt;string.h&gt;
- #include &lt;stdint.h&gt;
- ​
- typedef struct {
-     int32_t id;
-     int32_t grade;
-     int8_t name[];
- }student_info_struct;
- ​
- int main() {
-     int32_t *tmp = 0;
-     int8_t *name = &quot;sdc&quot;;
-     student_info_struct *si = NULL;
- ​
-     printf(&quot;sizeof(struct) = %d\n&quot;, sizeof(student_info_struct));
- ​
-     si = (student_info_struct *)malloc(sizeof(student_info_struct) + strlen(name) + 1); // +1 是为了存储 '\0'
-     if(NULL == si)
-     {
-         printf(&quot;malloc failed\n&quot;);
-         return -1;
-     }
-     memset((void *)si, 0, sizeof(student_info_struct) + strlen(name) + 1);
- ​
-     si-&gt;id = 123;
-     si-&gt;grade = 6;
-     memcpy((void *)si-&gt;name, name, strlen(name));
- ​
-     printf(&quot;addr:\n&quot;);
-     printf(&quot;si: 0x%p\n&quot;, si);
-     printf(&quot;si-&gt;grade: 0x%p\n&quot;, &amp;si-&gt;grade);
-     printf(&quot;si-&gt;name: 0x%p\n&quot;, &amp;si-&gt;name);
-     printf(&quot;si-&gt;name: 0x%p\n&quot;, si-&gt;name);
- ​
-     return 0;
- }
-</code></pre>
-<ul>
-<li>输出结果：</li>
-</ul>
-<pre><code> sizeof(struct) = 8 // 弹性数组不占空间
- addr: 
- &amp;si: 0x00000000003C21C0
- &amp;si-&gt;grade: 0x00000000003C21C4
- &amp;si-&gt;name: 0x00000000003C21C8
- si-&gt;name: 0x00000000003C21C8
-</code></pre>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Evolution of Development Priorities in Key-value Stores Serving Large-scale Applications: The RocksDB Experience]]></title>
-        <id>https://blog.shunzi.tech/post/RocksDB-Experience/</id>
-        <link href="https://blog.shunzi.tech/post/RocksDB-Experience/">
-        </link>
-        <updated>2021-04-05T04:21:02.000Z</updated>
-        <summary type="html"><![CDATA[<blockquote>
-<ul>
-<li>FAST21: Evolution of Development Priorities in Key-value Stores Serving Large-scale Applications: The RocksDB Experience</li>
-</ul>
-</blockquote>
-]]></summary>
-        <content type="html"><![CDATA[<blockquote>
-<ul>
-<li>FAST21: Evolution of Development Priorities in Key-value Stores Serving Large-scale Applications: The RocksDB Experience</li>
-</ul>
-</blockquote>
-<!--more-->
-<h2 id="abstract">Abstract</h2>
-<ul>
-<li>RocksDB是一个针对大规模分布式系统的键值存储，并针对固态硬盘(ssd)进行了优化。本文描述了RocksDB在过去8年中开发重点的变化。这种演变是硬件发展趋势的结果，也是许多公司大规模生产RocksDB的丰富经验的结果。RocksDB在多个组织进行规模化生产。我们将描述RocksDB的资源优化目标是如何以及为什么从写放大、到空间放大、到CPU利用率迁移的。大规模应用的运行经验告诉我们，需要跨不同的RocksDB实例管理资源分配，数据格式需要保持向后和向前兼容，以允许增量软件上线，还需要对数据库复制和备份提供适当的支持。失败处理的教训告诉我们，需要更早地在系统的每一层检测到数据损坏错误。</li>
-</ul>
-<h2 id="introduction">Introduction</h2>
-<ul>
-<li>RocksDB 起源于 LevelDB，针对 SSD 的一些特性进行了优化，以分布式应用程序为目标，同时也被设计成可以被嵌入到一些高级应用程序（如 Ceph）的 KV 库。每个RocksDB实例只管理单个节点上的数据，没有处理任何节点之间的操作（比如 replication、 loadbalancing），也不执行高级操作，比如 checkpoints，让上层应用来实现，底层只是提供一些支持。</li>
-<li>RocksDB 可以根据负载以及性能需求进行定制和调优，主要包括对 WAL 的处理、压缩策略的选择。</li>
-<li>RocksDB 应用广泛：
-<ul>
-<li>Database: MySQL, Rocksandra, CockroachDB, MongoDB, TiDB</li>
-<li>Stream processing：Apache Flink, Kafka Stream, Samza, and Facebook’s Stylus.</li>
-<li>Logging/queuing services: Facebook’s LogDevice, Uber’s Cherami, Iron.io</li>
-<li>Index services: Facebook’s Dragon, Rockset</li>
-<li>Caching on SSD: Caching on SSD, Qihoo’s Pika, Redis</li>
-</ul>
-</li>
-<li>对不同应用特性进行了简单总结：<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301101401.png" alt="20210301101401" loading="lazy"></li>
-<li>FAST20 之前的一篇介绍 Facebook 实际的 RocksDB 负载特性也得出了一些数据信息：<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301101630.png" alt="20210301101630" loading="lazy"></li>
-<li>使用如 RocksDB 这种公共的存储引擎有利有弊：
-<ul>
-<li>劣势在于每个系统需要基于 RocksDB 构建自己的子系统，那么就涉及到一系列复杂的崩溃一致性的保证操作（但比较好的公共存储引擎一般会 cover 这一点）</li>
-<li>优势在于很多基础功能是可以复用的</li>
-</ul>
-</li>
-<li>其实就是因为 RocksDB 的应用广泛，以及一些硬件技术的发展，导致 RocksDB 的开发重点也在不断地变化。</li>
-</ul>
-<h2 id="background">Background</h2>
-<ul>
-<li>flash的特性对RocksDB的设计产生了深刻的影响。读写性能的不对称和有限的寿命给数据结构和系统架构的设计带来了挑战和机遇。因此，RocksDB采用了flash友好的数据结构，并针对现代硬件进行了优化。</li>
-</ul>
-<h3 id="embedded-storage-on-flash-based-ssds">Embedded storage on flash based SSDs</h3>
-<ul>
-<li>低延迟高吞吐的高性能 SSD 的出现促进了相应设计的变化，在一些场景里，以往的 IO 瓶颈可能转移到了网络上，无论是吞吐量还是延迟。所以这时候数据存储到本地的 SSD 相比于存储到远端性能要好很多，这时候嵌入式的存储引擎的需求就增加了。</li>
-<li>RocksDB 就基于该场景产生了，并基于 LSM 开始了相关设计。</li>
-</ul>
-<h3 id="rocksdb-architecture">RocksDB architecture</h3>
-<ul>
-<li>LSM 树是 RocksDB 存储数据的主要数据结构</li>
-</ul>
-<h4 id="主要操作">主要操作</h4>
-<h5 id="写">写</h5>
-<ul>
-<li>步骤：
-<ul>
-<li>首先写入到名为 MemTable 的内存 Buffer 和磁盘上的 WAL 中
-<ul>
-<li>MemTable 基于跳表实现有序，插入和查询的复杂度均为 logN</li>
-<li>WAL 用于故障恢复，但其实不是强制的。</li>
-</ul>
-</li>
-<li>然后持续写入。一旦 MemTable 达到一定的大小（设定的阈值），当前 MemTable 和 WAL 就不可修改了</li>
-<li>分配一个新的 MemTable 和 WAL 来接受后续的写入</li>
-<li>不可修改的 Memtable 刷入到磁盘上的 SSTable 文件中</li>
-<li>刷入后的 Memtable 和 WAL 相应地被丢弃</li>
-</ul>
-</li>
-<li>每个SSTable按排序顺序存储数据，并将其划分为大小相同的块。每个SSTable也有一个索引块，每个SSTable块有一个索引项用于二分查找。</li>
-</ul>
-<h5 id="read">Read</h5>
-<ul>
-<li>在读取路径中，在每个后续级别都进行键查找，直到找到键为止。它首先搜索所有memtable，然后搜索所有级别为0的sstable，然后依次搜索更高级别的sstable。在每一个级别上，都使用二分查找。Bloom过滤器用于消除SSTable文件中不必要的搜索。扫描要求搜索所有级别。</li>
-</ul>
-<h5 id="compaction">Compaction</h5>
-<ul>
-<li>最新的sstable由MemTable刷新创建，并放置在0级。高于0级的级别是由称为压缩的流程创建的。给定级别上sstable的大小受到配置参数的限制。当超过level-L的size目标时，选择level-L中的一些sstable与level-(L+1)中的重叠sstable合并。这样做，deleted 和 overwritten 的数据被删除，并优化表的读性能和空间效率。这个过程将写数据从0级逐渐迁移到最后一级。压缩I/O是高效的，因为它可以并行化，并且只涉及对整个文件的批量读写。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301114859.png" alt="20210301114859" loading="lazy"></li>
-<li>Level-0 sstable有重叠的键范围，因为SSTable覆盖了完整的 sorted run。后面的每个级别只包含一个sorted run，因此这些级别中的sstable包含其级别 sorted run 的一个分区。</li>
-<li>RocksDB支持多种不同类型的压缩。
-<ul>
-<li><em>Leveled Compaction</em> 是从LevelDB继承的，然后进行了改进，如上图所示，Level 的 target 大小呈指数级增长</li>
-<li><em>Tiered Compaction</em> （又称 <em>Universal Compaction</em>）是和 Cassandra 以及 HBase 使用的策略类似的。多个 sorted run 被延迟压缩在一起，或者当有太多的 sorted run，或者DB总大小与最大 sorted run 的大小之比超过了一个可配置的阈值。</li>
-<li><em>FIFO Compaction</em> 当 DB 大小达到某个阈值限制时直接丢弃以前的文件并只执行轻量压缩，主要用于内存缓存应用。</li>
-</ul>
-</li>
-<li>通过使用不同的压缩策略，RocksDB 可以被配置为 读友好/写友好/对某些特殊缓存负载非常写友好。然而，应用程序所有者将需要考虑他们特定用例的不同指标之间的权衡。
-<ul>
-<li>一个 lazy 的压缩策略可以提升写吞吐量和写放大，但读性能将下降</li>
-<li>虽然更积极的压缩会牺牲写性能，但允许更快的读取。</li>
-</ul>
-</li>
-<li>日志和流处理服务需要进行大量的写操作，而数据库应用更喜欢进行权衡。表3通过微基准测试结果描述了这种灵活性。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301142503.png" alt="20210301142503" loading="lazy"></li>
-</ul>
-<h3 id="rocksdb-history">RocksDB History</h3>
-<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301160214.png" alt="20210301160214" loading="lazy"></figure>
-<h2 id="evolution-of-resource-optimization-targets">Evolution of resource optimization targets</h2>
-<ul>
-<li>资源优化目标的转变过程：从写放大到空间放大再到 CPU 利用率</li>
-</ul>
-<h3 id="write-amplification">Write amplification</h3>
-<ul>
-<li>当初开发 RockDB 时主要关注节省 Flash 颗粒的擦除次数来减小 SSD 内部的写放大，这是当时社区的普遍看法，这个对于很多写密集型的应用确实是个极大的挑战，现在也仍然是个问题。</li>
-<li>写放大实际出现在两个层次：
-<ul>
-<li>SSD 本身的写放大，观察发现在 1.1 到 3 之间。</li>
-<li>存储和数据库软件也会产生写放大，有时候甚至可能达到 100（比如当对小于100字节的更改写入整个4KB/8KB/16KB页时）</li>
-</ul>
-</li>
-<li><em>Leveled Compaction</em> 在 RocksDB 中通常显示出了 10-30 的写放大，在很多情况下，比使用 b 树要好好几倍。不过，10-30范围内的写放大对于写密集的应用程序来说还是太高了。</li>
-<li><em>Tiered Compaction</em> 将写放大降低到了 4-10，但也降低了读性能。如下图以及上表所示的对比结果：<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301145605.png" alt="20210301145605" loading="lazy"></li>
-<li>RocksDB应用程序所有者通常会选择一种压缩方法，在写速率高的时候减少写放大，在写速率低的时候更积极地压缩，以实现空间效率和读性能的目标。</li>
-</ul>
-<h3 id="space-amplification">Space amplification</h3>
-<ul>
-<li>经历了几年的开发之后发现，考虑到闪存写周期和写开销都没有限制，Space amplification 比 Write amplification 更重要，实际生产环境中表现出的 IOPS 是要比 SSD 本身可以提供的性能要低的，因此，我们将资源优化目标转移到磁盘空间。</li>
-<li>幸运的是，由于lsm -tree的非碎片数据布局，它在优化磁盘空间时也可以很好地工作。然而，我们看到了通过减少 LSM 树中的老数据(即删除和覆盖的数据)的数量来改进 <em>Leveled Compaction</em> 的机会，因此开发了 <em>Dynamic Leveled Compaction</em>，树中每个 Level 的大小会根据最后一个 Level 的实际大小自动调整(而不是静态地设置每个 Level 的大小)。该策略相比于 <em>Leveled Compaction</em> 实现了更好的以及更稳定的空间效率。</li>
-</ul>
-<h3 id="cpu-utilization">CPU utilization</h3>
-<ul>
-<li>很多人认为对于高速 SSD，已经足够快，性能瓶颈已经从 SSD 转移到了 CPU。基于我们的经验，我们并不认为这是一个问题，我们也不希望它成为未来基于 SSD 的 NAND 闪存的问题，原因有二。
-<ul>
-<li>只有少部分应用被 SSD 提供的 IOPS 给限制，大多数应用还是被空间给限制。</li>
-<li>其次，我们发现任何具有高端 CPU 的服务器都有足够的计算能力来饱和一个高端 SSD，在我们的环境中，RocksDB在充分利用SSD性能方面从来没有遇到过问题。
-<ul>
-<li>当然，可以配置一个系统，使 CPU 变成一个瓶颈（比如一个 CPU，多个 SSD）。然而，高效的系统通常是那些配置为良好平衡的系统，这是今天的技术所允许的</li>
-<li>密集的写为主导的工作负载也可能导致CPU成为瓶颈。对于某些情况，可以通过配置RocksDB使用更轻量级的压缩选项来缓解这种问题。</li>
-<li>对于其他情况，工作负载可能根本不适合SSD，因为它将超过允许SSD持续2-5年的典型闪存耐久预算。</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>为了证实我们的观点，我们调查了生产中 ZippyDB 和 MyRocks 的 42 种不同部署，它们分别服务于不同的应用程序。下图测试结果表明 <strong>大多数工作负载都受到空间限制</strong>。有些主机的确CPU利用率很高，但是主机通常没有得到充分的利用，没有为增长和处理数据中心或区域级故障留出空间(或由于错误配置)。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301151148.png" alt="20210301151148" loading="lazy"></li>
-<li>然而，减少 CPU 开销已经成为一个重要的优化目标，因为减少空间放大已经做的差不多了。减少CPU开销可以提高CPU确实受到限制的少数应用程序的性能，更重要的是，减少CPU开销的优化允许更经济有效的硬件配置，从成本的角度讲该优化也挺有必要的。</li>
-<li>早期降低CPU开销的努力包括引入前缀bloom过滤器、在索引查找之前应用bloom过滤器，以及其他bloom过滤器改进。还有进一步改善的空间。</li>
-</ul>
-<h3 id="adapting-to-newer-technologies">Adapting to newer technologies</h3>
-<ul>
-<li>SSD 架构相关的改进可能很容易瓦解 RocksDB 的相关性，比如 OC-SSD，Multi-Stream SSD，ZNS 承诺改善查询延迟和节省flash擦除周期。然而，这些新技术只能使使用 RocksDB 的少数应用程序受益，因为大多数应用程序都受到空间限制，而没有消除周期或延迟限制。此外，如果让RocksDB直接使用这些技术，将会对RocksDB的经验构成挑战，一个可能的方法是将这些技术的适应能力委托给底层文件系统，也许RocksDB会给底层文件系统提供一定的额外的提示。</li>
-<li>存储内计算可能会带来显著的收益，但目前还不清楚有多少RocksDB应用能从中受益。我们认为，RocksDB 要适应存储内计算将是一个挑战，可能需要对整个软件堆栈进行API更改，以充分利用。我们期待未来关于如何最好地做到这一点的研究。
-<ul>
-<li><a href="https://www.zhihu.com/question/305643823">计算型存储/存算一体如何实现？</a></li>
-</ul>
-</li>
-<li>分类(远程)存储似乎是一个更有趣的优化目标，并且是当前的优先级，到目前为止，我们的优化假设flash是本地连接的，因为我们的系统基础设施主要是这样配置的。然而，目前更快的网络可以提供更多的远程 I/O，因此在越来越多的应用程序中，使用远程存储运行RocksDB的性能是可行的。使用远程存储，可以更容易地同时充分利用 CPU 和 SSD 资源，因为它们可以根据需要分别提供(使用本地附加的SSD很难实现这一点)，因此，优化 RocksDB 的远程闪存存储已成为当务之急。我们目前正在通过尝试合并和并行 I/O 来解决长 I/O 延迟的挑战。我们已经对RocksDB进行了改造，以处理瞬时故障，将QoS要求传递给底层系统，并报告分析信息。然而，还需要做更多的工作。</li>
-<li>存储级内存(SCM)是一种很有前途的技术。我们正在研究如何最好地利用它。以下几种可能性值得考虑: (NVM) <a href="https://zhuanlan.zhihu.com/p/72564047">SCM介绍</a>
-<ul>
-<li>使用 SCM 作为 DRAM 的延申，这就提出了这样的问题:如何用混合的 DRAM 和 SCM 来最好地实现关键数据结构(例如，块缓存或 memtable)，以及在尝试利用所提供的持久性时会引入哪些开销</li>
-<li>使用 SCM 作为数据库的主存储，但是我们注意到RocksDB往往会受到空间或CPU的瓶颈，而不是 I/O</li>
-<li>为 WAL 使用 SCM，但是，这就提出了这样一个问题:考虑到我们只需要在转移到 SSD 之前的一小块 staging 区域，这个用例是否单独证明了 SCM 的成本是合理的。</li>
-</ul>
-</li>
-</ul>
-<h3 id="main-data-structure-revisited">Main Data Structure Revisited</h3>
-<ul>
-<li>我们不断地重新讨论lsm -tree是否仍然合适的问题，但仍然得出它们确实合适的结论。SSD的价格还没有下降到足以改变大多数用例的空间和闪存续航瓶颈的程度，用CPU或DRAM交换SSD的使用只对少数应用程序有意义，虽然主要结论是一致的，但我们经常听到用户对写放大的要求低于RocksDB所能提供的。然而，我们注意到，当对象大小很大时，可以通过分离键和值来减少写放大，比如 WiscKey 和 ForrestDB，所以在 RocksDB 中也添加了这种支持 BlobDB</li>
-</ul>
-<h2 id="lessons-on-serving-large-scale-systems">Lessons on serving large-scale systems</h2>
-<ul>
-<li>RocksDB是各种需求各异的大型分布式系统的基石。随着时间的推移，我们了解到需要在资源管理、WAL处理、批处理文件删除、数据格式兼容性和配置管理方面进行改进。</li>
-</ul>
-<h3 id="resource-management">Resource management</h3>
-<ul>
-<li>分布式系统常常对数据进行分片，分片成 shards，shards 分布在多个服务器存储节点上，大小通常有限，因为要进行备份以及负载均衡，同时也会作为原子粒度进行一些一致性的保证。因此每个节点大概会有几十上百个 shards，一个 RocksDB 实例通常只服务于一个 shard，所以一个服务节点上可能通常会运行多个 RocksDB 实例。可能共享地址空间，也可能使用自己独立的地址空间。</li>
-<li>一台主机可能会运行多个RocksDB实例，这对资源管理有一定影响。假设这些实例共享主机的资源，那么需要对资源进行全局(每个主机)和本地(每个实例)管理，以确保公平和有效地使用它们。当运行在单个进程模式下,拥有全局资源限制是很重要的,包括
-<ul>
-<li>(1) 内存写入缓冲器和块缓存,</li>
-<li>(2) Compaction 的 I/O 带宽、</li>
-<li>(3) Compaction 线程数</li>
-<li>(4) 总磁盘使用情况</li>
-<li>(5) 文件删除率</li>
-</ul>
-</li>
-<li>还需要本地资源限制，例如，确保单个实例不能使用过多的任何资源。RocksDB允许应用程序为每种类型的资源创建一个或多个资源控制器(作为传递给不同DB对象的c++对象实现)，也可以在每个实例的基础上这样做。同时需要支持一些优先级策略，来保证一些资源可以优先被分配给一些最需要该资源的实例。</li>
-<li>在一个进程中运行多个实例时得到的另一个教训是:大量地生成非池线程可能会有问题，特别是当线程是长期存在的时候。拥有太多的线程会增加CPU的概率，导致过多的上下文切换开销，并使调试变得极其困难，导致I/O strike。如果一个RocksDB实例需要使用一个可能会休眠或等待某个条件的线程来执行一些工作，那么最好使用一个线程池，这样可以方便地限制线程的大小和资源使用。</li>
-<li>考虑到每个shard只有本地信息，当RocksDB实例运行在单独的进程中时，全局(每台主机)资源管理变得更加具有挑战性。可以采用两种策略。
-<ul>
-<li>首先，将每个实例配置为谨慎地使用资源，而不是贪婪地使用资源。例如，使用压缩，每个实例可以启动比“正常”更少的压缩，只有在压缩落后时才会增加。这种策略的缺点是，全局资源可能无法得到充分利用，导致资源使用不理想。</li>
-<li>第二种，在操作上更具挑战性的策略是让实例之间共享资源使用信息，并相应地进行调整，试图在更大范围内优化资源使用。RocksDB还需要更多的工作来改善主机范围内的资源管理。</li>
-</ul>
-</li>
-</ul>
-<h3 id="wal-treatment">WAL treatment</h3>
-<ul>
-<li>传统的数据库倾向于在每一个写操作上强制执行write-ahead-log (WAL)，以确保持久性。相比之下，大型分布式存储系统通常为了性能和可用性复制数据，并且它们通过各种一致性保证来做到这一点。例如，当同一数据存在多个副本，其中一个副本损坏或无法访问时，存储系统会使用其他未受影响主机的有效副本重建故障主机的副本。对于这样的系统，RocksDB WAL 写的就不那么重要了。此外，分布式系统通常有自己的复制日志(例如Paxos日志)，在这种情况下，根本不需要RocksDB WAL。</li>
-<li>我们了解到，提供调优WAL同步行为的选项，以满足不同应用程序的需要是很有帮助的。具体来说，我们介绍了不同的WAL操作模式:(i)同步WAL写，(i)缓冲WAL写，和(i)根本没有WAL写。对于buffered WAL处理，为了不影响RocksDB的流量延迟，在后台定期将WAL以低优先级写入磁盘。</li>
-</ul>
-<h3 id="rate-limited-file-deletions">Rate-limited file deletions</h3>
-<ul>
-<li>RocksDB通常通过文件系统与底层存储设备交互。这些文件系统支持是能识别出 SSD 的;例如,XFS。每当一个文件被删除，使用实时丢弃，可以发出修剪命令 TRIM 到 SSD。修剪命令通常被认为可以改善 SSD 性能和 Flash 寿命，这是经过我们的生产经验验证的。然而也会产生性能问题，TRIM 破坏性很大：除了更新地址映射(通常在SSD的内部内存中)之外，SSD固件还需要将这些更改写入flash中的FTL的日志，这反过来可能触发SSD的内部垃圾收集，导致相当大的数据迁移，并对前台IO延迟造成负面影响。为了避免 TRIM 活动 spike 和I/O延迟的相关增加，我们引入了文件删除的速率限制，以防止多个文件同时被删除(在压缩后发生)。</li>
-</ul>
-<h3 id="data-format-compatibility">Data format compatibility</h3>
-<ul>
-<li>型分布式应用程序在许多主机上运行它们的服务，它们期望零停机时间。结果，软件升级在主机之间逐步推出;当出现问题时，更新将被回滚。由于持续部署，这些软件升级频繁发生;RocksDB每个月都会发布一个新版本。因此，磁盘上的数据在不同的软件版本之间保持向后和向前兼容是很重要的。新升级(或回滚)的RocksDB实例必须能够理解前一个实例存储在磁盘上的数据。此外，为了构建副本或平衡负载，可能需要在分布式实例之间复制RocksDB数据文件，而这些实例可能运行不同的版本。由于缺少前向兼容性保障，在一些部署中，RocksDB的操作出现了困难，因此我们增加了这一保障。</li>
-<li>RocksDB竭尽全力确保数据的前后兼容(除了新特性)。这在技术上和过程上都具有挑战性，但我们发现付出的努力是值得的。为了向后兼容，RocksDB必须能够理解之前写入磁盘的所有格式;这增加了软件和维护的复杂性。为了向前兼容，需要理解未来的数据格式，我们的目标是保持至少一年的向前兼容性。这可以通过使用通用技术部分实现，例如协议Buffer或Thrift所使用的技术。对于配置文件条目，RocksDB需要能够识别新的字段，并尽可能地猜测如何应用配置或何时放弃配置。我们不断地用不同版本的数据对不同版本的RocksDB进行测试。</li>
-</ul>
-<h3 id="managing-configurations">Managing configurations</h3>
-<ul>
-<li>RocksDB具有高度的可配置性，可以优化应用程序的工作负载。然而，我们发现配置管理是一个挑战。最初，RocksDB继承了LevelDB的参数配置方法，将参数选项直接嵌入到代码中。这造成了两个问题。
-<ul>
-<li>首先，参数选项通常与存储在磁盘上的数据绑定在一起，当使用一个选项创建的数据文件不能被新配置了另一个选项的RocksDB实例打开时，可能会产生兼容性问题。</li>
-<li>其次，代码中没有明确指定的配置选项会自动设置为RocksDB的默认值。当RocksDB软件更新包括改变默认配置参数(例如，增加内存使用量或压缩并行度)时，应用程序有时会遇到意想不到的后果</li>
-</ul>
-</li>
-<li>为了解决这些问题，RocksDB首先引入了RocksDB实例使用包含配置选项的字符串参数打开数据库的能力。后来，RocksDB引入了对随数据库存储选项文件的可选支持。我们还引入了两个工具:(i)验证工具，验证打开数据库的选项是否与目标数据库兼容;(ii)迁移工具重写数据库以兼容所需的选项(尽管这个工具是有限的)</li>
-<li>RocksDB配置管理的一个更严重的问题是大量的配置选项。在RocksDB的早期，我们的设计选择是支持高度定制:我们引入了许多新的旋钮，并引入了可插拔组件的支持，所有这些都允许应用程序实现其性能潜力。这被证明是一种成功的策略，能够在早期获得最初的吸引力。然而，现在一个常见的抱怨是，选择太多了，很难理解它们的影响;也就是说，它变得非常困难</li>
-<li>除了要调优许多配置参数之外，更令人生畏的是，最优配置不仅取决于嵌入了RocksDB的系统，还取决于上面应用程序产生的工作负载。以ZippyDB为例，ZippyDB是一个内部开发的大型分布式键值存储系统，在其节点上使用了RocksDB。ZippyDB服务于许多不同的应用程序，有时是单独的，有时是在多租户设置中。尽管在尽可能跨所有ZippyDB用例使用统一配置方面进行了大量努力，但不同用例的工作负载是如此不同，当性能很重要时，统一配置实际上是不可行的。表5显示了我们抽样的39个ZippyDB部署的25种不同配置<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301163015.png" alt="20210301163015" loading="lazy"></li>
-<li>对于已交付给第三方的嵌入式RocksDB系统，调整配置参数也尤其具有挑战性。考虑第三方在其应用程序中使用MySQL或ZippyDB等数据库。第三方通常对RocksDB知之甚少，也不知道如何对其进行最佳调整。数据库所有者也不太愿意对客户的系统进行调优</li>
-<li>这些真实的经验教训触发了我们配置支持策略的变化。我们在改进开箱即用性能和简化配置上花费了大量的精力。我们目前的重点是提供自动适应性，同时继续支持广泛的显式配置，考虑到RocksDB继续服务于专门的应用程序。我们注意到在追求自适应性的同时保持显式的可配置性会造成大量的代码维护开销，我们相信拥有一个统一的存储引擎的好处要大于代码的复杂性。</li>
-</ul>
-<h3 id="replication-and-backup-support">Replication and backup support</h3>
-<ul>
-<li>RocksDB是一个单节点库。如果需要，使用RocksDB的应用程序将负责复制和备份。每个应用程序都以自己的方式实现这些函数(出于合理的原因)，因此RocksDB对这些函数提供适当的支持是很重要的。</li>
-<li>通过复制现有副本的所有数据来引导一个新的副本可以通过两种方式完成。
-<ul>
-<li>首先，可以从源副本读取所有键，然后将其写入目标副本(逻辑复制)。在源端，RocksDB支持数据扫描操作，能够最大限度地减少对并发在线查询的影响;例如，通过提供选项来不缓存这些操作的结果，从而防止缓存垃圾化。在目标端，支持散装装载，并针对此场景进行了优化。</li>
-<li>第二，可以通过直接复制sstable和其他文件(物理复制)来引导一个新的副本。RocksDB通过识别当前时间点的现有数据库文件，并防止它们被删除或更改，从而帮助物理复制。支持物理复制是RocksDB将数据存储在底层文件系统上的一个重要原因，因为它允许每个应用程序使用自己的工具。我们认为，RocksDB直接使用块设备接口或与FTL进行深度集成所带来的潜在性能提升，不会超过上述所述的好处。</li>
-</ul>
-</li>
-<li>备份是大多数数据库和其他应用程序的重要特性。对于备份，应用程序具有与复制相同的逻辑与物理选择。备份和复制之间的一个区别是，应用程序通常需要管理多个备份。虽然大多数应用程序都实现了自己的备份(以满足自己的需求)，但如果应用程序的备份需求很简单，RocksDB会提供一个备份引擎供其使用。</li>
-<li>在这方面，我们看到有两个方面需要进一步改进，但都需要对key-value API进行更改;
-<ul>
-<li>第一个是在不同副本上以一致的顺序应用更新，这带来了性能挑战。</li>
-<li>第二个问题涉及到每次发出一个写请求的性能问题，以及副本可能会落后，而应用程序可能希望这些副本能够更快地赶上</li>
-</ul>
-</li>
-<li>不同的应用程序实现了不同的解决方案来解决这些问题，但是它们都有局限性. 挑战在于，应用程序不能乱序写数据，也不能用它们自己的序列号读取快照，因为RocksDB目前不支持使用用户定义的时间戳进行多版本控制</li>
-</ul>
-<h2 id="lessons-on-failure-handling">Lessons on failure handling</h2>
-<ul>
-<li>通过生产经验，我们学到了三个主要的教训，关于故障处理。首先，需要尽早检测数据损坏，以最小化数据不可用或丢失的风险，并通过这样做来查明错误的起源。其次，完整性保护必须覆盖整个系统，以防止静默的破坏暴露给RocksDB客户或传播到其他副本(见图4)。第三，错误需要以不同的方式处理.<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301163522.png" alt="20210301163522" loading="lazy"></li>
-</ul>
-<h3 id="frequency-of-silent-corruptions">Frequency of silent corruptions</h3>
-<ul>
-<li>由于性能原因，RocksDB用户通常不使用SSD(如DIF/DIX)的数据保护，存储介质损坏由RocksDB块校验和检测，这是所有成熟数据库的常规特性，因此我们在这里跳过分析。CPU/内存损坏很少发生，而且很难准确量化。使用RocksDB的应用程序通常会进行数据一致性检查，比较副本的完整性。这可以捕获错误，但这些错误可能是由RocksDB或客户端应用程序引入的(例如，在复制、备份或恢复数据时)。</li>
-<li>我们发现，通过比较MyRocks数据库表中的主索引和二级索引，可以估计在RocksDB级别引入的损坏频率;任何不一致都可能在RocksDB级别上出现，包括CPU或内存损坏。根据我们的测量，大约每三个月，每100PB的数据就会出现一次RocksDB级别的故障。更糟糕的是，在这些案件中，有40%的损坏已经传播到其他副本。</li>
-<li>在传输数据时也会发生数据损坏，通常是由于软件错误。例如，在处理网络故障时，底层存储系统中的错误导致我们在一段时间内看到，传输的每拍字节的物理数据大约有17个校验和不匹配。</li>
-</ul>
-<h3 id="multi-layer-protection">Multi-layer protection</h3>
-<ul>
-<li>需要尽早检测到数据损坏，以减少停机时间和数据丢失。大多数RocksDB应用都将数据复制到多个主机上;当检测到校验和不匹配时，将丢弃损坏的副本，并用正确的副本替换。然而，只有在正确的副本仍然存在时，这才是可行的选择。</li>
-<li>如今，RocksDB在多个层次上对文件数据进行校验和，以识别底层的损坏情况。这些以及计划的应用层校验和如图4所示。多层校验和是重要的，主要是因为它们有助于及早发现错误，也因为它们可以防止不同类型的威胁。从LevelDB继承的块校验和可以防止文件系统或文件系统以下的数据损坏暴露给客户端。文件校验和是在2020年增加的，用于防止底层存储系统传播到其他副本造成的损坏，以及防止在通过网络传输SSTable文件时造成的损坏。对于WAL文件，切换校验和能够在写时有效地早期检测损坏。</li>
-</ul>
-<h4 id="block-integrity">Block integrity</h4>
-<ul>
-<li>每个SSTable块或WAL片段都附加了一个校验和，在数据创建时生成。与仅在文件移动时才验证的文件校验和不同，这个校验和在每次读取数据时都要验证，因为它的作用域更小。这样做可以防止存储层损坏的数据暴露给RocksDB客户端。</li>
-</ul>
-<h4 id="file-integrity">File integrity</h4>
-<ul>
-<li>文件内容特别有可能在传输操作期间被破坏;例如，用于备份或分发SSTable文件。为了解决这个问题，sstable被它们自己的校验和保护，这些校验和是在创建表时生成的。SSTable的校验和记录在元数据的SSTable文件条目中，并在传输时使用SSTable文件进行验证。然而，我们注意到其他文件，如WAL文件，仍然没有采用这种方式保护。</li>
-</ul>
-<h4 id="handoffintegrity">Handoffintegrity</h4>
-<ul>
-<li>早期检测写损坏的一种已建立的技术是对将要写入底层文件系统的数据生成一个切换校验和，并将其与数据一起传递下去，由底层进行验证。我们希望使用这样的write API来保护WAL的写操作，因为与sstable不同的是，WAL可以从每次追加的增量验证中获益。不幸的是，本地文件系统很少支持这一点——但是，一些专门的堆栈，比如Oracle ASM就支持。</li>
-<li>另一方面，在远程存储上运行时，write API可以更改为接受校验和，并与存储服务的内部ECC挂钩。RocksDB可以在现有的WAL片段校验和上使用校验和组合技术来高效地计算写切换校验和。由于我们的存储服务执行写时验证，我们希望将损坏检测延迟到读时的情况非常罕见。</li>
-</ul>
-<h3 id="end-to-end-protection">End-to-end protection</h3>
-<ul>
-<li>虽然上面描述的保护层在许多情况下防止客户端暴露于损坏的数据，但它们并不全面。到目前为止提到的保护的一个不足是数据在文件I/O层以上是不受保护的;例如，MemTable中的数据和块缓存。在此级别损坏的数据将无法检测，因此最终将暴露给用户。此外，刷新或压缩操作可以持久化已损坏的数据，从而使损坏永久存在。</li>
-</ul>
-<h4 id="key-value-integrity">Key-value integrity</h4>
-<ul>
-<li>为了解决这个问题，我们目前正在实现每个键值校验和，以检测在文件I/O层之上发生的损坏。这个校验和将与键/值一起被复制，尽管我们将从已经存在替代完整性保护的文件数据中删除它。</li>
-</ul>
-<h3 id="severity-based-error-handling">Severity-based error handling</h3>
-<ul>
-<li>RocksDB遇到的大多数错误是底层存储系统返回的错误。这些错误可能源于许多问题，从严重的问题(如只读文件系统)到短暂的问题(如全磁盘或访问远程存储的网络错误)。早期，RocksDB对此类问题的反应要么是简单地向客户端返回错误消息，要么是永久停止所有写操作。</li>
-<li>今天，我们的目标是在错误不能在本地恢复的情况下中断RocksDB的操作;例如，临时网络错误不需要用户干预重启RocksDB实例。为了实现这一点，我们对RocksDB进行了改进，使其在遇到被归类为瞬态错误的错误后，能够周期性地重试恢复操作。因此，我们获得了运营上的优势，因为客户不需要为发生的大部分故障手动缓解RocksDB。</li>
-</ul>
-<h2 id="lessons-on-the-key-value-interface">Lessons on the key-value interface</h2>
-<ul>
-<li>核心键值(KV)接口的用途惊人地多。几乎所有的存储工作负载都可以通过一个带有KV API的数据存储来提供;我们很少看到应用程序不能使用这个接口实现功能。这也许就是kv如此受欢迎的原因。KV接口是通用的。键和值都是可变长度的字节数组。应用程序在决定将哪些信息打包到每个键和值中方面具有很大的灵活性，而且它们可以从丰富的编码方案集中自由选择。因此，是应用程序负责解析和解释键和值。KV接口的另一个优点是可移植性。从一个键值系统迁移到另一个键值系统是相对容易的。然而，尽管许多用例通过这个简单的接口实现了最佳性能，但我们注意到它可能会限制一些应用程序的性能。</li>
-<li>例如，在RocksDB之外构建并发控制是可能的，但很难提高效率，特别是在需要支持两阶段提交的情况下，在提交事务之前需要一些数据持久性。为此我们添加了事务支持，MyRocks (MySQL+RocksDB)使用了事务支持。我们会继续添加新功能;例如，gap/next 键锁定和大事务支持。</li>
-<li>在其他情况下，这种限制是由key-value接口本身造成的。因此，我们已经开始研究基本键-值接口的可能扩展。其中一个扩展就是支持用户定义的时间戳</li>
-</ul>
-<h3 id="versions-and-timestamps">Versions and timestamps</h3>
-<ul>
-<li>在过去的几年里，我们已经认识到了数据版本控制的重要性。我们得出的结论是，版本信息应该成为RocksDB的头等公民，以适当地支持功能，如多版本并发控制(MVCC)和时间点读取。为了实现这一目标，RocksDB需要能够有效地访问不同的版本。</li>
-<li>到目前为止，RocksDB内部一直在使用56位序列号来识别不同版本的kv -对。序列号由RocksDB生成，并在每次写入客户端时递增(因此，所有数据在逻辑上按排序顺序排列)。客户端应用程序不能影响序列号。然而，RocksDB允许应用程序对数据库进行快照，在此之后，RocksDB保证快照时存在的所有KV对将持续存在，直到应用程序显式地释放快照。因此，具有相同密钥的多个kv -对可能共存，并根据它们的序列号进行区分。</li>
-<li>这种版本控制方法是不充分的，因为它并没有满足多种应用的要求。要从过去的状态读取数据，必须在前一个时间点已经拍摄了快照。RocksDB不支持对过去进行快照，因为没有API来指定时间点。此外，支持时间点读取是低效的。最后，每个RocksDB实例分配自己的序列号，并且只能根据每个实例获取快照。这使得具有多个(可能是复制的)分片(每个分片都是一个RocksDB实例)的应用程序的版本控制变得复杂。总之，创建提供跨分片一致读取的数据版本基本上是不可能的</li>
-<li>应用程序可以通过在键或值中编码时间戳来绕开这些限制。但是，在这两种情况下，它们的性能都会下降。在键内进行编码会影响点查找的性能，而在值内进行编码会影响对相同键的无序写入的性能，并使读取旧版本的键变得复杂。我们相信应用程序指定的时间戳可以更好地解决这些限制，应用程序可以用可以全局理解的时间戳标记其数据，并且在键或值之外这样做</li>
-<li>我们已经添加了对应用程序指定的时间戳的基本支持，并使用DB-Bench评估了这种方法。结果如表6所示。每个工作负载有两个步骤:第一步填充数据库，第二步测量性能。例如，在“fill_seq + read_random”中，我们通过按升序写一些键来填充初始数据库，在步骤2中执行随机读操作。相对于基线，应用程序将时间戳编码为密钥的一部分(对于RocksDB来说是透明的)，应用程序指定的时间戳API可以带来1.2倍或更好的吞吐量增益。这些改进来自于将时间戳作为元数据与用户键分开处理，因为这样就可以使用点查找而不是迭代器来获取键的最新值，并且Bloom过滤器可以识别不包含该键的sstable。此外，SSTable覆盖的时间戳范围可以存储在其属性中，这可以用来排除只能包含陈旧值的SSTable。</li>
-</ul>
-<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301165053.png" alt="20210301165053" loading="lazy"></figure>
-<ul>
-<li>我们希望这个特性能够让用户更容易地在系统中实现单节点MVCC、分布式事务的多版本控制，或者解决多主复制中的冲突。然而，更复杂的API使用起来不那么简单，而且可能容易被误用。此外，与不存储时间戳相比，数据库将消耗更多的磁盘空间，而且对其他系统的可移植性也较差。</li>
-</ul>
-<h2 id="related-work">Related Work</h2>
-<h3 id="storage-engine-libraries">Storage Engine Libraries</h3>
-<ul>
-<li>BerkeleyDB</li>
-<li>SQLite</li>
-<li>Hekaton</li>
-</ul>
-<h3 id="key-value-stores-for-ssds">Key-value stores for SSDs</h3>
-<ul>
-<li>SILT: 在内存效率、CPU和性能之间进行平衡的键值存储</li>
-<li>ForestDB: 使用 HB+ tree 在日志上建立索引</li>
-<li>TokuDB：和其他数据库使用 FractalTree/Bε 树。</li>
-<li>LOCS/NoFTL-KV/FlashKV 瞄准开放通道ssd以提高性能</li>
-</ul>
-<h3 id="lsm-tree-improvements">LSM-tree improvements</h3>
-<ul>
-<li>一些系统也使用LSM树并改进了它们的性能。</li>
-<li>写放大通常是最主要的优化目标：
-<ul>
-<li>WiscKey</li>
-<li>PebblesDB</li>
-<li>IAM-tree</li>
-<li>TRIAD</li>
-</ul>
-</li>
-<li>这些系统在优化写放大方面比RocksDB做得更好，后者更关注不同指标之间的权衡。
-<ul>
-<li>SlimDB 优化 LSM 树空间效率</li>
-<li>Monkey 试图在 DRAM 和 IOPs 之间实现平衡。</li>
-<li>bLSM/VT-tree/cLSM 优化LSM树的一般性能</li>
-</ul>
-</li>
-</ul>
-<h3 id="large-scale-storage-systems">Large-scale storage systems</h3>
-<h2 id="future-work-and-open-questions">Future Work and Open Questions</h2>
-<ul>
-<li>除了完成上面提到的改进，包括对分类聚合存储、键值分离、多层校验和和应用程序指定的时间戳的优化，我们计划统一 leveled 和 tiered 压缩并提高自适应能力。然而，一些开放的问题可以从进一步的研究中受益。
-<ul>
-<li>How can we use SSD/HDD hybrid storage to improve efficiency?</li>
-<li>How can we mitigate the performance impact on readers when there are many consecutive deletion markers?</li>
-<li>How should we improve our write throttling algorithms?</li>
-<li>Can we develop an efficient way of comparing two replicas to ensure they contain the same data?</li>
-<li>How can we best exploit SCM? Should we still use LSM tree and how to organize storage hierarchy?</li>
-<li>Can there be a generic integrity API to handle data handoff between RocksDB and the file system layer?</li>
-</ul>
-</li>
-</ul>
-<h2 id="conclusion">Conclusion</h2>
-<ul>
-<li>RocksDB已经从一个服务于小众应用的键值存储平台发展到目前广泛应用于众多工业大规模分布式应用的地位。作为主要数据结构的LSM树很好地服务于RocksDB，因为它表现出良好的写入和空间放大能力。然而，我们对业绩的看法是随着时间的推移而演变的。虽然写和空间放大仍然是主要关注的问题，但更多的焦点已经转移到CPU和DRAM效率，以及远程存储上。</li>
-<li>运行大规模应用程序给我们带来了教训资源分配需要跨不同的RocksDB实例进行管理，数据格式需要保持向后和向前兼容，以允许增量软件部署，需要对数据库复制和备份提供适当的支持，配置管理需要简单且最好是自动化。失败处理的教训告诉我们，需要更早地在系统的每一层检测到数据损坏错误。key-value接口因其简单性和性能上的一些限制而广受欢迎。对界面进行一些简单的修改可能会产生更好的平衡。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210301170127.png" alt="20210301170127" loading="lazy"></li>
-</ul>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Series Three of Basic of Concurrency - Condition Variables]]></title>
-        <id>https://blog.shunzi.tech/post/basic-of-concurrency-one/</id>
-        <link href="https://blog.shunzi.tech/post/basic-of-concurrency-one/">
-        </link>
-        <updated>2021-04-05T03:40:00.000Z</updated>
-        <summary type="html"><![CDATA[<blockquote>
-<ul>
-<li>威斯康辛州大学操作系统书籍《Operating Systems: Three Easy Pieces》读书笔记系列之 Concurrency（并发）。本篇为并发技术的基础篇系列第三篇（Condition Variables），条件变量。</li>
-</ul>
-</blockquote>
-]]></summary>
-        <content type="html"><![CDATA[<blockquote>
-<ul>
-<li>威斯康辛州大学操作系统书籍《Operating Systems: Three Easy Pieces》读书笔记系列之 Concurrency（并发）。本篇为并发技术的基础篇系列第三篇（Condition Variables），条件变量。</li>
-</ul>
-</blockquote>
-<!-- more -->
-<h2 id="chapter-index">Chapter Index</h2>
-<ul>
-<li><a href="">Series One of Basic of Concurrency - Concurrency and Threads</a></li>
-<li><a href="../lock/">Series Two of Basic of Concurrency - Lock</a></li>
-<li><a href="">Series Three of Basic of Concurrency - Condition Variables</a></li>
-<li><a href="">Series Four of Basic of Concurrency - Semaphores</a></li>
-<li><a href="">Series Five of Basic of Concurrency - Bugs and Event-Based Concurrency</a></li>
-</ul>
-<h2 id="condition-variables">Condition Variables</h2>
-<ul>
-<li>到目前为止，我们已经形成了锁的概念，看到了如何通过硬件和操作系统支持的正确组合来实现锁。然而，锁并不是并发程序设计所需的唯一原语。</li>
-<li>具体来说，在很多情况下，线程需要检查某一条件（condition）满足之后，才会继续运行。例如，父线程需要检查子线程是否执行完毕 [这常被称为 join()]。这种等待如何实现呢？我们来看如下所示的代码。</li>
-</ul>
-<pre><code class="language-C">1 void *child(void *arg) {
-2   printf(&quot;child\n&quot;);
-3   // XXX how to indicate we are done?
-4   return NULL;
-5 }
-6
-7 int main(int argc, char *argv[]) {
-8   printf(&quot;parent: begin\n&quot;);
-9   pthread_t c;
-10  Pthread_create(&amp;c, NULL, child, NULL); // create child
-11  // XXX how to wait for child?
-12  printf(&quot;parent: end\n&quot;);
-13  return 0;
-14 }
-</code></pre>
-<ul>
-<li>我们期望能看到这样的输出：</li>
-</ul>
-<pre><code>parent: begin
-child
-parent: end 
-</code></pre>
-<ul>
-<li>我们可以尝试用一个共享变量，如下所示。这种解决方案一般能工作，但是效率低下，因为主线程会自旋检查，浪费 CPU 时间。我们希望有某种方式让父线程休眠，直到等待的条件满足（即子线程完成执行）。</li>
-</ul>
-<pre><code class="language-C">1 volatile int done = 0;
-2
-3 void *child(void *arg) {
-4   printf(&quot;child\n&quot;);
-5   done = 1;
-6   return NULL;
-7 }
-8
-9 int main(int argc, char *argv[]) {
-10  printf(&quot;parent: begin\n&quot;);
-11  pthread_t c;
-12  Pthread_create(&amp;c, NULL, child, NULL); // create child
-13  while (done == 0)
-14      ; // spin
-15  printf(&quot;parent: end\n&quot;);
-16  return 0;
-17 }
-</code></pre>
-<ul>
-<li><strong>CRUX: 多线程程序中，一个线程等待某些条件是很常见的。简单的方案是自旋直到条件满足，这是极其低效的，某些情况下甚至是错误的。那么，线程应该如何等待一个条件？</strong></li>
-</ul>
-<h3 id="definition-and-routines">Definition and Routines</h3>
-<ul>
-<li>线程可以使用条件变量（condition variable），来等待一个条件变成真。条件变量是一个显式队列，当某些执行状态（即条件，condition）不满足时，线程可以把自己加入队列，等待（waiting）该条件。另外某个线程，当它改变了上述状态时，就可以唤醒一个或者多个等待线程（通过在该条件上发信号），让它们继续执行。Dijkstra 最早在“私有信号量”中提出这种思想。Hoare 后来在关于观察者的工作中，将类似的思想称为条件变量。</li>
-<li>要声明这样的条件变量，只要像这样写：pthread_cond_t c;，这里声明 c 是一个条件变量（注意：还需要适当的初始化）。条件变量有两种相关操作：wait() 和 signal()。线程要睡眠的时候，调用 wait()。当线程想唤醒等待在某个条件变量上的睡眠线程时，调用 signal()。具体来说，POSIX 调用如下所示。</li>
-</ul>
-<pre><code class="language-C">pthread_cond_wait(pthread_cond_t *c, pthread_mutex_t *m);
-pthread_cond_signal(pthread_cond_t *c);
-</code></pre>
-<ul>
-<li>我们常简称为 wait()和 signal()。你可能注意到一点，wait()调用有一个参数，它是互斥量。它假定在 wait()调用时，这个互斥量是已上锁状态。wait()的职责是释放锁，并让调用线程休眠（原子地）。当线程被唤醒时（在另外某个线程发信号给它后），它必须重新获取锁，再返回调用者。这样复杂的步骤也是为了避免在线程陷入休眠时，产生一些竞态条件。我们观察一下如下所示代码中 join 问题的解决方法，以加深理解。</li>
-</ul>
-<pre><code class="language-C">1 int done = 0;
-2 pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
-3 pthread_cond_t c = PTHREAD_COND_INITIALIZER;
-4
-5 void thr_exit() {
-6   Pthread_mutex_lock(&amp;m);
-7   done = 1;
-8   Pthread_cond_signal(&amp;c);
-9   Pthread_mutex_unlock(&amp;m);
-10 }
-11
-12 void *child(void *arg) {
-13  printf(&quot;child\n&quot;);
-14  thr_exit();
-15  return NULL;
-16 }
-17
-18 void thr_join() {
-19  Pthread_mutex_lock(&amp;m);
-20  while (done == 0)
-21      Pthread_cond_wait(&amp;c, &amp;m);
-22  Pthread_mutex_unlock(&amp;m);
-23 }
-24
-25 int main(int argc, char *argv[]) {
-26  printf(&quot;parent: begin\n&quot;);
-27  pthread_t p;
-28  Pthread_create(&amp;p, NULL, child, NULL);
-29  thr_join();
-30  printf(&quot;parent: end\n&quot;);
-31  return 0;
-32 }
-</code></pre>
-<ul>
-<li>有两种情况需要考虑。
-<ul>
-<li>第一种情况是父线程创建出子线程，但自己继续运行（假设只有一个处理器），然后马上调用 thr_join()等待子线程。在这种情况下，它会先获取锁，检查子进程是否完成（还没有完成），然后调用 wait()，让自己休眠。子线程最终得以运行，打印出“child”，并调用 thr_exit()函数唤醒父进程，这段代码会在获得锁后设置状态变量 done，然后向父线程发信号唤醒它。最后，父线程会运行（从 wait()调用返回并持有锁），释放锁，打印出“parent:end”。</li>
-<li>第二种情况是，子线程在创建后，立刻运行，设置变量 done 为 1，调用 signal 函数唤醒其他线程（这里没有其他线程），然后结束。父线程运行后，调用 thr_join()时，发现 done 已经是 1 了，就直接返回。</li>
-</ul>
-</li>
-<li>最后一点说明：你可能看到父线程使用了一个 while 循环，而不是 if 语句来判断是否需要等待。虽然从逻辑上来说没有必要使用循环语句，但这样做总是好的（后面我们会加以说明）。</li>
-<li>为了确保理解 thr_exit()和 thr_join()中每个部分的重要性，我们来看一些其他的实现。首先，你可能会怀疑状态变量 done 是否需要。代码像下面这样如何？正确吗？</li>
-</ul>
-<pre><code class="language-C">1 void thr_exit() {
-2   Pthread_mutex_lock(&amp;m);
-3   Pthread_cond_signal(&amp;c);
-4   Pthread_mutex_unlock(&amp;m);
-5 }
-6
-7 void thr_join() {
-8   Pthread_mutex_lock(&amp;m);
-9   Pthread_cond_wait(&amp;c, &amp;m);
-10  Pthread_mutex_unlock(&amp;m);
-11 }
-
-</code></pre>
-<ul>
-<li>这段代码是有问题的。假设子线程立刻运行，并且调用 thr_exit()。在这种情况下，子线程发送信号，但此时却没有在条件变量上睡眠等待的线程。父线程运行时，就会调用 wait 并卡在那里，没有其他线程会唤醒它。通过这个例子，你应该认识到变量 done 的重要性，它记录了线程有兴趣知道的值。睡眠、唤醒和锁都离不开它。</li>
-<li>下面是另一个糟糕的实现。在这个例子中，我们假设线程在发信号和等待时都不加锁。会发生什么问题？想想看！</li>
-</ul>
-<pre><code class="language-C">1 void thr_exit() {
-2   done = 1;
-3   Pthread_cond_signal(&amp;c);
-4 }
-5
-6 void thr_join() {
-7   if (done == 0)
-8       Pthread_cond_wait(&amp;c);
-9 }
-
-</code></pre>
-<ul>
-<li>这里的问题是一个微妙的竞态条件。具体来说，如果父进程调用 thr_join()，然后检查完 done 的值为 0，然后试图睡眠。但在调用 wait 进入睡眠之前，父进程被中断。子线程修改变量 done 为 1，发出信号，同样没有等待线程。父线程再次运行时，就会长眠不醒，这就惨了。</li>
-</ul>
-<blockquote>
-<ul>
-<li><strong>提示：发信号时总是持有锁</strong></li>
-<li>尽管并不是所有情况下都严格需要，但有效且简单的做法，还是在使用条件变量发送信号时持有锁。虽然上面的例子是必须加锁的情况，但也有一些情况可以不加锁，而这可能是你应该避免的。因此，为了简单，请在调用 signal 时持有锁（hold the lock when calling signal）。</li>
-<li>这个提示的反面，即调用 wait 时持有锁，不只是建议，而是 wait 的语义强制要求的。因为 wait 调用总是假设你调用它时已经持有锁、调用者睡眠之前会释放锁以及返回前重新持有锁。因此，这个提示的一般化形式是正确的：调用 signal 和 wait 时要持有锁（hold the lock when calling signal or wait），你会保持身心健康的。</li>
-</ul>
-</blockquote>
-<ul>
-<li>希望通过这个简单的 join 示例，你可以看到使用条件变量的一些基本要求。为了确保你能理解，我们现在来看一个更复杂的例子：生产者/消费者（producer/consumer）或有界缓冲区（bounded-buffer）问题。</li>
-</ul>
-<h3 id="the-producerconsumer-bounded-buffer-problem">The Producer/Consumer (Bounded Buffer) Problem</h3>
-<ul>
-<li>本章要面对的下一个问题，是生产者/消费者（producer/consumer）问题，也叫作有界缓冲区（bounded buffer）问题。这一问题最早由 Dijkstra 提出。实际上也正是通过研究这一问题，Dijkstra 和他的同事发明了通用的信号量（它可用作锁或条件变量）。</li>
-<li>假设有一个或多个生产者线程和一个或多个消费者线程。生产者把生成的数据项放入缓冲区；消费者从缓冲区取走数据项，以某种方式消费。很多实际的系统中都会有这种场景。例如，在多线程的网络服务器中，一个生产者将 HTTP 请求放入工作队列（即有界缓冲区），消费线程从队列中取走请求并处理。</li>
-<li>我们在使用管道连接不同程序的输出和输入时，也会使用有界缓冲区，例如 grep foo file.txt | wc -l。这个例子并发执行了两个进程，grep 进程从 file.txt 中查找包括“foo”的行，写到标准输出；UNIX shell 把输出重定向到管道（通过 pipe 系统调用创建）。管道的另一端是 wc 进程的标准输入，wc 统计完行数后打印出结果。因此，grep 进程是生产者，wc 是进程是消费者，它们之间是内核中的有界缓冲区，而你在这个例子里只是一个开心的用户。</li>
-<li>因为有界缓冲区是共享资源，所以我们必须通过同步机制来访问它，以免产生竞态条件。为了更好地理解这个问题，我们来看一些实际的代码。- 首先需要一个共享缓冲区，让生产者放入数据，消费者取出数据。简单起见，我们就拿一个整数来做缓冲区（你当然可以想到用一个指向数据结构的指针来代替），两个内部函数将值放入缓冲区，从缓冲区取值。</li>
-</ul>
-<pre><code class="language-C">1 int buffer;
-2 int count = 0; // initially, empty
-3
-4 void put(int value) {
-5   assert(count == 0);
-6   count = 1;
-7   buffer = value;
-8 }
-9
-10 int get() {
-11  assert(count == 1);
-12  count = 0;
-13  return buffer;
-14 }
-
-</code></pre>
-<ul>
-<li>很简单，不是吗？put()函数会假设缓冲区是空的，把一个值存在缓冲区，然后把 count 设置为 1 表示缓冲区满了。get()函数刚好相反，把缓冲区清空后（即将 count 设置为 0），并返回该值。不用担心这个共享缓冲区只能存储一条数据，稍后我们会一般化，用队列保存更多数据项，这会比听起来更有趣。</li>
-<li>现在我们需要编写一些函数，知道何时可以访问缓冲区，以便将数据放入缓冲区或从缓冲区取出数据。条件是显而易见的：仅在 count 为 0 时（即缓冲器为空时），才将数据放入缓冲器中。仅在计数为 1 时（即缓冲器已满时），才从缓冲器获得数据。如果我们编写同步代码，让生产者将数据放入已满的缓冲区，或消费者从空的数据获取数据，就做错了（在这段代码中，断言将触发）。</li>
-<li>这项工作将由两种类型的线程完成，其中一类我们称之为生产者（producer）线程，另<br>
-一类我们称之为消费者（consumer）线程。下面展示了一个生产者的代码，它将一个整<br>
-数放入共享缓冲区 loops 次，以及一个消费者，它从该共享缓冲区中获取数据（永远不停），每次打印出从共享缓冲区中提取的数据项。</li>
-</ul>
-<pre><code class="language-C">1 void *producer(void *arg) {
-2   int i;
-3   int loops = (int) arg;
-4   for (i = 0; i &lt; loops; i++) {
-5       put(i);
-6   }
-7 }
-8
-9 void *consumer(void *arg) {
-10  while (1) {
-11      int tmp = get();
-12      printf(&quot;%d\n&quot;, tmp);
-13  }
-14 }
-</code></pre>
-<h4 id="a-broken-solution">A Broken Solution</h4>
-<ul>
-<li>假设只有一个生产者和一个消费者。显然，put()和 get()函数之中会有临界区，因为 put() 更新缓冲区，get()读取缓冲区。但是，给代码加锁没有用，我们还需别的东西。不奇怪，别的东西就是某些条件变量。在这个（有问题的）首次尝试中，我们用了条件变量 cond 和相关的锁 mutex。</li>
-</ul>
-<pre><code class="language-C">1 int loops; // must initialize somewhere...
-2 cond_t cond;
-3 mutex_t mutex;
-4
-5 void *producer(void *arg) {
-6   int i;
-7   for (i = 0; i &lt; loops; i++) {
-8       Pthread_mutex_lock(&amp;mutex); // p1
-9       if (count == 1) // p2
-10          Pthread_cond_wait(&amp;cond, &amp;mutex); // p3
-11      put(i); // p4
-12      Pthread_cond_signal(&amp;cond); // p5
-13      Pthread_mutex_unlock(&amp;mutex); // p6
-14  }
-15 }
-16
-17 void *consumer(void *arg) {
-18  int i;
-19  for (i = 0; i &lt; loops; i++) {
-20      Pthread_mutex_lock(&amp;mutex); // c1
-21      if (count == 0) // c2
-22          Pthread_cond_wait(&amp;cond, &amp;mutex); // c3
-23      int tmp = get(); // c4
-24      Pthread_cond_signal(&amp;cond); // c5
-25      Pthread_mutex_unlock(&amp;mutex); // c6
-26      printf(&quot;%d\n&quot;, tmp);
-27  }
-28 }
-
-</code></pre>
-<ul>
-<li>来看看生产者和消费者之间的信号逻辑。当生产者想要填充缓冲区时，它等待缓冲区变空（p1～p3）。消费者具有完全相同的逻辑，但等待不同的条件——变满（c1～c3）。当只有一个生产者和一个消费者时，上图中的代码能够正常运行。但如果有超过一个线程（例如两个消费者），这个方案会有两个严重的问题。哪两个问题？</li>
-<li>……（暂停思考一下）……</li>
-<li>我们来理解第一个问题，它与等待之前的 if 语句有关。假设有两个消费者（Tc1 和 Tc2），一个生产者（Tp）。首先，一个消费者（Tc1）先开始执行，它获得锁（c1），检查缓冲区是否可以消费（c2），然后等待（c3）（这会释放锁）。</li>
-<li>接着生产者（Tp）运行。它获取锁（p1），检查缓冲区是否满（p2），发现没满就给缓冲区加入一个数字（p4）。然后生产者发出信号，说缓冲区已满（p5）。关键的是，这让第一个消费者（Tc1）不再睡在条件变量上，进入就绪队列。Tc1 现在可以运行（但还未运行）。生产者继续执行，直到发现缓冲区满后睡眠（p6,p1-p3）。</li>
-<li>这时问题发生了：另一个消费者（Tc2）抢先执行，消费了缓冲区中的值（c1,c2,c4,c5,c6，跳过了 c3 的等待，因为缓冲区是满的）。现在假设 Tc1 运行，在从 wait 返回之前，它获取了锁，然后返回。然后它调用了 get() (p4)，但缓冲区已无法消费！断言触发，代码不能像预期那样工作。显然，我们应该设法阻止 Tc1 去消费，因为 Tc2 插进来，消费了缓冲区中之前生产的一个值。下表展示了每个线程的动作，以及它的调度程序状态（就绪、运行、睡眠）随时间的变化。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210405165844.png" alt="20210405165844" loading="lazy"></li>
-<li>问题产生的原因很简单：在 Tc1 被生产者唤醒后，但在它运行之前，缓冲区的状态改变了（由于 Tc2）。发信号给线程只是唤醒它们，暗示状态发生了变化（在这个例子中，就是值已被放入缓冲区），但并不会保证在它运行之前状态一直是期望的情况。信号的这种释义常称为Mesa 语义（Mesa semantic），为了纪念以这种方式建立条件变量的首次研究。另一种释义是 Hoare 语义（Hoare semantic），虽然实现难度大，但是会保证被唤醒线程立刻执行。实际上，几乎所有系统都采用了 Mesa 语义。</li>
-</ul>
-<h4 id="better-but-still-broken-while-not-if">Better, But Still Broken: While, Not If</h4>
-<ul>
-<li>幸运的是，修复这个问题很简单：把 if 语句改为 while。当消费者 Tc1 被唤醒后，立刻再次检查共享变量（c2）。如果缓冲区此时为空，消费者就会回去继续睡眠（c3）。生产者中相应的 if 也改为 while（p2）。</li>
-</ul>
-<pre><code class="language-C">1 int loops; // must initialize somewhere...
-2 cond_t cond;
-3 mutex_t mutex;
-4
-5 void *producer(void *arg) {
-6   int i;
-7   for (i = 0; i &lt; loops; i++) {
-8       Pthread_mutex_lock(&amp;mutex); // p1
-9       while (count == 1) // p2
-10          Pthread_cond_wait(&amp;cond, &amp;mutex); // p3
-11      put(i); // p4
-12      Pthread_cond_signal(&amp;cond); // p5
-13      Pthread_mutex_unlock(&amp;mutex); // p6
-14  }
-15 }
-16
-17 void *consumer(void *arg) {
-18  int i;
-19  for (i = 0; i &lt; loops; i++) {
-20      Pthread_mutex_lock(&amp;mutex); // c1
-21      while (count == 0) // c2
-22          Pthread_cond_wait(&amp;cond, &amp;mutex); // c3
-23      int tmp = get(); // c4
-24      Pthread_cond_signal(&amp;cond); // c5
-25      Pthread_mutex_unlock(&amp;mutex); // c6
-26      printf(&quot;%d\n&quot;, tmp);
-27  }
-28 }
-
-</code></pre>
-<ul>
-<li>由于 Mesa 语义，我们要记住一条关于条件变量的简单规则：总是使用 while 循环（always use while loop）。虽然有时候不需要重新检查条件，但这样做总是安全的，做了就开心了。</li>
-<li>但是，这段代码仍然有一个问题，也是上文提到的两个问题之一。你能想到吗？它和我们只用了一个条件变量有关。尝试弄清楚这个问题是什么，再继续阅读。想一下！</li>
-<li>……（暂停想一想，或者闭一下眼）……</li>
-<li>我们来确认一下你想得对不对。假设两个消费者（Tc1 和 Tc2）先运行，都睡眠了（c3）。生产者开始运行，在缓冲区放入一个值，唤醒了一个消费者（假定是 Tc1），并开始睡眠。现在是一个消费者马上要运行（Tc1），两个线程（Tc2 和 Tp）都等待在同一个条件变量上。问题马上就要出现了</li>
-<li>消费者 Tc1 醒过来并从 wait()调用返回（c3），重新检查条件（c2），发现缓冲区是满的，消费了这个值（c4）。这个消费者然后在该条件上发信号（c5），唤醒一个在睡眠的线程。但是，应该唤醒哪个线程呢？</li>
-<li>因为消费者已经清空了缓冲区，很显然，应该唤醒生产者。但是，如果它唤醒了 Tc2（这绝对是可能的，取决于等待队列是如何管理的），问题就出现了。具体来说，消费者 Tc2 会醒过来，发现队列为空（c2），又继续回去睡眠（c3）。生产者 Tp 刚才在缓冲区中放了一个值，现在在睡眠。另一个消费者线程 Tc1 也回去睡眠了。3 个线程都在睡眠，显然是一个缺陷。由表可以看到这个可怕灾难的步骤。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210405170637.png" alt="20210405170637" loading="lazy"></li>
-<li>信号显然需要，但必须更有指向性。消费者不应该唤醒消费者，而应该只唤醒生产者，反之亦然。</li>
-</ul>
-<h4 id="the-single-buffer-producerconsumer-solution">The Single Buffer Producer/Consumer Solution</h4>
-<ul>
-<li>解决方案也很简单：使用两个条件变量，而不是一个，以便正确地发出信号，在系统状态改变时，哪类线程应该唤醒。</li>
-</ul>
-<pre><code class="language-C">1 cond_t empty, fill;
-2 mutex_t mutex;
-3
-4 void *producer(void *arg) {
-5 int i;
-6 for (i = 0; i &lt; loops; i++) {
-7   Pthread_mutex_lock(&amp;mutex);
-8   while (count == 1)
-9       Pthread_cond_wait(&amp;empty, &amp;mutex);
-10  put(i);
-11  Pthread_cond_signal(&amp;fill);
-12  Pthread_mutex_unlock(&amp;mutex);
-13  }
-14 }
-15
-16 void *consumer(void *arg) {
-17  int i;
-18  for (i = 0; i &lt; loops; i++) {
-19      Pthread_mutex_lock(&amp;mutex);
-20      while (count == 0)
-21          Pthread_cond_wait(&amp;fill, &amp;mutex);
-22      int tmp = get();
-23      Pthread_cond_signal(&amp;empty);
-24      Pthread_mutex_unlock(&amp;mutex);
-25      printf(&quot;%d\n&quot;, tmp);
-26  }
-27 }
-</code></pre>
-<ul>
-<li>在上述代码中，生产者线程等待条件变量 empty，发信号给变量 fill。相应地，消费者线程等待 fill，发信号给 empty。这样做，从设计上避免了上述第二个问题：消费者再也不会唤醒消费者，生产者也不会唤醒生产者。</li>
-</ul>
-<h4 id="the-correct-producerconsumer-solution">The Correct Producer/Consumer Solution</h4>
-<ul>
-<li>我们现在有了可用的生产者/消费者方案，但不太通用。我们最后的修改是提高并发和效率。具体来说，增加更多缓冲区槽位，这样在睡眠之前，可以生产多个值。同样，睡眠之前可以消费多个值。单个生产者和消费者时，这种方案因为上下文切换少，提高了效率。多个生产者和消费者时，它甚至支持并发生产和消费，从而提高了并发。幸运的是，和现有方案相比，改动也很小。</li>
-<li>第一处修改是缓冲区结构本身，以及对应的 put() 和 get()方法。</li>
-</ul>
-<pre><code class="language-C">1 int buffer[MAX];
-2 int fill_ptr = 0;
-3 int use_ptr = 0;
-4 int count = 0;
-5
-6 void put(int value) {
-7   buffer[fill_ptr] = value;
-8   fill_ptr = (fill_ptr + 1) % MAX;
-9   count++;
-10 }
-11
-12 int get() {
-13  int tmp = buffer[use_ptr];
-14  use_ptr = (use_ptr + 1) % MAX;
-15  count--;
-16  return tmp;
-17 }
-
-</code></pre>
-<ul>
-<li>我们还稍稍修改了生产者和消费者的检查条件，以便决定是否要睡眠。展示了最终的等待和信号逻辑。生产者只有在缓冲区满了的时候才会睡眠（p2），消费者也只有在队列为空的时候睡眠（c2）。至此，我们解决了生产者/消费者问题。</li>
-</ul>
-<pre><code class="language-C">1 cond_t empty, fill;
-2 mutex_t mutex;
-3
-4 void *producer(void *arg) {
-5   int i;
-6   for (i = 0; i &lt; loops; i++) {
-7       Pthread_mutex_lock(&amp;mutex); // p1
-8       while (count == MAX) // p2
-9           Pthread_cond_wait(&amp;empty, &amp;mutex); // p3
-10      put(i); // p4
-11      Pthread_cond_signal(&amp;fill); // p5
-12      Pthread_mutex_unlock(&amp;mutex); // p6
-13  }
-14 }
-15
-16 void *consumer(void *arg) {
-17  int i;
-18  for (i = 0; i &lt; loops; i++) {
-19      Pthread_mutex_lock(&amp;mutex); // c1
-20      while (count == 0) // c2
-21          Pthread_cond_wait(&amp;fill, &amp;mutex); // c3
-22      int tmp = get(); // c4
-23      Pthread_cond_signal(&amp;empty); // c5
-24      Pthread_mutex_unlock(&amp;mutex); // c6
-25      printf(&quot;%d\n&quot;, tmp);
-26  }
-27 }
-
-</code></pre>
-<blockquote>
-<ul>
-<li><strong>提示：对条件变量使用 while（不是 if）</strong></li>
-<li>多线程程序在检查条件变量时，使用 while 循环总是对的。if 语句可能会对，这取决于发信号的语义。因此，总是使用 while，代码就会符合预期。</li>
-<li>对条件变量使用 while 循环，这也解决了假唤醒（spurious wakeup）的情况。某些线程库中，由于实现的细节，有可能出现一个信号唤醒两个线程的情况。再次检查线程的等待条件，假唤醒是另一个原因。</li>
-</ul>
-</blockquote>
-<h3 id="covering-conditions">Covering Conditions</h3>
-<ul>
-<li>现在再来看条件变量的一个例子。这段代码摘自 Lampson 和 Redell 关于飞行员的论文，同一个小组首次提出了上述的 Mesa 语义（Mesa semantic，他们使用的语言是 Mesa，因此而得名）。</li>
-<li>他们遇到的问题通过一个简单的例子就能说明，在这个例子中，是一个简单的多线程内存分配库。</li>
-</ul>
-<pre><code class="language-C">1 // how many bytes of the heap are free?
-2 int bytesLeft = MAX_HEAP_SIZE;
-3
-4 // need lock and condition too
-5 cond_t c;
-6 mutex_t m;
-7
-8 void *
-9 allocate(int size) {
-10  Pthread_mutex_lock(&amp;m);
-11  while (bytesLeft &lt; size)
-12      Pthread_cond_wait(&amp;c, &amp;m);
-13  void *ptr = ...; // get mem from heap
-14  bytesLeft -= size;
-15  Pthread_mutex_unlock(&amp;m);
-16  return ptr;
-17 }
-18
-19 void free(void *ptr, int size) {
-20  Pthread_mutex_lock(&amp;m);
-21  bytesLeft += size;
-22  Pthread_cond_signal(&amp;c); // whom to signal??
-23  Pthread_mutex_unlock(&amp;m);
-24 }
-
-</code></pre>
-<ul>
-<li>从代码中可以看出，当线程调用进入内存分配代码时，它可能会因为内存不足而等待。相应的，线程释放内存时，会发信号说有更多内存空闲。但是，代码中有一个问题：应该唤醒哪个等待线程（可能有多个线程）？</li>
-<li>考虑以下场景。假设目前没有空闲内存，线程 Ta 调用 allocate(100)，接着线程 Tb 请求较少的内存，调用 allocate(10)。Ta 和 Tb 都等待在条件上并睡眠，没有足够的空闲内存来满足它们的请求。这时，假定第三个线程 Tc调用了 free(50)。遗憾的是，当它发信号唤醒等待线程时，可能不会唤醒申请 10 字节的 Tb 线程。而 Ta 线程由于内存不够，仍然等待。因为不知道唤醒哪个（或哪些）线程，所以图中代码无法正常工作。</li>
-<li>Lampson 和 Redell 的解决方案也很直接：用 pthread_cond_broadcast()代替上述代码中的 pthread_cond_signal()，唤醒所有的等待线程。这样做，确保了所有应该唤醒的线程都被唤醒。当然，不利的一面是可能会影响性能，因为不必要地唤醒了其他许多等待的线程，它们本来（还）不应该被唤醒。这些线程被唤醒后，重新检查条件，马上再次睡眠。</li>
-<li>Lampson 和 Redell 把这种条件变量叫作覆盖条件（covering condition），因为它能覆盖所有需要唤醒线程的场景（保守策略）。成本如上所述，就是太多线程被唤醒。聪明的读者可能发现，在单个条件变量的生产者/消费者问题中，也可以使用这种方法。但是，在这个例子中，我们有更好的方法，因此用了它。一般来说，如果你发现程序只有改成广播信号时才能工作（但你认为不需要），可能是程序有缺陷，修复它！但在上述内存分配的例子中，广播可能是最直接有效的方案。</li>
-</ul>
-<h3 id="summary">Summary</h3>
-<ul>
-<li>我们看到了引入锁之外的另一个重要同步原语：条件变量。当某些程序状态不符合要求时，通过允许线程进入休眠状态，条件变量使我们能够漂亮地解决许多重要的同步问题，包括著名的（仍然重要的）生产者/消费者问题，以及覆盖条件。</li>
-</ul>
 ]]></content>
     </entry>
 </feed>

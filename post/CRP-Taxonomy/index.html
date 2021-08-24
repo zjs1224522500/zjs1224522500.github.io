@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+<title>
+    Elvis Zhang
+</title>
+<!--[if lt IE 9]><script src="//cdn.bootcss.com/html5shiv/r29/html5.js"></script><![endif]-->
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+<meta http-equiv="x-dns-prefetch-control" content="on">
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<meta name="author" content="Elvis">
+<meta name="description" content="The easy way or the right way!">
+<meta name="keywords" content="Dead">
+<script async src="//instant.page/3.0.0" type="module" defer integrity="sha384-OeDn4XE77tdHo8pGtE1apMPmAipjoxUQ++eeJa6EtJCfHlvijigWiJpD7VDPWXV1"></script>
+<link rel="stylesheet" href="https://blog.shunzi.tech/styles/main.css" />
+<link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<script type="text/javascript" src="https://apps.bdimg.com/libs/jquery/1.7.1/jquery.min.js"></script>
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/itjoker233/Gridea-theme-Chic/assets/media/css/style.min.css" />
+        <script src="https://cdn.jsdelivr.net/gh/itjoker233/Gridea-theme-Chic/assets/media/script/tocbot.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/itjoker233/Gridea-theme-Chic/assets/media/script/script.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/itjoker233/Gridea-theme-Chic/assets/media/script/icon.min.js"></script>
+        
+            <script src="https://cdn.jsdelivr.net/gh/ITJoker233/ITJoker233.github.io@latest/CDN/js/Card/prism.min.js"></script>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ITJoker233/ITJoker233.github.io@latest/CDN/css/Card/prism.min.css" />
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/katex.min.css">
+            <script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/katex.min.js"></script>
+            
+                <!--点击特效-->
+                <script src="https://cdn.jsdelivr.net/gh/ITJoker233/ITJoker233.github.io@latest/CDN/js/love.min.js"></script>
+                
+                    <script src="https://cdn.jsdelivr.net/gh/itjoker233/Gridea-theme-Chic@latest/assets/media/script/APlayer.min.js"></script>
+                    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css">
+                    
+                        <!--CDN样式-->
+                        <script src="https://cdn.jsdelivr.net/gh/ITJoker233/ITJoker233.github.io@latest/CDN/js/hit-kounter-lc-0.3.0.js"></script>
+                        <script src="https://cdn1.lncld.net/static/js/av-min-1.5.0.js"></script>
+                        
+                            <script>
+                                (function() {
+                                    var bp = document.createElement('script');
+                                    var curProtocol = window.location.protocol.split(':')[0];
+                                    if (curProtocol === 'https') {
+                                        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+                                    } else {
+                                        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+                                    }
+                                    var s = document.getElementsByTagName("script")[0];
+                                    s.parentNode.insertBefore(bp, s);
+                                })();
+                            </script>
+                            
+                                <script async src="https://www.googletagmanager.com/gtag/js?id=UA-143818020-1"></script>
+                                <script>
+                                    window.dataLayer = window.dataLayer || [];
+
+                                    function gtag() {
+                                        dataLayer.push(arguments);
+                                    }
+                                    gtag('js', new Date());
+                                    gtag('config', 'UA-143818020-1');
+                                </script>
+                                
+                                    <script type="text/javascript">
+                                        var _hmt = _hmt || [];
+                                        (function() {
+                                            var hm = document.createElement("script");
+                                            hm.src = "https://hm.baidu.com/hm.js?225d600be3e5bb9ae41b903854555ba8";
+                                            var s = document.getElementsByTagName("script")[0];
+                                            s.parentNode.insertBefore(hm, s);
+                                        })();
+                                    </script>
+                                    
+</head>
+
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo">
+                <a href="https://blog.shunzi.tech">
+                    Elvis Zhang
+                </a>
+            </div>
+            <div id="tp-weather-widget"></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/posts">
+                        博客
+                    </a>
+                    
+                    <a class="menu-item" href="/archives">
+                        归档
+                    </a>
+                    
+                    <a class="menu-item" href="/tag/diary">
+                        随笔
+                    </a>
+                    
+                    <a class="menu-item" href="https://blog.shunzi.tech/post/tools">
+                        导航
+                    </a>
+                    
+                    <a class="menu-item" href="/tags">
+                        标签
+                    </a>
+                    
+                    <a class="menu-item" href="/post/about">
+                        关于
+                    </a>
+                    
+                        <input id="switch_default" type="checkbox" class="switch_default">
+                        <label for="switch_default" class="toggleBtn"></label>
+            </div>
+            <form id="gridea-search-form" data-update="1629771976011" action="/search/index.html">
+                <input class="search-input" autocomplete="off" spellcheck="false" name="q" autofocus="true" placeholder="Search...">
+            </form>
+        </div>
+    </nav>
+
+    
+        <nav class="navbar-mobile" id="nav-mobile">
+            <div class="container">
+                <div class="navbar-header">
+                    <div>
+                        <a href="https://blog.shunzi.tech">
+                            Elvis Zhang
+                        </a>
+                        <!--en-->
+                        <a id="mobile-toggle-theme-en" class="a en">&nbsp;Dark</a>
+                        <!--zh-->
+                        <a id="mobile-toggle-theme-zh" class="a zh">&nbsp;&#x6697;&#x9ED1;</a>
+                    </div>
+                    <form id="gridea-search-form" data-update="1629771976011" action="/search/index.html">
+                        <input class="search-input" autocomplete="off" spellcheck="false" name="q" autofocus="true" placeholder="Search...">
+                    </form>
+                    <!--en-->
+                    <div class="menu-toggle" id="menu-toggle-en" onclick="mobileBtn()">&#9776; Menu</div>
+                    <!--zh-->
+                    <div class="menu-toggle" id="menu-toggle-zh" onclick="mobileBtn()">&#9776; &#x83DC;&#x5355;</div>
+
+                </div>
+                <div class="menu" id="mobile-menu">
+                    
+                        <a class="menu-item" href="/posts">
+                            博客
+                        </a>
+                        
+                        <a class="menu-item" href="/archives">
+                            归档
+                        </a>
+                        
+                        <a class="menu-item" href="/tag/diary">
+                            随笔
+                        </a>
+                        
+                        <a class="menu-item" href="https://blog.shunzi.tech/post/tools">
+                            导航
+                        </a>
+                        
+                        <a class="menu-item" href="/tags">
+                            标签
+                        </a>
+                        
+                        <a class="menu-item" href="/post/about">
+                            关于
+                        </a>
+                        
+                </div>
+            </div>
+        </nav>
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementById("menu-toggle-en");
+        var toggleMenu_zh = document.getElementById("menu-toggle-zh");
+
+        var mobileMenu = document.getElementById("mobile-menu");
+        if (toggleMenu.display != "none") {
+            if (toggleMenu.classList.contains("active")) {
+                toggleMenu.classList.remove("active")
+                mobileMenu.classList.remove("active")
+            } else {
+                toggleMenu.classList.add("active")
+                mobileMenu.classList.add("active")
+            }
+        } else if (toggleMenu_zh.display != "none") {
+            if (toggleMenu_zh.classList.contains("active")) {
+                toggleMenu_zh.classList.remove("active")
+                mobileMenu.classList.remove("active")
+            } else {
+                toggleMenu_zh.classList.add("active")
+                mobileMenu.classList.add("active")
+            }
+        }
+
+    }
+</script>
+
+
+
+    <script>
+        (function(a, h, g, f, e, d, c, b) {
+            b = function() {
+                d = h.createElement(g);
+                c = h.getElementsByTagName(g)[0];
+                d.src = e;
+                d.charset = "utf-8";
+                d.async = 1;
+                c.parentNode.insertBefore(d, c)
+            };
+            a["SeniverseWeatherWidgetObject"] = f;
+            a[f] || (a[f] = function() {
+                (a[f].q = a[f].q || []).push(arguments)
+            });
+            a[f].l = +new Date();
+            if (a.attachEvent) {
+                a.attachEvent("onload", b)
+            } else {
+                a.addEventListener("load", b, false)
+            }
+        }(window, document, "script", "SeniverseWeatherWidget", "//cdn.sencdn.com/widget2/static/js/bundle.js?t=" + parseInt((new Date().getTime() / 100000000).toString(), 10)));
+        window.SeniverseWeatherWidget('show', {
+            flavor: "slim",
+            location: "WWEFQFPJZ7T8",
+            geolocation: true,
+            language: "auto",
+            unit: "c",
+            theme: "auto",
+            token: "61bcc333-3305-4728-9465-6785274bb0a3",
+            hover: "enabled",
+            container: "tp-weather-widget"
+        })
+    </script>
+    
+            <div class="main">
+                <div class="container">
+                    <article class="post-wrap">
+                        <header class="post-header">
+                            <h1 class="post-title">
+                                Cache Replacement Policies - Taxonomy
+                            </h1>
+                            
+                                    <!--zh-->
+                                    <div class="post-meta zh">
+                                        &#x4F5C;&#x8005;:
+                                        <a itemprop="author" rel="author" href="/">
+                                            Elvis Zhang
+                                        </a>
+                                        <span class="post-time">&#x65E5;&#x671F;: <a href="#">2021-08-20</a></span>
+                                        <span class="post-readtime">&#x9605;&#x8BFB;&#x65F6;&#x95F4;:<a
+                                    href="#">9.4
+                                    &#x5206;&#x949F;</a></span>
+                                        <span class="post-words">&#x5B57;&#x6570;:<a href="#">2779</a></span>
+                                        
+                                            <span class="post-category">&#x5206;&#x7C7B;:
+                                
+                                <a href="https://blog.shunzi.tech/tag/9msH-lUaA/">缓存</a>
+                                
+                                <a href="https://blog.shunzi.tech/tag/la-n8a0mo/">读书笔记</a>
+                                
+                            </span>
+                                            
+                                                阅读量:
+                                                <span data-hk-page="current"> - </span>
+                                                
+                                    </div>
+                                    
+                        </header>
+                        
+                            <img class="post-feature-image" src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210824101929.png" alt="">
+                          
+                        <div class="post-content">
+                            <blockquote>
+<ul>
+<li>Cache Replacement Policies - Taxonomy</li>
+</ul>
+</blockquote>
+<!-- more -->
+<h2 id="缓存替换策略的分类">缓存替换策略的分类</h2>
+<ul>
+<li>为了组织这本书和几十年来研究过的许多思想，我们提出了缓存替换问题的解决方案的分类。我们的分类法建立在这样一个观察之上:缓存替换策略解决了一个预测问题，其<strong>目标是预测是否应该允许任何给定的行留在缓存中</strong>。该决定在缓存行生命周期的多个点重新计算，从该行插入缓存时开始，到该行从缓存中删除时结束。</li>
+<li>因此，在我们的分类法中，我们首先根据插入决策的粒度将缓存替换策略分为两大类。在第一类策略中，我们称之为<strong>粗粒度策略</strong>，当所有的行插入缓存时，它们被<strong>相同地对待</strong>，并且<strong>只根据它们在缓存中的行为来区分行</strong>。例如，由于一个缓存行驻留在缓存中，它的优先级可能会在每次重用时增加。相比之下，<strong>细粒度策略在插入到缓存时区分行</strong>(除了观察它们驻留在缓存中的行为)。为了在插入时进行区分，<strong>细粒度策略通常依赖于关于缓存访问行为的历史信息</strong>。例如，如果细粒度策略了解到某个特定指令加载的行在过去往往会被逐出而不会被重用，那么它可以以低优先级插入该行。</li>
+<li>为了更好地理解我们的分类，了解替换策略通常是通过将少量替换状态与每个缓存行关联来实现的，这一点很有用。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210819182902.png" alt="20210819182902" loading="lazy"></li>
+</ul>
+<h3 id="缓存生命周期中的相关概念">缓存生命周期中的相关概念</h3>
+<ul>
+<li><strong>Insertion Policy</strong>：当新行插入缓存时，替换策略如何<strong>初始化</strong>它的替换状态?</li>
+<li><strong>Promotion Policy</strong>：当缓存行在缓存中命中的时候，替换策略如何<strong>更新</strong>该行的替换状态?</li>
+<li><strong>Aging Policy</strong>：当插入或提升<strong>竞争行</strong>时，替换策略如何更新该行的替换状态?</li>
+<li><strong>Eviction Policy</strong>：给定固定数量的选择，哪一行执行替换策略驱逐？</li>
+<li>从缓存线的生命周期来看，我们可以看到<strong>粗粒度策略在插入时对所有缓存行的处理是相同的</strong>，所以它们主要依赖于聪明的老化和 promotion 策略来操作替换优先级。相反，<strong>细粒度策略使用更智能的插入策略</strong>。当然，细粒度策略还需要适当的老化和 promotion 来更新替换状态，因为在插入时并不能预测所有行为</li>
+</ul>
+<h3 id="粗粒度缓存">粗粒度缓存</h3>
+<ul>
+<li><strong>粗粒度策略在第一次插入缓存时对所有行的处理都是相同的</strong>，它们通过<strong>观察驻留在缓存中的行的重用行为来区分对缓存友好的行和对缓存不友好的行</strong>。根据用于区分缓存驻留行的指标，我们将粗粒度策略进一步划分为三个类。
+<ul>
+<li>第一个类包括绝大多数粗粒度策略，描述了基于最近访问时间对高速缓存行进行排序的策略。</li>
+<li>第二个类包括基于访问频率对高速缓存行进行排序的策略。</li>
+<li>最后，第三类中的策略随着时间的推移监视缓存行为，以便在给定的时间段内动态地选择最佳粗粒度策略。</li>
+</ul>
+</li>
+</ul>
+<h4 id="recency-based-policies">Recency-Based Policies</h4>
+<ul>
+<li>基于最近的策略基于每一行在其生命周期内的最新引用来排序行。为了达到这个顺序，基于最近的策略维护了一个概念性的 recency stack，该栈提供了引用行的相对顺序。不同的政策以不同的方式利用最新信息。例如，常用的LRU(最近最少使用)策略(及其变体)优先驱逐最近最少使用的行，而MRU(最近最常使用)等策略优先驱逐最近使用的行；其他政策利用中间解决方案。</li>
+<li>我们进一步划分基于最近行为的生命周期定义的基于最近行为的策略。
+<ul>
+<li>第一个类，包括绝大多数基于 recency-based 的策略，描述了当一行被从缓存中移除时结束该行生命周期的策略。我们认为这种策略有 <strong>固定的生命周期</strong>。</li>
+<li>第二个类包括一些策略，这些策略通过引入一个临时结构来<strong>延长缓存行的生命周期</strong>，使其超越回收，该结构为具有较长重用距离的行提供第二次接收缓存命中的机会。我们说，这样的政策有一个<strong>延长的寿命</strong>。</li>
+</ul>
+</li>
+</ul>
+<h4 id="frequency-basedpolicies">Frequency-BasedPolicies</h4>
+<ul>
+<li>基于频率的策略维护频率计数器，以<strong>根据它们被引用的频率对行进行排序</strong>。不同的替换策略使用不同的策略来更新和解释这些频率计数器。例如，<strong>一些策略单调地增加计数器，而另一些策略则随着时间的推移使计数器老化</strong>(降低其值)。另一个例子是，一些策略驱逐频率最低的行，而另一些策略驱逐频率满足预定义标准的行</li>
+</ul>
+<h4 id="hybrid-policies">Hybrid Policies</h4>
+<ul>
+<li><strong>由于不同的粗粒度策略适用于不同的缓存访问模式，因此混合策略可以在几个预先确定的粗粒度策略中动态选择，以适应程序执行中的阶段变化</strong>。特别是，混合策略在评估期间观察一些候选粗粒度策略的命中率，并使用此反馈来为未来访问选择最佳的粗粒度策略。自适应策略是有利的，因为它们有助于克服单个粗粒度策略的问题。在第三章中,我们将看到,最先进的混合政策调节粗粒度之间使用不同的插入优先的政策,我们注意到,尽管插入优先级的变化随着时间的推移,这些策略仍是粗粒度的,因为在一个时期,所有的处理是完全相同的。</li>
+</ul>
+<h3 id="细粒度缓存">细粒度缓存</h3>
+<ul>
+<li><strong>细粒度策略在将行插入缓存时区分行</strong>。它们通过使用来自高速缓存行以前生命周期的信息来进行这些区分。例如，如果一行在过去没有收到命中，那么它可以以低优先级插入。由于记住所有缓存行的过去行为是不可行的，细粒度策略通常记住一组缓存行的行为。例如，许多策略组合成一组最后被相同的加载指令访问的缓存行。</li>
+<li>当然，所有细粒度策略都需要考虑的一个问题是在插入时用于区分这些组的指标。基于使用的度量，我们将细粒度策略分为两大类:
+<ul>
+<li>(1) 基于分类的策略与每一组可能的预测之一相关联，即缓存友好型和缓存厌恶型;</li>
+<li>(2) 基于重用距离的策略尝试预测每组缓存线的详细重用距离信息。</li>
+</ul>
+</li>
+<li>这两类定义了一个频谱的极端，频谱一端的策略只有两个可能的预测值，而频谱另一端的政策有许多可能的预测值;许多策略将会在四个或八个可能值中预测其中之一。最后，Beckmann 和 Sanchez 提出了新的度量标准 [Beckmann和Sanchez, 2017]，我们将在第三类中讨论</li>
+</ul>
+<h4 id="classification-based-policies">Classification-Based Policies</h4>
+<ul>
+<li>基于分类的策略将传入的缓存行分为两类: 友好缓存行或反对缓存线。其<strong>主要思想是优先清除不支持缓存的行，以便为支持缓存的行留下更多的空间</strong>，因此，支持缓存的行会以比反对缓存的行更高的优先级插入。<strong>在缓存友好的行之间维护二级排序，通常基于最近次数</strong>。基于分类的策略被广泛认为是最先进的，因为 (1) 它们可以利用过去行为的长期历史来为未来做出更明智的决定，(2) 它们可以容纳所有类型的缓存访问模式。</li>
+</ul>
+<h4 id="reuse-distance-based-policies">Reuse Distance-Based Policies</h4>
+<ul>
+<li>基于重用距离的策略预测传入行的详细重用距离信息。<strong>超过预期重用距离而没有接收到命中的行将从缓存中删除</strong>。这些策略可以被视为基于最近的策略或基于频率的策略的预测变体，因为<strong>基于最近的和基于频率的策略都通过监视缓存线在缓存驻留时的重用行为隐式地估计重用距离</strong>(分别通过最近和频率)。利用历史信息对重用距离的显式预测有其独特的优点和缺点</li>
+</ul>
+<h3 id="设计考量">设计考量</h3>
+<ul>
+<li>替换策略的主要目标是提高缓存命中率，许多设计因素有助于实现更高的命中率：
+<ul>
+<li>粒度: 在插入时，行的粒度是多少?是否所有的高速缓存行都被相同的处理，或者它们是否根据历史信息分配不同的优先级</li>
+<li>历史: 替换策略在做决策时利用了多少历史信息?</li>
+<li>访问模式: 替换策略对特定访问模式的专门化程度如何?它对访问模式的更改或不同访问模式的混合是否健壮?</li>
+</ul>
+</li>
+<li>图 2.2 总结了我们完整的分类，并显示了替换策略的不同类别是如何处理这些设计因素的。一般来说，当我们移到图的右侧(通常与更新的策略相对应)时，趋势是<strong>趋向于使用较长的历史记录并能够适应各种访问模式的更细粒度的解决方案</strong>。在细粒度预测缓存行为的重要性可以通过观察最近的cache Replacement Championship(2017)的前四个解决方案都是细粒度的来衡量。细粒度预测为最新的细粒度策略提供了两个优势。
+<ul>
+<li>首先，它们允许细粒度策略只将缓存空间专用于最有可能从缓存中受益的行;相比之下，粗粒度策略倾向于重复将缓存资源分配给没有产生任何命中的行。</li>
+<li>其次，它们允许细粒度策略动态地确定不同组的行的访问模式;相比之下，粗粒度策略假设整个缓存遵循统一的缓存访问模式。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210820095251.png" alt="20210820095251" loading="lazy"></li>
+</ul>
+</li>
+<li>在细粒度的政策中,趋势是使用更长的历史作为state-ofthe-art细粒度策略(Jain and Lin, 2016)从历史是8样本信息缓存的大小(见第4章)。悠久的历史的应用让策略检测缓存友好长期重用行,否则就会被一长串厌恶缓存的中间访问所混淆。</li>
+</ul>
+
+                        </div>
+                        
+                            <div class="post-toc">
+                                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E7%BC%93%E5%AD%98%E6%9B%BF%E6%8D%A2%E7%AD%96%E7%95%A5%E7%9A%84%E5%88%86%E7%B1%BB">缓存替换策略的分类</a>
+<ul>
+<li><a href="#%E7%BC%93%E5%AD%98%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E4%B8%AD%E7%9A%84%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5">缓存生命周期中的相关概念</a></li>
+<li><a href="#%E7%B2%97%E7%B2%92%E5%BA%A6%E7%BC%93%E5%AD%98">粗粒度缓存</a>
+<ul>
+<li><a href="#recency-based-policies">Recency-Based Policies</a></li>
+<li><a href="#frequency-basedpolicies">Frequency-BasedPolicies</a></li>
+<li><a href="#hybrid-policies">Hybrid Policies</a></li>
+</ul>
+</li>
+<li><a href="#%E7%BB%86%E7%B2%92%E5%BA%A6%E7%BC%93%E5%AD%98">细粒度缓存</a>
+<ul>
+<li><a href="#classification-based-policies">Classification-Based Policies</a></li>
+<li><a href="#reuse-distance-based-policies">Reuse Distance-Based Policies</a></li>
+</ul>
+</li>
+<li><a href="#%E8%AE%BE%E8%AE%A1%E8%80%83%E9%87%8F">设计考量</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+                            </div>
+                            
+                                
+                                    
+                                            <!--zh-->
+                                            <section class="post-copyright zh">
+                                                <p class="copyright-item ">
+                                                    <span>&#x4F5C;&#x8005;:</span>
+                                                    <span>Elvis Zhang</span>
+                                                </p>
+
+                                                <p class="copyright-item">
+                                                    <span>&#x6C38;&#x4E45;&#x94FE;&#x63A5;:</span>
+                                                    <span><a href="https://blog.shunzi.tech/post/CRP-Taxonomy/">https://blog.shunzi.tech/post/CRP-Taxonomy/</a></span>
+                                                </p>
+
+                                                <p class="copyright-item">
+                                                    <span>&#x534F;&#x8BAE;:</span>
+                                                    <span>MIT License</span>
+                                                </p>
+                                            </section>
+                                            
+                                                
+                                                    
+                                                                    <!--Share-->
+                                                                    <span style="margin-right:15px">
+                        <i class="post-share"></i>
+                        <span>&#x5206;&#x4EAB;:</span>
+                                                                    <a title="QR 码" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://blog.shunzi.tech/post/CRP-Taxonomy/"><i class="fa fa-qrcode"></i></a>
+                                                                    <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://blog.shunzi.tech/post/CRP-Taxonomy/&sharesource=qzone&title=Cache Replacement Policies - Taxonomy&pics=https://blog.shunzi.tech/images/avatar.png?v=1629771976011&summary=&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;Cache Replacement Policies - Taxonomy&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+"><i class="fa fa-qq"></i></a>
+                                                                    <a title="新浪微博" target="_blank" href="https://service.weibo.com/share/share.php?url=https://blog.shunzi.tech/post/CRP-Taxonomy/&sharesource=weibo&title=Cache Replacement Policies - Taxonomy + " - " + &lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;Cache Replacement Policies - Taxonomy&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&pic="https://blog.shunzi.tech/images/avatar.png?v=1629771976011 "><i class="fa fa-weibo "></i></a>
+
+                                                                    </span>
+                                                                    
+                                                                            <!--zh-->
+                                                                            <section class="post-tags zh ">
+                                                                                <div>
+                                                                                    <span>&#x6807;&#x7B7E;:</span>
+                                                                                    <span class="tag ">
+                        
+                        
+                        <a href="https://blog.shunzi.tech/tag/9msH-lUaA/">#
+                    缓存
+                        </a>
+                        
+                        <a href="https://blog.shunzi.tech/tag/la-n8a0mo/">#
+                    读书笔记
+                        </a>
+                        
+                            
+                                </span>
+                                                                                </div>
+                                                                                <div>
+                                                                                    <a href="javascript:window.history.back();">
+                        &#x8FD4;&#x56DE;</a>
+                                                                                    <span>&dot;</span>
+                                                                                    <a href="#">&#x4E3B;&#x9875;</a>
+                                                                                </div>
+                                                                            </section>
+
+                                                                            
+                                                                                <!---->
+                                                                                <section class="post-nav">
+                                                                                    
+                                                                                        <a class="prev" rel="prev" href="https://blog.shunzi.tech/post/CRP-Coarse-Grained-One-Recency/">
+                                                                                            Cache Replacement Policies - Coarse-Grained Recency
+                                                                                        </a>
+                                                                                        
+                                                                                            
+                                                                                                <a class="next" rel="next" href="https://blog.shunzi.tech/post/CRP-Introduction/">
+                                                                                                    Cache Replacement Policies - Introduction
+                                                                                                </a>
+                                                                                                
+                                                                                </section>
+                    </article>
+                </div>
+                <div class="post-wrap">
+                
+                                            
+                                                <script type="application/javascript" src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+<div id="vlaine-comment"></div>
+<script type="application/javascript">
+    new Valine({
+        el: '#vlaine-comment',
+        appId: 'Pj5H1z0w7hJlLGJpGBh9NrCq-MdYXbMMI',
+        appKey: 'LdR8vK5EaBfK87esF7tlbsXe',
+        pageSize: 5,
+        avatar: 'mp',
+        placeholder: '来都来了，不妨评论一下',
+        visitor: false,
+        highlight: false,
+        recordIP: false,
+    })
+</script>
+                                                    
+                                                </div>
+            </div>
+    </div>
+    </div>
+    </div>
+    
+    <div id="player"></div>
+    
+        <footer id="footer" class="footer">
+            <div class="copyright">
+                
+                        Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+                            
+                                <b id="hitokoto"></b><br>
+                                
+                                        <svg viewBox="0 0 1024 1024" style="margin-left: 5px;margin-right: 5px;" version="1.0" width="8" height="8" class="my-face">
+            <path
+                d="M863.597631 513.574282l-271.33965-140.213484L729.783667 81.926656c3.583731-7.87141 7.167462-15.742819 7.167462-25.214109C736.887134 25.226908 708.345275 0.012799 672.635953 0.012799a63.611229 63.611229 0 0 0-39.293053 12.607055c-1.791866 1.59988-3.519736 3.19976-5.311602 3.19976L147.87531 418.925381a55.547834 55.547834 0 0 0-19.646527 47.356448c1.791866 17.278704 14.27093 33.021523 32.125591 42.492813l271.33965 141.749369L292.504463 945.221908c-12.479064 25.214109-1.791866 53.563983 23.166262 69.306802 10.751194 6.335525 23.230258 9.47129 35.709322 9.47129 16.062795 0 32.125591-4.735645 44.604655-15.742819l480.091993-403.297753a55.547834 55.547834 0 0 0 19.646526-47.228458 61.243407 61.243407 0 0 0-32.12559-44.156688z"
+                fill="#93b5cf"></path>
+        </svg>
+                                        Elvis Zhang &copy;Copyright
+                                            <script>
+                                                var date = new Date();
+                                                document.write("" + date.getFullYear());
+                                            </script>
+                                            | Powered by
+                                            <a href="https://github.com/" target="_blank">
+                                                Github Pages
+                                            </a>
+            </div>
+            <div id="update" style="display:none;">
+                on
+            </div>
+            
+                <div id="version" style="display:none;">
+                    1.7.6
+                </div>
+                
+                    <script>
+                        var port = '';
+                        
+                        document.write('<div id="home_path" style="display:none;">' + document.location.protocol + '//' + window.document.location.hostname + port + '</div>')
+                    </script>
+        </footer>
+        
+            <script src='https://cdn.jsdelivr.net/npm/live2d-widget@3.x/lib/L2Dwidget.min.js'></script>
+            
+                <script>
+                    
+
+                    function LoadPlayer() {
+                        var musicList = [];
+                        
+                        musicList.push({
+                            name: 'See You Again (feat. Charlie Puth)',
+                            url: 'https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBbmlqSWg1RWM0TlZoSXhtUU9nLTk3R2g5cDVlblE.mp3',
+                            artist: 'Charlie Puth',
+                            cover: 'https://4.bp.blogspot.com/-tk-Dzg0cHNQ/WnxPiEImF8I/AAAAAAAAMbg/FisRjWssG3kMFGiMh1BE3j4U6QnI2O3rwCLcBGAs/s1600/wiz-khalifa-see-you-again.jpg',
+                        });
+                        
+                        console.log(" MusicList: " + musicList);
+                        
+                        const ap = new APlayer({
+                            container: document.getElementById('player'),
+                            fixed: true,
+                            audio: musicList
+                        });
+                        
+                    }
+                    LoadPlayer();
+                    
+                    
+                    loadlive2d();
+                    
+                    
+                    hitokoto();
+                    
+                    getStar();
+                    hljs.initHighlighting();
+                    console.clear();
+                    
+                    CheckVersion();
+                    
+                    var newDate = new Date();
+                    newDate.setTime(1629771976011);
+                    console.log(" Blog Update Time: " + newDate.toLocaleDateString());
+                    console.log("\n %c \u26a1Theme:Chic Author's Blog:https://blog.itjoker.cn  Write By ITJoker  \n\n", "color: #ffffff; background: rgba(49, 49, 49, 0.85); padding:5px 0;border-radius:5px;");
+                </script>
+        </div>
+</body>
+<script>
+    scroll();
+</script>
+
+</html>

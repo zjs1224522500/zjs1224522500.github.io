@@ -115,7 +115,7 @@
                         <input id="switch_default" type="checkbox" class="switch_default">
                         <label for="switch_default" class="toggleBtn"></label>
             </div>
-            <form id="gridea-search-form" data-update="1628152178998" action="/search/index.html">
+            <form id="gridea-search-form" data-update="1629771976011" action="/search/index.html">
                 <input class="search-input" autocomplete="off" spellcheck="false" name="q" autofocus="true" placeholder="Search...">
             </form>
         </div>
@@ -134,7 +134,7 @@
                         <!--zh-->
                         <a id="mobile-toggle-theme-zh" class="a zh">&nbsp;&#x6697;&#x9ED1;</a>
                     </div>
-                    <form id="gridea-search-form" data-update="1628152178998" action="/search/index.html">
+                    <form id="gridea-search-form" data-update="1629771976011" action="/search/index.html">
                         <input class="search-input" autocomplete="off" spellcheck="false" name="q" autofocus="true" placeholder="Search...">
                     </form>
                     <!--en-->
@@ -252,9 +252,9 @@
                                         </a>
                                         <span class="post-time">&#x65E5;&#x671F;: <a href="#">2021-05-12</a></span>
                                         <span class="post-readtime">&#x9605;&#x8BFB;&#x65F6;&#x95F4;:<a
-                                    href="#">5.0
+                                    href="#">26.5
                                     &#x5206;&#x949F;</a></span>
-                                        <span class="post-words">&#x5B57;&#x6570;:<a href="#">1267</a></span>
+                                        <span class="post-words">&#x5B57;&#x6570;:<a href="#">6563</a></span>
                                         
                                             <span class="post-category">&#x5206;&#x7C7B;:
                                 
@@ -280,6 +280,13 @@
 <h2 id="stl">STL</h2>
 <ul>
 <li>C++ STL（标准模板库）是一套功能强大的 C++ 模板类，提供了通用的模板类和函数，这些模板类和函数可以实现多种流行和常用的算法和数据结构，如向量、链表、队列、栈。</li>
+<li>C++ 标准模板库的核心包括以下三个组件：
+<ul>
+<li><strong>容器（Containers）</strong>：容器是用来管理某一类对象的集合。C++ 提供了各种不同类型的容器，比如 deque、list、vector、map 等。</li>
+<li><strong>算法（Algorithms）</strong>：算法作用于容器。它们提供了执行各种操作的方式，包括对容器内容执行初始化、排序、搜索和转换等操作。</li>
+<li><strong>迭代器（iterators）</strong>：迭代器用于遍历对象集合的元素。这些集合可能是容器，也可能是容器的子集。</li>
+</ul>
+</li>
 </ul>
 <h3 id="参考链接">参考链接</h3>
 <ul>
@@ -290,6 +297,7 @@
 <h3 id="stl-容器">STL 容器</h3>
 <h4 id="顺序容器-sequential-containers">顺序容器 Sequential Containers</h4>
 <ul>
+<li><a href="https://github.com/czs108/Cpp-Primer-5th-Notes-CN/tree/master/Chapter-9%20Sequential%20Containers">C++ Primer 第9章 顺序容器</a></li>
 <li><strong>概览</strong></li>
 </ul>
 <table>
@@ -332,16 +340,255 @@
 <p><strong>容器选择原则</strong></p>
 <ul>
 <li>除非有合适的理由选择其他容器，否则应该使用<code>vector</code>。</li>
-<li>如果程序有很多小的元素，且空间的额外开销很重要，则不要使用<code>list</code>或<code>forward_list</code>。</li>
-<li>如果程序要求随机访问容器元素，则应该使用<code>vector</code>或<code>deque</code>。</li>
-<li>如果程序需要在容器头尾位置插入/删除元素，但不会在中间位置操作，则应该使用<code>deque</code>。</li>
+<li>如果<strong>程序有很多小的元素，且空间的额外开销很重要</strong>，则<strong>不要</strong>使用<code>list</code>或<code>forward_list</code>。</li>
+<li>如果<strong>程序要求随机访问容器元素，则应该使用<code>vector</code>或<code>deque</code></strong>。</li>
+<li>如果<strong>程序需要在容器头尾位置插入/删除元素，但不会在中间位置操作，则应该使用<code>deque</code></strong>。</li>
 <li>如果程序只有在读取输入时才需要在容器中间位置插入元素，之后需要随机访问元素。则：
 <ul>
-<li>先确定是否真的需要在容器中间位置插入元素。当处理输入数据时，可以先向<code>vector</code>追加数据，再调用标准库的<code>sort</code>函数重排元素，从而避免在中间位置添加元素。</li>
-<li>如果必须在中间位置插入元素，可以在输入阶段使用<code>list</code>。输入完成后将<code>list</code>中的内容拷贝到<code>vector</code>中。</li>
+<li>先<strong>确定是否真的需要在容器中间位置插入元素</strong>。当处理输入数据时，可以先向<code>vector</code>追加数据，再调用标准库的<code>sort</code>函数重排元素，从而<strong>避免在中间位置添加元素</strong>。</li>
+<li>如果<strong>必须在中间位置插入元素，可以在输入阶段使用<code>list</code>。输入完成后将<code>list</code>中的内容拷贝到<code>vector</code></strong> 中。</li>
 </ul>
 </li>
-<li>不确定应该使用哪种容器时，可以先只使用<code>vector</code>和<code>list</code>的公共操作：使用迭代器，不使用下标操作，避免随机访问。这样在必要时选择<code>vector</code>或<code>list</code>都很方便。</li>
+<li>不确定应该使用哪种容器时，可以先只使用<code>vector</code>和<code>list</code>的公共操作：<strong>使用迭代器，不使用下标操作，避免随机访问</strong>。这样在必要时选择<code>vector</code>或<code>list</code>都很方便。</li>
+</ul>
+<p><strong>迭代器</strong></p>
+<ul>
+<li>一个迭代器范围（iterator range）由一对迭代器表示。这两个迭代器通常被称为begin和end，分别指向同一个容器中的元素或尾后地址。end迭代器不会指向范围中的最后一个元素，而是指向尾元素之后的位置。这种元素范围被称为左闭合区间（left-inclusive interval），其标准数学描述为[begin，end）。迭代器begin和end必须指向相同的容器，end可以与begin指向相同的位置，但不能指向begin之前的位置（由程序员确保）。</li>
+<li>区分：
+<ul>
+<li>begin / end</li>
+<li>cbegin / cend</li>
+<li>rbegin / rend</li>
+</ul>
+</li>
+</ul>
+<p><strong>容器定义和初始化</strong></p>
+<ul>
+<li>将一个容器初始化为另一个容器的拷贝时，两个容器的容器<strong>类型和元素类型都必须相同</strong>。</li>
+<li><strong>传递迭代器参数来拷贝一个范围时，不要求容器类型相同，而且新容器和原容器中的元素类型也可以不同，但是要能进行类型转换</strong>。</li>
+</ul>
+<pre><code class="language-C++">// each container has three elements, initialized from the given initializers
+list&lt;string&gt; authors = {&quot;Milton&quot;, &quot;Shakespeare&quot;, &quot;Austen&quot;};
+vector&lt;const char*&gt; articles = {&quot;a&quot;, &quot;an&quot;, &quot;the&quot;};
+list&lt;string&gt; list2(authors);        // ok: types match
+deque&lt;string&gt; authList(authors);    // error: container types don't match
+vector&lt;string&gt; words(articles);     // error: element types must match
+// ok: converts const char* elements to string
+forward_list&lt;string&gt; words(articles.begin(), articles.end());
+</code></pre>
+<ul>
+<li>定义和使用array类型时，需要同时指定元素类型和容器大小。对array进行列表初始化时，初始值的数量不能大于array的大小。如果初始值的数量小于array的大小，则只初始化靠前的元素，剩余元素会被值初始化。如果元素类型是类类型，则该类需要一个默认构造函数。</li>
+<li>可以对array进行拷贝或赋值操作，但要求二者的元素类型和大小都相同。</li>
+</ul>
+<pre><code class="language-C++">array&lt;int, 42&gt;      // type is: array that holds 42 ints
+array&lt;string, 10&gt;   // type is: array that holds 10 strings
+array&lt;int, 10&gt;::size_type i;   // array type includes element type and size
+array&lt;int&gt;::size_type j;       // error: array&lt;int&gt; is not a type
+</code></pre>
+<p><strong>赋值和swap（Assignment and swap）</strong></p>
+<ul>
+<li>赋值运算符两侧的运算对象必须类型相同。assign允许用不同但相容的类型赋值，或者用容器的子序列赋值。<strong>由于其旧元素被替换，因此传递给assign的迭代器不能指向调用assign的容器本身。</strong></li>
+<li><strong>array不支持assign，也不允许用花括号列表进行赋值。</strong></li>
+</ul>
+<pre><code class="language-C++">list&lt;string&gt; names;
+vector&lt;const char*&gt; oldstyle;
+names = oldstyle;   // error: container types don't match
+// ok: can convert from const char*to string
+names.assign(oldstyle.cbegin(), oldstyle.cend());
+</code></pre>
+<ul>
+<li>swap 交换两个相同类型容器的内容。除array外，<strong>swap不对任何元素进行拷贝、删除或插入操作，只交换两个容器的内部数据结构，因此可以保证快速完成</strong>。</li>
+</ul>
+<pre><code class="language-C++">vector&lt;string&gt; svec1(10);   // vector with ten elements
+vector&lt;string&gt; svec2(24);   // vector with 24 elements
+swap(svec1, svec2);
+</code></pre>
+<ul>
+<li><strong>赋值</strong>相关运算会导致指向左边容器内部的迭代器、引用和指针失效。而<strong>swap</strong>操作交换容器内容，不会导致迭代器、引用和指针失效（array和string除外）。</li>
+<li><strong>对于array，swap会真正交换它们的元素。因此在swap操作后，指针、引用和迭代器所绑定的元素不变，但元素值已经被交换</strong>。</li>
+</ul>
+<pre><code class="language-C++">array&lt;int, 3&gt; a = { 1, 2, 3 };
+array&lt;int, 3&gt; b = { 4, 5, 6 };
+auto p = a.cbegin(), q = a.cend();
+a.swap(b);
+// 输出交换后的值，即4、5、6
+while (p != q)
+{
+    cout &lt;&lt; *p &lt;&lt; endl;
+    ++p;
+}
+</code></pre>
+<ul>
+<li><strong>对于其他容器类型（除string），指针、引用和迭代器在swap操作后仍指向操作前的元素</strong>，但这些元素已经属于不同的容器了。</li>
+</ul>
+<pre><code class="language-C++">vector&lt;int&gt; a = { 1, 2, 3 };
+vector&lt;int&gt; b = { 4, 5, 6 };
+auto p = a.cbegin(), q = a.cend();
+a.swap(b);
+// 输出交换前的值，即1、2、3
+while (p != q)
+{
+    cout &lt;&lt; *p &lt;&lt; endl;
+    ++p;
+}
+</code></pre>
+<ul>
+<li>新标准库同时提供了成员和非成员函数版本的swap。非成员版本的swap在泛型编程中非常重要，<strong>建议统一使用非成员版本的swap</strong></li>
+</ul>
+<p><strong>关系运算符（Relational Operator）</strong></p>
+<ul>
+<li>每个容器类型都支持相等运算符（==、!=）。除无序关联容器外，其他容器都支持关系运算符（&gt;、&gt;=、&lt;、&lt;=）。关系运算符两侧的容器类型和保存元素类型都必须相同。</li>
+<li><strong>两个容器的比较实际上是元素的逐对比较，其工作方式与string的关系运算符类似：</strong></li>
+</ul>
+<pre><code class="language-C++">vector&lt;int&gt; v1 = { 1, 3, 5, 7, 9, 12 };
+vector&lt;int&gt; v2 = { 1, 3, 9 };
+vector&lt;int&gt; v3 = { 1, 3, 5, 7 };
+vector&lt;int&gt; v4 = { 1, 3, 5, 7, 9, 12 };
+v1 &lt; v2     // true; v1 and v2 differ at element [2]: v1[2] is less than v2[2]
+v1 &lt; v3     // false; all elements are equal, but v3 has fewer of them;
+v1 == v4    // true; each element is equal and v1 and v4 have the same size()
+v1 == v2    // false; v2 has fewer elements than v1
+</code></pre>
+<ul>
+<li>容器的相等运算符实际上是使用元素的==运算符实现的，而其他关系运算符则是使用元素的&lt;运算符。如果元素类型不支持所需运算符，则保存该元素的容器就不能使用相应的关系运算。</li>
+</ul>
+<p><strong>操作</strong></p>
+<ul>
+<li>
+<p>添加:</p>
+<ul>
+<li>push_back</li>
+<li>push_front</li>
+<li>insert: 将元素插入到迭代器指定的位置之前。一些不支持push_front的容器可以使用insert将元素插入开始位置。
+<ul>
+<li>在新标准库中，接受元素个数或范围的insert版本返回指向第一个新增元素的迭代器，而旧版本中这些操作返回void。如果范围为空，不插入任何元素，insert会返回第一个参数。</li>
+</ul>
+<pre><code class="language-C++">list&lt;string&gt; 1st;
+auto iter = 1st.begin();
+while (cin &gt;&gt; word)
+  iter = 1st.insert(iter, word);  // same as calling push_front
+</code></pre>
+</li>
+<li>新标准库增加了三个<strong>直接构造而不是拷贝元素</strong>的操作：emplace_front、emplace_back和emplace，其分别对应push_front、push_back和insert。当调用push或insert时，元素对象被拷贝到容器中。而调用emplace时，则是将参数传递给元素类型的构造函数，直接在容器的内存空间中构造元素。<pre><code class="language-C++">// construct a Sales_data object at the end of c
+// uses the three-argument Sales_data constructor
+c.emplace_back(&quot;978-0590353403&quot;, 25, 15.99);
+// error: there is no version of push_back that takes three arguments
+c.push_back(&quot;978-0590353403&quot;, 25, 15.99);
+// ok: we create a temporary Sales_data object to pass to push_back
+c.push_back(Sales_data(&quot;978-0590353403&quot;, 25, 15.99));
+</code></pre>
+</li>
+<li><strong>forward_list 有特殊版本的 insert 和 emplace 操作，且不支持 push_back 和 emplace_back。vector 和 string 不支持 push_front 和 emplace_front。</strong></li>
+</ul>
+</li>
+<li>
+<p>访问：</p>
+<ul>
+<li>每个顺序容器都有一个front成员函数，而除了forward_list之外的顺序容器还有一个back成员函数。这两个操作分别返回首元素和尾元素的引用。在调用front和back之前，要确保容器非空。</li>
+<li>在容器中访问元素的成员函数都返回引用类型。<strong>如果容器是const对象，则返回const引用</strong>，否则返回普通引用。</li>
+<li><strong>可以快速随机访问的容器（string、vector、deque 和 array）都提供下标运算符</strong>。保证下标有效是程序员的责任。如果希望确保下标合法，可以使用 at 成员函数。at 类似下标运算，但如果下标越界，at 会抛出 out_of_range 异常。</li>
+</ul>
+</li>
+<li>
+<p>删除：</p>
+<ul>
+<li>删除 deque 中<strong>除首尾位置之外的任何元素都会使所有迭代器、引用和指针</strong>失效。删除 vector 或string 的元素后，<strong>指向删除点之后位置的迭代器</strong>、引用和指针也都会失效。删除元素前，程序员必须确保目标元素存在。</li>
+<li>pop_front 和 pop_back 函数分别删除首元素和尾元素。vector 和 string 类型不支持 pop_front，forward_list 类型不支持 pop_back。</li>
+<li>erase 函数删除指定位置的元素。<strong>可以删除由一个迭代器指定的单个元素</strong>，也<strong>可以删除由一对迭代器指定的范围内的所有元素</strong>。两种形式的 erase 都<strong>返回指向删除元素（最后一个）之后位置的迭代器</strong>。<pre><code class="language-C++">// delete the range of elements between two iterators
+// returns an iterator to the element just after the last removed element
+elem1 = slist.erase(elem1, elem2);  // after the call elem1 == elem2
+</code></pre>
+</li>
+<li>clear 函数删除容器内的所有元素。</li>
+</ul>
+</li>
+<li>
+<p>改变容器大小（Resizing a Container）</p>
+<ul>
+<li>resize 函数接受一个可选的元素值参数，用来初始化添加到容器中的元素，否则新元素进行值初始化。如果容器保存的是类类型元素，且 resize 向容器添加新元素，则必须提供初始值，或元素类型提供默认构造函数。</li>
+</ul>
+</li>
+<li>
+<p><strong>容器操作可能使迭代器失效（Container Operations May Invalidate Iterators）</strong></p>
+<ul>
+<li>向容器中添加或删除元素可能会使指向容器元素的指针、引用或迭代器失效。失效的指针、引用或迭代器不再表示任何元素，使用它们是一种严重的程序设计错误。</li>
+<li><strong>必须保证在每次改变容器后都正确地重新定位迭代器。不要保存end函数返回的迭代器。</strong><pre><code class="language-C++">// safer: recalculate end on each trip whenever the loop adds/erases elements
+while (begin != v.end())
+{
+    // do some processing
+    ++begin;    // advance begin because we want to insert after this element
+    begin = v.insert(begin, 42);    // insert the new value
+    ++begin;    // advance begin past the element we just added
+}
+</code></pre>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>vector对象是如何增长的（How a vector Grows）</strong></p>
+<ul>
+<li>vector和string的实现通常会分配比新空间需求更大的内存空间，容器预留这些空间作为备用，可用来保存更多新元素。</li>
+<li>capacity函数返回容器在不扩充内存空间的情况下最多可以容纳的元素数量。reserve函数告知容器应该准备保存多少元素，它并不改变容器中元素的数量，仅影响容器预先分配的内存空间大小。</li>
+<li>只有当需要的内存空间超过当前容量时，reserve才会真正改变容器容量，分配不小于需求大小的内存空间。当需求大小小于当前容量时，reserve并不会退回内存空间。因此在调用reserve之后，capacity会大于或等于传递给reserve的参数。</li>
+<li><strong>在C++11中可以使用 shrink_to_fit 函数来要求deque、vector和string退回不需要的内存空间（并不保证退回）。</strong></li>
+</ul>
+</li>
+<li>
+<p><strong>string 操作</strong></p>
+<ul>
+<li>构造方法：
+<ul>
+<li>拷贝构造</li>
+<li>求子串</li>
+</ul>
+</li>
+<li>操作：
+<ul>
+<li>append<pre><code class="language-C++">string s(&quot;C++ Primer&quot;), s2 = s;     // initialize s and s2 to &quot;C++ Primer&quot;
+s.insert(s.size(), &quot; 4th Ed.&quot;);     // s == &quot;C++ Primer 4th Ed.&quot;
+s2.append(&quot; 4th Ed.&quot;);     // equivalent: appends &quot; 4th Ed.&quot; to s2; s == s2
+</code></pre>
+</li>
+<li>replace<pre><code class="language-C++">// equivalent way to replace &quot;4th&quot; by &quot;5th&quot;
+s.erase(11, 3);         // s == &quot;C++ Primer Ed.&quot;
+s.insert(11, &quot;5th&quot;);    // s == &quot;C++ Primer 5th Ed.&quot;
+// starting at position 11, erase three characters and then insert &quot;5th&quot;
+s2.replace(11, 3, &quot;5th&quot;);   // equivalent: s == s2
+</code></pre>
+</li>
+<li>搜索：
+<ul>
+<li>string 的每个搜索操作都返回一个 string::size_type 值，表示匹配位置的下标。不建议用int或其他带符号类型来保存string搜索函数的返回值。</li>
+</ul>
+</li>
+<li>比较：
+<ul>
+<li>string 类型提供了一组compare函数进行字符串比较操作，类似C标准库的strcmp函数</li>
+</ul>
+</li>
+<li>数值转换（Numeric Conversions）
+<ul>
+<li>进行数值转换时，string参数的第一个非空白字符必须是符号（+或-）或数字。它可以以0x或0X开头来表示十六进制数。对于转换目标是浮点值的函数，string参数也可以以小数点开头，并可以包含e或E来表示指数部分。</li>
+<li>如果给定的 string 不能转换为一个数值，则转换函数会抛出invalid_argument异常。如果转换得到的数值无法用任何类型表示，则抛出 out_of_range 异常。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="容器适配器">容器适配器</h4>
+<ul>
+<li>标准库定义了stack、queue和priority_queue三种容器适配器。<strong>容器适配器可以改变已有容器的工作机制</strong>。</li>
+<li>默认情况下，stack和queue是基于deque实现的，priority_queue是基于vector实现的。可以在创建适配器时将一个命名的顺序容器作为第二个类型参数，来重载默认容器类型。</li>
+</ul>
+<pre><code class="language-C++">// empty stack implemented on top of vector
+stack&lt;string, vector&lt;string&gt;&gt; str_stk;
+// str_stk2 is implemented on top of vector and initially holds a copy of svec
+stack&lt;string, vector&lt;string&gt;&gt; str_stk2(svec);
+</code></pre>
+<ul>
+<li>所有适配器都要求容器具有添加和删除元素的能力，因此适配器不能构造在 array 上。适配器还要求容器具有添加、删除和访问尾元素的能力，因此也不能用 forward_list 构造适配器。</li>
 </ul>
 <h4 id="关联容器">关联容器</h4>
 <p>关联容器支持高效的关键字查找和访问操作。2个主要的关联容器（associative-container）类型是<code>map</code>和<code>set</code>。</p>
@@ -377,6 +624,135 @@ pair&lt;string, size_t&gt; word_count;  // holds a string and an size_t
 pair&lt;string, vector&lt;int&gt;&gt; line;   // holds string and vector&lt;int&gt;
 </code></pre>
 <p><code>pair</code>的默认构造函数对数据成员进行值初始化。</p>
+<h5 id="定义">定义</h5>
+<ul>
+<li>定义map时，必须指定关键字类型和值类型；定义set时，只需指定关键字类型。</li>
+<li>初始化map时，提供的每个键值对用花括号{}包围。</li>
+</ul>
+<pre><code class="language-C++">map&lt;string, size_t&gt; word_count;   // empty
+// list initialization
+set&lt;string&gt; exclude = { &quot;the&quot;, &quot;but&quot;, &quot;and&quot; };
+// three elements; authors maps last name to first
+map&lt;string, string&gt; authors =
+{
+    {&quot;Joyce&quot;, &quot;James&quot;},
+    {&quot;Austen&quot;, &quot;Jane&quot;},
+    {&quot;Dickens&quot;, &quot;Charles&quot;}
+};
+</code></pre>
+<ul>
+<li>map 和 set 中的关键字必须唯一，multimap 和 multiset 没有此限制。</li>
+</ul>
+<p><strong>关键字类型的要求（Requirements on Key Type）</strong></p>
+<ul>
+<li>对于有序容器——map、multimap、set和multiset，关键字类型必须定义元素比较的方法。默认情况下，标准库使用<strong>关键字类型的 &lt; 运算符</strong>来进行比较操作。</li>
+<li>用来组织容器元素的操作的类型也是该容器类型的一部分。如果需要使用自定义的比较操作，则必须在定义关联容器类型时提供此操作的类型。操作类型在尖括号中紧跟着元素类型给出。</li>
+</ul>
+<pre><code class="language-C++">bool compareIsbn(const Sales_data &amp;lhs, const Sales_data &amp;rhs)
+{
+    return lhs.isbn() &lt; rhs.isbn();
+}
+
+// bookstore can have several transactions with the same ISBN
+// elements in bookstore will be in ISBN order
+multiset&lt;Sales_data, decltype(compareIsbn)*&gt; bookstore(compareIsbn);
+</code></pre>
+<h5 id="操作">操作</h5>
+<ul>
+<li><strong>类型</strong>
+<ul>
+<li>对于set类型，key_type和value_type是一样的。set中保存的值就是关键字。对于map类型，元素是关键字-值对。即每个元素是一个pair对象，包含一个关键字和一个关联的值。由于元素关键字不能改变，因此pair的关键字部分是const的。另外，只有map类型（unordered_map、unordered_multimap、multimap、map）才定义了mapped_type。</li>
+</ul>
+<pre><code class="language-C++">set&lt;string&gt;::value_type v1;        // v1 is a string
+set&lt;string&gt;::key_type v2;          // v2 is a string
+map&lt;string, int&gt;::value_type v3;   // v3 is a pair&lt;const string, int&gt;
+map&lt;string, int&gt;::key_type v4;     // v4 is a string
+map&lt;string, int&gt;::mapped_type v5;  // v5 is an int
+</code></pre>
+</li>
+<li><strong>迭代器</strong>
+<ul>
+<li>解引用关联容器迭代器时，会得到一个类型为容器的value_type的引用。对map而言，value_type是pair类型，其first成员保存const的关键字，second成员保存值。<pre><code class="language-C++">// get an iterator to an element in word_count
+auto map_it = word_count.begin();
+// *map_it is a reference to a pair&lt;const string, size_t&gt; object
+cout &lt;&lt; map_it-&gt;first;          // prints the key for this element
+cout &lt;&lt; &quot; &quot; &lt;&lt; map_it-&gt;second;  // prints the value of the element
+map_it-&gt;first = &quot;new key&quot;;      // error: key is const
+++map_it-&gt;second;               // ok: we can change the value through an iterator
+</code></pre>
+</li>
+<li>虽然set同时定义了iterator和const_iterator类型，但两种迭代器都只允许只读访问set中的元素。类似map，set中的关键字也是const的。<pre><code class="language-C++">set&lt;int&gt; iset = {0,1,2,3,4,5,6,7,8,9};
+set&lt;int&gt;::iterator set_it = iset.begin();
+if (set_it != iset.end())
+{
+    *set_it = 42;       // error: keys in a set are read-only
+    cout &lt;&lt; *set_it &lt;&lt; endl;    // ok: can read the key
+}
+</code></pre>
+</li>
+<li>map 和 set 都支持begin和end操作。使用迭代器遍历map、multimap、set或multiset时，迭代器按关键字升序遍历元素。</li>
+</ul>
+</li>
+<li><strong>添加：</strong>
+<ul>
+<li>使用insert成员可以向关联容器中添加元素。向map和set中添加已存在的元素对容器没有影响。</li>
+<li>通常情况下，对于想要添加到map中的数据，并没有现成的pair对象。可以直接在insert的参数列表中创建pair。<pre><code class="language-C++">// four ways to add word to word_count
+word_count.insert({word, 1});
+word_count.insert(make_pair(word, 1));
+word_count.insert(pair&lt;string, size_t&gt;(word, 1));
+word_count.insert(map&lt;string, size_t&gt;::value_type(word, 1));
+</code></pre>
+</li>
+<li>insert或emplace的返回值依赖于容器类型和参数：
+<ul>
+<li>对于<strong>不包含重复关键字</strong>的容器，添加单一元素的insert和emplace版本<strong>返回一个pair，表示操作是否成功</strong>。pair的first成员是一个迭代器，指向具有给定关键字的元素；second成员是一个bool值。如果关键字已在容器中，则insert直接返回，bool值为false。如果关键字不存在，元素会被添加至容器中，bool值为true。</li>
+<li>对于<strong>允许包含重复关键字</strong>的容器，添加单一元素的insert和emplace版本返回<strong>指向新元素</strong>的迭代器。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>删除：</strong>
+<ul>
+<li>与顺序容器不同，关联容器提供了一个额外的erase操作。它接受一个key_type参数，删除所有匹配给定关键字的元素（如果存在），返回实际删除的元素数量。对于不包含重复关键字的容器，erase的返回值总是1或0。若返回值为0，则表示想要删除的元素并不在容器中。</li>
+</ul>
+</li>
+<li><strong>map的下标操作（Subscripting a map</strong>）
+<ul>
+<li>map下标运算符接受一个关键字，获取与此关键字相关联的值。如果关键字不在容器中，下标运算符会向容器中添加该关键字，并值初始化关联值。</li>
+<li>由于下标运算符可能向容器中添加元素，所以只能对非const的map使用下标操作。</li>
+<li>对map进行下标操作时，返回的是mapped_type类型的对象；解引用map迭代器时，返回的是value_type类型的对象。</li>
+</ul>
+</li>
+<li><strong>访问元素：</strong>
+<ul>
+<li>如果multimap或multiset中有多个元素具有相同关键字，则这些元素在容器中会相邻存储。</li>
+<li>lower_bound和upper_bound操作都接受一个关键字，返回一个迭代器。如果关键字在容器中，lower_bound返回的迭代器会指向第一个匹配给定关键字的元素，而upper_bound返回的迭代器则指向最后一个匹配元素之后的位置。如果关键字不在multimap中，则lower_bound和upper_bound会返回相等的迭代器，指向一个不影响排序的关键字插入位置。因此用相同的关键字调用lower_bound和upper_bound会得到一个迭代器范围，表示所有具有该关键字的元素范围。<pre><code class="language-C++">// definitions of authors and search_item as above
+// beg and end denote the range of elements for this author
+for (auto beg = authors.lower_bound(search_item),
+        end = authors.upper_bound(search_item);
+    beg != end; ++beg)
+    cout &lt;&lt; beg-&gt;second &lt;&lt; endl;    // print each title
+</code></pre>
+</li>
+<li>lower_bound和upper_bound有可能返回尾后迭代器。如果查找的元素具有容器中最大的关键字，则upper_bound返回尾后迭代器。如果关键字不存在，且大于容器中任何关键字，则lower_bound也返回尾后迭代器。</li>
+<li>equal_range操作接受一个关键字，返回一个迭代器pair。若关键字存在，则第一个迭代器指向第一个匹配关键字的元素，第二个迭代器指向最后一个匹配元素之后的位置。若关键字不存在，则两个迭代器都指向一个不影响排序的关键字插入位置。<pre><code class="language-C++">// definitions of authors and search_item as above
+// pos holds iterators that denote the range of elements for this key
+for (auto pos = authors.equal_range(search_item);
+        pos.first != pos.second; ++pos.first)
+    cout &lt;&lt; pos.first-&gt;second &lt;&lt; endl;  // print each title
+</code></pre>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="无序容器">无序容器</h5>
+<ul>
+<li>新标准库定义了4个无序关联容器（unordered associative container），这些容器使用哈希函数（hash function）和关键字类型的 == 运算符组织元素。</li>
+<li>无序容器和对应的有序容器通常可以相互替换。但是由于元素未按顺序存储，使用无序容器的程序输出一般会与有序容器的版本不同。</li>
+<li>无序容器在存储上组织为一组桶，每个桶保存零或多个元素。无序容器使用一个哈希函数将元素映射到桶。为了访问一个元素，容器首先计算元素的哈希值，它指出应该搜索哪个桶。容器将具有一个特定哈希值的所有元素都保存在相同的桶中。因此无序容器的性能依赖于哈希函数的质量和桶的数量及大小。<br>
+<img src="https://i.loli.net/2021/08/14/JWiQAbr25sMTh4q.png" alt="20210814224446" loading="lazy"></li>
+<li>默认情况下，无序容器使用关键字类型的 == 运算符比较元素，还使用一个 hash&lt;key_type&gt; 类型的对象来生成每个元素的哈希值。标准库为内置类型和一些标准库类型提供了hash模板。因此可以直接定义关键字是这些类型的无序容器，而不能直接定义关键字类型为自定义类类型的无序容器，必须先提供对应的hash模板版本。</li>
+</ul>
 <h3 id="stl-常用算法">STL 常用算法</h3>
 <h4 id="搜索">搜索</h4>
 <h5 id="二分查找">二分查找</h5>
@@ -413,6 +789,7 @@ ForwardIterator lower_bound (ForwardIterator first, ForwardIterator last,
 <li><a href="#stl-%E5%AE%B9%E5%99%A8">STL 容器</a>
 <ul>
 <li><a href="#%E9%A1%BA%E5%BA%8F%E5%AE%B9%E5%99%A8-sequential-containers">顺序容器 Sequential Containers</a></li>
+<li><a href="#%E5%AE%B9%E5%99%A8%E9%80%82%E9%85%8D%E5%99%A8">容器适配器</a></li>
 <li><a href="#%E5%85%B3%E8%81%94%E5%AE%B9%E5%99%A8">关联容器</a>
 <ul>
 <li><a href="#%E4%BD%BF%E7%94%A8%E5%85%B3%E8%81%94%E5%AE%B9%E5%99%A8using-an-associative-container">使用关联容器（Using an Associative Container）</a>
@@ -420,6 +797,9 @@ ForwardIterator lower_bound (ForwardIterator first, ForwardIterator last,
 <li><a href="#pair">pair</a></li>
 </ul>
 </li>
+<li><a href="#%E5%AE%9A%E4%B9%89">定义</a></li>
+<li><a href="#%E6%93%8D%E4%BD%9C">操作</a></li>
+<li><a href="#%E6%97%A0%E5%BA%8F%E5%AE%B9%E5%99%A8">无序容器</a></li>
 </ul>
 </li>
 </ul>
@@ -468,7 +848,7 @@ ForwardIterator lower_bound (ForwardIterator first, ForwardIterator last,
                         <i class="post-share"></i>
                         <span>&#x5206;&#x4EAB;:</span>
                                                                     <a title="QR 码" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://blog.shunzi.tech/post/cpp-std/"><i class="fa fa-qrcode"></i></a>
-                                                                    <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://blog.shunzi.tech/post/cpp-std/&sharesource=qzone&title=C++ STL&pics=https://blog.shunzi.tech/images/avatar.png?v=1628152178998&summary=&lt;ul&gt;
+                                                                    <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://blog.shunzi.tech/post/cpp-std/&sharesource=qzone&title=C++ STL&pics=https://blog.shunzi.tech/images/avatar.png?v=1629771976011&summary=&lt;ul&gt;
 &lt;li&gt;C++ STL 的相关资料记录&lt;/li&gt;
 &lt;li&gt;持续更新&lt;/li&gt;
 &lt;/ul&gt;
@@ -477,7 +857,7 @@ ForwardIterator lower_bound (ForwardIterator first, ForwardIterator last,
 &lt;li&gt;C++ STL 的相关资料记录&lt;/li&gt;
 &lt;li&gt;持续更新&lt;/li&gt;
 &lt;/ul&gt;
-&pic="https://blog.shunzi.tech/images/avatar.png?v=1628152178998 "><i class="fa fa-weibo "></i></a>
+&pic="https://blog.shunzi.tech/images/avatar.png?v=1629771976011 "><i class="fa fa-weibo "></i></a>
 
                                                                     </span>
                                                                     
@@ -622,7 +1002,7 @@ ForwardIterator lower_bound (ForwardIterator first, ForwardIterator last,
                     CheckVersion();
                     
                     var newDate = new Date();
-                    newDate.setTime(1628152178998);
+                    newDate.setTime(1629771976011);
                     console.log(" Blog Update Time: " + newDate.toLocaleDateString());
                     console.log("\n %c \u26a1Theme:Chic Author's Blog:https://blog.itjoker.cn  Write By ITJoker  \n\n", "color: #ffffff; background: rgba(49, 49, 49, 0.85); padding:5px 0;border-radius:5px;");
                 </script>

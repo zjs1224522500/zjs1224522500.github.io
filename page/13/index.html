@@ -31,6 +31,9 @@
                 <!--点击特效-->
                 <script src="https://cdn.jsdelivr.net/gh/ITJoker233/ITJoker233.github.io@latest/CDN/js/love.min.js"></script>
                 
+                    <script src="https://cdn.jsdelivr.net/gh/itjoker233/Gridea-theme-Chic@latest/assets/media/script/APlayer.min.js"></script>
+                    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css">
+                    
                         <!--CDN样式-->
                         <script src="https://cdn.jsdelivr.net/gh/ITJoker233/ITJoker233.github.io@latest/CDN/js/hit-kounter-lc-0.3.0.js"></script>
                         <script src="https://cdn1.lncld.net/static/js/av-min-1.5.0.js"></script>
@@ -60,10 +63,22 @@
                                     gtag('config', 'UA-143818020-1');
                                 </script>
                                 
+                                    <script type="text/javascript">
+                                        var _hmt = _hmt || [];
+                                        (function() {
+                                            var hm = document.createElement("script");
+                                            hm.src = "https://hm.baidu.com/hm.js?225d600be3e5bb9ae41b903854555ba8";
+                                            var s = document.getElementsByTagName("script")[0];
+                                            s.parentNode.insertBefore(hm, s);
+                                        })();
+                                    </script>
+                                    
         <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js"></script>
 </head>
 
 <body>
+    <body background="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1953&q=80"
+    style="background-attachment: fixed;background-repeat: no-repeat;background-size: 100% 100%" ></body>
     <div class="wrapper">
         <header>
     <nav class="navbar">
@@ -76,8 +91,8 @@
             <div id="tp-weather-widget"></div>
             <div class="menu navbar-right">
                 
-                    <a class="menu-item" href="/">
-                        主页
+                    <a class="menu-item" href="/posts">
+                        博客
                     </a>
                     
                     <a class="menu-item" href="/archives">
@@ -86,6 +101,10 @@
                     
                     <a class="menu-item" href="/tag/diary">
                         随笔
+                    </a>
+                    
+                    <a class="menu-item" href="https://blog.shunzi.tech/post/tools">
+                        导航
                     </a>
                     
                     <a class="menu-item" href="/tags">
@@ -99,7 +118,7 @@
                         <input id="switch_default" type="checkbox" class="switch_default">
                         <label for="switch_default" class="toggleBtn"></label>
             </div>
-            <form id="gridea-search-form" data-update="1623475546024" action="/search/index.html">
+            <form id="gridea-search-form" data-update="1629771976011" action="/search/index.html">
                 <input class="search-input" autocomplete="off" spellcheck="false" name="q" autofocus="true" placeholder="Search...">
             </form>
         </div>
@@ -118,7 +137,7 @@
                         <!--zh-->
                         <a id="mobile-toggle-theme-zh" class="a zh">&nbsp;&#x6697;&#x9ED1;</a>
                     </div>
-                    <form id="gridea-search-form" data-update="1623475546024" action="/search/index.html">
+                    <form id="gridea-search-form" data-update="1629771976011" action="/search/index.html">
                         <input class="search-input" autocomplete="off" spellcheck="false" name="q" autofocus="true" placeholder="Search...">
                     </form>
                     <!--en-->
@@ -129,8 +148,8 @@
                 </div>
                 <div class="menu" id="mobile-menu">
                     
-                        <a class="menu-item" href="/">
-                            主页
+                        <a class="menu-item" href="/posts">
+                            博客
                         </a>
                         
                         <a class="menu-item" href="/archives">
@@ -139,6 +158,10 @@
                         
                         <a class="menu-item" href="/tag/diary">
                             随笔
+                        </a>
+                        
+                        <a class="menu-item" href="https://blog.shunzi.tech/post/tools">
+                            导航
                         </a>
                         
                         <a class="menu-item" href="/tags">
@@ -220,7 +243,7 @@
                 <div class="container">
                     <div class="intro">
                         <div class="avatar">
-                            <a href="https://blog.shunzi.tech"><img src="https://blog.shunzi.tech/images/avatar.png?v=1623475546024"></a>
+                            <a href="https://blog.shunzi.tech"><img src="https://blog.shunzi.tech/images/avatar.png?v=1629771976011"></a>
                         </div>
                         <div class="nickname">
                             Elvis
@@ -235,6 +258,8 @@
                                 
                                         
                                 
+                                    <a class="link-item" href="https://twitter.com/YouDieInADream" title="twitter"><i class="fa fa-twitter"></i></a>
+                                    
                                         
                                 
                                         
@@ -281,6 +306,8 @@
     var OriginTitile = document.title;
 </script>
 
+    <div id="player"></div>
+    
         <footer id="footer" class="footer">
             <div class="copyright">
                 
@@ -322,6 +349,28 @@
             
                 <script>
                     
+
+                    function LoadPlayer() {
+                        var musicList = [];
+                        
+                        musicList.push({
+                            name: 'See You Again (feat. Charlie Puth)',
+                            url: 'https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBbmlqSWg1RWM0TlZoSXhtUU9nLTk3R2g5cDVlblE.mp3',
+                            artist: 'Charlie Puth',
+                            cover: 'https://4.bp.blogspot.com/-tk-Dzg0cHNQ/WnxPiEImF8I/AAAAAAAAMbg/FisRjWssG3kMFGiMh1BE3j4U6QnI2O3rwCLcBGAs/s1600/wiz-khalifa-see-you-again.jpg',
+                        });
+                        
+                        console.log(" MusicList: " + musicList);
+                        
+                        const ap = new APlayer({
+                            container: document.getElementById('player'),
+                            fixed: true,
+                            audio: musicList
+                        });
+                        
+                    }
+                    LoadPlayer();
+                    
                     
                     loadlive2d();
                     
@@ -335,7 +384,7 @@
                     CheckVersion();
                     
                     var newDate = new Date();
-                    newDate.setTime(1623475546024);
+                    newDate.setTime(1629771976011);
                     console.log(" Blog Update Time: " + newDate.toLocaleDateString());
                     console.log("\n %c \u26a1Theme:Chic Author's Blog:https://blog.itjoker.cn  Write By ITJoker  \n\n", "color: #ffffff; background: rgba(49, 49, 49, 0.85); padding:5px 0;border-radius:5px;");
                 </script>
