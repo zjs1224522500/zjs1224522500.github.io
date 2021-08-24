@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://blog.shunzi.tech</id>
     <title>Elvis Zhang</title>
-    <updated>2021-08-24T02:26:31.054Z</updated>
+    <updated>2021-08-24T02:30:19.178Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://blog.shunzi.tech"/>
     <link rel="self" href="https://blog.shunzi.tech/atom.xml"/>
@@ -16,11 +16,18 @@
         <link href="https://blog.shunzi.tech/post/CRP-Fine-Grained-Three-Other/">
         </link>
         <updated>2021-08-20T09:40:00.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<ul>
+<li>Cache Replacement Policies - Fine-Grained Other</li>
+</ul>
+</blockquote>
+]]></summary>
         <content type="html"><![CDATA[<blockquote>
 <ul>
 <li>Cache Replacement Policies - Fine-Grained Other</li>
 </ul>
 </blockquote>
+<!-- more -->
 <h3 id="other-prediction-metrics">OTHER PREDICTION METRICS</h3>
 <ul>
 <li>并非所有细粒度策略都预测重用距离或二分标签，当然可以使用不同的预测目标捕获过去的行为。例如，Kharbutli 和 Solihin[2005] 死块预测器的一个组件可以<strong>预测一个缓存行在缓存中被重用的最大次数</strong>。作为这类解决方案的一个例子，我们现在详细讨论 <strong>EVA 策略</strong> [Beckmann和Sanchez, 2017]，它引入了一种新的预测目标，称为 EVA，这是少数几个使用历史信息来指导老化过程的细粒度解决方案之一。</li>
@@ -49,11 +56,18 @@
         <link href="https://blog.shunzi.tech/post/CRP-Fine-Grained-Two-Classification/">
         </link>
         <updated>2021-08-20T08:40:00.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<ul>
+<li>Cache Replacement Policies - Fine-Grained Classification</li>
+</ul>
+</blockquote>
+]]></summary>
         <content type="html"><![CDATA[<blockquote>
 <ul>
 <li>Cache Replacement Policies - Fine-Grained Classification</li>
 </ul>
 </blockquote>
+<!-- more -->
 <h3 id="classification-based-policies">CLASSIFICATION-BASED POLICIES</h3>
 <ul>
 <li><strong>基于分类的策略学习了传入行的二分类：缓存访问是否可能导致未来的命中？</strong> 对缓存友好的行，预期会导致缓存命中的行以更高的优先级插入缓存，以便它们有足够的机会接收缓存命中，而不喜欢缓存的行(不期望缓存命中的行)则以较低的优先级插入，这样它们就可以在不浪费缓存资源的情况下被快速清除。</li>
@@ -153,11 +167,18 @@
         <link href="https://blog.shunzi.tech/post/CRP-Fine-Grained-One-Reuse-Distance/">
         </link>
         <updated>2021-08-20T07:40:00.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<ul>
+<li>Cache Replacement Policies - Fine-Grained Reuse Distance</li>
+</ul>
+</blockquote>
+]]></summary>
         <content type="html"><![CDATA[<blockquote>
 <ul>
 <li>Cache Replacement Policies - Fine-Grained Reuse Distance</li>
 </ul>
 </blockquote>
+<!-- more -->
 <h2 id="fine-grained-replacement-policies">Fine-Grained Replacement Policies</h2>
 <ul>
 <li>细粒度策略在插入时区分高速缓存行，这种区分通常基于类似高速缓存行的前一个生存期的回收信息。例如，如果细粒度策略得知某一行在其之前的生命周期中没有被重用而被逐出，那么它可以以低优先级将该行插入到缓存中。相比之下，粗粒度策略(如LRU)只有在从MRU位置迁移到LRU位置后才会驱逐一行，所以该方案强制缓存行驻留在缓存很长一段时间，消耗宝贵的缓存空间来确定行应该驱逐。因此，<strong>通过学习以前缓存行的行为，细粒度策略可以更有效地使用缓存</strong>。</li>
@@ -215,11 +236,18 @@
         <link href="https://blog.shunzi.tech/post/CRP-Coarse-Grained-Three-Hybrid/">
         </link>
         <updated>2021-08-20T06:40:00.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<ul>
+<li>Cache Replacement Policies - Coarse-Grained Hybrid</li>
+</ul>
+</blockquote>
+]]></summary>
         <content type="html"><![CDATA[<blockquote>
 <ul>
 <li>Cache Replacement Policies - Coarse-Grained Hybrid</li>
 </ul>
 </blockquote>
+<!-- more -->
 <h2 id="hybrid-policies">Hybrid Policies</h2>
 <ul>
 <li>混合策略 [Jaleel et al.， 2010b, Qureshi et al.， 2006, 2007] 认识到不同的工作负载，甚至相同工作负载中的不同阶段，可以从不同的替代策略中受益。例如，如果程序在小工作集和大工作集之间交替，<strong>当工作集较小时，它将受益于最近友好策略，当工作集较大时，它将受益于抗抖动策略</strong>。因此，混合策略评估应用程序当前工作集的需求，并从多个竞争策略中动态选择。混合策略面临的两个主要挑战是 (1) 准确识别最有利的策略，以及 (2 以较低的硬件成本管理多个策略。我们现在讨论解决这些挑战的两种解决方案。</li>
