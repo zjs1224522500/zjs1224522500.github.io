@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://blog.shunzi.tech</id>
     <title>Elvis Zhang</title>
-    <updated>2021-08-24T02:30:19.178Z</updated>
+    <updated>2021-08-25T14:35:05.309Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://blog.shunzi.tech"/>
     <link rel="self" href="https://blog.shunzi.tech/atom.xml"/>
@@ -227,6 +227,25 @@
 </li>
 <li>选择两个值中最大的行进行驱逐。因此，该策略在有条件时依赖 ETA，否则转变回 LRU。<br>
 <img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210821112316.png" alt="20210821112316" loading="lazy"></li>
+</ul>
+<h3 id="参考文献">参考文献</h3>
+<ul>
+<li><a href="">[1] Chip Multiprocessor Architecture: Techniques to Improve Throughput and Latency</a>
+<ul>
+<li>Kunle Olukotun, Lance Hammond, and James Laudon</li>
+<li>2007</li>
+</ul>
+</li>
+</ul>
+<h3 id="基于重用距离的缓存策略的其他相关研究">基于重用距离的缓存策略的其他相关研究</h3>
+<ul>
+<li><a href="https://research.cs.wisc.edu/multifacet/papers/sigmetrics13_caches_reuse.pdf">Reuse-based Online Models for Caches</a></li>
+<li><a href="https://www.usenix.org/sites/default/files/conference/protected-files/inflow16_slides_lavaee.pdf">Cache Replacement Based on Reuse-Distance Prediction</a></li>
+<li><a href="http://iccd.et.tudelft.nl/Proceedings/2007/Papers/5.1.5.pdf">ElCached: Elastic	Multi-Level	Key-Value	Cache</a></li>
+<li><a href="https://www.cs.rochester.edu/~cding/Documents/Publications/TR741.pdf">Reuse Distance Analysis 2001</a></li>
+<li><a href="https://dl.acm.org/doi/pdf/10.1145/2818374"></a></li>
+<li><a href="https://dl.acm.org/doi/abs/10.1145/3380732"></a></li>
+<li><a href="">一种基于重用距离预测与流检测的高速缓存替换算法</a></li>
 </ul>
 ]]></content>
     </entry>
