@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://blog.shunzi.tech</id>
     <title>YouDieInADream</title>
-    <updated>2021-11-03T02:52:49.132Z</updated>
+    <updated>2021-11-03T12:26:43.688Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://blog.shunzi.tech"/>
     <link rel="self" href="https://blog.shunzi.tech/atom.xml"/>
@@ -10,6 +10,450 @@
     <logo>https://blog.shunzi.tech/images/avatar.png</logo>
     <icon>https://blog.shunzi.tech/favicon.ico</icon>
     <rights>All rights reserved 2021, YouDieInADream</rights>
+    <entry>
+        <title type="html"><![CDATA[ChameleonDB: a Key-value Store for Optane Persistent Memory]]></title>
+        <id>https://blog.shunzi.tech/post/ChameleonDB/</id>
+        <link href="https://blog.shunzi.tech/post/ChameleonDB/">
+        </link>
+        <updated>2021-09-28T08:37:41.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<ul>
+<li>该篇文章来自于 EuroSys2021 - ChameleonDB: a Key-value Store for Optane Persistent Memory</li>
+</ul>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<ul>
+<li>该篇文章来自于 EuroSys2021 - ChameleonDB: a Key-value Store for Optane Persistent Memory</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="abstract">Abstract</h2>
+<ul>
+<li>Optane DC PM 的出现使得利用其高带宽和低延迟构建持久性 KV 存储成为了热点。Optane Pmem 本质上是一种具有两个不同属性的混合存储设备，这是Optane Pmem面临的一个主要挑战。
+<ul>
+<li>一方面，是一个高速的<strong>字节寻址</strong>的设备，类似于 DRAM</li>
+<li>另一方面，对 Optane 的<strong>写操作以 256bytes 进行</strong>，更像一个块设备。</li>
+</ul>
+</li>
+<li>现有的基于持久性内存的 KV 存储设计没有考虑到后面的因素，导致出现了<strong>较高的写放大以及受限的读写吞吐量</strong>。与此同时，直接重用原有的为块设备设计的 KV 存储，如 LSM，也将因为<strong>字节寻址的特性而导致更高的读延迟</strong>。</li>
+<li>本文中我们提出了 ChameleonDB，一个考虑且利用了 PM 的两个特性的基于混和 内存/存储 场景的设计。使用 LSM Tree 以低写放大率有效地接受写入，且使用了一个 DRAM 中的 HASH 表来 bypass LSM 的多层结构从而快速读。与此同时，ChameleonDB 可能选择在后台维护LSM多级结构，以在系统崩溃后实现较短的恢复时间。ChameleonDB 的混合结构被设计成能够吸收写负载的突发写入，从而避免长尾延迟。</li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<ul>
+<li>现有的 KV 存储设计在 PM 场景中面临主要三个挑战：</li>
+</ul>
+<h3 id="challenge-1-optane-pmem-is-a-block-device">Challenge 1: Optane Pmem is a Block Device</h3>
+<ul>
+<li>在 PM 发布之前就有大量研究人员提出了该设备场景下的 KV 存储。这些设计都假设 PM 是一个稍微慢一点且持久的 DRAM，相应地，这样的设计通常构建一个持久化哈希表或持久化树来索引存储日志中的 KV 项。当新的KV项目按照到达顺序批量写入日志时，索引上的相应更新(通常)在非连续的内存位置单独进行(由哈希函数或树结构确定)。
+<ul>
+<li>HASH:
+<ul>
+<li>Level hashing</li>
+<li>CCEH</li>
+</ul>
+</li>
+<li>tree-structured
+<ul>
+<li>WB+ Tree</li>
+<li>FAST&amp;FAIR</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>不幸的是，这些前面的假设和最终商业 PM 相关性能特性的研究表现不一致。</li>
+<li>据报道，Optane Pmem的写单元大小为256B，为了理解这种性能特征的含义，我们将特定大小的数据写入与256B单元大小对齐的随机选择的地址。在实验中，我们将写大小从8B改变为128KB，并使用不同的线程数，以便能够达到内存的峰值带宽。测试结果如下所示，当写大小小于 256B 时，写吞吐量比256B及其以上的写吞吐量要小很多，更有意思的是，256B 的吞吐量几乎是 128B 的两倍，128B 又几乎是 64B 的两倍，这强有力地证明了设备 256B 访问单元的特性。<strong>任何非连续的小于该大小的写入都要进行一个 RMW 读后写的操作来生成一个 256B 的写，从而导致写入放大和并减少了有效的内存带宽</strong>。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210428155831.png" alt="20210428155831" loading="lazy"></li>
+<li>这样的特性造成之前基于假设的 KV 存储的设计遭受了写性能的损失，原则上类似于对其他块设备(如机械硬盘和 SSD)的小写操作。特别的是，利用持久性的 HASH 表以及树结构的 KV 存储，在 key 插入、rehash、rebalance等过程中每个对索引的更新都是小写操作，比如 16bytes，远小于 256byte，此时写的放大高达 16。由于没有充分考虑设备的写单元，这些设计无法提供高写性能。</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210629140723.png" alt="20210629140723" loading="lazy"></figure>
+<h3 id="challenge-2-optane-pmem-is-of-high-speed">Challenge 2: Optane Pmem is of High Speed</h3>
+<ul>
+<li>有大量的工作都是在解决基于块设备的 KV 存储中的小写问题，如 LevelDB/RocksDB/Cassandra/LSM-trie/PebblesDB 都是学术界以及工业界中的例子。他们聚合了最近的更新操作并批量顺序写这些数据到磁盘，根据 key 比较的结果或者hash函数的结果。由于维护一个大的已排序列表的开销太大，所以要维护多个和指数级长的已排序列表。每个列表位于其单独的 level，从 L0 开始是最短的列表，每个 k+1 层 level 都有着 k 层的 r 倍容量。r 的值在不同的 KV 存储中不同，例如 LevelDB/RocksDB r=10，LSM-trie r=8，在 KV 项被写入到存储之后，初始在 L0，然后向下移动直到最后一层。</li>
+<li>LSM 树结构有两种主要的压缩方案，它们对写放大和读性能有不同的影响。leveling 和 size-tiering。
+<ul>
+<li>leveling: 在相邻两层的 KV 项被归并排序然后重新插入到更下面的一层。随着下层的 Key 的个数达到了上层的很多倍之后，每个压缩的写入放大倍数可以大到10(以LevelDB为例)。</li>
+<li>size-tiering: 每一层包含多个具有重叠的键范围的子 levels，在子 Level 之间进行键的归并排序操作，结果将被写入到更低一层的新的子 level 中。这样的话，该压缩的写入放大总是为 1。确实该策略可以显著减少额外的写操作，但也会显著增加子 level 的个数，然后增加了在存储中查询一个 Key 的开销。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210303230248.png" alt="20210303230248" loading="lazy"></li>
+</ul>
+</li>
+<li>而基于 LSM 的设计似乎是在Optane Pmem上部署的一个很好的候选方案，它为块设备设计了内置的多级结构，不幸的是，<strong>它与Optane的高读性能不兼容</strong>。因为它的多层设计，读一个 Key 需要检索很多层，从 L0 开始，直到这个 Key 被找到或者找到最后一层都没找到这个 Key。我们的目标是每次搜索 Key 只有一个磁盘读取，在 DRAM 中为每个 KV 项所在的块维护了 BloomFilter，从而在从该层读取磁盘上的数据之前先判断是否该 Key 存在于这个 Block 中。<strong>相比于毫秒级别的磁盘访问时间，对于 filter 的纳秒级的操作几乎可以忽略。只要实际只发生一次磁盘读取，这样的设计就能在磁盘上的 KV 项上实现最好的读取延迟。然而，当存储设备是Optane Pmem 时，情况就大不相同了，它的读延迟本身是纳秒级的，只有 DRAM 读延迟的3倍左右</strong>。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210629140829.png" alt="20210629140829" loading="lazy"></li>
+<li>为了理解 Optane 高速访问的影响，我们选择构建了一个基于 HASH 的 KV 存储， 7 层 LSM-trie，分别在 SATA SSD、PCIe SSD 和 Optane PMem 上。在不同的层级上读取 Key 并报告其读延迟，如下图所示。 从表中读取项的时间(在图中表示为“Table read”)是高度一致的，无论键驻留在哪个级别，因为只需要读取一次磁盘(或Pmem)。如图2(a)和2(b)所示，当存储在 SSD 上运行时，花费在过滤器(在图中表示为“Filter Check”)上的时间只占很小的一部分。因此，在 Bloom flters 帮助下的磁盘上的 KV 存储，使用多层次结构不会损害读性能。然而如图 c 所示，当 Optane Pmem 使用的时候，花费在过滤器上的时间就变得很长，相比于 Pmem 的读取时间。KV 对在较低的层级时，它不断增加，最终成为不可接受的。这个观察结果表明，<strong>多级结构成为实现稳定的的低读延迟的主要障碍。同时，同样的结构对于允许批写以适应块设备也是必不可少的</strong></li>
+</ul>
+<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210428225223.png" alt="20210428225223" loading="lazy"></figure>
+<h3 id="challenge-3-optane-pmem-is-non-volatile">Challenge 3: Optane Pmem is Non-volatile</h3>
+<ul>
+<li>为了避免前面提到的挑战，研究者已经提出了当 Pmem 仅用于存储KV项作为存储日志时，将索引结构移动到 DRAM 上。因为 KV 项批量写到日志中没有任何写放大，然后所有的索引的读和更新都发生在 DRAM 上，这样的设计提供了高吞吐和低延迟。（<strong>索引位于 DRAM 上</strong>）
+<ul>
+<li>ASPLOS’20 FlatStore</li>
+<li>FAST'19 uDepot</li>
+<li>SOSP'19 KVell</li>
+</ul>
+</li>
+<li>然而，让整个索引或者绝大部分索引都在易失的内存中就一定程度上消除了 Optane Pmem 作为持久性内存的优势，Pmem 本身就是承诺快速故障恢复的介质。对于一个存储了几十亿的 KV 对的 KV 存储，DRAM 中的索引可能占据的空间超过 100GB，而且有限的 DRAM 空间本身就是被多种系统和应用共享，一旦索引数据在丢失，从存储日志中重建这么大的索引是会花费特别长的时间的。与此同时，快速的恢复和重启是很重要的，特别是在虚拟化的环境中，一个 KV 存储可能宿主在虚拟机或者容器中，这些虚拟机容器本身的启动时间就只有几秒甚至不到秒的级别。所以<strong>把最近的对于索引结构的更新周期性地保存在 PMem 中，并使Pmem上的索引有组织并可以很快使用 对于 LSM Tree 的设计是非常有用的</strong>。</li>
+<li><strong>（目标：利用 PMem 进行快速故障恢复，减少 DRAM 消耗，主要是快速构建索引）</strong></li>
+</ul>
+<h3 id="summary">Summary</h3>
+<ul>
+<li><strong>in-DRAM index</strong><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210629140940.png" alt="20210629140940" loading="lazy"></li>
+</ul>
+<h3 id="solution">Solution</h3>
+<ul>
+<li>虽然现有的KV存储设计不能同时实现Optane Pmem上期望的多个目标(<strong>高写吞吐量、低读延迟、高动态工作负载下良好的读尾延迟、小DRAM占用空间、快速恢复和重启</strong>)，但我们提出了一个KV存储设计，名为ChameleonDB，可以在一个系统中实现这个目标。为了证明 ChameleonDB 的实力，下图中和基于 HASH 位于 Pmem 的索引存储以及基于 HASH 位于 DRAM 的索引存储进行了相应的四个性能维度的对比。和写吞吐高度相关的写放大，读延迟，内存占用，恢复时间。
+<ul>
+<li>PmemLSM 对应传统的带有 Bloom 过滤器的 LSM 树状 KV 存储设计，它有很长的读延迟。（<strong>因为 LSM 和布隆过滤器</strong>）</li>
+<li>DRAM_HASH 对应内存中维护索引，PMem 中维护日志，会有比较大的内存占用和很长的恢复时间。（<strong>因为内存 HASH 表内存占用，索引重建开销大</strong>）</li>
+<li>Pmem-Hash 对应了持久的 HASH 表设计，会有比较大的写放大，相应地导致较低的写吞吐。（<strong>因为 HASH 操作均为小写，基于 PMem 的特性，存在写放大</strong>）</li>
+<li>相反，ChameleonDB 在四个维度都表现得很好。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210429141642.png" alt="20210429141642" loading="lazy"></li>
+</ul>
+</li>
+</ul>
+<h4 id="contribution">Contribution</h4>
+<ul>
+<li>我们分析了现有的在 PMem 上构建的 KV 存储设计的缺点，证明了他们中还没有方案可以同时实现低读延迟、低 DRAM 消耗、快速重启以及高吞吐。特别的，我们揭示了在Optane Pmem上部署基于LSM 的 KV 存储的困境，据我们所知，这尚未在开放文献中进行讨论。</li>
+<li>我们提出了 ChameleonDB，一个新的为 PMem 设计的 KV 存储，一定程度上讲，该设计是一个混合设计。利用了其中一个存储(pmems-hash、pmems-lsm 和 dram-hash)的各自优势来解决其他存储可能存在的问题。特别的，<strong>使用了一个多层的结构来高效地持久化索引上的更新操作，使用了一个内存中的 HASH 表来加速小规模的最近更新的索引的读操作，然后使用了在 Pmem 上的哈希表来遍历存储中的大部分 Key，它还提供了一种操作模式，用于减少长读尾延迟</strong>。</li>
+<li>我们实现了 ChameleonDB 并进行了测试对比，和其他几种结构的最先进的方案进行了对比。实验表明 ChameleonDB 成功地同时实现了前面提到的目标，且和其他存储相比要在一个或者多个维度上表现得更好。</li>
+</ul>
+<h2 id="design">Design</h2>
+<ul>
+<li>
+<p><strong>整体结构</strong></p>
+<ul>
+<li>KV 分离</li>
+<li>HASH 分区</li>
+<li>DRAM-NVM 混合索引<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210629141059.png" alt="20210629141059" loading="lazy"></li>
+</ul>
+</li>
+<li>
+<p>ChameleonDB 是一个 <strong>Value 存储在存储日志上的 KV 存储</strong>，同时 <strong>keys（或者他们的 hash 值）以及对应值的地址信息被存储在相应的持久性索引</strong>中，如下图所示。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210429162043.png" alt="20210429162043" loading="lazy"></p>
+</li>
+<li>
+<p>KV 项根据请求到达顺序被批量写入到 Value Log 中，持久性索引是一个有多个 shards 的高度并行的结构，每个 shard 有自己的多层结构以及自己的 compaction 操作。Keys 根据相应的 hash 值分布在这些 shards<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210629145203.png" alt="20210629145203" loading="lazy"></p>
+</li>
+</ul>
+<h3 id="a-multi-shard-structure">A Multi-shard Structure</h3>
+<ul>
+<li>ChameleonDB 的索引被组织成多个 shard 的结构，每一个 shard 覆盖了相等范围的 HASH key space。一个 shard 是一个多层的类 LSM 的结构，如下图所示。</li>
+<li>每一个 Level 会有很多个子 levels，被称之为 tables，<strong>每一个又被组织成固定大小的 hashtable，使用线性探测的方法来解决 HASH 冲突</strong>。和其他基于 LSM 的 KV 存储一样，每个 shard 有一个内存中的 Memtable 来聚合 KV 项。当 Memtable 满了之后，即负载因子达到了阈值，这时候执行刷回，从 DRAM 到 PMem，最终在 Pmem 上组织成持久的不可变的 L0 level 上的 Tables。每一层能够容纳的最大的 Table 数量是由层级之间的比例系数 r 来确定的，除了最后一层只包含一个 Table。下图所示的例子中的 r 为 4，因此在有四个 Memtables 被 flush 到 Level0 之后然后变满，从而触发 Compaction<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210429162627.png" alt="20210429162627" loading="lazy"></li>
+<li>Leveling 和 Size-Tiering 两种策略各有优缺，ChameleonDB在不同的LSM级别上使用这两种压缩方案来提供低写放大和低读延迟。在每一个 shard，size_tiering 主要用于压缩上层，就是在 PMem 上的除了最后一层以外的层次，leveling compaction 用于压缩最底层。这种混合压缩策略在 SIGMOD’18 的 Dostoevsky 中也有应用被称之为 lazy leveling，在写放大和读延迟之间达到平衡，并且比单独使用两种方案中的任何一种性能更好</li>
+<li>基于 LSM 的 KV 存储的 Compaction 的策略通常都是在两个相邻的层次之间进行的。以如下所示的图中的例子来说，L0 满了触发到 L1 的 compaction，然后级联 compaction 触发到 L2 的 compaction。</li>
+<li>在 ChameleonDB 中，<strong>我们引入了 Direct Compaction 算法通过允许在多个 levels 之间进行 compaction 而减少了压缩开销</strong>。为了完成如下图 a 所示的 compaction，Direct Compaction 首先触发了一个包含 L0,L1,L2 的 compaction，如图 b 所示。同样地，最后一层的 compaction 会在 L0 满且上层 level 都有 r-1 个 tables 的时候执行。在 shard 执行了最后一层的 compaction 之后，shard 上层的所有表都被清除因为其数据项已经被移动到了最后一层。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210429163911.png" alt="20210429163911" loading="lazy"></li>
+<li><strong>随着单个 shard 中每个 table 的大小（包括内存中的 Memtable）超过了 256B（PMem 的访问单元），需要按照 256B 大小进行对齐，flushing/compacting table 可以完整利用 PMem 的写带宽，解决了前面描述的第一个挑战。在此之后，每一次 flush memtable 之后，ChameleonDB 持久化 LSM 数据结构的修改，故障恢复只需要重启恢复没有持久化的 Memtable 数据，从而解决挑战三</strong>。</li>
+</ul>
+<h3 id="the-auxiliary-bypass-index-abi-in-a-shard">The Auxiliary Bypass Index (ABI) in a Shard</h3>
+<ul>
+<li>因为每一个 shard 是一个多层的结构，一个 get 操作因为需要一层一层检查 tables 直到找到目标的 Key 或者到达最后一层，会有比较严重的读延迟，如下图 a 所示。因为 ChameleonDB 在上层使用了 size-tiering 的压缩策略来减小写放大，levels（以及子 level）的数量已经显著增加，而<strong>在 LSM 中使用的比较多的布隆过滤器，没办法为这种较长的读延迟提供高效的解决方案，因为检查 filters 本身就会占据 PMem 读延迟的大约 50%</strong>，这就是我们为什么需要一个新的解决方案来减小读延迟，也就是 ChameleonDB 辅助旁路索引  Auxiliary Bypass Index（ABI）</li>
+<li><strong>每个 shard 有自己的 ABI，本质是一个内存中的 HASH 表，索引了所有的上层 Keys，通过使用 ABI，在查询 Keys 的时候最多查询三个表，一个 Memtable，一个 ABI，一个最后一层的 table</strong>，如图 b 所示。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210429171653.png" alt="20210429171653" loading="lazy"></li>
+<li><strong>ABI 包含且只包含存在于上层的 KV 项，当 Keys 被持久化到 L0 的时候，也需要被插入到 ABI 中，在数据项被合并到最后一层的时候，相应地需要从 ABI 中移除对应的索引</strong>。为了实现这样的效果，ChameleonDB 在执行 MemTable 到 L0 的刷回的时候把数据项添加到 ABI，在最后一层的 Compaction 执行之后删除 ABI 中所有的数据项，因为在最后一层的 Compaction 之后所有的上层数据都会被清除。PinK 也尝试着把上层以一个多层的 LSM 结构给固定住，而 ABI 将上层的 keys 组织成一个 hash table，在 DRAM 中以 O(1) 的时间复杂度进行访问。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210507171610.png" alt="20210507171610" loading="lazy"></li>
+<li>除了减小尾延迟以外，ABI 也能有助于加速最后一层的 Compaction，ABI 包含一个 shard 的上层的所有数据项，Direct Compaction 是把上层所有的 tables 给压缩到最后一层的 table，<strong>不再需要把所有的持久化的上层 Tables 读取出来然后压缩到最后一层，而是直接合并已经存在于 DRAM 中的数据项到最后一层，如下图所示，从而减小最后一层 Compaction 的开销。通过使用 ABI，我们避免了检查多个 levels，从而解决上述挑战2</strong><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210507172253.png" alt="20210507172253" loading="lazy"></li>
+<li><strong>直接合并 ABI 和 Last Level，这里的前提是 ABI 的数据和 Upper Level 的数据一致，也就是说都是存储的 索引</strong></li>
+</ul>
+<h3 id="trade-restart-time-for-the-put-performance">Trade Restart Time for the Put Performance</h3>
+<ul>
+<li>ChameleonDB shards 的多层结构帮忙减少了重启时间，因为只有 Memtable 需要在重启过程中恢复数据，同时 Memtables 只包含了非常小比例的数据，比如对于一个 4 层结构，且系数为 4 的存储大概只包含了 1/256。然而，维护一个多层 LSM 结构消耗了读带宽、CPU 时钟周期、以及写带宽，因为 Compaction 操作需要与 put 请求一起不断进行，这会降低 put 性能。对于传统的 LSM 设计，比如 LevelDB\RocksDB，多层的结构不得不总是被维护，否则，读延迟会大打折扣，因为越来越多的memtable被刷新到0，而没有被压缩就会产生很多级别，导致遍历次数变多。除此以外，DRAM 的消耗也会快速增加，因为 Memtable 变得越来越大来容纳更多的 KV 项。相反，<strong>ChameleonDB 的结构中，上层通常用于快速恢复，提供了一个不用妥协读延迟和 DRAM 消耗来维护多层结构的机遇</strong>。（加 HASH 索引）</li>
+<li>在系统特别稳定以及系统很少故障的场景中，ChameleonDB 可以通过暂时暂停多级结构的维护来换取更高的 put 性能，而无需在密集的 put 工作负载期间进行上层压缩，从而降低系统崩溃时重启时间延长的风险。这样的策略我们称之为 <strong>Write-Intensive Mode</strong></li>
+<li>在 Write-Intensive Mode 下，Memtables 当满了的时候不再被刷回到 L0，L0 到 L1 的压缩不会被触发，同样地，<strong>所有的压缩到其他高层也不会进行。只有当 ABI 已满时，才会触发清除 ABI 的最后一级压缩，如果这时候一个系统故障发生了，重启时间可能会很长因为 ABI 中所有的项必须从存储日志中恢复</strong>。实验表明该模式下的重启时间仍然比 DRAM-Hash 要小，DRAM-HASH 的整个索引都需要在重启过程中重建。此外，ChameleonDB 重启时间的长短可以将 Write-Intensive Mode 作为一个用户选项来进行控制。</li>
+<li><strong>简而言之，Write-Intensive Mode 就是不使用上层的索引，停止维护多级结构，ABI 满了则进行合并</strong></li>
+</ul>
+<h3 id="handling-put-bursts">Handling Put Bursts</h3>
+<ul>
+<li>读操作尾延迟通常用来测量 QoS，后台压缩任务对于尾延迟有比较高的影响因为该操作消耗 Optane Pmem 读写带宽，在一个 Put 操作爆发期间，读操作的尾延迟可能显著增加，因为后台压缩任务被触发。</li>
+<li>为了提供更好的服务质量，我们在 ChameleonDB 中引入了一个动态的 <strong>Get-Protect Mode</strong> 来监控读操作的尾延迟并调整 Compaction 的时机。具体而言，<strong>就是一个读操作尾延迟到达一个阈值的时候，ChameleonDB 挂起所有的上层 Compactions，包括 flush 操作，延缓最后一层压缩的执行</strong>。挂起上层压缩的影响就是重启时间可能因为不止要恢复 Memtable 还有 ABI 来扫描整个 Log 从而变得很长，和 WriteIntensive Mode 类似，当 ABI 满了之后，所有的数据项需要被压缩到最后一层，假设 DRAM 空间被限制了，且不能容纳一个二级 ABI。然而，最后一层的压缩需要读取最后一层的数据并和 ABI 中的数据进行合并，并写回 Optane Pmem，该操作的开销可能非常大，且显著影响尾延迟，因此 <strong>Get-Protect Mode  下只是将 ABI 中的内容 dump 到 Pmem 上作为一个新的级别，而没有进行合并。这将增加get 请求检查的 levels 的数量。然而，根据我们的实验结果，这种副作用相对于最后一级压缩的成本是适度的</strong>。此外，我们限制了可以转储到 Optane Pmem 的 ABI 的数量(默认为一个)。Dumped 的 tables 将在 put burst subsides 之后被合并到最后一层。当尾延迟低于预先设定的阈值时，将取消 Get-Protect Mode。</li>
+<li><strong>简而言之，Get-Protect Mode 就是挂起 Compaction，ABI 满了则 dump 到 PMem</strong></li>
+</ul>
+<h3 id="implementation-details">Implementation Details</h3>
+<h4 id="randomized-load-factors">Randomized Load Factors</h4>
+<ul>
+<li>哈希表通常用作一种可扩展的结构，其大小随插入的项而变化。一旦一个表被认为是满的，它将被展开，其中的项目将被重新散列到新的位置。重新散列是一个耗时的过程。因此，在ChameleonDB的一个分片中，我们为上层的键使用一个固定大小的散列表，以避免频繁地进行重散列，因为散列表的大小变化很大。</li>
+<li>ChameleonDB的分片中的每个表(或子层)也是一个散列表。它通过线性探测来解决碰撞问题。确定此类哈希表是否已满的常用方法是在插入新项时探测它的次数。但是，使用探测计数来确定表是否已满可能会与 ChameleonDB 中的压缩操作发生冲突。例如，由于插入了一个探测数大于阈值的项，一个级别中的4个表中的项可能无法插入到比它大4倍的新表中。另一方面，允许无限的探测时间也不是一个可接受的选择，因为在最坏的情况下，一个 get 请求可能需要扫描整个表，导致太长的 get 延迟。</li>
+<li>在ChameleonDB中，我们限制了MemTable的加载因子，从而控制所有持久性表的加载因子(因为它们的所有项都来自MemTable)。例如，当我们将MemTable的负载因子限制为不超过75%时，表的四个槽中就有一个是空的。当MemTable的负载因子达到预定义的阈值时，认为它已经满了。当到达一个空槽时，对哈希表的扫描就会停止，<strong>因此降低负载因子来增加表中的空槽可以改善获取延迟，但代价是降低空间效率和更频繁的压缩。对所有分片使用统一的负载因子阈值将导致压缩突发，因为插入通常会均匀地分布到 shards 上。在压缩爆发期间，所有shards 都需要进行上层压缩，甚至更糟的是，最后一级压缩的KV存储会经历一个显著的性能退化期。为了缓解压缩突发，ChameleonDB为 shards 使用随机加载因子，从而错开不同 shards 的压缩时间。</strong></li>
+</ul>
+<h4 id="dram-footprint">DRAM footprint</h4>
+<ul>
+<li>使用ABI改善获取延迟的一个主要问题是它的 DRAM 占用。众所周知，每个分片中的级别大小呈指数级增长。<strong>尽管ABI包含了所有上层的条目，但它只占总指数的中等比例</strong>(例如，1/r ，层次之间的比率为 r )。</li>
+</ul>
+<h4 id="write-amplifcation">Write Amplifcation</h4>
+<ul>
+<li>ChameleonDB中的写放大(不包括对存储日志的写)与级别数(表示为l)、级间比r和负载因子(表示为f)有关。写哈希表的写放大为1/f。例如，一个负载因子为75%、大小为1MB的哈希表只有0.75MB的用户数据，因此写入这个表的写入放大倍数是1/0.75。由于ChameleonDB使用大小分层(size-tiering)来进行中层压缩，使用水平分层(leveling )来进行最后一级压缩，ChameleonDB的写入放大倍数为(l−1 + r)/f。</li>
+</ul>
+<h4 id="kv-items-in-the-storage-log">KV items in the storage log</h4>
+<ul>
+<li>存储日志中的每个条目都有{key, value_size, value}的形式，其中，key 和 value_size 的大小固定在8个字节，而 value 的大小(也就是 value_size)是可变的。日志项首先在DRAM中缓冲以形成批处理。然后，当批处理的大小达到预定义的阈值(例如，4KB)时，将批处理附加到日志的尾部。</li>
+</ul>
+<h2 id="evaluation">Evaluation</h2>
+<ul>
+<li>为了观察和理解 ChameleonDB 在真实系统中的性能行为，并了解它是否实现了所有的设计目标(高写吞吐量、低读延迟、响应请求峰值对读尾延迟的影响，以及快速恢复和重新启动)，我们在英特尔Optane持久性存储器(Pmem)上开发了 ChameleonDB 原型。</li>
+</ul>
+<h3 id="setup">Setup</h3>
+<ul>
+<li>ChameleonDB以它的App Direct模式运行，通过调用Persistent的开源库中的函数，通过load和store指令访问内存，通过调用 PMDK 中开源库的函数。</li>
+<li>所有实验都在两台服务器上进行8核Intel Xeon Silver 4215处理器，64GB DRAM和两个128GB Optane Pmem。两个Optane Pmem内存条连接到同一个插座，并以交错模式运行。在我们的实验中，KV存储运行在处理器上，本地访问Optane Pmem，以获得更高的访问效率。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210507225125.png" alt="20210507225125" loading="lazy"></li>
+<li>对比对象：
+<ul>
+<li>DRAM-HASH：DRAM 中维护 HASH 索引（robin-hood hash table）</li>
+<li>Pmem-HASH：PMem 中的持久性 HASH 索引 CCEH</li>
+<li>Pmem-LSM-F：带布隆过滤器且位于 PMem 的 LSM</li>
+<li>Pmem-LSM-NF：不带布隆过滤器且位于 PMem 的 LSM</li>
+<li>Pmem-LSM-PinK：除了最后一层以外所有层驻留在 DRAM 上的 LSM，且不使用布隆过滤器（<strong>该对照组是最公平的对照组，资源开销相近</strong>）</li>
+</ul>
+</li>
+<li><strong>写性能</strong>：
+<ul>
+<li>PMem-hash 最差，因为在 Optane 上进行了大量的随机写，与 256B 不匹配，写放大严峻</li>
+<li>ChameleonDB, Pmem-LSM-NF, and Pmem-LSM-PinK 性能相近，比 Pmem-LSM-F 好很多，这三个方案性能优势相近，因为写入都是大而顺序的，且都没有布隆过滤器的开销。其中 ChameleonDB 和 Pmem-LSM-PinK 在 Compaction 期间使用了一些 DRAM 读代替 PMem 读。三个方案的性能差距较小。因为在 compaction 中发挥了 Pmem 顺序读的优势，与更昂贵的 CPU 使用和哈希操作期间随机 dram 访问 KV 项和压缩相比，读的性能影响大大降低。DRAM-HASH 占用内存更多，恢复更慢，大规模数据场景瓶颈就越明显。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210507204527.png" alt="20210507204527" loading="lazy"></li>
+</ul>
+</li>
+<li>延迟除 PMem-HASH 以外是比较接近的。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210630110740.png" alt="20210630110740" loading="lazy"></li>
+<li>读方面，Pmem-LSM-NF 最差，DRAM-HASH 最高，其次为本文的方案。ChameleonDB 比 PinK 好是因为 PinK 在 DRAM 维护了多层结构 LSM 需要进行多次检查（level by level）。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210507204550.png" alt="20210507204550" loading="lazy"></li>
+<li>延迟和吞吐的比较结果一致。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210630111312.png" alt="20210630111312" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210507204635.png" alt="20210507204635" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210507204648.png" alt="20210507204648" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210507204710.png" alt="20210507204710" loading="lazy"><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210507204752.png" alt="20210507204752" loading="lazy"></li>
+</ul>
+<h2 id="related-work">Related Work</h2>
+<h3 id="persistent-hashing">Persistent Hashing</h3>
+<ul>
+<li><strong>PFHT</strong>：是一种布谷鸟哈希变体，它通过在一次写操作中最多允许一次 displacement 来优化以减少在服务写请求期间的内存写操作</li>
+<li><strong>Level Hashing</strong>：应用两级散列方案，以便每个键可以有三个桶作为插入的候选桶，这有助于提高负载因子，来代替双重哈希</li>
+<li><strong>CCEH</strong>：CCEH是一种可扩展的散列，它使用线性探测策略，因此成功的插入只需要一次内存写操作</li>
+<li>这些工作设计的写优化的 HASH 都是试图减少 PM 上的写入，但是现阶段在 Optane 上的就地更新会有严峻写放大，ChameleonDB 则聚合了数据。</li>
+</ul>
+<h3 id="key-value-stores-for-persistent-memory">Key-value stores for Persistent Memory</h3>
+<ul>
+<li><strong>SLM-DB</strong>：使用一个全局 B+tree 作为索引，数据追加写日志。因为全局索引所以只能存在 PM 上，但又造成小写。而本文的方案使用 HASH 表，占用更小，可以放在内存中</li>
+<li><strong>FlatStore</strong>：维护一个易失的全局索引，数据丢 PM，故障恢复时间长。本文只需要恢复一小部分。</li>
+<li>准确理解存储设备的性能特征对于在设备上进行有效的KV-store设计至关重要。</li>
+<li><strong>HiKV</strong> 假设了延迟方面 PM 写比 DRAM 差，读相近，但其实最近研究发现 PM 写延迟更接近 DRAM，读延迟更差。本文的设计通过只在 DRAM 中进行小的写操作和使用基于 DRAM 哈希表的旁路索引减少读操作来适应这些真正的性能特征。</li>
+<li><strong>Bullet</strong> 使用交叉引用日志(CRLs)技术将持久内存写移出关键路径，解决了优化的持久内存和 DRAM 常驻 KV 存储之间的性能差距。本文则是使用不同的方式来消除这个性能 gap，使用内存哈希表来减少对 Optane Pmem 的访问，然后批量执行小写。</li>
+<li><strong>NoveLSM</strong> 和 <strong>MatrixKV</strong> 则主要是利用 PM 来提升写性能，NoveLSM 维护更大的 Memtable 在 PM 上来直接在 PM 上执行小写，MatrixKV 则是把 L0 放在 PM 上来优化 compaction 使其更细粒度。但是本文的方案比这两个方案都要好，因为适配了 256B 访问单元避免了小写，使用了共享数据结构来减少 LSM 的层级数，从而细粒度压缩并减小放大，同时使用了 size-tiering 和 leveling compactions 来减小写放大并保证低延迟。</li>
+</ul>
+<h3 id="key-value-stores-for-fast-ssd">Key-Value Stores for Fast SSD</h3>
+<ul>
+<li><strong>KVell</strong>：利用无共享结构和异步 I/O 解决方案来充分利用磁盘 I/O 带宽，避免 CPU 瓶颈，从而提升性能</li>
+<li><strong>Zhang et al.</strong>：提出了 FPGA 加速 compaction 的 LSM KV 存储来减小 CPU 瓶颈</li>
+<li><strong>PinK</strong>：消除了上层的 BF 并使用基于 FPGA 的 SSD 消除了 compaction 过程中的 CPU 的开销</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[X-Engine: An Optimized Storage Engine for Large-scale E-commerce Transaction Processing]]></title>
+        <id>https://blog.shunzi.tech/post/X-Engine/</id>
+        <link href="https://blog.shunzi.tech/post/X-Engine/">
+        </link>
+        <updated>2021-08-30T08:37:41.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<ul>
+<li>该篇文章来自于 SIGMOD19: X-Engine: An Optimized Storage Engine for Large-scale E-commerce Transaction Processing</li>
+</ul>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<ul>
+<li>该篇文章来自于 SIGMOD19: X-Engine: An Optimized Storage Engine for Large-scale E-commerce Transaction Processing</li>
+</ul>
+</blockquote>
+<!--more-->
+<h2 id="x-engine">X-Engine</h2>
+<h3 id="abstract">Abstract</h3>
+<ul>
+<li>X-Engine，这是在阿里巴巴构建的 POLARDB 的一个写优化存储引擎，它使用了带有 LSM 树(日志结构的合并树)的分层存储架构，利用 FPGA 加速压缩等硬件加速，以及一套优化，包括事务中的异步写、多级流水线和压缩期间的增量缓存替换。评估结果表明，X-Engine 在事务性工作负载下的性能优于其他存储引擎。</li>
+<li><strong>简单概括</strong>：
+<ul>
+<li>大量的优化都是通过利用多核来异步并发执行一些操作，并使用流水线的相关技术来争取把 CPU 和磁盘打满，并一定程度上进行协同。<strong>但开启大量线程的代价就是极高的 CPU 占用</strong>，所以后面又提出了使用 FPGA 来加速 compaction，通过将 compaction 任务进行拆分，使得 FPGA 可以参与。</li>
+<li>其他的几个优化在 RocksDB 上本身也已经得到了应用。
+<ul>
+<li>L0 层内 compaction 来提高 L0 的有序性加速查询和 compaction</li>
+<li>细粒度缓存 KV Cache 和 Block Cache 的协同；细粒度缓存效率对点查询的优化效率更高，粗粒度缓存在 compaction 过程中进行直接替换来代替缓存失效淘汰</li>
+<li>元数据索引的多版本 CoW 更新来代替直接 Update 整个元数据</li>
+</ul>
+</li>
+<li>还有就是
+<ul>
+<li>并发内存跳表，跳表内热数据的多版本优化，数据按版本链式保存</li>
+<li>事务的分阶段处理，流水线优化</li>
+<li>compaction 过程的数据重用，结合上面的元数据 CoW</li>
+<li>内部各个操作的优先级调度，主要是对 compaction 调度</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="introduction">Introduction</h3>
+<ul>
+<li>下图是双 11 负载的变化情况，概括下来就是在特定时间点请求可能呈海啸式增长。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210828173902.png" alt="20210828173902" loading="lazy"></li>
+<li>以前处理这种负载的方式为使用一个共享的架构，来在多个 DB 实例中进行分布式的事务处理，然后在峰值来临之前对 DB 实例进行扩展，但是这样由于需要大量实例，它需要大量的资金和工程成本。而本文提出的方法则是 <strong>提升单机的存储引擎容量来解决该问题</strong>，从而使得需要的实例数减少，给定固定成本的可实现吞吐量增加。</li>
+<li>针对这种洪泛式的负载，需要快速将数据从内存移动到持久化存储，同时还需要处理高并发的电商事务处理。这种在线促销的负载主要表现为数个小时的事务陡增，包含大量的写入。即便内存大小不断增大，但是比起负载还是小很多，所以必须在 RAM/SSD/HDD 混和存储场景下来重复利用存储资源。X-Engine 根据数据的冷热来进行数据的分层放置，甚至使用 NVM。</li>
+<li>LSM 比较适合这种分层结构存储，除了 LSM 以外，还有一些加速写的数据结构，LSM、VLDB12 LogBase、以及优化的树结构，甚至混和结构 bLSM，但是对于我们的场景都不够高效；另一些则通过交换点和范围查询的性能来提高写的性能，因为写不适合混合读和写的电子商务工作负载。</li>
+<li>大多数数据库负载，热记录都在一个稳定的时间内表现出了很强的空间局部性，记录的空间位置随时间变化很快。这是因为随着时间的推移，在不同的类别或记录上有不同的促销活动。例如，全天都有针对不同类别或品牌的秒杀促销活动(销售热门商品，你必须抓住它们可供购买的那一秒)，以刺激需求，吸引顾客购买随时间变化的不同商品。这意味着数据库缓存中的热记录会不断变化，任何记录的温度都可能从冷/暖到热或从热到冷/暖。如果我们将数据库缓存视为一个储存库，而将底层(大型)数据库视为海洋，则这种现象将导致当前(即热记录vs .冷记录)在非常深的海洋中快速地向任何方向移动(例如，存储在X-Engine上的巨大数据库)。存储引擎需要确保新出现的热记录能够尽可能快地从深水中检索并有效缓存。</li>
+<li><strong>Contributions</strong>
+<ul>
+<li>利用线程级别的并行在内存中处理大量请求，从事务中解耦写请求来异步执行，将长写路径分解为流水线中的多个阶段，以增加总体吞吐量</li>
+<li>利用重定义的 LSM 结构来在分层存储器件上在不同的层次之间移动数据，并优化 compaction 算法</li>
+<li>把 compaction offload 到 FPGA</li>
+<li>CoW 更新的多版本元数据索引来加速点查询，而不管数据的温度</li>
+</ul>
+</li>
+</ul>
+<h3 id="system-overview">System Overview</h3>
+<ul>
+<li>电商场景数据热度变化频繁，且包含大量的写请求，考虑使用 LSM，但是传统的 LSM 不适合该负载，所以我们做了大量的优化。X-Engine 可以部署在 POLARFS 上，POLARFS 使用了大量的新技术如 RDMA NVMe 等</li>
+<li>下图展示了 X-Engine 的架构，把每个 Table 分区到了多个子表，维护了一个 LSM 树，为每个子表关联 metasnapshot 和 索引，每个数据库实例有个 REDO LOG，每个 LSM 树由驻留在内存中的热数据层和 NVM/SSD/HDD 的 温/冷 数据层组成，之后会被分区到不同层。数据的热温冷代表着理想的访问频率，然后相应地被放到对应的层。热数据层包含一个 active memetable 和多个 immutable memtable，都是跳表，存储最近插入的数据，并缓冲热记录。温冷数据层组织数据在一个类似树的结构中，每一层的树存储有序的 extents，一个 extents 打包了对应的数据块、索引块和过滤器块，我们正在探索机器学习技术来识别适当的数据温度，这在附录C中有简要的讨论，它的全部细节超出了这项工作的范围。</li>
+<li>X-Engine 利用 redo logs、metasnapshots、和 index 来支持事务多版本并发控制，每一个 metasnapshot 有一个元数据索引来追踪所有的 memtables 和所有层次的 extents，树的一个或多个相邻层组成一个层，分别存储在NVM、SSD和HDD上。在X-Engine中，表被划分为几个子表。每个子表都有自己的热、热和冷数据层(即LSM树)。X-Engine 以面向行格式存储记录。我们设计了一个多版本memtables 来存储不同版本的记录，以支持MVCC(在第3.2.1节介绍)。在磁盘上，元数据索引跟踪存储在区段中的记录的所有版本。我们将在3.1节详细介绍数据结构。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210830115307.png" alt="20210830115307" loading="lazy"></li>
+<li><strong>The read path</strong>: 读路径是从存储器中检索记录的过程。原来的lsm树设计没有很好的读取性能。查找首先搜索memtable。在memtable中，它必须一个一个地遍历每一层。在最坏的情况下，查找必须以扫描所有级别结束，直到最大级别得出查询记录不存在的结论。为了加速这一过程，提出了一个 manifest file 来定位包含查询键的目标SST。在每个 SST 内还应用了 Bloom 过滤器，以促进早期终止</li>
+<li>为了为电子商务交易中常见的点查找获得良好的响应时间，我们<strong>优化了区段的设计，引入了跟踪所有 memtable 和区段的元数据索引，以及一组缓存以促进快速查找</strong>。我们还提出了<strong>压缩中的增量缓存替换方法，以减少压缩导致的不必要的缓存迁出</strong>。我们引入快照以确保查询读取记录的正确版本</li>
+<li><strong>The write path</strong>: 写路径包括物理访问路径和在存储引擎中插入或更新记录的相关过程。在lsm树KV存储中，到达的键值对被附加或插入到活动memtable中。一旦完全填充，活动memtable就会切换为不可变的，等待刷新到磁盘。同时，创建一个新的空活动memtable。为了支持高并发事务处理，存储引擎需要通过在持久存储(例如SSD)中记录新记录，并将它们高速插入memtable。在这个过程中，<strong>我们区分了长延迟的磁盘 I/O 和低延迟的内存访问，并将它们组织在一个多级流水线中，以减少每个线程的空闲状态，提高总体吞吐量</strong>(章节3.2.3)。为了实现高水平的并发性，我们进一步<strong>将写的提交与事务处理分离开来，并分别优化它们的线程级并行性</strong>。</li>
+<li><strong>Flush and Compaction</strong>: LSM 树依赖于刷新和压缩操作来合并数据，这些数据可能会淹没从memtable到磁盘的主内存，并保持合并数据的有序顺序。不可变memtable被刷新到Level0，在此期间记录被排序并打包到排序序列表(SSTs)中。每个SST都独占一个 Key 范围，因此一个级别可以包含多个SST。当 Level-i 的 sst 规模达到某一阈值时，与Leveli+1键值域重叠的sst合并。这个合并过程在某些系统中称为压缩，因为它还会删除标记为要删除的记录。最初的压缩算法从这两层读取 sst，合并它们，然后将合并后的结果写回 lsm 树。<strong>这个过程有几个缺点:它消耗大量的cpu和磁盘 I/O;同一条记录从LSMtree读取和写入多次，导致写入放大;它会使正在合并的记录的缓存内容无效，即使它们的值保持不变</strong></li>
+<li>在X-Engine中，我们首先<strong>优化不可变memtables的刷新</strong>。对于压缩，我们<strong>应用数据重用来减少要合并的区段数量，异步I/O与磁盘I/O重叠，以及FPGA加载来减少CPU消耗</strong>。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210830152307.png" alt="20210830152307" loading="lazy"></li>
+</ul>
+<h3 id="detailed-design">Detailed Design</h3>
+<ul>
+<li>X-Engine 应用 MVCC 和两阶段锁来实现 Snapshot isolation 和 Read Commited 的隔离级别来保证 ACID，同一记录的不同版本被存储为具有自动递增版本 ID 的单独元组。X-Engine 将这些版本的最大值跟踪为 LSN (日志序列号)。每个传入事务使用它所看到的LSN 作为快照。事务只读取比它自己的 LSN 更小的最大版本的元组，并为它所写的每个元组添加行锁，以避免写冲突。</li>
+<li>下图展示了事务处理的流程。这个过程包括一个读/写阶段和一个提交阶段。事务的所有读请求都是通过访问lsm树的读路径在读/写阶段提供的。在此阶段，<strong>将在事务中插入或更新的记录写入事务缓冲区</strong>。接下来，在<strong>提交阶段，将从事务缓冲区写入存储的任务记录分发到多个写任务队列。通过记录相应的记录并将它们插入到lsm树中</strong>，引入了一个多级流水线来处理所有这些写任务。下面我们将详细介绍X-Engine的数据结构、读路径、写路径、刷新和压缩<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210830152521.png" alt="20210830152521" loading="lazy"></li>
+</ul>
+<h4 id="the-read-path">The read path</h4>
+<ul>
+<li>我们从数据结构的设计开始，包括区段、缓存和索引。对于每个数据结构，我们将介绍它如何促进读取路径中的快速查找。</li>
+</ul>
+<h5 id="extent">Extent</h5>
+<ul>
+<li>图4显示了区段的布局，由数据块、元数据和块索引组成。记录以面向行的样式存储在数据块中。元数据 schema 跟踪每个列的类型。块索引保留每个数据块的偏移量。在生产系统的当前部署中，我们在 LSM 树的所有级别上将区段的总大小调优为2 MB。因为许多电子商务事务以高度倾斜的方式访问记录，所以保持这种大小的区段允许在压缩期间重用许多区段(详见第3.3.2节)。这种设计还有助于压缩期间的增量缓存替换(在3.1.4节中引入的优化)<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210830153138.png" alt="20210830153138" loading="lazy"></li>
+<li>我们在每个区段中使用版本存储模式数据 schema，以加速 DDL(数据定义语言)操作。通过这种设计，当向表中添加新列时，我们只需要在新版本的新区段上强制执行这个新列，而不需要修改任何现有的区段。当查询读取带有不同版本模式的区段时，它将与最新版本保持一致，并将带有旧模式的记录的空属性的缺省值。这种快速 DDL 特性对于在线电子商务业务非常重要，因为在线电子商务业务经常根据需求的变化调整数据库模式的设计。</li>
+</ul>
+<h5 id="cache">Cache</h5>
+<ul>
+<li>图5说明了XEngine中的数据库缓存。我们专门为点查找优化了行缓存，点查找是阿里巴巴电子商务交易中的大多数查询。行缓存使用LRU缓存替换策略缓存记录，而不管记录在 LSM 树中的哪个级别。 因此，即使是最大级别的记录也可以被缓存，只要查询访问它。一旦点查找错过了 memtables，查询的键就被散列到行缓存中相应的匹配槽中。因此，在点查询的行缓存中检索记录只需要 O(1)时间。当随机查找访问记录时，行缓存的影响较小。</li>
+<li>我们在行缓存中只保存最新版本的记录，由于时间局部性，这些记录被访问的机会最大。为了实现这一点，我们<strong>在刷新期间用行缓存中的新记录替换旧版本的记录，从而减少因刷新而导致的缓存丢失</strong></li>
+<li><strong>块缓存以数据块为单位缓冲数据。它为每个没有从行缓存c查询或范围查询请求提供服务</strong>。表缓存包含子表头的元数据信息，这些子表头通向相应的区段。找到区段后，我们使用Bloom筛选器筛选不匹配的键。然后，我们搜索索引块来定位记录，并最终从它的数据块中检索它。</li>
+<li>这些缓存对于温度变化后减少记录缓存丢失非常重要。由于记录的空间局部性，行缓存中出现的热记录和已有的热记录可能来自相同的区段甚至相同的数据块。因此，<strong>表和块缓存有助于提高缓存未命中后的总体缓存命中率，并可能有助于减少行缓存中替换的延迟</strong><br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210830153356.png" alt="20210830153356" loading="lazy"></li>
+</ul>
+<h5 id="multi-version-metadata-index">Multi-version Metadata Index</h5>
+<ul>
+<li>图 6 说明了 X-Engine 中多版本元数据索引的结构。<strong>每个子表的LSM 树都有其关联的元数据索引</strong>，该索引从表示子表的根节点开始。<strong>索引的每次修改都会创建一个新的元快照，它指向所有相关的级别和memtable，而不需要修改现有元快照的节点(即copy-on-write方法</strong>)。</li>
+<li>在图6中， extent i 最初是 Level0 的一部分，且被缓存(用红色表示)。当重用此区段的压缩完成时，MetaSnapshot v 旁边会创建一个新的 MetaSnapshot v+1，链接到新合并的 Level1 (颜色较深)。Level1 的元数据只需要指向extent i，而不需要在磁盘中实际移动它(用紫色表示)，从而保持所有缓存内容的完整性。<strong>利用这种写时复制方法，事务可以以只读方式访问它们想要的任何版本，而不需要在数据访问期间锁定索引</strong>。我们使用垃圾收集来删除过时的元快照。RocksDB 等其他存储引擎也探索过类似的设计。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210830154135.png" alt="20210830154135" loading="lazy"></li>
+</ul>
+<h5 id="incremental-cache-replacement">Incremental cache replacement</h5>
+<ul>
+<li>在lsm树中，由于压缩合并了磁盘中的许多区段，它通常会导致大量缓存驱逐，降低了查找时的缓存命中率，并导致明显的性能下降和不稳定的响应时间。即使缓存记录的值没有改变，如果它们的区段与压缩中涉及的其他区段共享重叠的键范围，则它们可能已经在磁盘中移动了。</li>
+<li>为了解决这个问题，我们建议在块缓存中进行增量替换，而不是从缓存中删除所有 compacted 区段。在压缩期间，我们检查要合并的区段的数据块是否被缓存。如果是这样，我们<strong>将缓存中的旧块替换为相同位置的新合并块，而不是简单地清除所有旧块。这种方法通过保持块缓存中一些块的更新和不移动来减少缓存丢失</strong>。</li>
+</ul>
+<h4 id="the-write-path">The write path</h4>
+<ul>
+<li>在本节中，我们从优化接收每个子表的 LSM 树的传入记录的memtable结构开始。接下来，我们介绍如何设计写任务队列和写路径中的多阶段流水线，它们由X-Engine中所有子表的 LSM 树共享。</li>
+</ul>
+<h5 id="multi-version-memtable">Multi-version memtable</h5>
+<ul>
+<li>我们实现 memtable 作为一个无锁的skiplist，像许多其他系统一样，以实现良好的查找和插入性能[9]。然而，在查询热记录时，基于skiplist的memtable的最先进实现存在性能问题。对单个记录的频繁更新会生成多个版本。如果一个热记录与只关注最新版本的查询的谓词匹配，则查询可能必须扫描许多旧版本来定位所请求的版本。电子商务平台上的在线促销活动，在消费者下单购买热门商品时，放大了这些多余的访问。</li>
+<li>在X-Engine中，我们<strong>垂直地将相同记录的新版本附加到原始节点旁，形成一个新的链表</strong>。图7显示了提议的结构，其中蓝色节点存储具有不同键的记录，黄色节点存储同一记录的多个版本。<strong>不同的键被组织在一个跳表中，而每个键的多个版本存储在一个链表中。热记录上的更新会增加相应的链表节点</strong>。此外，通常被传入事务引用的新版本被保持在唯一键的skiplist的底层，如图7所示，其中版本99是最新的版本。<strong>该设计减少了扫描不必要的老版本的数据造成的开销</strong>。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210830160234.png" alt="20210830160234" loading="lazy"></li>
+</ul>
+<h5 id="asynchronous-writes-in-transactions">Asynchronous writes in transactions</h5>
+<ul>
+<li>在InnoDB这样的存储引擎中，传统的一线程一事务方法在写效率上有很大的缺陷。在这种方法中，用户线程从头到尾执行事务。虽然这种方法很容易实现写的执行和事务的并发控制，而用户线程自己不写日志，线程必须等待磁盘IOs写日志的长延迟完成</li>
+<li>在X-Engine中，我们选择了另一种方法，将<strong>写的提交与相应的事务解耦，并将它们分组以进行批处理</strong>。如图3所示，我们首先将写任务分配到多个无锁写任务队列中。在此之后，大多数线程可以异步返回来处理其他事务，这样在多级流水线(将在下面介绍)中，每个队列只留下一个线程来参与提交写任务。通过这种方式，事务中的写入是异步的。在高并发工作负载中，这种方法允许更多的线程处理来自并发事务的写任务。队列的最佳数量取决于机器中可用的I/O带宽，以及每个无锁队列上方的多个线程之间的争用。我们发现，在32核机器中，每个队列中有8个线程会使I/O带宽饱和，由于竞争，为每个队列分配更多的线程会降低吞吐量。此外，在解耦过程之后，我们将同一个队列中的写任务分组在一起，并批量处理它们。与单个事务提交相比，批处理提交可以显著提高I/O，从而提高吞吐量。在下面的讨论中，我们将优化批处理的效率<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210830180411.png" alt="20210830180411" loading="lazy"></li>
+</ul>
+<h5 id="multi-staged-pipeline">Multi-staged pipeline</h5>
+<ul>
+<li>写路径是访问主内存和磁盘的多个操作的一个长序列，在其执行过程中计算工作负载会发生变化。这使得通过计算隐藏内存访问和磁盘 I/O 具有挑战性</li>
+<li>为了解决这个问题，我们将写路径分解为多个阶段。图3的右半部分显示了四阶段流水线的概述，其中各个阶段交替访问主内存和磁盘。
+<ul>
+<li>在第一阶段，<strong>日志缓冲</strong>，线程从事务缓冲区收集每个写请求的wal (write-ahead logs)到内存日志缓冲区，并计算它们相应的CRC32错误检测代码。这个阶段涉及重要的计算和仅访问主内存。</li>
+<li>在第二阶段，<strong>日志刷回</strong>，线程将缓冲区中的日志刷新到磁盘。刷新日志后，日志序列号在日志文件中向前移动。然后，这些线程将已经写完日志的写任务推入下一阶段</li>
+<li><strong>写 memtable</strong>。在这里，多个线程并行地在活动 memtable 中追加记录。这个阶段只访问主内存。所有这样的写都可以在失败后从 WAL 中恢复。</li>
+<li>最后一个阶段，<strong>提交</strong>，完成所有任务的事务最终由多个线程并行提交，并释放它们使用的资源(如锁)。</li>
+</ul>
+</li>
+<li>在这个流水线中，<strong>我们根据每个阶段的需求，分别为每个阶段调度线程，使每个阶段的吞吐量与其他阶段的吞吐量相匹配，以达到总吞吐量的最大化</strong>。虽然前三个阶段是内存密集型的，但第一和第二阶段访问主内存中的不同数据结构，而第二阶段写入磁盘。因此，重叠它们可以提高主存储器和磁盘的利用率。</li>
+<li>此外，我们还<strong>分别限制了每个阶段的线程数。由于较强的数据依赖关系在前两个阶段,每个阶段我们只安排一个线程(例如,图3的线程 a)</strong>,其他阶段,我们分配多个线程并行处理(例如,线程b, c, d,如图3所示)。所有线程从阶段拉取任务进行处理。从前两个阶段提取任务的操作是先发制人的，只允许第一个到达的线程处理该阶段。其他阶段则是理想并行，允许多个线程并行工作。<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210830161423.png" alt="20210830161423" loading="lazy"></li>
+</ul>
+<h4 id="flush-and-compaction">Flush and Compaction</h4>
+<h5 id="fast-flush-of-warm-extents-in-level0">Fast flush of warm extents in Level0</h5>
+<ul>
+<li>依赖 flush 来避免 OOM，在即将到来的交易高峰时，风险是很大的。在 X-engine中，每个刷新操作将其不可变的memtable转换为extent，将它们追加到Level0，并离开，而不与现有记录合并。然而，这个过程会留下一组未排序的区段。查询现在必须访问所有的区段来寻找潜在的匹配。这个过程中涉及的磁盘 I/O 开销很大。尽管Level0的大小可能不到整个存储空间的1%，但它包含的记录只比最近插入到memtable中的记录稍微老一点。由于电子商务工作负载中的强大时间局部性，传入查询很可能需要这些记录。因此，我们将 Level0 中的区段称为 warm extents</li>
+<li>我们<strong>引入了 Level0 内部的压缩来积极地合并 Level0 中的暖区，而不将合并的区推入下一个 Level1</strong>。这种方法将温记录保存在lsm 树的第一级，防止查询深入树中检索这些记录。另一方面，由于 Level0 与其他级别相比规模较小，Level0 内部的压缩只需要访问一小部分区段，不像其他在更深级别中广泛合并区段的压缩。由于这种对 CPU 和 I/O 的轻量级消耗，可以频繁地执行level0内部的压缩。</li>
+</ul>
+<h5 id="accelerating-compactions">Accelerating compactions</h5>
+<ul>
+<li>
+<p>压缩涉及昂贵的合并操作。我们对压缩应用了三种优化: 数据重用、异步 I/O 和 FPGA 加载。</p>
+</li>
+<li>
+<p><strong>数据重用</strong>。我们在压缩过程中重用区段和数据块，以减少合并两个相邻级别(即Leveli和Leveli+1)所需的 I/O 数量。为了增加重用的机会并使其有效，我们将区段的大小减少到 2 MB，并进一步将区段划分为多个 16 KB 的数据块。<strong>如果压缩所涉及的一个区段的键范围与其他区段的键范围不重叠，则只需更新其相应的元数据索引(如第3.1.3节所介绍的)就可以重用它，而不需要在磁盘上实际移动它</strong>。我们在图8中展示了一个示例，其中Level1的3个区段(键范围为[1,35]、[80,200]和[210,280])被压缩为来自Level2的5个区段(键范围为[1,30]、[50,70]、[100,130]、[150,170]和[190,205])。下面我们列出了不同的重用情况：</p>
+<ul>
+<li>Level1 的 Extent[210,280]和Level2的Extent[50,70]被直接重用</li>
+<li>Level1 的 Extent[1,35] 与 Level2的extent[1,30]重叠。但前者只有一个数据块[1,25]与后者的数据块重叠。因此，数据块[32,35]被重用</li>
+<li>Level1 extent[80,200]与Level2中的多个extent重叠。它的第二个数据块与Level2中的三个区段重叠。然而，这个数据块中的键是稀疏的，因为在135到180之间没有键。因此，我们将其分为两个数据块 [106,135] 和[180,200]，并分别将其与Level2的extent[100, 130]和[190,205]进行合并。Extent[150,170]被直接重用<br>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210830162544.png" alt="20210830162544" loading="lazy"></li>
+</ul>
+</li>
+<li>
+<p><strong>Asynchronous I/O</strong>：<strong>在区段级别，压缩操作由三个不相交的阶段组成</strong>:</p>
+<ul>
+<li>(1)从存储器中检索两个输入区段，</li>
+<li>(2)合并它们，</li>
+<li>(3)将合并的区段(一个或多个)写回存储器。</li>
+</ul>
+</li>
+<li>
+<p>第一和第三阶段是I/O阶段，而第二阶段是计算密集型阶段。我们在第一和第三阶段发出异步I/O请求。第二阶段实现为第一I/O阶段的回调函数。当多个压缩并行运行时，第二阶段的执行与其他阶段的执行重叠，以隐藏I/O</p>
+</li>
+<li>
+<p><strong>FPGA oﬀloading</strong>：我们引入 FPGA 来加速压缩，并减少cpu上的资源消耗。<strong>通过上面介绍的两个优化，在cpu上运行的压缩仍然会消耗多个线程。因为压缩工作在lsm树的两个连续级别的独立区段对上，所以压缩任务在这些区段对的粒度上理论上能并行的</strong>。因此，它可以被分割成多个小任务。我们把这样小的任务放到 FPGA 上，并以流的方式处理它们。每个压缩区段都被传输回磁盘。通过这样的加载，<strong>CPU 线程从合并区段的沉重负担中得到释放。因此，我们能够分配更多的线程来处理并发事务</strong>。这种基于 FPGA 的压实加速的细节超出了本文的范围，将另行探讨。</p>
+</li>
+</ul>
+<h5 id="scheduling-compactions">Scheduling compactions</h5>
+<ul>
+<li>LSM 树依赖于压缩来按已排序的顺序保存记录，并从存储中删除标记为要删除的记录。如果不及时删除已删除的记录，查找查询可能不得不遍历存储中的许多无效记录，从而严重损害读性能。压缩还有助于合并Level0中的子级别，以降低该级别的查找成本。在X-Engine中，我们<strong>引入了基于规则的压缩调度</strong>，以利用这些好处。我们根据压实操作的层次来区分压实:
+<ul>
+<li>intra-Level0 压缩(合并Level0中的子层)</li>
+<li>minor 压缩(合并两个相邻的层，除了最大的层)</li>
+<li>major 压缩(合并最大的层和它上面的层)</li>
+<li>self-major 压缩(合并最大的层以减少碎片和删除记录)。</li>
+</ul>
+</li>
+<li>当一个级别的总大小或区段总数达到预定义的阈值时，就会触发压缩。<strong>所有触发的压缩作业都被放入一个优先队列</strong>。确定优先级的规则对配置是开放的，这进一步取决于数据库之上的不同应用程序的需求。</li>
+<li>下面，我们将展示一个为阿里巴巴的一个在线应用程序量身定制的配置示例。在这个应用程序中，<strong>有频繁的删除。当应该删除的记录数量达到其阈值时，就会触发压缩以删除这些记录，并且这种压缩具有最高优先级，以防止存储空间的浪费。删除之后，Level0 内部的压缩被优先排序，以帮助加速查找 Level0 中最近插入的记录。Minor、major 和 self-major compaction 分别按此顺序排列</strong>:
+<ul>
+<li>(1) Compactions for deletions.</li>
+<li>(2) Intra-Level0 compactions.</li>
+<li>(3) Minor compaction.</li>
+<li>(4) Major compaction.</li>
+<li>(5) Self-major compactions.</li>
+</ul>
+</li>
+<li>可以对不同子表以及不同 LSM 树的压缩进行并发执行调度。这种并行性是理想的，因为子表之间的数据独立。在每个子表中，一次只执行一个压缩。虽然可以对同一lsm -树执行多个压缩，而不会损坏数据或导致任何数据竞争，但我们有足够的机会在子表级别进行并发压缩，以提高性能。</li>
+</ul>
+<h2 id="related-work">Related Work</h2>
+<ul>
+<li></li>
+</ul>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Cache Replacement Policies - Fine-Grained Other]]></title>
         <id>https://blog.shunzi.tech/post/CRP-Fine-Grained-Three-Other/</id>
@@ -643,432 +1087,6 @@
 <li>https://en.wikipedia.org/wiki/Cache_replacement_policies#B%C3%A9l%C3%A1dy's_algorithm</li>
 <li>最有效的缓存算法是总是丢弃那些在未来很长一段时间内不需要的信息。这个最优结果被称为 Bélády 的最优算法/简单地说最优替换策略或千里眼算法。由于通常不可能预测未来需要多少信息，这在实践中通常是不可实现的。只有经过实验才能计算出实际的最小值，并且可以比较实际选择的缓存算法的有效性。</li>
 </ul>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[UniKV: Toward High-Performance and Scalable KV Storage in Mixed Workloads via Unified Indexing]]></title>
-        <id>https://blog.shunzi.tech/post/UniKV/</id>
-        <link href="https://blog.shunzi.tech/post/UniKV/">
-        </link>
-        <updated>2021-06-24T13:21:02.000Z</updated>
-        <summary type="html"><![CDATA[<ul>
-<li>ICDE20: UniKV: Toward High-Performance and Scalable KV Storage in Mixed Workloads via Unified Indexing</li>
-<li>https://ieeexplore.ieee.org/document/9101876</li>
-</ul>
-]]></summary>
-        <content type="html"><![CDATA[<ul>
-<li>ICDE20: UniKV: Toward High-Performance and Scalable KV Storage in Mixed Workloads via Unified Indexing</li>
-<li>https://ieeexplore.ieee.org/document/9101876</li>
-</ul>
-<!--more-->
-<h2 id="abstract">Abstract</h2>
-<ul>
-<li>现有的 KV 存储有严重的读写放大问题，现有设计通常都是在做一些 R/W/SCAN 的权衡，很难同时实现比较高的性能。</li>
-<li>本文设计的 UniKV，结合了 HASH 索引和 LSM Tree，利用数据局部性来区分 KV 对的索引管理，它还开发了多种技术来解决统一索引技术引起的问题，从而同时提高读、写和扫描的性能。实验表明，UniKV 在读写混合工作负载下的总吞吐量显著优于几个最先进的 KV 存储(例如，LevelDB、RocksDB、HyperLevelDB 和 PebblesDB)</li>
-</ul>
-<h2 id="intro">Intro</h2>
-<ul>
-<li>我们的见解是，哈希索引是一种经过充分研究的索引技术，它支持特定KV对的快速查找。然而，将散列索引和LSM-tree组合起来是具有挑战性的，因为它们每个都要做出不同的设计权衡。HASH 支持高性能读写，但是不支持 range，同时 HASH 索引保存在内存中，额外的内存开销也就导致了伸缩性的问题。而 LSM 是同时支持高效的写和 scan 的，并同时有良好的可扩展性，但是有比较严重的 compaction 开销和多层访问的开销。因此我们提出了问题：<strong>我们是否可以整合 HASH 和 LSM 来同时保证 read/write/scan/Scalability 的高效？</strong></li>
-<li>现有 KV 负载常有数据局部性，也就给上述问题的解决提供了机会。UniKV 采用分层体系结构实现差异化数据索引，给最近写入的数据（可能会频繁访问的数据，即热数据）构建轻量级内存哈希索引，而维护大量的不频繁访问的数据（也就是冷数据）在一个完全有序的基于 LSM 的设计中。</li>
-<li>为了高效利用 HASH 索引和 LSM 树而不用导致大量的内存和 I/O 开销，UniKV 设计了三种技术：
-<ul>
-<li>轻量级的两级 HASH 索引来保证内存开销尽可能小，同时加速热数据的访问</li>
-<li>为了减少热KV对迁移到冷KV对引起的I/O开销，UniKV 设计了部分KV分离策略来优化迁移过程</li>
-<li>为了在 大 KV 存储中实现高扩展性和高效的读写性能，UniKV 不像传统的基于 lsm 树的设计那样，允许冷 KV 对之间有多个级别;相反，它采用了一种横向扩展(scale-out)方法，通过动态范围分区方案将数据动态地分割为多个独立的分区。</li>
-</ul>
-</li>
-</ul>
-<h2 id="background-and-motivation">BACKGROUND AND MOTIVATION</h2>
-<ul>
-<li>背景方面主要介绍了造成 LSM 读写放大的原因：
-<ul>
-<li>写放大：compaction 读后排序覆盖写</li>
-<li>读放大：L0 无序全量检索，一层一层地进行检索，BloomFilter 误报</li>
-</ul>
-</li>
-<li>Motivation：
-<ul>
-<li><strong>内存哈希索引</strong>：内存 HASH 索引查询性能高，直接使用 HASH 函数计算就能找到对应的 pointer，然后根据 pointer 就能取出对应的数据。写性能也很高，虽然可能产生 HASH 冲突，但也有一些 HASH 冲突的解决办法。</li>
-<li><strong>设计 tradeoffs</strong>：HASH 索引和 LSM 其实是在 R/W/扩展性 三个方面做了不同的权衡，
-<ul>
-<li>HASH 索引的读写较好，但是有一些限制
-<ul>
-<li>扩展性较差，对于大数量的 KV 存储，读写性能可能显著下降因为哈希冲突和有限的内存，性能可能比 LSM 还差。为了证明该结论，使用了基于 HASH 索引的 SkimpyStash 来和 LevelDB 对比<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210623164841.png" alt="20210623164841" loading="lazy"></li>
-<li>除此以外，HASH 索引不支持高效的范围查询</li>
-</ul>
-</li>
-<li>LSM 支持大量的数据存储而不使用额外的内存索引，在大数据量场景下比 HASH 表现更好，然后有着很严峻的读写放大问题，虽然有大量的方案在优化这一点，但是本质都是在 R/W 之间做 trade-off。</li>
-</ul>
-</li>
-<li><strong>负载特征</strong>: 真实 KV 负载不仅仅是读写混合的，还有很强的数据访问倾斜性，即一小部分数据可能需要接受大量的请求。该结论也进行了实验证明，下图展示了 SSTable 的访问频率。X 轴代表了从低到高 Level 顺序编号的 SSTable，Y 轴代表每个 SSTable 的访问次数。平均来讲，更低 Level 的 SSTables 也就是更小 ID 的 SSTables 通常刚从内存中刷回，相比于更高层的 Table 有更高的访问频率。最后一层包含大约 70% 的 SSTables，但是他们只接受 9% 的请求。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210623165833.png" alt="20210623165833" loading="lazy"></li>
-<li><strong>Main Idea</strong>：基于 HASH 和 LSM 各自设计的 trade-off，以及负载局部性的事实，我们的思想就是结合 HASH 索引和 LSM 来解决各自的限制。具体来讲，就是使用 HASH 索引来加速单个 Key 的查询，通常是很小比例的经常访问的数据，也就是热数据。与此同时，对于大量的不常访问的冷数据，我们仍然遵循原始的 LSM 设计来提供较高的 scan 性能。同时为了支持大数据量的存储的可扩展性，我们提出了动态范围分区的方法来以 scale out 的形式扩展 LSM。</li>
-</ul>
-</li>
-</ul>
-<h2 id="design">Design</h2>
-<h3 id="架构概览">架构概览</h3>
-<ul>
-<li>两层结构：
-<ul>
-<li>第一层为 UnsortedStore，保存了从内存刷回的数据，无序。</li>
-<li>第二层为 Sorted Store，保存了从 Unsorted Store 合并后的有序的数据</li>
-</ul>
-</li>
-<li>利用数据的局部性，小比例的热数据保存在 UnsortedStore 中，直接使用一个内存 HASH 索引来支持快速的读写，同时保证剩余数量的冷数据在 SortedStore 中，以有序的形式来提供高效的 scan 和更好的扩展性。</li>
-<li>使用了如下技术：
-<ul>
-<li>Differentiated indexing：两层使用不同的索引</li>
-<li>Differentiated indexing：部分 KV 分离来优化两层之间的 Merge</li>
-<li>Dynamic range partitioning：动态范围分区来以 scale out 的形式扩展存储</li>
-<li>Scan optimizations and consistency：优化了 scan 和 crash recovery 的实现<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210623170709.png" alt="20210623170709" loading="lazy"></li>
-</ul>
-</li>
-</ul>
-<h3 id="differentiated-indexing">Differentiated Indexing</h3>
-<h4 id="data-management">Data Management</h4>
-<ul>
-<li>第一层直接追加写，无需有序，内存 HASH 表索引，从而快速查询。第二层在 LSM 中组织，Key 全局有序，KV 分离，Value 存储在单独的 Value Log。LSM 中存储 Key 和 Address。</li>
-<li>移除了所有 SSTables 的 BloomFilters 来节省内存空间并减少计算开销。对于 UnsortedStore 中的数据直接使用内存 HASH 表就能查询到对应 Key 的位置信息，对于 SortedStore 中的数据，我们也可以有效地找到可能包含 KV 对的SSTable，通过二叉搜索，比较 SSTable 的键和存储在内存中的边界键，因为所有的键在 SotedStore 中有序。即便是查询不存在的键，也只会访问一个 SSTable，这只会增加一个额外不必要的从 SSTable 的 I/O 读取来确认不存在的 Key，因为我们可以通过使用索引块的元数据来直接决定 SSTable 哪个数据块内(通常是4KB) 需要读出，元数据又通常是缓存在内存中的。相比之下，现有的基于 LSM 树的 KV 存储可能需要对 SSTable 进行 7.6 次检查，由于 Bloom 过滤器的误报以及多层搜索，平均需要 2.3 次 I/O 才能进行键查找。</li>
-<li>对于内存中的数据管理，UniKV 使用和传统 LSM 相似的方式，同时使用 WAL 确保数据的可靠性，KV 首先写入到磁盘上的日志中来保证崩溃一致性，然后插入到 Memtable，也就是对应的一个内存跳表中，Mmetable 满了之后，转换为 Immutable Memtable，然后再刷回到磁盘变成 UnsortedStore 中的一个数据文件，追加写入。</li>
-</ul>
-<h4 id="hash-indexing">Hash indexing</h4>
-<ul>
-<li>UnsortedStore 中的 Tables 以追加写的方式写入，使用内存哈希表索引，为了减小内存开销，我们构建了一个轻量级的两级 HASH，结合布谷鸟 HASH 和链式 HASH 来解决哈希冲突。如下图所示，每个桶存储使用了布谷鸟哈希的 KV 对索引项，所以可能因为哈希冲突而追加好几个 overflowed 的索引项。当我们构建索引项的时候，根据 n 个哈希函数的哈希结果找到对应的桶，直到找到一个空位置，最多使用 n 个哈希函数，如果不能在 n 个桶中找到对应的空桶，生成一个 overflowed 的索引追加到对应的桶后 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>h</mi><mi>n</mi></msub><mo>(</mo><mi>k</mi><mi>e</mi><mi>y</mi><mo>)</mo><mi mathvariant="normal">%</mi><mi>N</mi></mrow><annotation encoding="application/x-tex">h_n(key) \% N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathdefault">h</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.151392em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span><span class="mclose">)</span><span class="mord">%</span><span class="mord mathdefault" style="margin-right:0.10903em;">N</span></span></span></span></li>
-<li>定位到桶之后，记录 KeyTag 和 SSTableID 到对应的索引项中，每个索引项包含三个信息 &lt;keyTag, SSTableID, pointer&gt;，keyTag 保存使用了不同的 HASH 函数计算出的哈希值的高位 2 Bytes，被用来在查询过程中快速过滤出索引项。使用 2Bytes 来存储 SSTable ID，如果 UnsortedStore 中一个 SSTable 2MB，那么我们可以索引 128GB 的数据。指针使用了 4Bytes 来执行相同 Bucket 的下一个索引项。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210623173549.png" alt="20210623173549" loading="lazy"></li>
-</ul>
-<h4 id="key-lookup">Key Lookup</h4>
-<ul>
-<li>键查询过程如下：
-<ul>
-<li>使用 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>h</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>(</mo><mi>k</mi><mi>e</mi><mi>y</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">h_{n+1}(key)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathdefault">h</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.301108em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">n</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.208331em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span><span class="mclose">)</span></span></span></span> 计算 KeyTag，搜索候选的 buckets 从 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>h</mi><mi>n</mi></msub><mo>(</mo><mi>k</mi><mi>e</mi><mi>y</mi><mo>)</mo><mi mathvariant="normal">%</mi><mi>N</mi></mrow><annotation encoding="application/x-tex">h_{n}(key) \% N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathdefault">h</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.151392em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">n</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span><span class="mclose">)</span><span class="mord">%</span><span class="mord mathdefault" style="margin-right:0.10903em;">N</span></span></span></span> 到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>h</mi><mn>1</mn></msub><mo>(</mo><mi>k</mi><mi>e</mi><mi>y</mi><mo>)</mo><mi mathvariant="normal">%</mi><mi>N</mi></mrow><annotation encoding="application/x-tex">h_{1}(key) \% N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathdefault">h</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span><span class="mclose">)</span><span class="mord">%</span><span class="mord mathdefault" style="margin-right:0.10903em;">N</span></span></span></span>，直到找到了 KV 对，对于每一个候选的 Bucket，因为最新的 overflow 项被追加到了其尾部，因此，我们将 keyTag 与属于溢这个 bucket 的索引项从尾部开始进行比较，一旦找到了匹配的 keyTag，就根据对应的 SSTableID 检索出 SSTable 对应的元数据信息，并读出对应的 KV 对，注意查询的 KV 对可能因为哈希冲突而不存在于这个 SSTable，然后我们继续查询候选的 buckets，最终，如果 KV 对在 UnsortedStore 中没找到，那我们就从 SortedStore 上通过二分查找去找。</li>
-</ul>
-</li>
-</ul>
-<h4 id="memory-overhead">Memory overhead</h4>
-<ul>
-<li>我们分析了哈希索引的内存开销，UnsortedStore 中的每一个 KV 对消耗一个索引项，每个索引项消耗 8B 的内存，因此 UnsortedStore 中的每 1GB 数据，每个 KV 项 1KB 的话，将有大约 100w 索引项，消耗大约 10M 内存（在给定 Bucket 利用率大约为 80% 的情况下），内存的使用量小于 UnsortedStore 的数据大小的 1%。对于特别小的 KV 对，哈希索引可能导致较大的内存开销，一个解决方案就是差异化不同大小的 KV 项的索引的管理，例如对于小 KV 则使用经典的 LSM，对于大 KV 则使用 UniKV。</li>
-<li>我们的哈希索引在设计上做了一个 trade-off，一方面，哈希冲突可能当我们分配 Buckets 给 KV 对时存在，因此我们需要在索引项中存储 Key 的信息以便在查询过程中区分。另一方面，存储完整的 Key 浪费了内存，为了平衡内存消耗和读性能，UniKV 使用了两个哈希来保留 HASH 值的 2B 作为 keyTag，从而显著减少了哈希冲突的概率。如果哈希冲突发生了，也可以通过比较存储在磁盘上的键来解决。</li>
-</ul>
-<h3 id="partial-kv-separation">Partial KV separation</h3>
-<ul>
-<li>因为 UnsortedStore 的 KV 对使用了内存哈希表来索引，引入了额外的内存开销。对应的 SSTables 的键的范围因为只能追加写的策略变得可能范围重叠，所以执行 scan 的时候不可避免地需要检索每个 SSTable。为了限制内存开销并保证 scan 性能，UniKV 限制了 UnsortedStore 的大小，当大小达到设定阈值 UnsortedLimit 时，UniKV 触发一个合并操作，从 UnsortedStore 合并到 SortedStore，该参数根据可用内存来配置。</li>
-<li>合并操作可能产生大的 I/O 开销，因为 SortedStore 现有的 KV 对需要先读取然后合并排序后写回，因此如何减少合并开销是关键且有挑战性的。UniKV 提出了一个部分 KV 分离的策略，在 UnsortedStore 中不分离地保存，但是在 SortedStore 中分离保存。基本原理就是从内存中最近刷回的保存在 UnsortedStore 的数据因为局部性的原因更有可能是热数据，因此为了高效访问 KV 存储在了一起，然而 SortedStore 中的 KV 数据更可能是冷数据，因此数据量非常大，造成很大的合并开销。因此我们采用了 KV 分离来减少合并的开销。</li>
-<li>下图描绘了该设计思路，当从 UnsortedStore 合并到 SortedStore 的时候，UniKV 批量合并 Keys，同时保存 value 到一个新的创建的追加写的日志文件中，还使用指针记录值位置，这些指针与相应的键保存在一起，每一个指针项包含四个属性：&lt;partition,logNumber,offset,length&gt; 分别代表 partition number，log file id, value location, length。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210624145132.png" alt="20210624145132" loading="lazy"></li>
-</ul>
-<h4 id="garbage-collection-gc-in-sortedstore">Garbage collection (GC) in SortedStore</h4>
-<ul>
-<li>SSTable 中的无效 Keys 在 Compaction 的时候会被删除，所以这里的 GC 是指删除 Value Log 中的无效 Values。GC 以日志文件为单元进行操作，当一个分区的大小超过预定义阈值的时候触发 GC，具体而言就是 GC 操作首先从日志文件的分区中识别并读出所有的有效值，然后把所有的有效值写回到一个新的日志文件，并生成新的指针来记录最新的 value 位置信息，最后删除无效的指针和老旧的文件。</li>
-<li>有两个关键问题：
-<ul>
-<li>哪些分区被选择来 GC？</li>
-<li>如何从日志文件中快速识别出有效的值并读取？</li>
-</ul>
-</li>
-<li>不像之前的 KV 分离方案 WiscKey 一样严格按顺序执行 GC，UniKV 可以灵活地选择任意分区执行 GC 因为 KV 根据键范围被映射到了不同的分区而且分区之间的操作互相独立。我们采用了一个贪心方法来选择有最大数量的 KV 的分区来 GC，同时检查选择的分区的日志文件中的 value 的有效性，UniKV 只需要检查保存了有效的 Key 和最近的位置信息的 SortedStore 中的 Keys 和指针，因此对于每个 GC 操作只需要扫描 SortedStore 中的所有 Keys 和指针来获取所有的有效值，花费的时间主要取决于 SSTables 的总大小，注意 GC 和 compaction 操作是顺序执行的，所以 GC 操作也发生在数据加载的过程中，并且在度量写性能时还计算了 GC 成本。</li>
-</ul>
-<h3 id="dynamic-range-partitioning">Dynamic Range Partitioning</h3>
-<ul>
-<li>因为 SortedStore 随着数据量逐渐变大，如果只是像 LSM 在大规模的存储中简单地添加更多的层次，将会导致频繁的合并操作，相应地在写数据时将数据从低向高移动，读数据时触发多层访问。每个 GC 需要通过查询 LSM 从日志文件中读取所有的有效的数据并写回，所以 GC 的开销也会随着层级的增加变得很大。因此 UniKV 提出了动态范围分区的方法来以 scale out 形式扩展，该方法把不同范围的 KV 映射到独立管理的不同分区，每个分区有自己的 UnsortedStore 和 SortedStore。</li>
-<li>工作原理如下图所示，初始地，UniKV 在一个分区写数据，一旦大小达到阈值，partitionSizeLimit，UniKV 就把分区根据范围平均分成两个分区，对于范围分区，关键特性是两个新分区的键不应该有重叠。为了实现这一点，UnsortedStore 和 SortedStore 中的 KV 对都需要被拆分。</li>
-<li>为了分割 UnsortedStore 和 SortedStore 中的键，UniKV 首先锁住它们并暂停写请求。注意，锁粒度是一个分区，也就是说，UniKV 锁住整个分区，并在分割期间暂停对这个分区的所有写入。然后对所有键进行排序，以避免分区之间的重叠。它首先将所有内存中的 KV 对刷新到 UnsortedStore 中，并读取 UnsortedStore 和 SortedStore 中的所有 sstable 来执行合并排序，就像在基于 lsm 树的 KV 存储中一样。然后将排序后的键分成等量的两部分，并记录两部分之间的边界键 K。注意，这个边界键 K 作为分裂点。也就是说，密钥小于 K 的 KV 对形成一个分区 P1，其他的则形成另一个分区 P2。通过分隔点，UniKV 将 UnsortedStore 中的有效值分成两部分，并通过将它们附加到每个分区新创建的日志文件中，将它们写到相应的分区中。最后，UniKV 将值位置存储在指针中，这些指针与对应的键保存在一起，并将所有键和指针写回对应分区中的 SortedStore。注意 UniKV 释放锁，并在键分割后恢复处理写请求。</li>
-<li>其次，为了拆分 SortedStore 中的值(这些值分别存储在多个日志文件中)，UniKV 采用了一个惰性拆分方案，该方案在使用后台线程进行 GC 期间拆分日志文件中的值。它的工作原理如下。P1 中的 GC 线程首先扫描 P1 的 SortedStore 中的所有 sstable。然后，它从 P1 和 P2 共享的旧日志文件中读出有效值，并将它们写回属于 P1 的新创建的日志文件。最后，它生成新的指针，这些指针存储有相应的键，以记录值的最新位置。P2 中的 GC 线程执行与 P1 中相同的过程。惰性拆分设计的主要好处是通过将其与 GC 操作集成在一起来显著减少拆分开销，从而避免较大的 I/O 开销。注意，对于范围分区，P2 中的最小键必须大于 P1 中的所有键。一旦一个分区达到其大小限制，这个范围分区过程就会重复。我们强调，每个分割操作都可以看作是一个压缩操作加上一个 GC 操作，但是它们必须按顺序执行。因此，在分区中分割键会引入额外的 I/O。分割后，每个分区都有自己的 UnsortedStore、SortedStore 和日志文件。</li>
-<li>对于大型KV存储，初始分区可能会分裂多次，从而产生多个分区。为了在进行读写操作时有效地定位某个分区，我们在内存中记录每个分区的分区号和边界键，作为分区索引。我们还持久化地将分区索引存储在磁盘上的 manifest 中。另外，不同分区的键没有重叠，所以每个键只能存在于一个分区中。因此，可以通过首先定位一个分区来执行键查找，这可以通过检查边界键来有效地完成，然后只查询一个分区内的 KV 对。简而言之，动态范围分区方案通过将KV 对拆分为多个独立分区，以横向扩展 scale-out 的方式扩展存储。因此，该方案可以保证较高的读写性能，以及高效的扫描，即使是大型 KV 存储，使其具有良好的可扩展性</li>
-</ul>
-<h3 id="io-cost-analysis">I/O Cost Analysis</h3>
-<ul>
-<li>此处省略。原文分别分析了传统 LSM 和 UniKV 各自的读写开销。UniKV 相比之下开销更小。</li>
-</ul>
-<h3 id="scan-optimization">Scan Optimization</h3>
-<ul>
-<li>因为 KV 在 UniKV 的 SortedStore 中是分开存储的，所以 scan 操作可能会对 value 造成随机读。而 UnsortedStore 中的 SSTables 本身又是直接从内存刷回的所以是无序的，其键范围是重叠的，scan 操作可能就会读取每个 SSTable，因此也会造成额外的读开销。</li>
-<li>为了优化 scan，UniKV 首先通过快速的查询分区键的边界来快速找到要 scan 的键对应的分区，可能会显著减少需要 scan 的数据量，UniKV 还使用了一些其他策略。</li>
-<li>对于 UnsortedStore，UniKV 提出了一个 Size-based Merge 策略，即把 Unsorted Store 中的所有 SSTables 合并成一个大的 SSTable，使用一个后台线程来保证数据全局有序，该线程只有当 UnsortedStore 中的 SSTables 数量达到预定义的阈值 scanMergeLimit 时的才会执行。即便该操作会造成额外的 I/O 开销，如果 UnsortedStore 的大小是有限的话，该操作的 I/O 开销也会很小。该操作可以显著提升 scan 的性能因为高效的顺序读，特别是大数据量的 scan 操作。</li>
-<li>对于 SortedStore，UniKV 利用 SSD 的 I/O 并行性来从日志文件中多线程并发获取 values。UniKV 还利用预读机制来预取 values 到 page cache，工作流程如下：首先从 SortedStore 中的 SSTables 获取给定 scan range 内的 keys 和 pointers，然后以第一个键的值开始向日志文件发出预读请求(via posix_fadvise)，最后根据指针读取出 values 并返回 KV 对。另一方面我们认为 UniKV 不会对 UnsortedStore 和 SortedStore 的扫描结果执行内存合并和排序，这是因为一个 scan 操作是通过如下三步执行的：
-<ul>
-<li>seek() 它从每个需要检查在 UnsortedStore 和 SortedStore的sstable 中定位开始键，并返回初始键的 KV 对直到找到</li>
-<li>next() 找到比需要检查的每个 sstable 中最后一个返回的键大的下一个最小键，并返回最小键的值</li>
-<li>重复步骤二直到返回的 KV 对的数量等于 scan 的长度</li>
-</ul>
-</li>
-<li>通过上述优化，我们的实验表明 UniKV 的扫描性能与 LevelDB 相似，后者总是保持键在每个级别上的完全排序。</li>
-</ul>
-<h3 id="crash-consistency">Crash Consistency</h3>
-<ul>
-<li>三个地方需要保证崩溃一致性：Memtables 中缓冲的数据，内存哈希索引，SortedStore 的 GC。对于 KV 对直接使用 WAL 来保证，关于分区的元数据信息直接使用 manifest 来保证，一样也是 WAL 机制。</li>
-<li>内存哈希表则使用 checkpointing 技术，当每一半的 UnsortedLimit sstable 从内存刷新到 UnsortedStore 时，它将哈希索引保存在磁盘文件中，因此重建哈希索引可以通过读最近保存的磁盘上的索引的副本来 replay。</li>
-<li>GC 操作的一致性保证不太一样，因为需要重写现有的有效 KV 对，为了保证现有的有效的 KV 对的一致性，执行以下步骤：
-<ul>
-<li>识别出有效 KV 对</li>
-<li>读取有效的 values 并写回到新的 log file</li>
-<li>写所有的新的指向新的日志文件的指针和对应的 Key 到 SortedStore 的 SSTable 中</li>
-<li>标记新的 SSTable 为有效，以 GC_done 的标志标记老的日志文件来允许其被删除</li>
-<li>如果 crash，可以根据上面四个步骤 redo GC</li>
-</ul>
-</li>
-<li>UniKV 实现了上述机制，实验表明恢复开销很小。</li>
-</ul>
-<h3 id="implementation-issues">Implementation Issues</h3>
-<ul>
-<li>基于 LevelDB v1.20 实现，修改了大约 8K 代码，大部分都是为了引入哈希索引、动态范围分区和部分 KV 分离、以及 GC 操作。因为 UnsortedStore 和 SortedStore 都是基于 SSTable 的，所以 UniKV 可以直接利用 SSTable 成熟稳定的代码。</li>
-<li>对于 scan，UniKV 利用了多线程技术来并发获取 values。然而线程数量受限于一个进程的内存空间大小，使用太多线程可能触发频繁的上下文切换，UniKV 维护了一个 32 线程的线程池并从池中并行地分配线程来获取 values。Scan 过程中，UniKV 插入固定数量的 value 地址到 worker queue 中，然后可以唤醒睡眠线程来并行第读取 value。</li>
-</ul>
-<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210625161445.png" alt="20210625161445" loading="lazy"></figure>
-<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210625161520.png" alt="20210625161520" loading="lazy"></figure>
-<figure data-type="image" tabindex="3"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210625161538.png" alt="20210625161538" loading="lazy"></figure>
-<figure data-type="image" tabindex="4"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210625161549.png" alt="20210625161549" loading="lazy"></figure>
-<figure data-type="image" tabindex="5"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210625161558.png" alt="20210625161558" loading="lazy"></figure>
-<figure data-type="image" tabindex="6"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210625161647.png" alt="20210625161647" loading="lazy"></figure>
-<figure data-type="image" tabindex="7"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210625161709.png" alt="20210625161709" loading="lazy"></figure>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Differentiated Key-Value Storage Management for Balanced I/O Performance]]></title>
-        <id>https://blog.shunzi.tech/post/DiffKV/</id>
-        <link href="https://blog.shunzi.tech/post/DiffKV/">
-        </link>
-        <updated>2021-06-18T13:21:02.000Z</updated>
-        <summary type="html"><![CDATA[<ul>
-<li>ATC21 Differentiated Key-Value Storage Management for Balanced I/O Performance</li>
-<li>https://www.cse.cuhk.edu.hk/~pclee/www/pubs/atc21diffkv.pdf</li>
-</ul>
-]]></summary>
-        <content type="html"><![CDATA[<ul>
-<li>ATC21 Differentiated Key-Value Storage Management for Balanced I/O Performance</li>
-<li>https://www.cse.cuhk.edu.hk/~pclee/www/pubs/atc21diffkv.pdf</li>
-</ul>
-<!--more-->
-<h2 id="abstract">Abstract</h2>
-<ul>
-<li>KV 存储读写放大严峻，现有设计都是在做 trade-off，不能同时实现高性能的读写以及 scan。所以提出了 DiffKV，在 KV 分离的基础上构建并仔细管理 Key Value 的顺序。Key 沿用 LSM-Tree，保持全序，同时以协调的方式管理部分有序的 Value，以保持高扫描性能。进一步提出细粒度 KV 分离，以大小区分 KV 对，实现混合工作负载下的均衡性能。</li>
-</ul>
-<h2 id="introduction">Introduction</h2>
-<ul>
-<li>为了减小 compaction 开销，现有方案大致有几个方向。
-<ul>
-<li>放松全局有序的要求来缓解 compaction 开销。<strong>但常伴随着 scan 性能的下降</strong>
-<ul>
-<li>Dostoevsky</li>
-<li>PebblesDB</li>
-<li>SlimDB</li>
-</ul>
-</li>
-<li>基于 KV 分离，Key 有序，专门的存储区管理 Value。<strong>一是更适用于大 KV，二是还是有 scan 的性能损失（毕竟 Value 的顺序不保证了就导致随机读），三是还引入了垃圾回收的开销</strong>
-<ul>
-<li>WiscKey</li>
-<li>HashKV</li>
-<li>BadgerDB</li>
-<li>Atlas</li>
-<li>An Efficient Memory-Mapped Key-Value Store for Flash Storage</li>
-<li>Titan</li>
-<li>UniKV</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>简而言之，现有的LSM-tree优化仍然受到读写和扫描之间紧密的性能紧张关系的限制，包括：
-<ul>
-<li>(i) <strong>键和值的有序程度</strong></li>
-<li>(ii) <strong>不同大小的KV对的管理</strong>。</li>
-</ul>
-</li>
-</ul>
-<h2 id="background-and-motivation">Background and Motivation</h2>
-<ul>
-<li>LSM-tree KV Store 基础结构此处省略。</li>
-</ul>
-<h3 id="现有优化方案">现有优化方案</h3>
-<ul>
-<li>主要还是分为两类:
-<ul>
-<li>Relaxing fully-sorted ordering</li>
-<li>KV separation</li>
-</ul>
-</li>
-</ul>
-<h4 id="relaxing-fully-sorted-ordering">Relaxing fully-sorted ordering</h4>
-<ul>
-<li>以 PebblesDB 为例实现了分段 LSM。将一个 Level 分为了几个不相交的 Guards，每个 Guard 里的 SSTables 可以范围重叠。那么你会问了：<strong>为啥这样就能减小 compaction 开销呢？</strong> 因为 PebblesDB 只是读取了某一层中的 group 的 SSTables，然后进行了排序创建了新的 SSTables 写到下一层，compaction 过程不需要读取下一层的 SSTables 从而减小 compaction 开销和写放大。<strong>但是因为每个 Group 里的 SSTable 是重叠的，所以牺牲了一部分 scan 性能，虽然可以利用多线程来并行读，但是就导致了更多的 CPU 开销，所以提升也是有限的。</strong><br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210617231445.png" alt="20210617231445" loading="lazy"></li>
-</ul>
-<h4 id="kv-separation">KV separation</h4>
-<ul>
-<li>KV 分离则是将 Key 和 Location 信息存储在 LSM-tree，Value 单独地存储在一个日志里，Titan 中以多个 blob 文件形式来组织 Value。对于中大型 Value，因为 Key 和 Location 有着远小于 Value 的大小，在 LSM-tree 里存储的数据量就比较小，compaction 开销和写放大也相应比较小。除此以外，小的 LSM-tree 也减小了读放大，可以提升读性能。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210618103203.png" alt="20210618103203" loading="lazy"></li>
-<li>然而，由于 KV 分离将值写入一个附加日志，一个连续范围的键值现在分散在日志的不同位置。scan 操作也就会导致随机读取，因此导致比较差的 scan 性能，特别是小到中型 Value（OLTP 应用超过 90% 的 value 小于 1KB），除此以外，KV 分离还需要 GC 来回收空间，频繁的 GC 操作会导致额外的 I/O 开销。</li>
-</ul>
-<h3 id="trade-off-analysis">Trade-off Analysis</h3>
-<ul>
-<li>性能测试之前，先大概讲一下 <a href="https://docs.pingcap.com/zh/tidb/stable/titan-overview">Titan</a>
-<ul>
-<li>Titan 基于 KV 分离实现，此外，采用了多个小的 Blob Files 来代替大的只追加写的日志对 Value 进行管理，使用多线程来减小 GC 开销。</li>
-<li>数据组织形式如下：
-<ul>
-<li>LSM-tree: Key - index(BlobFileID:offset:ValueSize)</li>
-<li>BlobFile: Value (Value 的存储类似于原本 SSTable 的结构)
-<ul>
-<li>每条 BlobRecord 冗余存储了 Value 对应的 Key 以便反向索引，但也引入了写放大</li>
-<li>KeyValue 有序存放，为了提升 scan 性能，甚至进行预取</li>
-<li>支持 BlobRecord 粒度的 compression，支持多种算法</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>GC：
-<ul>
-<li>监听 LSM-tree 的 compaction 来统计每个 BlobFile 的 discardable 数据大小，触发的 GC 则选择对应 discardable 最大的 File 来作为 candidate</li>
-<li>GC 选择了一些 candidates，当 discardable size 达到一定比例之后再 GC。使用 Sample 算法，随机取 BlobFile 中的一段数据 A，计其大小为 a，然后遍历 A 中的 key，累加过期的 key 所在的 blob record 的 size 计为 d，最后计算得出 d 占 a 比值 为 r，如果 r &gt;= discardable_ratio 则对该 BlobFile 进行 GC，否则不对其进行 GC。如果 discardable size 占整个 BlobFile 数据大小的比值已经大于或等于 discardable_ratio 则不需要对其进行 Sample<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210618111817.png" alt="20210618111817" loading="lazy"></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><strong>Write performance</strong>：加载 100GB 数据库，不同 value 大小（128B - 16KB），两种优化方案都能降低写放大，随着 value 大小的增加，写放大降低的越多，相应的写吞吐也就很大提升。证明以往的两种优化方向都是可以改善写放大并提升写性能的，特别是对于大 Value。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210618104027.png" alt="20210618104027" loading="lazy"></li>
-<li><strong>Read and scan performance</strong>：放松全局有序的要求导致查询性能出现了降级，而 KV 分离因为显著减小了 LSM-tree 的大小，读吞吐比 RocksDB 高很多。而对于 scan 两种方案都比 RocksDB 差很多，做了延迟分解，发现大部分扫描时间花在了 iteratively reading values，随着 value 的增大，scan 延迟的差距变小，因为访问更大的 Value 对应了更小的随机读开销。对于那些小 KV 为主的负载，两种优化方案都会受到很大限制。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210618140321.png" alt="20210618140321" loading="lazy"></li>
-<li>总结一下，现有的优化方案其实都是在做 reads/writes 的 trade-off，两种优化方向的本质都是在降低 Value 的有序程度来减小写放大并提升吞吐量，但相应地牺牲了 scan 的性能，特别是对于小到中型的 KV 对。</li>
-</ul>
-<h2 id="design">Design</h2>
-<h3 id="system-overview">System Overview</h3>
-<ul>
-<li>DiffKV 利用了一个类似于 LSM-tree 的结构 vTree 来组织 Value 保证 Value 的部分有序，也是由多个 Level 组成，每个 level 只能以追加的方式写入，和 LSM-Tree 的不同在于，vTree 只存储那些在每一层中不一定按键完全排序的 Value，即允许部分有序来保证 scan 性能。</li>
-<li>为了实现部分有序，vTree 也需要类似 compaction 的操作，称之为 merge，为了减小 merge 的开销，DiffKV 让 LSM-tree 的 compaction 和 vTree 的 merge 协调地执行来减少总体开销。</li>
-<li>为了让 DiffKV 和现有设计兼容，内存组件和 WAL 都和原生 LSM 一样，流程是一样的。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210618144116.png" alt="20210618144116" loading="lazy"></li>
-</ul>
-<h3 id="data-orgaization">Data Orgaization</h3>
-<ul>
-<li>vTree 分层组织，每层由 sorted groups 组成，每个 group 由很多 vTables 组成。（<strong>这里仿佛就跟 PebblesDB 的设计是类似的了</strong>）</li>
-</ul>
-<h4 id="vtable">vTable</h4>
-<ul>
-<li>大小固定，8MB 默认。一个 immutable Memtable 的 flush 可以生成很多个 vTables，取决于 value size 和 Memtable Size。</li>
-<li>vTable 组成部分：
-<ul>
-<li>data area: 基于 Key 的顺序存储 values</li>
-<li>metedata area: 记录必要的元数据，比如 vTable 的数据大小，该 table 中最小最大 Value（<strong>和 SSTable 不同的是不要求 BllomFilter</strong>，因为直接查索引就能知道）。元数据较小，存储开销也较小。</li>
-</ul>
-</li>
-</ul>
-<h4 id="sorted-group">Sorted Group</h4>
-<ul>
-<li>所有的 vTables 在 Group 中也是有序的。也就是无重叠范围，LSM-tree 的 SSTables 组成的集合也相当于一个 Sorted Group。DiffKV 一次 flush 对应生成一个 Sorted Group，从而保留每个 immutable Memtable 里顺序性，对应 Groups 数量表示了 vTree 的有序程度，Groups 数量增加，有序性相应下降，在一个极端情况下，如果所有的 sstable/vtable组成一个 Group，那么有序程度最大，因为所有的 KV 对都是完全排序的。</li>
-<li><strong>（埋个坑：这里直接用 Groups 数量来表示有序程度会不会有些草率，其实有序与否更多是看重叠范围大小，当然 Groups 越多重叠的概率可能越大，但不确定这个有序程度是不是会对后面造成影响，拭目以待）</strong></li>
-</ul>
-<h4 id="vtree">vTree</h4>
-<ul>
-<li>vTree --- 1:N --- levels --- 1:N --- groups --- 1:N --- vTables --- 1:N --- values</li>
-<li>全局有序的最小单元是 group，level 就可能存在具有重叠键范围的 groups 了，merge 操作不需要对 vTree 中连续两层中的所有值进行排序;与 lsm-tree 中的 compaction 相比，这减轻了I/O开销</li>
-</ul>
-<h3 id="compaction-triggered-merge">Compaction-Triggered Merge</h3>
-<ul>
-<li><strong>首先，为什么要 merge？</strong> 其实就是为了保证部分有序，或者说维持有序性，这样才可能加速 scan。</li>
-<li>Merge 会读取一定数量的 vTables，通过查询 LSM-tree 中存储的最新位置信息来检查哪些 value 是有效的，每个 merge 还要更新最新的 location 信息到 LSM-tree 中</li>
-<li>为了限制 vTree 中的合并开销，vTree 中的合并操作不是独立执行的，而是和 LSM-tree 中的压缩操作以协调的方式触发的。所以称该操作为 compaction-triggered merge</li>
-<li><strong>举例说明：</strong> 假设 LSM tree 的 level 和 vTree 的 level 是关联的。
-<ul>
-<li>当 LSM-tree 发生 Level i -&gt; i+1 的 compaction 的时候，相应地触发 vTree 上相应的 value 从 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>v</mi><msub><mi>L</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">vL_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">v</span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31166399999999994em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>v</mi><msub><mi>L</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">vL_{i+1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.891661em;vertical-align:-0.208331em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">v</span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.311664em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.208331em;"><span></span></span></span></span></span></span></span></span></span> 的 merge。</li>
-<li>Merge 有两个主要问题：
-<ul>
-<li><strong>选哪些 value 进行 merge</strong>？选择那些参加了 compaction 的 keys 对应的 value 进行 merge，称之为 compaction-related value</li>
-<li><strong>如何把这些 value 写回到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>v</mi><msub><mi>L</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">vL_{i+1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.891661em;vertical-align:-0.208331em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">v</span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.311664em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.208331em;"><span></span></span></span></span></span></span></span></span></span></strong>？把这些 value 组织起来生成新的 vTables 并把这些 vTables 以追加写的形式写到下一层。如下图所示的棕色就是这些需要 merge 的 values，<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>V</mi><mn>33</mn></msub></mrow><annotation encoding="application/x-tex">V_{33}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.22222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">3</span><span class="mord mtight">3</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>, <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>V</mi><mn>13</mn></msub></mrow><annotation encoding="application/x-tex">V_{13}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.22222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span><span class="mord mtight">3</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>, <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>V</mi><mn>45</mn></msub></mrow><annotation encoding="application/x-tex">V_{45}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.22222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">4</span><span class="mord mtight">5</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 在排序后追加写入到下一层。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210618151924.png" alt="20210618151924" loading="lazy"></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>生成的 vTables 中的所有数据都是有序的，也就是说 Merge 产生的 vTables 形成了一个单独的 sorted group。但是，我们要指出的是，合并操作并不需要重新组织 vTree 中 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>v</mi><msub><mi>L</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">vL_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">v</span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31166399999999994em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 和 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>v</mi><msub><mi>L</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">vL_{i+1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.891661em;vertical-align:-0.208331em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">v</span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.311664em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.208331em;"><span></span></span></span></span></span></span></span></span></span> 两级的所有vtable。追加写的形式来表面重写，从而减小写放大，老的 vTables 也不会在 merge 过程中删除，因为可能还是包含一些有效的 value，交给 GC 来判断处理。</li>
-<li><strong>compaction-triggered merge 带来的好处表现在两个方面</strong>：(<strong>协同设计的核心</strong>)
-<ul>
-<li><strong>只合并与 compaction 相关的值可以非常有效地识别哪些值仍然有效，因为在 compaction 期间本身就需要从 lsm-tree 中读出相应的键</strong>。相反如果 vTree 的 merge 独立执行，那就需要查询 LSM-tree 并比较 location 信息来判断有效性了，增加了较大的查询开销。</li>
-<li>merge 操作过程中新生成的 vTables 伴随着有效 value 的位置信息的变化，LSM-tree 需要被更新来维护对应的最新的 value location 信息，因为<strong>只有 compaction-related values 被合并，更新 LSM 树中的值位置可以通过直接更新参与 compaction 的 KV 对来执行</strong>。因此，更新值位置的开销可以隐藏在 compaction 操作中，因为 compaction 本身需要重写 lsm 树中的 KV 对</li>
-</ul>
-</li>
-</ul>
-<h3 id="merge-optimizations">Merge Optimizations</h3>
-<ul>
-<li>Compaction-triggered merge 引入了有限的合并开销，该开销又主要是检查 value 的有效性并写回 value location 信息造成的。但是如果让每一次 compaction 操作都触发 merge 的话可能造成频繁的 merge，比如 vTree 中的每个级别只与 LSM-tree 中的一个级别相关，那么每个 compaction 操作都必须在 vTree 中触发合并操作，为了减小 merge 开销，提出了两个优化方案。</li>
-</ul>
-<h4 id="lazy-merge">Lazy merge</h4>
-<ul>
-<li>该策略用于限制 merge 频率和开销。核心思想是聚合多个 lower vTree levels 为单个 level，关联地聚合 LSM-tree 的多个 levels，如下图所示。聚合 vTree 的 0,...,n-2 为一个单独的 level，相应地聚合 LSM Tree 的 0,...,n-2 levels，因此任何发生在 0,...,n-2 之间的 compaction 都不会触发 merge，也就是说 vTree 的 0,...,n-2 Level Merge 操作被延迟到除非需要合并到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>v</mi><msub><mi>L</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">vL_{n-1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.891661em;vertical-align:-0.208331em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">v</span><span class="mord"><span class="mord mathdefault">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.301108em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.208331em;"><span></span></span></span></span></span></span></span></span></span> 的时候才会执行。</li>
-<li>该策略显著减少合并次数和合并数据量，但是牺牲了较低层次的 value 的有序程度，然而，我们认为这种牺牲对扫描性能的影响是有限的。因为 LSM 中的大部分数据都是保存在最后几层，不同层次的数据分布不均匀意味着大多数值实际上是从 vTree 的最后两层进行扫描的，所以最后两层的值的有序程度才会更多地影响 scan 性能。也就是说，low level 对 scan 性能影响很小，频繁的在 low level 的合并操作不会对 scan 性能的提升有什么帮助但却引入了较大的 merge 开销。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210618155342.png" alt="20210618155342" loading="lazy"></li>
-</ul>
-<h4 id="scan-optimized-merge">Scan-optimized merge</h4>
-<ul>
-<li>该策略用于调整 value 的有序程度，来保证较高的 scan 性能。原本的合并策略中，上层的 value 被重新组织写入到下层，下层的 value 其实是没有参与 merge 的。这种策略减小了写放大，但是导致了太多的 sorted group，即可能重叠的现象更严峻。因此我们的核心思想是找到和其他 vTables 有重叠范围的 vTables，让这些 vTables 参与 merge 而不管其位于哪一层。这样就能保证有序的程度较高。</li>
-<li>下图描述了核心思想，在普通的 compaction-triggered merge 之后，首先在下层检查包含 compaction-related values 的 vTables，目标是找出满足如下两个条件的 vTables 集合：
-<ul>
-<li>集合中至少一个 vTable 有重叠的键范围</li>
-<li>vTables 的数量，也就是 set size，大于预先定义的阈值，max_sorted_run</li>
-</ul>
-</li>
-<li>如果存在上述的 SET，scan 性能势必会降低，因为这些 vTable 没有被排序。所以添加一个 scan optimization tag 给这些 tables，所以他们将能总是参与到下一次 Merge 并增加有序性。</li>
-<li>为了找到这样的一组 vTables，首先遍历每个包含 compaction-related values 的  vTable 的起始和终止 Key，对于每个检查的 vTable，统计有重叠键范围的 vTables 的数量，可以通过扫描排序后的键字符串来完成。如下图所示，考虑一个检查过的 vTable 【26-38】，扫描排序后的字符串，可以统计出在 Key 38 之前起始 keys 的个数，本例中有五个，然后结束 Key 在 26 之前的只有一个，然后相减，得到和 【26-38】 重叠的 tables 有四个，也就是该集合的 size 为 4，如果超过了阈值，那么就会给这些 tables 添加 tag，并在下一次合并中对他们进行合并。同时这个 tag 会被持久化到 mainfest file 中，持久化开销可忽略不计。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210618161027.png" alt="20210618161027" loading="lazy"></li>
-<li>Scan-optimized merge 该策略是一个原始策略上的 enhancement。原策略只是简单做追加写，而该策略进一步包含了下一层中确定的 tables 来进行合并，从而增加有序性。注意该策略引入了有限的合并开销，有两个原因：
-<ul>
-<li>允许每一层有多个 sorted groups（一整层不是全局有序的） <strong>（这里有点奇怪）</strong></li>
-<li>不是标记了的 table 中的所有 values 都会参与 merge，而只是 compaction-related values 会参与。</li>
-</ul>
-</li>
-</ul>
-<h3 id="gc">GC</h3>
-<ul>
-<li>为了减小 GC 开销，又提出了基于无效 value 数量的 state-aware lazy approach</li>
-</ul>
-<h4 id="state-awareness">State awareness</h4>
-<ul>
-<li>DiffKV 在一个哈希表中记录每个 vTable 的无效 KV 的数量，每次当 vTable 参与一个 Merge 的时候，DiffKV 记录从 vTable 中检索到的值的数量，并在哈希表中更新旧 vTable中无效值的数量。它还为哈希表中任何新的 vTable 插入一个条目。对哈希表的更新是在合并操作期间执行的，因此开销是有限的。另外，哈希表中的每个条目只占用几个字节，所以哈希表的内存开销是有限的。</li>
-</ul>
-<h4 id="lazy-gc">Lazy GC</h4>
-<ul>
-<li>如果 vTable 有一定比例的无效 Values 且超过阈值 gc_threshold 的时候被选为 GC candidate，需要注意的是 DiffKV 不能立马回收候选的 vTables，相反只是标记一个 GC tag，延迟 GC 到下一次合并。具体的，如果带有 GC tag 的 vTable 被包含到一次合并中，那么该 table 包含的 values 将总是被重写到下一个 level。</li>
-<li>该策略避免了查询 LSM 检查有效性的额外开销，也避免了更新 LSM 新的地址信息的开销，被延迟到和合并一起执行，所以查询和更新的开销可以被合并操作给隐藏。</li>
-</ul>
-<h3 id="discussion">Discussion</h3>
-<ul>
-<li><strong>Optimizing compaction at L0</strong>：提出一个简单的优化 selective compaction 来聚合 Level 0 中小的 SSTables，具体而言，我们会触发内部 compaction，简单地在 L0 处合并多个小 sstable 来生成一个新的大的，而不与 L1 处的 sstable 合并，这样的话，L0 中的 SSTables 的大小将和 L1 中的相当，且没有额外的 compaction 开销引入。</li>
-<li><strong>Crash consistency</strong>：DiffKV 基于 Titan 实现，一致性保证和 Titan 以及 RocskDB 一样，使用了 WAL。同时 DiffKV 还未记录无效数据的 HASHTable 提供了一致性保证，随着 HashTable 在 compaction 之后被更新，DiffKV 将更新信息追加到 manifest 文件中。</li>
-</ul>
-<h2 id="fine-grained-kv-separation">Fine-grained KV Separation</h2>
-<ul>
-<li>对于大KV对，KV分离的好处是显著的，但对于小KV对就不是这样了。然而，不同值大小的混合工作负载也很常见;例如，在广义帕累托分布下，值的大小可能变化很大。在本节中，我们通过 value 大小来区分KV对，通过细粒度的KV分离来进一步增强DiffKV，从而实现混合工作负载下的均衡性能。</li>
-</ul>
-<h3 id="differentiated-value-management">Differentiated Value Management</h3>
-<ul>
-<li>使用两个参数分为三组，small medium large 。小 value 直接写 LSM，中 Value 写 vTree，大 value 写 vLog。</li>
-<li>大 value 的在写 Memtable 之前就先分离了 KV，这样做的好处有两个方面：
-<ul>
-<li>直接将大 value 刷回到 vLog，并保留小的 Key 和地址信息在 Memtable，可以节省内存消耗，同时因为大的顺序 I/O 保证了较高的写性能。</li>
-<li>因为大 value 被写回到了 disk，就不用再写 WAL 了，减小了 I/O 的次数</li>
-</ul>
-</li>
-<li>需要注意的是，对于中小型KV对，以及大型KV对的键和值位置，仍然需要写入WAL中，以保证一致性。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210618170142.png" alt="20210618170142" loading="lazy"></li>
-</ul>
-<h3 id="hotness-aware-vlogs">Hotness-aware vLogs</h3>
-<h4 id="structure-of-vlogs">Structure of vLogs</h4>
-<ul>
-<li>就是一个简单的环形只允许追加的日志，由一组无序的 vTables 组成，vTable 和前面提到的 vTable 格式相同，唯一的不同是 value 是追加写入到无序的 vTables 的，所以在每个 table 内也是无序的，我们这样做的原因是因为 KV 分离对于大型 KV 对执行写入MemTable 之前,大型 KV 被立即刷新到磁盘,以免写 WAL,所以没有办法排序每个 table 中的 values。事实上也不需要，因为他们本身就能从大 I/O 中获益了而不用批量写入。</li>
-</ul>
-<h4 id="gc-for-vlogs">GC for vLogs</h4>
-<ul>
-<li>为了减小 GC 开销，使用了一个热点感知的设计，采用一种简单而有效的无参数冷热分离方案。如下图所示，使用两个 vLogs，分别对应冷热 vLogs，存储了对应的冷热数据，每个vLog 都有自己的写边界，我们分别称它们为 写头 和 GC 头。为了实现冷热分离，用户写入的数据被追加到 hot vLog 的 write head，而来自于 GC 写的数据（比如有效数据需要在 GC 过程中进行写入）被追加写到 cold vLog 的 GC head。其基本原理是，GC 回收的值通常比最近写入的用户数据访问频率更低，因此可以将它们视为冷数据，这种设计的一个好处是实现简单，因为实现冷热识别不需要参数。显然，我们还可以应用其他的热点感知分类方案。</li>
-<li>DiffKV 使用了一个贪心的算法来减小 GC 开销，思想是回收有最大数量的无效值的无序的 vTables。具体的，DiffKV 在 compaction 中监控了每个无序 vTables 的无效数据比例，并维护了一个内存中的 GC 队列来追踪所有候选的 vTables，候选条件即为无效值比例大于阈值。需要注意的是 GC 队列只维护每个无序 vTable 的元数据，它根据无效值的比率按降序进行维护。GC 触发的时候，DiffKV 简单地选择队列头的无序 vTables，如图 9 中的 t1 t2，然后将有效的 values 追加到 cold vLog 的 GC 头。出于性能考虑，DiffKV 使用后台进程多线程来实现 GC。</li>
-</ul>
-<h2 id="evaluation">Evaluation</h2>
-<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210618205333.png" alt="20210618205333" loading="lazy"></figure>
-<figure data-type="image" tabindex="2"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210618211219.png" alt="20210618211219" loading="lazy"></figure>
-<figure data-type="image" tabindex="3"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210618213715.png" alt="20210618213715" loading="lazy"></figure>
-<figure data-type="image" tabindex="4"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210618213702.png" alt="20210618213702" loading="lazy"></figure>
-<figure data-type="image" tabindex="5"><img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210618213857.png" alt="20210618213857" loading="lazy"></figure>
 ]]></content>
     </entry>
 </feed>
