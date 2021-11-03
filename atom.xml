@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://blog.shunzi.tech</id>
-    <title>Elvis Zhang</title>
-    <updated>2021-08-25T14:35:05.309Z</updated>
+    <title>YouDieInADream</title>
+    <updated>2021-11-03T02:52:49.132Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://blog.shunzi.tech"/>
     <link rel="self" href="https://blog.shunzi.tech/atom.xml"/>
     <subtitle>The easy way or the right way.</subtitle>
     <logo>https://blog.shunzi.tech/images/avatar.png</logo>
     <icon>https://blog.shunzi.tech/favicon.ico</icon>
-    <rights>All rights reserved 2021, Elvis Zhang</rights>
+    <rights>All rights reserved 2021, YouDieInADream</rights>
     <entry>
         <title type="html"><![CDATA[Cache Replacement Policies - Fine-Grained Other]]></title>
         <id>https://blog.shunzi.tech/post/CRP-Fine-Grained-Three-Other/</id>
@@ -155,7 +155,11 @@
 <h4 id="evicted-address-filtereaf">EVICTED ADDRESS FILTER(EAF)</h4>
 <ul>
 <li><strong>EAF 策略</strong> [Seshadri等人，2012] <strong>单独预测每个缺失块的重用行为，允许比 PC 更细粒度的差异</strong>。关键的观察是，如果一个高重用的块被过早地从缓存中逐出，那么它将在逐出后不久被访问，而低重用的块在逐出后很长一段时间内都不会被访问。因此，<strong>EAF 策略使用 bloom 过滤器</strong> [bloom, 1970] (一种概率性的、空间效率高的结构，用于确定集合中某个元素的存在或缺失) <strong>来跟踪一小组最近被驱逐的地址</strong>。在<strong>缓存丢失时，如果新行出现在 bloom 过滤器(也称为逐出地址过滤器)中，那么预测该行是重用友好的，并以高优先级插入</strong>; 否则，<strong>根据双峰插入策略 the Bimodal Insertion policy 插入新行</strong>(参见3.1.2节)。当 <strong>bloom 过滤器满时，它被重置</strong>。EAF 在概念上类似于一个小型的候选缓存，它跟踪最近从主缓存中删除的行。表 4.4 总结了 EAF 策略的操作。<br>
-<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210821154831.png" alt="20210821154831" loading="lazy"></li>
+<img src="https://raw.githubusercontent.com/zjs1224522500/PicGoImages/master//img/blog/20210821154831.png" alt="20210821154831" loading="lazy">
+<ul>
+<li><strong>回顾一下 BIP，双峰插入策略，本质是使缓存行以较低的一个概率插入到 MRU 的位置。BIP 保持 LIP 的抗抖动，因为它在大多数时间插入 LRU 位置，但它也可以通过偶尔保留较新的行来适应阶段变化。</strong></li>
+</ul>
+</li>
 <li>从概念上讲，EAF 策略延长了缓存行的生存期，超过了淘汰时间，因此一行的生存期从它的插入开始，但当该行从 bloom 过滤器中删除时结束。随着生命周期的延长，对于具有较长重用间隔的行，EAF 观察重用变得可行，从而获得更好的抗扫描能力和抗抖动能力，从而获得更好的性能。</li>
 <li><strong>重用检测器 (ReD)</strong> [crc, 2017, Albericio等人，2013] 提出了类似的想法，因为它<strong>绕过 LLC 或地址重用表中没有击中的任何缓存行，跟踪最近的缓存丢失。因此，ReD 只在第二次重用时将行插入缓存中</strong>。为了避免在第一次看到所有行时绕过它们，ReD 还使用基于 PC 的预测器来预测在第一次访问后可能被重用的行。</li>
 </ul>
