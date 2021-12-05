@@ -2071,7 +2071,7 @@ p > code {
       border-bottom-color: #212529;
     }
     .archive-timeline-box::after, .tag-timeline-wrapper::after {
-      background: #f8f9fae5;
+      background: #f8f9fa99;
     }h1, h2, h3, h4, h5, h6 {
       color: #212529;
     }
@@ -2117,11 +2117,11 @@ p > code {
       }.nav-item a:hover {
         color: #222;
       }.nav-item-active {
-      background: #f8f9fae5;
+      background: #f8f9fa99;
     }
 
     .nav-item:hover {
-      background: #f8f9fae5;
+      background: #f8f9fa99;
       color: rgba(0, 0, 0, 0.98);
     }.site-author-image {
       border-radius: 50%;
@@ -2157,7 +2157,7 @@ p > code {
       color: #fc6423;
       border-bottom-color: #fc6423;
     }.bg-color {
-      background-color: #e9ecefe5;
+      background-color: #e9ecef99;
     }
     .gemini .blog-header, .gemini .sidebar-wrapper, .gemini .article-wrapper, .gemini .post, .gemini .page, .gemini .section, .gemini .section-box, .gemini .sidebar-box, .gemini .friends-section {
       border-radius: 10px;
@@ -2178,7 +2178,7 @@ p > code {
       color: #212529 !important;
     }
     .mist .site-title i {
-      background: #212529e5;
+      background: #21252999;
     }body {
       cursor: default;
     }a {
